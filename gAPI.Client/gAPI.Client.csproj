@@ -5,7 +5,7 @@
     <Version>0.0.0-preview</Version>
     <Authors>Willem Beltman</Authors>
     <Company>Willem Beltman</Company>
-    <PackageId>gAPI</PackageId>
+    <PackageId>gAPI.Client</PackageId>
     <Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
     <PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
