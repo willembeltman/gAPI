@@ -5,11 +5,11 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 
-		<Version>0.0.1-alpha</Version>
+		<Version>0.0.1-alpha2</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI</PackageId>
-		<Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
+		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET. This is the core library of the gAPI ecosystem.</Description>
 		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
@@ -32,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="../README.md" Pack="true" PackagePath="" />
+		<None Include="..\README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>
