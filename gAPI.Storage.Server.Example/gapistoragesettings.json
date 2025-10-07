@@ -1,0 +1,11 @@
+{
+  "LocalStorageServerConfig": {
+    "SuperSecretKey": "SUPERSECRETKEYOF32CHARACTERSLONG",
+    "Credentials": [
+      {
+        "UserName": "USERNAME",
+        "Password": "PASSWORD"
+      }
+    ]
+  }
+}
