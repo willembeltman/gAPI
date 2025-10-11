@@ -1,4 +1,4 @@
-# gAPI.AutoStorage
+# gAPI.Storage
 
 A .NET 9.0 client library for connecting to a gAPI.Storage.Server instance.
 This package uses the shared gAPI.Storage library to provide seamless communication and file transfer between your application and a remote storage server.
