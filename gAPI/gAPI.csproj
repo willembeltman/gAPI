@@ -18,21 +18,37 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Storage.Blobs" Version="12.25.1" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-		<PackageReference Include="System.Net.Http.Json" Version="9.0.9" />
+		<PackageReference Include="System.Net.Http.Json" Version="9.0.10" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Test.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>Test.txt</LastGenOutput>
+	  </None>
+	  <None Update="Test.txt">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Test.tt</DependentUpon>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 
 </Project>

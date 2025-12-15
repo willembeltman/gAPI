@@ -14,18 +14,18 @@ namespace gAPI.Storage.Server
     {
         public static void RegistrateServices(this WebApplicationBuilder builder)
         {
-            builder.Configuration.AddJsonFile("gapistoragesettings.json", optional: false, reloadOnChange: true);
             if (builder.Environment.IsDevelopment())
             {
                 builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
-                builder.Configuration.AddJsonFile("gapistoragesettings.Development.json", optional: true, reloadOnChange: true);
             }
+            builder.Configuration.AddEnvironmentVariables();
 
             builder.Services.Configure<LocalStorageServerConfig>(
                 builder.Configuration.GetSection("LocalStorageServerConfig")
             );
 
             var appConfig = builder.Configuration.GetSection("LocalStorageServerConfig").Get<LocalStorageServerConfig>()!;
+            Console.WriteLine($"gAPI.Storage.Server.WebApplicationBuilderExtention UserName = {appConfig.Credentials.UserName}");
 
             builder.Services.AddAuthentication(options =>
             {
@@ -34,7 +34,8 @@ namespace gAPI.Storage.Server
             })
             .AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = true;
+                //options.RequireHttpsMetadata = false; // for local dev
+                options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {

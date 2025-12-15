@@ -1,0 +1,275 @@
+﻿using gAPI.AutoComponents.Interfaces;
+
+namespace gAPI.AutoComponents.Generators.Helpers
+{
+    public class ListDataSourceGenerator : BaseGenerator
+    {
+        public ListDataSourceGenerator(
+            ISharedReference baseListResponseT,
+            ISharedReference baseResponseT,
+            ISharedReference baseResponse,
+            ItemDataSourceGenerator itemDataSource,
+            string directory,
+            string @namespace) : base(directory, @namespace)
+        {
+            BaseListResponseT = baseListResponseT;
+            BaseResponseT = baseResponseT;
+            BaseResponse = baseResponse;
+            ItemDataSource = itemDataSource;
+
+            Name = "ListDataSource";
+            FileName = $"{Name}.g.cs";
+        }
+
+        public ISharedReference BaseListResponseT { get; }
+        public ISharedReference BaseResponseT { get; }
+        public ISharedReference BaseResponse { get; }
+        public ItemDataSourceGenerator ItemDataSource { get; }
+
+        public void GenerateCode()
+        {
+            Reg(BaseListResponseT);
+            Reg(BaseResponseT);
+            Reg(BaseResponse);
+            Reg(ItemDataSource);
+            Reg("Microsoft.AspNetCore.Components");
+            Reg("Microsoft.AspNetCore.Components.Forms");
+            Reg("Microsoft.AspNetCore.Http");
+            Reg("Microsoft.JSInterop");
+
+            Code = $@"{GetNamespacesCode()}
+#nullable enable
+namespace {Namespace}
+{{
+    public class {Name}< T, TKey> where T : class, new()
+        where TKey : struct
+    {{
+        public {Name}(
+            IJSRuntime JS,
+            Action StateHasChanged,
+            Func<T, TKey> GetPrimaryKey,
+            Func<int?, int?, string[]?, Task<{BaseListResponseT.Name}<T>>> List,
+            Action<T>? SetForeignKey = null,
+            Action<T>? AfterSaveAction = null,
+            Action<T?>? AfterCancelAction = null,
+            Func<T, Task<{BaseResponseT.Name}<T>>>? Create = null,
+            Func<TKey, Task<{BaseResponseT.Name}<T>>>? Read = null,
+            Func<T, Task<{BaseResponseT.Name}<T>>>? Update = null,
+            Func<TKey, Task<{BaseResponseT.Name}<bool>>>? Delete = null,
+            Func<TKey, IFormFile?, Task<{BaseResponseT.Name}<T>>>? FileUpdate = null,
+            Func<TKey, Task<{BaseResponseT.Name}<bool>>>? FileDelete = null)
+        {{
+            this.JS = JS;
+            this.StateHasChanged = StateHasChanged;
+            this.GetPrimaryKey = GetPrimaryKey;
+            this.List = List;
+            this.SetForeignKey = SetForeignKey;
+            this.AfterSaveAction = AfterSaveAction;
+            this.AfterCancelAction = AfterCancelAction;
+            this.Create = Create;
+            this.Read = Read;
+            this.Update = Update;
+            this.Delete = Delete;
+            this.FileUpdate = FileUpdate;
+            this.FileDelete = FileDelete;
+        }}
+
+        private DotNetObjectReference<ListDataSource<T, TKey>>? DotNetRef;
+        private bool IsRegistrated = false;
+        private CancellationTokenSource? LoadCts;
+        private readonly IJSRuntime JS;
+        private readonly Action StateHasChanged;
+        private readonly Func<T, TKey> GetPrimaryKey;
+        private readonly Func<int?, int?, string[]?, Task<{BaseListResponseT.Name}<T>>> List;
+        private readonly Action<T>? SetForeignKey;
+        private readonly Action<T>? AfterSaveAction;
+        private readonly Action<T?>? AfterCancelAction;
+        private readonly Func<T, Task<{BaseResponseT.Name}<T>>>? Create;
+        private readonly Func<TKey, Task<{BaseResponseT.Name}<T>>>? Read;
+        private readonly Func<T, Task<{BaseResponseT.Name}<T>>>? Update;
+        private readonly Func<TKey, Task<{BaseResponseT.Name}<bool>>>? Delete;
+        private readonly Func<TKey, IFormFile?, Task<{BaseResponseT.Name}<T>>>? FileUpdate;
+        private readonly Func<TKey, Task<{BaseResponseT.Name}<bool>>>? FileDelete;
+
+        public List<{ItemDataSource.Name}<T, TKey>> Items {{ get; }} = [];
+        public {BaseListResponseT.Name}<T>? Response {{ get; private set; }}
+        public {BaseResponse.Name}? StatusResponse {{ get; private set; }}
+        public string SentinelId {{ get; set; }} = $""sentinel_{{Guid.NewGuid()}}"";
+        public int Take {{ get; set; }} = 10;
+        public bool HasMore {{ get; private set; }} = true;
+        public bool OrderByDirectionDesc {{ get; private set; }} = false;
+        public string OrderByColumn {{ get; private set; }} = """";
+        public bool ShowDropdown {{ get; set; }} = false;
+        public bool IsLoading {{ get; private set; }} = false;
+
+        public string[]? OrderBy =>
+            string.IsNullOrEmpty(OrderByColumn)
+                ? null
+                : [$""{{OrderByColumn}} {{(OrderByDirectionDesc ? ""desc"" : ""asc"")}}""];
+
+        public async Task InitialiseAsync()
+        {{
+            await RegisterAsync();
+            await LoadMoreAsync();
+        }}
+        public async Task OnHandleFileSelected({ItemDataSource.Name}<T, TKey> item, InputFileChangeEventArgs e)
+        {{
+            await item.HandleFileSelected(e);
+        }}
+        public void OnCancelFileSelected({ItemDataSource.Name}<T, TKey> item)
+        {{
+            item.CancelFileSelected();
+        }}
+        public void OnHandleFileRemoved({ItemDataSource.Name}<T, TKey> item)
+        {{
+            item.HandleFileRemoved();
+        }}
+        public async Task HandleValidSubmit({ItemDataSource.Name}<T, TKey> item)
+        {{
+            if (SetForeignKey != null) // SetForeignKey is optional
+            {{
+                if (item.Model == null) throw new Exception(""Model cannot be null."");
+                SetForeignKey(item.Model);
+            }}
+            await item.HandleValidSubmit();
+        }}
+        public void ToggleDropdown()
+        {{
+            ShowDropdown = !ShowDropdown;
+        }}
+        public async Task CloseDropdown({ItemDataSource.Name}<T, TKey>? item)
+        {{
+            if (item != null)
+            {{
+                // Plaats gekozen item bovenaan
+                Items.Remove(item);
+                Items.Insert(0, item);
+            }}
+
+            ShowDropdown = false;
+            await UnRegisterAsync();
+        }}
+        public async Task OrderByChanged(ChangeEventArgs e)
+        {{
+            OrderByColumn = e.Value?.ToString() ?? """";
+            Items.Clear();
+            await LoadMoreAsync();
+        }}
+        public async Task OrderByDirectionChanged(ChangeEventArgs e)
+        {{
+            OrderByDirectionDesc = Convert.ToBoolean(e.Value);
+            Items.Clear();
+            await LoadMoreAsync();
+        }}
+        public async Task OrderByColumnClicked(string columnName)
+        {{
+            if (OrderByColumn != columnName)
+            {{
+                OrderByColumn = columnName;
+                OrderByDirectionDesc = false;
+            }}
+            else if (!OrderByDirectionDesc)
+            {{
+                OrderByDirectionDesc = true;
+            }}
+            else
+            {{
+                OrderByColumn = """";
+            }}
+            Items.Clear();
+            await LoadMoreAsync();
+        }}
+        [JSInvokable]
+        public async Task OnIntersect()
+        {{
+            if (!IsLoading && HasMore)
+                await LoadMoreAsync();
+        }}
+
+        private async Task RegisterAsync()
+        {{
+            DotNetRef ??= DotNetObjectReference.Create(this);
+            if (!IsRegistrated)
+            {{
+                await JS.InvokeVoidAsync(""intersectionObserver.register"", DotNetRef, SentinelId);
+                IsRegistrated = true;
+            }}
+        }}
+        private async Task UnRegisterAsync()
+        {{
+            if (IsRegistrated)
+            {{
+                await JS.InvokeVoidAsync(""intersectionObserver.unregister"", SentinelId);
+                IsRegistrated = false;
+            }}
+        }}
+        private async Task LoadMoreAsync()
+        {{
+            LoadCts?.Cancel();
+            LoadCts = new CancellationTokenSource();
+            var token = LoadCts.Token;
+
+            if (IsLoading || !HasMore) return;
+            IsLoading = true;
+
+            try
+            {{
+                var newItems = ListItems(Items.Count, Take, OrderBy);
+                var count = 0;
+
+                await foreach (var item in newItems)
+                {{
+                    if (token.IsCancellationRequested) return;
+                    Items.Add(item);
+                    count++;
+                }}
+
+                HasMore = count >= Take;
+            }}
+            finally
+            {{
+                IsLoading = false;
+                StateHasChanged();
+
+                // Fallback: als pagina korter is dan viewport, nog een keer proberen
+                await JS.InvokeVoidAsync(""intersectionObserver.ensureVisible"", DotNetRef, SentinelId);
+            }}
+        }}
+        private async IAsyncEnumerable<{ItemDataSource.Name}<T, TKey>> ListItems(int? skip = null, int? take = null, string[]? orderBy = null)
+        {{
+            Response = await List(skip, take, orderBy);
+            StatusResponse = Response;
+            if (Response?.Response == null)
+            {{
+                yield break;
+            }}
+
+            await foreach (var item in Response.Response)
+            {{
+                yield return new {ItemDataSource.Name}<T, TKey>(
+                    GetPrimaryKey: a => GetPrimaryKey(a),
+                    AfterSaveAction,
+                    AfterCancelAction,
+                    Create,
+                    Read,
+                    Update,
+                    Delete,
+                    FileUpdate,
+                    FileDelete)
+                {{
+                    Response = new {BaseResponseT.Name}<T> {{ Response = item }}
+                }};
+            }}
+        }}
+
+        public async ValueTask DisposeAsync()
+        {{
+            await UnRegisterAsync();
+            LoadCts?.Dispose();
+        }}
+    }}
+}}
+";
+        }
+    }
+}

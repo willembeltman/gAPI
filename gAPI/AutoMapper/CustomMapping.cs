@@ -131,7 +131,7 @@ namespace gAPI.AutoMapper
             if (item is ICrudEntity crudl)
             {
                 crudl.CanUpdate = serviceHandler == null ? false : await serviceHandler.CanUpdateAsync(item);
-                crudl.CanRemove = serviceHandler == null ? false : await serviceHandler.CanRemoveAsync(item);
+                crudl.CanDelete = serviceHandler == null ? false : await serviceHandler.CanDeleteAsync(item);
             }
         }
     }

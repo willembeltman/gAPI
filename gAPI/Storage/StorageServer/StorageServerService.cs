@@ -39,6 +39,8 @@ namespace gAPI.Storage.StorageServer
                 Password = credential.Password
             };
 
+            Console.WriteLine($"StorageServerService.AuthenticateHttpClient UserName={credential.UserName}");
+
             using var response = await httpClient.PostAsJsonAsync("/Auth/Login", loginRequest);
             response.EnsureSuccessStatusCode();
 

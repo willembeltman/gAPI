@@ -1,0 +1,8 @@
+<#@ template hostspecific="false" language="C#" #>
+<#@ output extension=".txt" #>
+<#int top = 10;
+
+for (int i = 0; i<=top; i++)
+{ #>
+   The square of <#= i #> is <#= i*i #>
+<# } #>

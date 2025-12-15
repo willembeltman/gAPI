@@ -3,6 +3,6 @@
     public interface ICrudEntity
     {
         bool CanUpdate { get; set; }
-        bool CanRemove { get; set; }
+        bool CanDelete { get; set; }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using gAPI.EntityFrameworkDisk;
-using gAPI.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;

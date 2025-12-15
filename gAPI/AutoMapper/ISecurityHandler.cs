@@ -7,7 +7,7 @@ namespace gAPI.AutoMapper
         Task<bool> CanCreateAsync();
         Task<bool> CanCreateAsync(TDto dto);
         Task<bool> CanReadAsync(TDto dto);
-        Task<bool> CanRemoveAsync(TDto dto);
+        Task<bool> CanDeleteAsync(TDto dto);
         Task<bool> CanUpdateAsync(TDto dto);
         Task<bool> CanListAsync();
     }
