@@ -17,7 +17,7 @@ namespace gAPI.AutoApi.SignalR
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateClientHandlerAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 
@@ -25,12 +25,12 @@ namespace gAPI.AutoApi.SignalR
                 .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
                 .ToArray();
 
-            if (Interfaces.Any(a => a.Service == null))
-                throw new Exception("Not all [Generate] interfaces are implemented");
+            //if (Interfaces.Any(a => a.ClientHandler == null))
+            //    throw new Exception("Not all [Generate] interfaces are implemented");
 
-            Services = Interfaces
-                .Select(a => a.Service)
-                .ToArray();
+            //ClientHandlers = Interfaces
+            //    .Select(a => a.ClientHandler)
+            //    .ToArray();
 
             var collector = new TypeCollector(config);
             foreach (var swi in interfaceSymbols)
@@ -61,6 +61,6 @@ namespace gAPI.AutoApi.SignalR
         public Interface[] Interfaces { get; }
         public EnumDto[] Enums { get; }
         public Dto[] Dtos { get; }
-        public Service[] Services { get; }
+        //public ClientHandler[] ClientHandlers { get; }
     }
 }

@@ -20,116 +20,115 @@ namespace gAPI.AutoApi.SignalR.Models
             ResponseType = new TypeHelper(dataModel, methodSymbol.ReturnType, IsNullable);
 
             ApiName = Name;
-            var apiNameAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "ApiNameAttribute");
-            if (apiNameAttr != null)
+            var handlerNameAttr = methodSymbol.GetAttributes()
+                .FirstOrDefault(a => a.AttributeClass?.Name == "ClientHandlerNameAttribute");
+            if (handlerNameAttr != null)
             {
-                ApiName = apiNameAttr.ConstructorArguments[0].Value?.ToString() ?? ApiName;
+                ApiName = handlerNameAttr.ConstructorArguments[0].Value?.ToString() ?? ApiName;
             }
-
 
             Arguments = methodSymbol.Parameters
                 .Select(parameterSymbol => new InterfaceMethodArgument(dataModel, this, parameterSymbol))
                 .ToArray();
 
-            IsCreate = methodSymbol.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "IsCreateAttribute");
-            if (IsCreate && Arguments.Length != 1)
-                throw new Exception("Kan niet create method hebben met anders dan 1 parameter");
+            //IsCreate = methodSymbol.GetAttributes()
+            //    .Any(a => a.AttributeClass?.Name == "IsCreateAttribute");
+            //if (IsCreate && Arguments.Length != 1)
+            //    throw new Exception("Kan niet create method hebben met anders dan 1 parameter");
 
-            IsRead = methodSymbol.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "IsReadAttribute");
-            if (IsRead && Arguments.Length != 1)
-                throw new Exception("Kan niet read method hebben met anders dan 1 parameter");
+            //IsRead = methodSymbol.GetAttributes()
+            //    .Any(a => a.AttributeClass?.Name == "IsReadAttribute");
+            //if (IsRead && Arguments.Length != 1)
+            //    throw new Exception("Kan niet read method hebben met anders dan 1 parameter");
 
-            IsUpdate = methodSymbol.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "IsUpdateAttribute");
-            if (IsUpdate && Arguments.Length != 1)
-                throw new Exception("Kan niet update method hebben met anders dan 1 parameter");
+            //IsUpdate = methodSymbol.GetAttributes()
+            //    .Any(a => a.AttributeClass?.Name == "IsUpdateAttribute");
+            //if (IsUpdate && Arguments.Length != 1)
+            //    throw new Exception("Kan niet update method hebben met anders dan 1 parameter");
 
-            var isDeleteAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "IsDeleteAttribute");
+            //var isDeleteAttr = methodSymbol.GetAttributes()
+            //    .FirstOrDefault(a => a.AttributeClass?.Name == "IsDeleteAttribute");
 
-            if (isDeleteAttr != null)
-            {
-                IsDelete = true;
+            //if (isDeleteAttr != null)
+            //{
+            //    IsDelete = true;
 
-                var arg = isDeleteAttr.ConstructorArguments[0];
-                if (arg.Kind == TypedConstantKind.Type && arg.Value is ITypeSymbol targetTypeSymbol)
-                {
-                    IsDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
-                }
+            //    var arg = isDeleteAttr.ConstructorArguments[0];
+            //    if (arg.Kind == TypedConstantKind.Type && arg.Value is ITypeSymbol targetTypeSymbol)
+            //    {
+            //        IsDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
+            //    }
 
-                if (methodSymbol.Parameters.Length != 1)
-                    throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
-            }
+            //    if (methodSymbol.Parameters.Length != 1)
+            //        throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
+            //}
 
-            IsList = methodSymbol.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "IsListAttribute");
-            if (IsList && Arguments.Length != 3)
-                throw new Exception("Kan niet list method hebben met anders dan 3 parameters");
+            //IsList = methodSymbol.GetAttributes()
+            //    .Any(a => a.AttributeClass?.Name == "IsListAttribute");
+            //if (IsList && Arguments.Length != 3)
+            //    throw new Exception("Kan niet list method hebben met anders dan 3 parameters");
 
-            var isListByAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "IsListByAttribute");
-            if (isListByAttr != null)
-            {
-                IsListBy = true;
-                IsListByName = isListByAttr.ConstructorArguments[0].Value?.ToString();
-                if (isListByAttr.ConstructorArguments[1].Kind == TypedConstantKind.Type &&
-                    isListByAttr.ConstructorArguments[1].Value is ITypeSymbol targetTypeSymbol)
-                {
-                    IsListByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
-                }
+            //var isListByAttr = methodSymbol.GetAttributes()
+            //    .FirstOrDefault(a => a.AttributeClass?.Name == "IsListByAttribute");
+            //if (isListByAttr != null)
+            //{
+            //    IsListBy = true;
+            //    IsListByName = isListByAttr.ConstructorArguments[0].Value?.ToString();
+            //    if (isListByAttr.ConstructorArguments[1].Kind == TypedConstantKind.Type &&
+            //        isListByAttr.ConstructorArguments[1].Value is ITypeSymbol targetTypeSymbol)
+            //    {
+            //        IsListByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
+            //    }
 
-                if (Arguments.Length != 4)
-                    throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
-            }
+            //    if (Arguments.Length != 4)
+            //        throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
+            //}
 
-            var isListNotByAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "IsListNotByAttribute");
-            if (isListNotByAttr != null)
-            {
-                IsListNotBy = true;
-                IsListNotByName = isListNotByAttr.ConstructorArguments[0].Value?.ToString();
-                if (isListNotByAttr.ConstructorArguments[1].Kind == TypedConstantKind.Type &&
-                    isListNotByAttr.ConstructorArguments[1].Value is ITypeSymbol targetTypeSymbol)
-                {
-                    IsListNotByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
-                }
+            //var isListNotByAttr = methodSymbol.GetAttributes()
+            //    .FirstOrDefault(a => a.AttributeClass?.Name == "IsListNotByAttribute");
+            //if (isListNotByAttr != null)
+            //{
+            //    IsListNotBy = true;
+            //    IsListNotByName = isListNotByAttr.ConstructorArguments[0].Value?.ToString();
+            //    if (isListNotByAttr.ConstructorArguments[1].Kind == TypedConstantKind.Type &&
+            //        isListNotByAttr.ConstructorArguments[1].Value is ITypeSymbol targetTypeSymbol)
+            //    {
+            //        IsListNotByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
+            //    }
 
-                if (Arguments.Length != 4)
-                    throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
-            }
+            //    if (Arguments.Length != 4)
+            //        throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
+            //}
 
-            IsFileUpdate = methodSymbol.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "IsFileUpdateAttribute");
-            if (IsFileUpdate && Arguments.Length != 2)
-                throw new Exception("Kan niet file update method hebben met anders dan 2 parameter");
+            //IsFileUpdate = methodSymbol.GetAttributes()
+            //    .Any(a => a.AttributeClass?.Name == "IsFileUpdateAttribute");
+            //if (IsFileUpdate && Arguments.Length != 2)
+            //    throw new Exception("Kan niet file update method hebben met anders dan 2 parameter");
 
-            var isFileDeleteAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "IsFileDeleteAttribute");
+            //var isFileDeleteAttr = methodSymbol.GetAttributes()
+            //    .FirstOrDefault(a => a.AttributeClass?.Name == "IsFileDeleteAttribute");
 
-            if (isFileDeleteAttr != null)
-            {
-                IsFileDelete = true;
+            //if (isFileDeleteAttr != null)
+            //{
+            //    IsFileDelete = true;
 
-                var arg = isFileDeleteAttr.ConstructorArguments[0];
-                if (arg.Kind == TypedConstantKind.Type && arg.Value is ITypeSymbol targetTypeSymbol)
-                {
-                    IsFileDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
-                }
+            //    var arg = isFileDeleteAttr.ConstructorArguments[0];
+            //    if (arg.Kind == TypedConstantKind.Type && arg.Value is ITypeSymbol targetTypeSymbol)
+            //    {
+            //        IsFileDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
+            //    }
 
-                if (methodSymbol.Parameters.Length != 1)
-                    throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
-            }
+            //    if (methodSymbol.Parameters.Length != 1)
+            //        throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
+            //}
 
-            var isPageAttr = methodSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "IsPageAttribute");
-            if (isPageAttr != null)
-            {
-                IsPage = true;
-                IsPageRoute = isPageAttr.ConstructorArguments[0].Value?.ToString();
-            }
+            //var isPageAttr = methodSymbol.GetAttributes()
+            //    .FirstOrDefault(a => a.AttributeClass?.Name == "IsPageAttribute");
+            //if (isPageAttr != null)
+            //{
+            //    IsPage = true;
+            //    IsPageRoute = isPageAttr.ConstructorArguments[0].Value?.ToString();
+            //}
 
             IsAuthorized =
                 @interface.IsAuthorized ||
@@ -151,24 +150,23 @@ namespace gAPI.AutoApi.SignalR.Models
         public TypeHelper ResponseType { get; }
         public string ApiName { get; }
         public InterfaceMethodArgument[] Arguments { get; }
-        public bool IsCreate { get; }
-        public bool IsRead { get; }
-        public bool IsUpdate { get; }
-        public bool IsDelete { get; }
-        public TypeHelper IsDeleteType { get; }
-        public bool IsList { get; }
-        public bool IsListBy { get; }
-        public string IsListByName { get; }
-        public TypeHelper IsListByForeignType { get; }
-        public bool IsListNotBy { get; }
-        public string IsListNotByName { get; }
-        public TypeHelper IsListNotByForeignType { get; }
-        public bool IsFileUpdate { get; }
-        public bool IsFileDelete { get; }
-        public TypeHelper IsFileDeleteType { get; }
-        public bool IsPage { get; }
-        public string IsPageRoute { get; }
-        public bool IsAuthorize { get; }
+        //public bool IsCreate { get; }
+        //public bool IsRead { get; }
+        //public bool IsUpdate { get; }
+        //public bool IsDelete { get; }
+        //public TypeHelper IsDeleteType { get; }
+        //public bool IsList { get; }
+        //public bool IsListBy { get; }
+        //public string IsListByName { get; }
+        //public TypeHelper IsListByForeignType { get; }
+        //public bool IsListNotBy { get; }
+        //public string IsListNotByName { get; }
+        //public TypeHelper IsListNotByForeignType { get; }
+        //public bool IsFileUpdate { get; }
+        //public bool IsFileDelete { get; }
+        //public TypeHelper IsFileDeleteType { get; }
+        //public bool IsPage { get; }
+        //public string IsPageRoute { get; }
         public bool IsAsync { get; }
         public bool IsAuthorized { get; }
         public bool IsHidden { get; }

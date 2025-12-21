@@ -2,9 +2,9 @@
 
 namespace gAPI.Attributes
 {
-    public class ApiNameAttribute : Attribute
+    public class ClientHandlerNameAttribute : Attribute
     {
-        public ApiNameAttribute(string name)
+        public ClientHandlerNameAttribute(string name)
         {
             Name = name;
         }

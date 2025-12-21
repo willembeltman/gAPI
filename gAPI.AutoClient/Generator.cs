@@ -34,17 +34,32 @@ namespace gAPI.AutoClient
                     return;
                 }
 
-//#if DEBUG
-//                if (!Debugger.IsAttached)
-//                {
-//                    Debugger.Launch(); // Triggert dialoog om te attachen
-//                }
-//#endif
+                //#if DEBUG
+                //                if (!Debugger.IsAttached)
+                //                {
+                //                    Debugger.Launch(); // Triggert dialoog om te attachen
+                //                }
+                //#endif
 
-                var config = ClientConfigParser.Parse(configText);
-                var dataModel = new ServiceContext(compilation, config);
-                var generatedDataModel = new ClientsGenerator(dataModel, spc);
+                try
+                {
+                    var config = ClientConfigParser.Parse(configText);
+                    var dataModel = new ServiceContext(compilation, config);
+                    var generatedDataModel = new ClientsGenerator(dataModel, spc);
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex.ToString(), spc);
+                    throw;
+                }
             });
+        }
+
+        public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
+        {
+            //throw new Exception(errorMessage); // Helps while debugging
+            var sourceCode = $"#error gAPI AutoComponents has thrown an error: \\r\\n{errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+            CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
         }
 
 

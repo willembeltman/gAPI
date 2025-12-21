@@ -17,13 +17,7 @@ namespace gAPI.AutoApi.SignalR.Models
 
             ApiName = Name;
             ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-            var apiNameAttr = NamedTypeSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "ApiNameAttribute");
-            if (apiNameAttr != null)
-            {
-                ApiName = apiNameAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? ApiName;
-            }
-            ApiName = ServiceNameHelper.RemoveServiceName(ApiName);
+            ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
 
             IsAuthorized = NamedTypeSymbol.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
@@ -39,12 +33,12 @@ namespace gAPI.AutoApi.SignalR.Models
                 .Select(methodSymbol => new InterfaceMethod(dataModel, this, methodSymbol))
                 .ToArray();
 
-            Service = allSymbols
-                .Where(a =>
-                    a.TypeKind == TypeKind.Class &&
-                    a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
-                .Select(a => new Service(this, a))
-                .SingleOrDefault();
+            //ClientHandler = allSymbols
+            //    .Where(a =>
+            //        a.TypeKind == TypeKind.Class &&
+            //        a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
+            //    .Select(a => new ClientHandler(this, a))
+            //    .SingleOrDefault();
         }
 
         public INamedTypeSymbol NamedTypeSymbol { get; }
@@ -55,6 +49,6 @@ namespace gAPI.AutoApi.SignalR.Models
         public bool IsAuthorized { get; }
         public bool IsHidden { get; }
         public InterfaceMethod[] Methods { get; }
-        public Service Service { get; }
+        //public ClientHandler ClientHandler { get; }
     }
 }

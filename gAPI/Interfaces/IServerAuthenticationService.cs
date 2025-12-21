@@ -11,7 +11,11 @@ namespace gAPI.Interfaces
         /// <param name="scopeIdentifier"></param>
         /// <returns></returns>
         Task<bool> InitializeAsync(Guid scopeIdentifier, string? bearerToken = null);
-
-        Guid? ScopeIdentifier { get; }
+        /// <summary>
+        /// Asynchronously retrieves the unique identifier of the current user, if available.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the user identifier as a string,
+        /// or <see langword="null"/> if no user is authenticated.</returns>
+        Task<string?> GetUserId();
     }
 }
