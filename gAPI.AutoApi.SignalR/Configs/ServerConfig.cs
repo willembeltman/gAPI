@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoApi.SignalR.Configs
+﻿namespace gAPI.AutoHub.Configs
 {
     internal class ServerConfig
     {

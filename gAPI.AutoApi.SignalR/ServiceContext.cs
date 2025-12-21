@@ -1,11 +1,11 @@
-﻿using gAPI.AutoApi.SignalR.Configs;
-using gAPI.AutoApi.SignalR.Helpers;
-using gAPI.AutoApi.SignalR.Models;
+﻿using gAPI.AutoHub.Configs;
+using gAPI.AutoHub.Helpers;
+using gAPI.AutoHub.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.SignalR
+namespace gAPI.AutoHub
 {
     internal class ServiceContext
     {

@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoApi.SignalR.Generators
+﻿namespace gAPI.AutoHub.Generators
 {
 
     internal class AddAutoHubServicesGenerator : BaseGenerator

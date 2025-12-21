@@ -1,9 +1,9 @@
-﻿using gAPI.AutoClient.SignalR.Helpers;
+﻿using gAPI.AutoHubClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.Models
+namespace gAPI.AutoHubClient.Models
 {
     internal class Interface
     {

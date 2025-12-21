@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.SignalR.Models;
+﻿using gAPI.AutoHubClient.Models;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.Helpers
+namespace gAPI.AutoHubClient.Helpers
 {
     internal class TypeDigger
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoApi.SignalR.Models
+namespace gAPI.AutoHub.Models
 {
     internal class SharedReference
     {

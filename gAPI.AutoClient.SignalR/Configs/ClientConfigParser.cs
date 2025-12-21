@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace gAPI.AutoClient.SignalR.Configs
+namespace gAPI.AutoHubClient.Configs
 {
     internal static class ClientConfigParser
     {

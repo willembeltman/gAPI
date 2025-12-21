@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.Helpers;
+﻿using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoClient.ServiceModels
+namespace gAPI.AutoApiClient.ServiceModels
 {
     internal class InterfaceMethodArgument
     {

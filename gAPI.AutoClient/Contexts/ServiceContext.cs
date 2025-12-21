@@ -1,11 +1,11 @@
-﻿using gAPI.AutoClient.Configs;
-using gAPI.AutoClient.Helpers;
-using gAPI.AutoClient.ServiceModels;
+﻿using gAPI.AutoApiClient.Configs;
+using gAPI.AutoApiClient.Helpers;
+using gAPI.AutoApiClient.ServiceModels;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoClient.Contexts
+namespace gAPI.AutoApiClient.Contexts
 {
     internal class ServiceContext
     {

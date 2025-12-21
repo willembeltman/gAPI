@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.ServiceModels
+namespace gAPI.AutoApiClient.ServiceModels
 {
     internal class EnumDto
     {

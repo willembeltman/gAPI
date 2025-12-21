@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoClient.SignalR.Models
+namespace gAPI.AutoHubClient.Models
 {
     internal class EnumChoice
     {

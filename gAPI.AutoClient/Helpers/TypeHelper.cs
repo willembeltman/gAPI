@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.Contexts;
+﻿using gAPI.AutoApiClient.Contexts;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.Helpers
+namespace gAPI.AutoApiClient.Helpers
 {
     internal class TypeHelper
     {

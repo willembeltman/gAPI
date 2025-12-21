@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.ServiceModels;
+﻿using gAPI.AutoApiClient.ServiceModels;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoClient.Generators
+namespace gAPI.AutoApiClient.Generators
 {
 
     internal class BaseGenerator

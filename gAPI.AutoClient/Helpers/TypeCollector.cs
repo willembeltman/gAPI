@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoClient.Helpers
+namespace gAPI.AutoApiClient.Helpers
 {
     public class TypeCollector
     {

@@ -1,5 +1,5 @@
-﻿using gAPI.AutoClient.Configs;
-using gAPI.AutoClient.Contexts;
+﻿using gAPI.AutoApiClient.Configs;
+using gAPI.AutoApiClient.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoClient
+namespace gAPI.AutoApiClient
 {
     [Generator]
     public class Generator : IIncrementalGenerator
@@ -85,7 +85,7 @@ namespace gAPI.AutoClient
         //            }
 
         //            var sb = $@"
-        //namespace gAPI.AutoClient
+        //namespace gAPI.AutoApiClient
         //{{
         //    internal static class AccessedTypes
         //    {{

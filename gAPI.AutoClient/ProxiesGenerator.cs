@@ -1,12 +1,12 @@
-﻿using gAPI.AutoClient.Configs;
-using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.Generators;
+﻿using gAPI.AutoApiClient.Configs;
+using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.Generators;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoClient
+namespace gAPI.AutoApiClient
 {
     internal class ClientsGenerator
     {

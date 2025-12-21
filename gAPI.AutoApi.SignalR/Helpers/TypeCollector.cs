@@ -1,9 +1,9 @@
-﻿using gAPI.AutoApi.SignalR.Configs;
+﻿using gAPI.AutoHub.Configs;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApi.SignalR.Helpers
+namespace gAPI.AutoHub.Helpers
 {
     public class TypeCollector
     {

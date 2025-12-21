@@ -1,11 +1,11 @@
-﻿using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.Enums;
-using gAPI.AutoClient.Helpers;
+﻿using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.Enums;
+using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoClient.ServiceModels
+namespace gAPI.AutoApiClient.ServiceModels
 {
     internal class InterfaceMethod
     {

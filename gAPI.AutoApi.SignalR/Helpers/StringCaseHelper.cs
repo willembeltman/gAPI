@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.AutoApi.SignalR.Helpers
+namespace gAPI.AutoHub.Helpers
 {
     internal static class StringCaseHelper
     {

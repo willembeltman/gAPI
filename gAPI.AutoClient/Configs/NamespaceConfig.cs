@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoClient.Configs
+﻿namespace gAPI.AutoApiClient.Configs
 {
     internal class NamespaceConfig
     {

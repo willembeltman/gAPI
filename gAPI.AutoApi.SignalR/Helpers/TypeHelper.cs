@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.SignalR.Helpers
+namespace gAPI.AutoHub.Helpers
 {
     internal class TypeHelper
     {
@@ -159,7 +159,7 @@ namespace gAPI.AutoApi.SignalR.Helpers
 //using Microsoft.CodeAnalysis;
 //using System.Linq;
 
-//namespace gAPI.AutoApi.SignalR.Models
+//namespace gAPI.AutoHub.Models
 //{
 //    internal class TypeHelper
 //    {

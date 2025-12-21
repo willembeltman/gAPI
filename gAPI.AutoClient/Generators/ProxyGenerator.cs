@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.ServiceModels;
+﻿using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.ServiceModels;
 using System.Linq;
 
-namespace gAPI.AutoClient.Generators
+namespace gAPI.AutoApiClient.Generators
 {
     internal class ClientGenerator : BaseGenerator
     {

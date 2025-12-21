@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoClient.SignalR.Configs
+﻿namespace gAPI.AutoHubClient.Configs
 {
     internal class NamespaceConfig
     {

@@ -1,6 +1,6 @@
-﻿using gAPI.AutoClient.SignalR.Models;
+﻿using gAPI.AutoHubClient.Models;
 
-namespace gAPI.AutoClient.SignalR.Generators
+namespace gAPI.AutoHubClient.Generators
 {
     internal class SignalRHubGenerator : BaseGenerator
     {

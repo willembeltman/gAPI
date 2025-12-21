@@ -1,8 +1,8 @@
-﻿using gAPI.AutoApi.SignalR.Helpers;
+﻿using gAPI.AutoHub.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoApi.SignalR.Models
+namespace gAPI.AutoHub.Models
 {
     internal class DtoProperty
     {

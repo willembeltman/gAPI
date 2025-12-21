@@ -1,8 +1,8 @@
-﻿using gAPI.AutoClient.SignalR.Models;
+﻿using gAPI.AutoHubClient.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.Generators
+namespace gAPI.AutoHubClient.Generators
 {
 
     internal class BaseGenerator : SharedReference

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoClient.ServiceModels
+namespace gAPI.AutoApiClient.ServiceModels
 {
     internal class Client
     {

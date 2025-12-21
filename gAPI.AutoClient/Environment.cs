@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoClient
+﻿namespace gAPI.AutoApiClient
 {
     internal static class Environment
     {

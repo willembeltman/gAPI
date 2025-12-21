@@ -1,6 +1,6 @@
-﻿using gAPI.AutoClient.Configs;
+﻿using gAPI.AutoApiClient.Configs;
 
-namespace gAPI.AutoClient.Generators
+namespace gAPI.AutoApiClient.Generators
 {
     internal class ToFormFileAsyncExtentionGenerator : BaseGenerator
     {

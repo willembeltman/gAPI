@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.Generators
+namespace gAPI.AutoHubClient.Generators
 {
     internal class SignalRContextGenerator : BaseGenerator
     {

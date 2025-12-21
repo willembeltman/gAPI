@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System;
 
-namespace gAPI.AutoClient.SignalR.Generators
+namespace gAPI.AutoHubClient.Generators
 {
     internal class ClientHandlerContextGenerator : BaseGenerator
     {

@@ -1,12 +1,12 @@
-﻿using gAPI.AutoClient.SignalR.Configs;
-using gAPI.AutoClient.SignalR.Generators;
+﻿using gAPI.AutoHubClient.Configs;
+using gAPI.AutoHubClient.Generators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoClient.SignalR
+namespace gAPI.AutoHubClient
 {
     internal class SignalRHostGenerator
     {

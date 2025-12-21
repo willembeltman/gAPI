@@ -1,10 +1,10 @@
-﻿using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.Helpers;
+﻿using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoClient.ServiceModels
+namespace gAPI.AutoApiClient.ServiceModels
 {
     internal class Dto
     {

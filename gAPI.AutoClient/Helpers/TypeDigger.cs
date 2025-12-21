@@ -1,9 +1,9 @@
-﻿using gAPI.AutoClient.Contexts;
-using gAPI.AutoClient.ServiceModels;
+﻿using gAPI.AutoApiClient.Contexts;
+using gAPI.AutoApiClient.ServiceModels;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.Helpers
+namespace gAPI.AutoApiClient.Helpers
 {
     internal class TypeDigger
     {

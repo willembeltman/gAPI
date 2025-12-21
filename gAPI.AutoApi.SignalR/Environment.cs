@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoApi.SignalR
+﻿namespace gAPI.AutoHub
 {
     internal static class Environment
     {

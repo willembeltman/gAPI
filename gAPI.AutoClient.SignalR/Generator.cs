@@ -1,4 +1,4 @@
-﻿using gAPI.AutoClient.SignalR.Configs;
+﻿using gAPI.AutoHubClient.Configs;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoClient.SignalR
+namespace gAPI.AutoHubClient
 {
     [Generator]
     public class Generator : IIncrementalGenerator
