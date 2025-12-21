@@ -11,5 +11,7 @@ namespace gAPI.Interfaces
         /// <param name="scopeIdentifier"></param>
         /// <returns></returns>
         Task<bool> InitializeAsync(Guid scopeIdentifier, string? bearerToken = null);
+
+        Guid? ScopeIdentifier { get; }
     }
 }

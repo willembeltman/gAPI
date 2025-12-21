@@ -1,0 +1,18 @@
+{
+  // Used for detecting dtos, enums and services, give the start name
+  // of the namespaces that contain all your dtos, enums and services
+  "BaseNamespaces": [
+    "BSD"
+  ],
+  // Where / in what namespace should we store the virtual controllers?
+  "Controllers_Destination": {
+    "Directory": "Controllers",
+    "Namespace": "BSD.Api.Controllers"
+  },
+  // Where / in what namespace should we store your virtual 
+  // AddAutoApi.SignalRServices() extention?
+  "AddAutoApi.SignalRServices_Destination": {
+    "Directory": "Services",
+    "Namespace": "BSD.Business.Services"
+  }
+}

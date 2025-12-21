@@ -3,6 +3,7 @@ using gAPI.AutoComponents.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,12 +34,12 @@ namespace gAPI.AutoComponents
                     return;
                 }
 
-                //#if DEBUG
-                //                if (!Debugger.IsAttached)
-                //                {
-                //                    Debugger.Launch(); // Triggert dialoog om te attachen
-                //                }
-                //#endif
+//#if DEBUG
+//                if (!Debugger.IsAttached)
+//                {
+//                    Debugger.Launch(); // Triggert dialoog om te attachen
+//                }
+//#endif
 
                 try
                 {
@@ -51,6 +52,7 @@ namespace gAPI.AutoComponents
                 catch (Exception ex)
                 {
                     ShowError(ex.ToString(), spc);
+                    throw;
                 }
             });
         }

@@ -1,8 +1,8 @@
-﻿using gAPI.AutoApi.Helpers;
-using gAPI.AutoApi.Models;
+﻿using gAPI.AutoApi.SignalR.Helpers;
+using gAPI.AutoApi.SignalR.Models;
 using System.Linq;
 
-namespace gAPI.AutoApi.Generators
+namespace gAPI.AutoApi.SignalR.Generators
 {
     internal class ControllerGenerator : BaseGenerator
     {
@@ -173,27 +173,12 @@ namespace gAPI.AutoApi.Generators
                 code += $"    {attr}" + Environment.NewLine;
                 if (method.IsAsync)
                 {
-                    if (method.ResponseType.UnderlayingTypes.Length == 0)
-                    {
-                        code += $"    public async Task<ActionResult> {method.Name}({methodSignature})" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        code += $"    public async Task<ActionResult<{method.ResponseType.UnderlayingTypes[0].Name}>> {method.Name}({methodSignature})" + Environment.NewLine;
-                    }
+                    code += $"    public async Task<ActionResult<{method.ResponseType.UnderlayingTypes[0].Name}>> {method.Name}({methodSignature})" + Environment.NewLine;
                 }
                 else
                 {
-                    if (method.ResponseType.Name == "void")
-                    {
-                        code += $"    public async Task<ActionResult> {method.Name}({methodSignature})" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        code += $"    public async Task<ActionResult<{method.ResponseType.Name}>> {method.Name}({methodSignature})" + Environment.NewLine;
-                    }
+                    code += $"    public async Task<ActionResult<{method.ResponseType.Name}>> {method.Name}({methodSignature})" + Environment.NewLine;
                 }
-
                 code += $"    {{" + Environment.NewLine;
                 code += $"        if (!ModelState.IsValid) return BadRequest(ModelState);" + Environment.NewLine;
 
@@ -203,29 +188,9 @@ namespace gAPI.AutoApi.Generators
                     code += $"        await serverAuthenticationService.InitializeAsync(scopeIdentifier);" + Environment.NewLine;
 
                 if (method.IsAsync)
-                {
-                    if (method.ResponseType.UnderlayingTypes.Length == 0)
-                    {
-                        code += $"        await {Service.Name.ToLower()}.{method.Name}({methodCall});" + Environment.NewLine;
-                        code += $"        return Ok();" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        code += $"        return Ok(await {Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
-                    }
-                }
+                    code += $"        return Ok(await {Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
                 else
-                {
-                    if (method.ResponseType.Name == "void")
-                    {
-                        code += $"        {Service.Name.ToLower()}.{method.Name}({methodCall});" + Environment.NewLine;
-                        code += $"        return Ok();" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        code += $"        return Ok({Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
-                    }
-                }
+                    code += $"        return Ok({Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
 
                 code += $"    }}" + Environment.NewLine;
             }

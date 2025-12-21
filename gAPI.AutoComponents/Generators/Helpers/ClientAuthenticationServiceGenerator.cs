@@ -63,7 +63,7 @@ namespace {Namespace}
         public event {StateChangedHandler.Name}? OnStateHasChanged;
 
         protected virtual HttpClient HttpClient {{ get; }}
-        protected virtual Guid ScopeIdentifier {{ get; }} 
+        public virtual Guid ScopeIdentifier {{ get; }} 
 
         protected virtual {State.Name}? State {{ get; set; }}
         protected virtual DateTime? LastChecked {{ get; set; }}

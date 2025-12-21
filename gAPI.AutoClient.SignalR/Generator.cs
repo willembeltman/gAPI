@@ -1,14 +1,13 @@
-﻿using gAPI.AutoClient.Configs;
-using gAPI.AutoClient.Contexts;
+﻿using gAPI.AutoClient.SignalR.Configs;
+using gAPI.AutoClient.SignalR.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoClient
+namespace gAPI.AutoClient.SignalR
 {
     [Generator]
     public class Generator : IIncrementalGenerator
@@ -34,12 +33,12 @@ namespace gAPI.AutoClient
                     return;
                 }
 
-//#if DEBUG
-//                if (!Debugger.IsAttached)
-//                {
-//                    Debugger.Launch(); // Triggert dialoog om te attachen
-//                }
-//#endif
+                //#if DEBUG
+                //                if (!Debugger.IsAttached)
+                //                {
+                //                    Debugger.Launch(); // Triggert dialoog om te attachen
+                //                }
+                //#endif
 
                 var config = ClientConfigParser.Parse(configText);
                 var dataModel = new ServiceContext(compilation, config);
@@ -70,7 +69,7 @@ namespace gAPI.AutoClient
         //            }
 
         //            var sb = $@"
-        //namespace gAPI.AutoClient
+        //namespace gAPI.AutoClient.SignalR
         //{{
         //    internal static class AccessedTypes
         //    {{

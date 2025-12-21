@@ -28,7 +28,7 @@ namespace gAPI.AutoComponents.Contexts
             foreach (var @interface in Interfaces.Where(a => a.Client == null))
             {
                 throw new InvalidOperationException(
-                    $"No implementation of the service interface `{@interface.Name}` was found. " +
+                    $"No implementation of the service interface a`{@interface.FullName}` was found. " +
                     "This usually means your project does not reference the assembly containing the generated client, " +
                     "the client was not generated correctly, or no implementation exists " +
                     "(why are you using gAPI.AutoComponents without gAPI.AutoClient? but anyways). " +
