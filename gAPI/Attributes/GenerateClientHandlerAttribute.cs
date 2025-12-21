@@ -2,7 +2,7 @@
 
 namespace gAPI.Attributes
 {
-    public class GenerateClientHandlerAttribute : Attribute
+    public class GenerateHubAttribute : Attribute
     {
     }
 }

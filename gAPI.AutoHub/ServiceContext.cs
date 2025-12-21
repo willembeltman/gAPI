@@ -17,7 +17,7 @@ namespace gAPI.AutoHub
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateClientHandlerAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateHubAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 

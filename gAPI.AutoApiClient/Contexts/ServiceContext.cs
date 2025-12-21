@@ -17,7 +17,7 @@ namespace gAPI.AutoApiClient.Contexts
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateApiAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 

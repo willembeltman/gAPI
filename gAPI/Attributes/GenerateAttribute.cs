@@ -2,7 +2,7 @@
 
 namespace gAPI.Attributes
 {
-    public class GenerateAttribute : Attribute
+    public class GenerateApiAttribute : Attribute
     {
     }
 }

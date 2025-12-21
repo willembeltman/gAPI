@@ -19,7 +19,7 @@ namespace gAPI.CodeGen.Frontend.Contexts
             var interfaceTypes = allTypes
                 .Where(t =>
                     t.IsInterface &&
-                    t.GetCustomAttributes(typeof(GenerateAttribute), inherit: true).Length > 0
+                    t.GetCustomAttributes(typeof(GenerateApiAttribute), inherit: true).Length > 0
                 )
                 .ToArray();
 

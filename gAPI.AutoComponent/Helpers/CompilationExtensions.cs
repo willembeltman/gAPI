@@ -10,10 +10,10 @@ namespace gAPI.AutoComponent.Helpers
         public static bool HasAttribute(this INamedTypeSymbol namedTypeSymbol, string fullAttributeName)
         {
             var attributes = namedTypeSymbol.GetAttributes();
-            var hasGenerateAttribute = attributes.Any(attr =>
+            var hasGenerateApiAttribute = attributes.Any(attr =>
                 attr.AttributeClass?.ToDisplayString() == fullAttributeName // volledig gekwalificeerde naam (optioneel)
             );
-            return hasGenerateAttribute;
+            return hasGenerateApiAttribute;
         }
         public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol @this)
         {
