@@ -1,0 +1,113 @@
+﻿using System.Linq;
+
+namespace gAPI.AutoHubClient.Generators
+{
+    internal class SignalRConnectionGenerator : BaseGenerator
+    {
+        internal SignalRConnectionGenerator(
+            ServiceContext dataModel,
+            ISignalRConnectionGenerator iSignalRConnection)
+        {
+            DataModel = dataModel;
+            ISignalRConnection = iSignalRConnection;
+
+            Directory = dataModel.Config.HubClients_Destination.Directory;
+            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+
+            Name = "SignalRConnection";
+            FileName = $"{Name}.g.cs";
+        }
+
+        public ServiceContext DataModel { get; }
+        public ISignalRConnectionGenerator ISignalRConnection { get; }
+
+        public void GenerateCode()
+        {
+            Reg("Microsoft.AspNetCore.SignalR.Client");
+            Reg(ISignalRConnection);
+            var propertiesHeader = string.Join(Environment.NewLine, DataModel.Interfaces
+                .Select(i =>
+                {
+                    Reg(i);
+                    return @$"
+    private readonly List<{i.Name}> {i.ApiName}s = [];";
+                }));
+
+            var hookups = string.Join(Environment.NewLine, DataModel.Interfaces
+                .Select(i =>
+                {
+                    Reg(i);
+                    return string.Join(Environment.NewLine, i.Methods
+                        .Select(m =>
+                        {
+                            var arguments = string.Join(", ", m.Arguments.Select(p => p.ParameterType.Name));
+                            var arguments2 = string.Join(", ", m.Arguments.Select(p => p.Name));
+                            return @$"
+        Connection.On<{arguments}> (""{i.ApiName}.{m.Name}"", async ({arguments2}) =>
+        {{
+            foreach (var item in {i.ApiName}s)
+            {{
+                await item.{m.Name}({arguments2});
+            }}
+        }});";
+                        }));
+                }));
+
+            var properties = string.Join(Environment.NewLine, DataModel.Interfaces
+                .Select(i =>
+                {
+                    Reg(i);
+                    return @$"
+    public async Task RegisterEventHandlerAsync({i.Name} implementation)
+    {{
+        {i.ApiName}s.Add(implementation);
+        await StartAsync();
+    }}
+    public void UnRegisterEventHandlerAsync({i.Name} implementation)
+    {{
+        {i.ApiName}s.Remove(implementation);
+    }}";
+                }));
+
+            Code = @$"{GetNamespacesCode()}#nullable enable
+
+namespace {Namespace};
+
+public class {Name} : {ISignalRConnection.Name}
+{{
+    private bool Started;
+    private readonly HubConnection Connection;
+    private readonly gAPI.Interfaces.IClientAuthenticationService ClientAuthenticationService;{propertiesHeader}
+
+    public SignalRConnection(
+        Uri baseUrl, 
+        gAPI.Interfaces.IClientAuthenticationService clientAuthenticationService)
+    {{
+        var url = $""{{baseUrl}}hubs/signalrhub"";
+        Connection = new HubConnectionBuilder()
+            .WithUrl(url)
+            .WithAutomaticReconnect()
+            .Build();
+        ClientAuthenticationService = clientAuthenticationService;
+{hookups}
+    }}
+
+    private async Task StartAsync()
+    {{
+        if (!Started)
+        {{
+            await Connection.StartAsync();
+            Started = true;
+        }}
+
+        await Connection.InvokeAsync(""InitializeAsync"", ClientAuthenticationService.ScopeIdentifier);
+    }}{properties}
+
+    public async ValueTask DisposeAsync()
+    {{
+        await Connection.DisposeAsync();
+    }}
+}}";
+        }
+    }
+}

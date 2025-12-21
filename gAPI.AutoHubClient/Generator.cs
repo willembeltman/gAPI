@@ -16,45 +16,46 @@ namespace gAPI.AutoHubClient
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-                var configFile = context.AdditionalTextsProvider
-                    .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohubclient.json", StringComparison.OrdinalIgnoreCase))
-                    .Select((file, ct) => file.GetText(ct)?.ToString())
-                    .Collect()
-                    .Select((configs, _) => configs.FirstOrDefault()); // string?
+            var configFile = context.AdditionalTextsProvider
+                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohubclient.json", StringComparison.OrdinalIgnoreCase))
+                .Select((file, ct) => file.GetText(ct)?.ToString())
+                .Collect()
+                .Select((configs, _) => configs.FirstOrDefault()); // string?
 
-                var combined = context.CompilationProvider.Combine(configFile);
+            var combined = context.CompilationProvider.Combine(configFile);
 
-                context.RegisterSourceOutput(combined, (spc, tuple) =>
+            context.RegisterSourceOutput(combined, (spc, tuple) =>
+            {
+                var (compilation, configText) = tuple;
+
+                CurrentSpc = spc;
+
+                if (string.IsNullOrWhiteSpace(configText))
                 {
-                    var (compilation, configText) = tuple;
-
-                    CurrentSpc = spc;
-
-                    if (string.IsNullOrWhiteSpace(configText))
-                    {
-                        ShowError($"#error Config parse error: Config file is empty", spc);
-                        return;
-                    }
+                    ShowError($"#error Config parse error: Config file is empty", spc);
+                    return;
+                }
 
 //#if DEBUG
-//                    if (!Debugger.IsAttached)
-//                    {
-//                        Debugger.Launch(); // Triggert dialoog om te attachen
-//                    }
+//                if (!Debugger.IsAttached)
+//                {
+//                    Debugger.Launch(); // Triggert dialoog om te attachen
+//                }
 //#endif
-                    try
-                    {
-                        var config = ClientConfigParser.Parse(configText);
-                        var dataModel = new ServiceContext(compilation, config);
-                        SignalRHostGenerator.Generate(dataModel, spc);
-                    }
-                    catch (Exception ex)
-                    {
-                        ShowError(ex.ToString(), spc);
-                        throw;
-                    }
 
-                });
+                try
+                {
+                    var config = ClientConfigParser.Parse(configText);
+                    var dataModel = new ServiceContext(compilation, config);
+                    SignalRHostGenerator.Generate(dataModel, spc);
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex.ToString(), spc);
+                    throw;
+                }
+
+            });
         }
 
         public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)

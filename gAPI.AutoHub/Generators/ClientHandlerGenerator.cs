@@ -1,8 +1,8 @@
-﻿using gAPI.AutoHubClient.Models;
+﻿using gAPI.AutoHub.Models;
 using System.Linq;
 using System;
 
-namespace gAPI.AutoHubClient.Generators
+namespace gAPI.AutoHub.Generators
 {
     internal class ClientHandlerGenerator : BaseGenerator
     {
@@ -11,8 +11,8 @@ namespace gAPI.AutoHubClient.Generators
             DataModel = dataModel;
             Interface = @interface;
 
-            Directory = dataModel.Config.HubClients_Destination.Directory;
-            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+            Directory = dataModel.Config.Hubs_Destination.Directory;
+            Namespace = dataModel.Config.Hubs_Destination.Namespace;
 
             Name = Interface.ApiName + "ClientHandler";
             FileName = $"{Name}.g.cs";
@@ -76,13 +76,13 @@ public class {Name}(
                 if (method.IsAsync)
                 {
                     code += $"    public async Task {method.Name}({methodSignature})" + Environment.NewLine;
-                    code += $"        => await clientProxy.SendAsync(nameof({method.Name}), {methodCall});" + Environment.NewLine;
+                    code += $"        => await clientProxy.SendAsync(\"{Interface.ApiName}.{method.Name}\", {methodCall});" + Environment.NewLine;
                 }
                 else
                 {
                     code += $"    #warning For better performance please change the method `{Interface.Name}.{method.Name}({methodSignature})` to be async." + Environment.NewLine;
                     code += $"    public void {method.Name}({methodSignature})" + Environment.NewLine;
-                    code += $"        => clientProxy.SendAsync(nameof({method.Name}), {methodCall}).Result;" + Environment.NewLine;
+                    code += $"        => clientProxy.SendAsync(\"{Interface.ApiName}.{method.Name}\", {methodCall}).Result;" + Environment.NewLine;
                 }
             }
 

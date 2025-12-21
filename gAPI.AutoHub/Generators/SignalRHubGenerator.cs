@@ -1,6 +1,6 @@
-﻿using gAPI.AutoHubClient.Models;
+﻿using gAPI.AutoHub.Models;
 
-namespace gAPI.AutoHubClient.Generators
+namespace gAPI.AutoHub.Generators
 {
     internal class SignalRHubGenerator : BaseGenerator
     {
@@ -8,8 +8,8 @@ namespace gAPI.AutoHubClient.Generators
         {
             DataModel = dataModel;
 
-            Directory = dataModel.Config.HubClients_Destination.Directory;
-            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+            Directory = dataModel.Config.Hubs_Destination.Directory;
+            Namespace = dataModel.Config.Hubs_Destination.Namespace;
 
             Name = "SignalRHub";
             FileName = $"{Name}.g.cs";
@@ -24,7 +24,7 @@ namespace gAPI.AutoHubClient.Generators
 
 namespace {Namespace};
 
-public class {Name}(gAPI.Interfaces.IClientAuthenticationService authenticationService) : Hub
+public class {Name}(gAPI.Interfaces.IServerAuthenticationService authenticationService) : Hub
 {{
     List<string> UserIds = [];
 
@@ -34,7 +34,7 @@ public class {Name}(gAPI.Interfaces.IClientAuthenticationService authenticationS
         await base.OnConnectedAsync();
     }}
 
-    public async Task SetScopeIdentifier(Guid scopeIdentifier)
+    public async Task InitializeAsync(Guid scopeIdentifier)
     {{
         await authenticationService.InitializeAsync(scopeIdentifier);
         var userId = await authenticationService.GetUserId();

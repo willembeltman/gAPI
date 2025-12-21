@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.Test.EntityFrameworkDi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.Test.Shared", "gAPI.Test.Shared\gAPI.Test.Shared.csproj", "{8B6CA604-510E-4ECB-B64B-671169EBB836}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.AutoComponents", "gAPI.AutoComponents\gAPI.AutoComponents.csproj", "{A8CB3677-F831-8648-0D43-0FC8003F912B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.AutoComponents", "gAPI.AutoComponent\gAPI.AutoComponents.csproj", "{A8CB3677-F831-8648-0D43-0FC8003F912B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.Test.Storage.Server", "gAPI.Test.Storage.Server\gAPI.Test.Storage.Server.csproj", "{81EA9914-8519-A0BA-2A7D-C1A17074A305}"
 EndProject
