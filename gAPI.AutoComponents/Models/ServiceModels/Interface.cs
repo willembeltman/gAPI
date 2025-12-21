@@ -1,11 +1,11 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Models.ServiceModels
+namespace gAPI.AutoComponent.Models.ServiceModels
 {
     public class Interface : ISharedReference
     {

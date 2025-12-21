@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace gAPI.AutoComponents.Interfaces;
+namespace gAPI.AutoComponent.Interfaces;
 
 public interface ICrudlType : ISharedReference
 {

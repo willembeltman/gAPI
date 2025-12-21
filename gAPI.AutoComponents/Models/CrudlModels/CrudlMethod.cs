@@ -1,11 +1,11 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Enums;
-using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Interfaces;
-using gAPI.AutoComponents.Models.ServiceModels;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Enums;
+using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models.ServiceModels;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Models.CrudlModels
+namespace gAPI.AutoComponent.Models.CrudlModels
 {
     public class CrudlMethod : ICrudlMethod
     {

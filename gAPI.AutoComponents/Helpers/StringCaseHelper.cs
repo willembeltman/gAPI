@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.AutoComponents.Helpers
+namespace gAPI.AutoComponent.Helpers
 {
     public static class StringCaseHelper
     {

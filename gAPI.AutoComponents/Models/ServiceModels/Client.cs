@@ -1,7 +1,7 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoComponents.Models.ServiceModels
+namespace gAPI.AutoComponent.Models.ServiceModels
 {
     public class Client : ISharedReference
     {

@@ -1,7 +1,7 @@
-﻿using gAPI.AutoComponents.Interfaces;
-using gAPI.AutoComponents.SimpleRazorCompiler;
+﻿using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.SimpleRazorCompiler;
 
-namespace gAPI.AutoComponents.Generators.Components;
+namespace gAPI.AutoComponent.Generators.Components;
 
 public class AutoGridEditGenerator : BaseGenerator
 {

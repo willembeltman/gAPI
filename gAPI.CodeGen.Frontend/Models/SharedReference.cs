@@ -1,4 +1,4 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 
 namespace gAPI.CodeGen.Frontend.Models
 {

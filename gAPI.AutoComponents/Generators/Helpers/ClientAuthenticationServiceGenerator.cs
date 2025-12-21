@@ -1,6 +1,6 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 
-namespace gAPI.AutoComponents.Generators.Helpers
+namespace gAPI.AutoComponent.Generators.Helpers
 {
     internal class ClientAuthenticationServiceGenerator : BaseGenerator
     {

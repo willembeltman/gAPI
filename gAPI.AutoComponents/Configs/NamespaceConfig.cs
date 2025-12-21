@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.Configs
+﻿namespace gAPI.AutoComponent.Configs
 {
     public class NamespaceConfig
     {

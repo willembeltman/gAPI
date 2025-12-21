@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System;
+using gAPI.AutoHub.Models;
 
 namespace gAPI.AutoHub.Generators
 {
@@ -8,11 +9,13 @@ namespace gAPI.AutoHub.Generators
         internal ClientHandlerContextGenerator(
             ServiceContext dataModel,
             SignalRHubGenerator signalRHub,
-            ClientHandlerGenerator clientHandler)
+            IClientHandlerContextGenerator iClientHandlerContext)
         {
             DataModel = dataModel;
             SignalRHub = signalRHub;
-            ClientHandler = clientHandler;
+            IClientHandlerContext = iClientHandlerContext;
+            ClientHandler = IClientHandlerContext.ClientHandler;
+            IClientHandler = ClientHandler.Interface; 
 
             Directory = dataModel.Config.Hubs_Destination.Directory;
             Namespace = dataModel.Config.Hubs_Destination.Namespace;
@@ -23,10 +26,14 @@ namespace gAPI.AutoHub.Generators
 
         public ServiceContext DataModel { get; }
         public SignalRHubGenerator SignalRHub { get; }
+        public IClientHandlerContextGenerator IClientHandlerContext { get; }
         public ClientHandlerGenerator ClientHandler { get; }
+        public Interface IClientHandler { get; }
 
         public void GenerateCode()
         {
+            Reg(IClientHandlerContext);
+            Reg(IClientHandler);
             Reg(ClientHandler);
             Reg("Microsoft.AspNetCore.SignalR");
             Code = @$"{GetNamespacesCode()}#nullable enable
@@ -35,10 +42,11 @@ namespace {Namespace};
 
 public class {Name}(
     IHubContext<SignalRHub> hubContext)
+    : {IClientHandlerContext.Name}
 {{
-    public {ClientHandler.Name} All
+    public {IClientHandler.Name} All
         => new {ClientHandler.Name}(hubContext.Clients.All);
-    public {ClientHandler.Name} ByUserId(object userId)
+    public {IClientHandler.Name} ByUserId(object userId)
         => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()));
 }}
 ";

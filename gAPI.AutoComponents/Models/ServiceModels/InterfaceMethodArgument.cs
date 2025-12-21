@@ -1,8 +1,8 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Helpers;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoComponents.Models.ServiceModels
+namespace gAPI.AutoComponent.Models.ServiceModels
 {
     public class InterfaceMethodArgument
     {

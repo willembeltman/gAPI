@@ -1,13 +1,13 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Enums;
-using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Interfaces;
-using gAPI.AutoComponents.Models.ServiceModels;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Enums;
+using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Models.CrudlModels
+namespace gAPI.AutoComponent.Models.CrudlModels
 {
     /// <summary>
     /// Een Crudl is een verzameling van methoden die CRUD (Create, Read, Update, Delete) operaties uitvoeren op een bepaald 

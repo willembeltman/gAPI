@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents
+﻿namespace gAPI.AutoComponent
 {
     public static class Environment
     {

@@ -1,9 +1,9 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Helpers
+namespace gAPI.AutoComponent.Helpers
 {
     public class TypeHelper : ITypeHelper
     {

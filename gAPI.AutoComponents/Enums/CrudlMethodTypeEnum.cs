@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.Enums
+﻿namespace gAPI.AutoComponent.Enums
 {
     public enum CrudlMethodTypeEnum
     {

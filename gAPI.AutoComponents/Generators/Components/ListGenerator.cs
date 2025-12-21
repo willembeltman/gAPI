@@ -1,8 +1,8 @@
-﻿using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Interfaces;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Generators.Components;
+namespace gAPI.AutoComponent.Generators.Components;
 
 public class ListGenerator : BaseGenerator
 {

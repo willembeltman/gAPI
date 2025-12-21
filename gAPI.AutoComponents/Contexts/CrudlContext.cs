@@ -1,10 +1,10 @@
-﻿using gAPI.AutoComponents.Enums;
-using gAPI.AutoComponents.Models.CrudlModels;
-using gAPI.AutoComponents.Models.PageModels;
+﻿using gAPI.AutoComponent.Enums;
+using gAPI.AutoComponent.Models.CrudlModels;
+using gAPI.AutoComponent.Models.PageModels;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Contexts
+namespace gAPI.AutoComponent.Contexts
 {
     public class CrudlContext
     {

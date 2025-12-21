@@ -17,7 +17,7 @@ namespace gAPI.AutoHub
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
                 var configFile = context.AdditionalTextsProvider
-                    .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
+                    .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohub.json", StringComparison.OrdinalIgnoreCase))
                     .Select((file, ct) => file.GetText(ct)?.ToString())
                     .Collect()
                     .Select((configs, _) => configs.FirstOrDefault()); // string?
@@ -46,7 +46,7 @@ namespace gAPI.AutoHub
                     {
                         var config = ServerConfigParser.Parse(configText);
                         var dataModel = new ServiceContext(compilation, config);
-                        var signalRGenerator = new SignalRHostGenerator(dataModel, spc);
+                        SignalRHostGenerator.Generate(dataModel, spc);
                     }
                     catch (Exception ex)
                     {

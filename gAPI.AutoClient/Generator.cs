@@ -16,7 +16,7 @@ namespace gAPI.AutoApiClient
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
+                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autoapiclient.json", StringComparison.OrdinalIgnoreCase))
                 .Select((file, ct) => file.GetText(ct)?.ToString())
                 .Collect()
                 .Select((configs, _) => configs.FirstOrDefault()); // string?

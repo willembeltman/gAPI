@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.Generators.Helpers
+﻿namespace gAPI.AutoComponent.Generators.Helpers
 {
     public class StateChangedHandlerGenerator : BaseGenerator
     {

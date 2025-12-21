@@ -3,7 +3,7 @@
 
     internal class AddAutoHubServicesGenerator : BaseGenerator
     {
-        internal AddAutoHubServicesGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, SignalRContextGenerator signalRContext)
+        internal AddAutoHubServicesGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
         {
             ServiceContext = dataModel;
             SignalRHub = signalRHub;
@@ -27,11 +27,12 @@
         internal void GenerateCode()
         {
             Reg("Microsoft.Extensions.DependencyInjection");
-            var propertiesCode = $"        services.AddScoped<SignalRContext>();\r\n";
-            foreach (var service in ClientHandlerContexts)
+            var propertiesCode = $"        services.AddScoped<ISignalRContext, SignalRContext>();\r\n";
+            foreach (var clientHandlerContext in ClientHandlerContexts)
             {
-                Reg(service.Namespace);
-                propertiesCode += $"        services.AddScoped<{service.Name}>();\r\n";
+                Reg(clientHandlerContext);
+                Reg(clientHandlerContext.IClientHandlerContext);
+                propertiesCode += $"        services.AddScoped<{clientHandlerContext.IClientHandlerContext.Name}, {clientHandlerContext.Name}>();\r\n";
             }
 
             Code = $@"{GetNamespacesCode()}namespace {Namespace};

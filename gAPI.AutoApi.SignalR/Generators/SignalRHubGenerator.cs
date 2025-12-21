@@ -24,7 +24,7 @@ namespace gAPI.AutoHub.Generators
 
 namespace {Namespace};
 
-public class SignalRHub(gAPI.Interfaces.IServerAuthenticationService authenticationService) : Hub
+public class {Name}(gAPI.Interfaces.IServerAuthenticationService authenticationService) : Hub
 {{
     List<string> UserIds = [];
 

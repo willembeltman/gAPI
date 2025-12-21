@@ -1,11 +1,11 @@
-﻿using gAPI.AutoComponents.Configs;
-using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Models.ServiceModels;
+﻿using gAPI.AutoComponent.Configs;
+using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Contexts
+namespace gAPI.AutoComponent.Contexts
 {
     public class ServiceContext
     {

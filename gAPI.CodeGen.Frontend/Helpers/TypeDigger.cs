@@ -1,4 +1,4 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 using Microsoft.CodeAnalysis;

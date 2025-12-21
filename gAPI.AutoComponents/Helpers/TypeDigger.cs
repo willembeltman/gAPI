@@ -1,10 +1,10 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Interfaces;
-using gAPI.AutoComponents.Models.ServiceModels;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Helpers
+namespace gAPI.AutoComponent.Helpers
 {
     public class TypeDigger : ITypeDigger
     {

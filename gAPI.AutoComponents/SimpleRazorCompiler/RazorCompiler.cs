@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace gAPI.AutoComponents.SimpleRazorCompiler;
+namespace gAPI.AutoComponent.SimpleRazorCompiler;
 
 public static class RazorCompiler
 {

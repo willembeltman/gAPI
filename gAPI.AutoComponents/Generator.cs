@@ -1,5 +1,5 @@
-﻿using gAPI.AutoComponents.Configs;
-using gAPI.AutoComponents.Contexts;
+﻿using gAPI.AutoComponent.Configs;
+using gAPI.AutoComponent.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoComponents
+namespace gAPI.AutoComponent
 {
     [Generator]
     public class Generator : IIncrementalGenerator
@@ -16,7 +16,7 @@ namespace gAPI.AutoComponents
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
+                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autocomponent.json", StringComparison.OrdinalIgnoreCase))
                 .Select((file, ct) => file.GetText(ct)?.ToString())
                 .Collect()
                 .Select((configs, _) => configs.FirstOrDefault()); // string?

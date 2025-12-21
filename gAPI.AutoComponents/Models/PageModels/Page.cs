@@ -1,8 +1,8 @@
-﻿using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Helpers;
-using gAPI.AutoComponents.Models.ServiceModels;
+﻿using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Models.ServiceModels;
 
-namespace gAPI.AutoComponents.Models.PageModels
+namespace gAPI.AutoComponent.Models.PageModels
 {
     public class Page
     {

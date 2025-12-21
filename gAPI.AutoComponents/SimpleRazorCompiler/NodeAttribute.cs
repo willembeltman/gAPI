@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.SimpleRazorCompiler;
+﻿namespace gAPI.AutoComponent.SimpleRazorCompiler;
 
 public class NodeAttribute
 {

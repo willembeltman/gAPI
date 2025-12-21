@@ -1,4 +1,4 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.CrudlsModels;
 

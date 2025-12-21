@@ -19,7 +19,7 @@ namespace gAPI.AutoApi
             try
             {
                 var configFile = context.AdditionalTextsProvider
-                    .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
+                    .Where(file => Path.GetFileName(file.Path).Equals("gapi.autoapi.json", StringComparison.OrdinalIgnoreCase))
                     .Select((file, ct) => file.GetText(ct)?.ToString())
                     .Collect()
                     .Select((configs, _) => configs.FirstOrDefault()); // string?

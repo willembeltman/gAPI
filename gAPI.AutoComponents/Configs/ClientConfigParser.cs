@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace gAPI.AutoComponents.Configs
+namespace gAPI.AutoComponent.Configs
 {
     public static class ClientConfigParser
     {

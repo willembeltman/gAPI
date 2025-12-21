@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoComponents.Models.ServiceModels
+namespace gAPI.AutoComponent.Models.ServiceModels
 {
     public class EnumChoice
     {

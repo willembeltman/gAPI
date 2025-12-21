@@ -3,45 +3,39 @@ using System;
 
 namespace gAPI.AutoHubClient.Generators
 {
-    internal class ClientHandlerContextGenerator : BaseGenerator
+    internal class IClientHandlerContextGenerator : BaseGenerator
     {
-        internal ClientHandlerContextGenerator(
+        internal IClientHandlerContextGenerator(
             ServiceContext dataModel,
             SignalRHubGenerator signalRHub,
-            IClientHandlerContextGenerator iClientHandlerContext)
+            ClientHandlerGenerator clientHandler)
         {
             DataModel = dataModel;
             SignalRHub = signalRHub;
-            IClientHandlerContext = iClientHandlerContext;
-            ClientHandler = IClientHandlerContext.ClientHandler;
+            ClientHandler = clientHandler;
 
             Directory = dataModel.Config.HubClients_Destination.Directory;
             Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
-            Name = ClientHandler.Interface.ApiName + "ClientHandlerContext";
+            Name = "I" + ClientHandler.Interface.ApiName + "ClientHandlerContext";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
         public SignalRHubGenerator SignalRHub { get; }
-        public IClientHandlerContextGenerator IClientHandlerContext { get; }
         public ClientHandlerGenerator ClientHandler { get; }
 
         public void GenerateCode()
         {
             Reg(ClientHandler);
-            Reg("Microsoft.AspNetCore.SignalR");
             Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
-public class {Name}(
-    IHubContext<SignalRHub> hubContext)
+public interface {Name}
 {{
-    public {ClientHandler.Name} All
-        => new {ClientHandler.Name}(hubContext.Clients.All);
-    public {ClientHandler.Name} ByUserId(object userId)
-        => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()));
+    {ClientHandler.Name} All {{ get; }}
+    {ClientHandler.Name} ByUserId(object userId);
 }}
 ";
         }

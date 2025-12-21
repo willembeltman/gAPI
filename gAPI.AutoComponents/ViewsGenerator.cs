@@ -1,13 +1,13 @@
-﻿using gAPI.AutoComponents.Configs;
-using gAPI.AutoComponents.Contexts;
-using gAPI.AutoComponents.Generators.Components;
-using gAPI.AutoComponents.Generators.Helpers;
+﻿using gAPI.AutoComponent.Configs;
+using gAPI.AutoComponent.Contexts;
+using gAPI.AutoComponent.Generators.Components;
+using gAPI.AutoComponent.Generators.Helpers;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoComponents
+namespace gAPI.AutoComponent
 {
     public class ViewsGenerator
     {

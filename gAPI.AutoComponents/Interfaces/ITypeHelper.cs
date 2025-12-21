@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.Interfaces;
+﻿namespace gAPI.AutoComponent.Interfaces;
 
 public interface ITypeHelper : ISharedReference
 {

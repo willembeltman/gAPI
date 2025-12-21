@@ -1,8 +1,8 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Generators;
+namespace gAPI.AutoComponent.Generators;
 
 public class BaseGenerator(string directory, string @namespace) : IBaseGenerator
 {

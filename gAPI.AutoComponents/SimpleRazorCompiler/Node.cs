@@ -1,9 +1,9 @@
-﻿using gAPI.AutoComponents.SimpleRazorCompiler.Enums;
+﻿using gAPI.AutoComponent.SimpleRazorCompiler.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponents.SimpleRazorCompiler;
+namespace gAPI.AutoComponent.SimpleRazorCompiler;
 
 public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
 {

@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponents.SimpleRazorCompiler.Enums;
+﻿namespace gAPI.AutoComponent.SimpleRazorCompiler.Enums;
 
 public enum NodeTypeEnum
 {

@@ -1,4 +1,4 @@
-﻿using gAPI.AutoComponents.Generators.Components;
+﻿using gAPI.AutoComponent.Generators.Components;
 using gAPI.CodeGen.Frontend.Configs;
 using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Generators;

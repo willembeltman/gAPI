@@ -1,7 +1,7 @@
-﻿using gAPI.AutoComponents.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using System.Linq;
 
-namespace gAPI.AutoComponents.Generators.Components;
+namespace gAPI.AutoComponent.Generators.Components;
 
 public class DetailsGenerator : BaseGenerator
 {
