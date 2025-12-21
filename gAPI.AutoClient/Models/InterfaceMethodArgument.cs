@@ -2,7 +2,7 @@
 using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoApiClient.ServiceModels
+namespace gAPI.AutoApiClient.Models
 {
     internal class InterfaceMethodArgument
     {

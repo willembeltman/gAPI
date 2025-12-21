@@ -1,4 +1,4 @@
-﻿using gAPI.AutoApiClient.ServiceModels;
+﻿using gAPI.AutoApiClient.Models;
 using System.Collections.Generic;
 using System.Linq;
 

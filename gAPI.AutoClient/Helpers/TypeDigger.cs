@@ -1,5 +1,5 @@
 ﻿using gAPI.AutoApiClient.Contexts;
-using gAPI.AutoApiClient.ServiceModels;
+using gAPI.AutoApiClient.Models;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 

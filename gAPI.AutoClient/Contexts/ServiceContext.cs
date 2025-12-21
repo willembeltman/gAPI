@@ -1,6 +1,6 @@
 ﻿using gAPI.AutoApiClient.Configs;
 using gAPI.AutoApiClient.Helpers;
-using gAPI.AutoApiClient.ServiceModels;
+using gAPI.AutoApiClient.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;

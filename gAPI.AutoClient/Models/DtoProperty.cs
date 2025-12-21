@@ -3,7 +3,7 @@ using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoApiClient.ServiceModels
+namespace gAPI.AutoApiClient.Models
 {
     internal class DtoProperty
     {

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApiClient.ServiceModels
+namespace gAPI.AutoApiClient.Models
 {
     internal class Dto
     {

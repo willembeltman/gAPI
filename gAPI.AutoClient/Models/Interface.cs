@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApiClient.ServiceModels
+namespace gAPI.AutoApiClient.Models
 {
     internal class Interface
     {
