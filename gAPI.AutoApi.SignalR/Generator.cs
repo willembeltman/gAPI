@@ -46,7 +46,7 @@ namespace gAPI.AutoApi.SignalR
                     {
                         var config = ServerConfigParser.Parse(configText);
                         var dataModel = new ServiceContext(compilation, config);
-                        var signalRGenerator = new SignalRGenerator(dataModel, spc);
+                        var signalRGenerator = new SignalRHostGenerator(dataModel, spc);
                     }
                     catch (Exception ex)
                     {

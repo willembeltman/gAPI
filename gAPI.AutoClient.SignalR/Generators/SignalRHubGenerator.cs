@@ -1,6 +1,6 @@
-﻿using gAPI.AutoApi.SignalR.Models;
+﻿using gAPI.AutoClient.SignalR.Models;
 
-namespace gAPI.AutoApi.SignalR.Generators
+namespace gAPI.AutoClient.SignalR.Generators
 {
     internal class SignalRHubGenerator : BaseGenerator
     {
@@ -8,8 +8,8 @@ namespace gAPI.AutoApi.SignalR.Generators
         {
             DataModel = dataModel;
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+            Directory = dataModel.Config.HubClients_Destination.Directory;
+            Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
             Name = "SignalRHub";
             FileName = $"{Name}.g.cs";
@@ -24,7 +24,7 @@ namespace gAPI.AutoApi.SignalR.Generators
 
 namespace {Namespace};
 
-public class SignalRHub(gAPI.Interfaces.IServerAuthenticationService authenticationService) : Hub
+public class SignalRHub(gAPI.Interfaces.IClientAuthenticationService authenticationService) : Hub
 {{
     List<string> UserIds = [];
 

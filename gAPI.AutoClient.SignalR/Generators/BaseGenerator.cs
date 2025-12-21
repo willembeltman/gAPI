@@ -1,18 +1,15 @@
-﻿using gAPI.AutoClient.SignalR.ServiceModels;
+﻿using gAPI.AutoClient.SignalR.Models;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoClient.SignalR.Generators
 {
 
-    internal class BaseGenerator
+    internal class BaseGenerator : SharedReference
     {
         public string Directory { get; protected set; }
         public string FileName { get; protected set; }
         public string Code { get; protected set; }
-        public string Name { get; protected set; }
-        public string Namespace { get; protected set; }
-        public string FullName => $"{Namespace}.{Name}";
         private List<string> Namespaces { get; set; } = new List<string>();
 
 

@@ -1,22 +1,22 @@
-﻿using gAPI.AutoClient.SignalR.Contexts;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 
 namespace gAPI.AutoClient.SignalR.Helpers
 {
     internal class TypeHelper
     {
-        public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false) // Hier komt hij dus binnen met long?, wat eigenlijk Nullable<T> is, met daarin een long.
+        public TypeHelper(ServiceContext dataModel, Type type) { }
+        public TypeHelper(ServiceContext dataModel, ITypeSymbol type, bool isNullable = false) // Hier komt hij dus binnen met long?, wat eigenlijk Nullable<T> is, met daarin een long.
         {
-            TypeSymbol = typeSymbol;
+            Type = type;
             DataModel = dataModel;
             IsNullable = isNullable;
 
             var nullable = "";
             var nulleblePrimitive = false;
-
             // Check of het een Nullable<T> is
-            while (typeSymbol.OriginalDefinition is INamedTypeSymbol named &&
+            while (type.OriginalDefinition is INamedTypeSymbol named &&
                    named.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
             {
                 if (named.TypeArguments[0].Name == "T")
@@ -27,18 +27,13 @@ namespace gAPI.AutoClient.SignalR.Helpers
                 else
                 {
                     nullable += "?";
-                    typeSymbol = named.TypeArguments[0];
+                    type = named.TypeArguments[0];
                 }
             }
 
             if (nulleblePrimitive)
             {
-                _Name = typeSymbol.ToDisplayString();
-
-                IsDateTime = _Name == "DateTime";
-                IsCheckbox = _Name == "bool" || _Name == "bool?";
-                IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
-
+                _Name = type.ToDisplayString();
                 UnderlayingTypes = new TypeHelper[0];
             }
             else
@@ -46,7 +41,7 @@ namespace gAPI.AutoClient.SignalR.Helpers
                 if (isNullable && nullable.Length == 0)
                     nullable += "?";
 
-                if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol array)
+                if (type.TypeKind == TypeKind.Array && type is IArrayTypeSymbol array)
                 {
                     IsArray = true;
                     _Name = "";
@@ -55,12 +50,12 @@ namespace gAPI.AutoClient.SignalR.Helpers
                 }
                 else
                 {
-                    _Name = typeSymbol.Name.Split('`').First();
+                    _Name = type.Name.Split('`').First();
                     _Name = GetSimpleCsTypeByName(_Name);
                     _NameEnd = nullable;
-                    Namespace = typeSymbol.ContainingNamespace?.ToDisplayString();
+                    _Namespace = type.ContainingNamespace?.ToDisplayString();
 
-                    if (typeSymbol is INamedTypeSymbol namedType)
+                    if (type is INamedTypeSymbol namedType)
                     {
                         IsGenericType = namedType.IsGenericType;
                         UnderlayingTypes = namedType.TypeArguments
@@ -69,11 +64,6 @@ namespace gAPI.AutoClient.SignalR.Helpers
                     }
                     else
                     {
-                        IsEnum = typeSymbol.TypeKind == TypeKind.Enum;
-                        IsDateTime = _Name == "DateTime";
-                        IsCheckbox = _Name == "bool" || _Name == "bool?";
-                        IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
-
                         IsGenericType = false;
                         UnderlayingTypes = new TypeHelper[0];
                     }
@@ -81,11 +71,11 @@ namespace gAPI.AutoClient.SignalR.Helpers
             }
         }
 
-        public ITypeSymbol TypeSymbol { get; }
+        internal ITypeSymbol Type { get; }
         public ServiceContext DataModel { get; }
         public bool IsNullable { get; }
 
-        public string Name
+        internal string Name
         {
             get
             {
@@ -97,7 +87,7 @@ namespace gAPI.AutoClient.SignalR.Helpers
             }
         }
 
-        public string FullName
+        internal string FullName
         {
             get
             {
@@ -108,40 +98,36 @@ namespace gAPI.AutoClient.SignalR.Helpers
             }
         }
 
-        public string[] Namespaces
+        internal string[] Namespaces
         {
             get
             {
-                if (Namespace == null)
+                if (_Namespace == null)
                 {
                     return UnderlayingTypes.SelectMany(a => a.Namespaces).ToArray();
                 }
 
                 if (!IsGenericType)
-                    return new[] { Namespace };
+                    return new[] { _Namespace };
 
                 var list = UnderlayingTypes.SelectMany(a => a.Namespaces).ToList();
-                list.Insert(0, Namespace);
+                list.Insert(0, _Namespace);
                 return list.ToArray();
             }
         }
 
-        public string _Name { get; }
-        public bool IsEnum { get; }
-        public bool IsDateTime { get; }
-        public bool IsCheckbox { get; }
-        public bool IsArray { get; }
+        internal string _Name { get; }
+        internal bool IsArray { get; }
 
         private readonly string _NameEnd;
 
-        public string Namespace { get; }
-        public string _FullName => $"{Namespace}.{_Name}";
-        public bool IsGenericType { get; }
+        internal string _Namespace { get; }
+        internal string _FullName => $"{_Namespace}.{_Name}";
+        internal bool IsGenericType { get; }
 
-        public TypeHelper[] UnderlayingTypes { get; }
-        public bool IsNumber { get; internal set; }
+        internal TypeHelper[] UnderlayingTypes { get; }
 
-        public static string GetSimpleCsTypeByName(string name)
+        internal static string GetSimpleCsTypeByName(string name)
         {
             switch (name)
             {
@@ -165,24 +151,6 @@ namespace gAPI.AutoClient.SignalR.Helpers
                     return name;
             }
         }
-
-
-        public override bool Equals(object obj) => obj is TypeHelper other && Equals(other);
-        public bool Equals(TypeHelper other) => FullName == other.FullName;
-        public static bool operator ==(TypeHelper left, TypeHelper right) => left.Equals(right);
-        public static bool operator !=(TypeHelper left, TypeHelper right) => !left.Equals(right);
-
-        public override int GetHashCode()
-        {
-            unchecked // voorkomt overflow exceptions
-            {
-                int hash = 17;
-                hash = hash * 23 + (FullName?.GetHashCode() ?? 0);
-                hash = hash * 23 + IsNullable.GetHashCode();
-                return hash;
-            }
-        }
-
     }
 }
 
@@ -191,11 +159,11 @@ namespace gAPI.AutoClient.SignalR.Helpers
 //using Microsoft.CodeAnalysis;
 //using System.Linq;
 
-//namespace gAPI.AutoApi.Models
+//namespace gAPI.AutoClient.SignalR.Models
 //{
-//    public class TypeHelper
+//    internal class TypeHelper
 //    {
-//        public TypeHelper(ITypeSymbol type, bool isNull = false)
+//        internal TypeHelper(ITypeSymbol type, bool isNull = false)
 //        {
 //            Type = type;
 //            IsNullable = isNull;
@@ -229,10 +197,10 @@ namespace gAPI.AutoClient.SignalR.Helpers
 //            }
 //        }
 
-//        public ITypeSymbol Type { get; }
-//        public bool IsNullable { get; }
+//        internal ITypeSymbol Type { get; }
+//        internal bool IsNullable { get; }
 
-//        public string Name
+//        internal string Name
 //        {
 //            get
 //            {
@@ -243,7 +211,7 @@ namespace gAPI.AutoClient.SignalR.Helpers
 //                return $"{_Name}{_NameEnd}";
 //            }
 //        }
-//        public string FullName
+//        internal string FullName
 //        {
 //            get
 //            {
@@ -253,7 +221,7 @@ namespace gAPI.AutoClient.SignalR.Helpers
 //                    return $"{_FullName}<{string.Join(",", UnderlayingTypes.Select(a => a.FullName))}>";
 //            }
 //        }
-//        public string[] Namespaces
+//        internal string[] Namespaces
 //        {
 //            get
 //            {
@@ -278,18 +246,18 @@ namespace gAPI.AutoClient.SignalR.Helpers
 //            }
 //        }
 
-//        public string _Name { get; }
-//        public bool IsArray { get; }
+//        internal string _Name { get; }
+//        internal bool IsArray { get; }
 
 //        private string _NameEnd;
 
-//        public string _Namespace { get; }
-//        public string _FullName => $"{_Namespace}.{_Name}";
-//        public bool IsGenericType { get; }
+//        internal string _Namespace { get; }
+//        internal string _FullName => $"{_Namespace}.{_Name}";
+//        internal bool IsGenericType { get; }
 
-//        public TypeHelper[] UnderlayingTypes { get; }
+//        internal TypeHelper[] UnderlayingTypes { get; }
 
-//        public static string GetSimpleCsTypeByName(string name)
+//        internal static string GetSimpleCsTypeByName(string name)
 //        {
 //            switch (name)
 //            {

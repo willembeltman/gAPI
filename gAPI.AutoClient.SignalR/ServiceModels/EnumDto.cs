@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.ServiceModels
+namespace gAPI.AutoClient.SignalR.Models
 {
     internal class EnumDto
     {

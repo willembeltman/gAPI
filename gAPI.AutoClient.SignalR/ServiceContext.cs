@@ -1,23 +1,23 @@
 ﻿using gAPI.AutoClient.SignalR.Configs;
 using gAPI.AutoClient.SignalR.Helpers;
-using gAPI.AutoClient.SignalR.ServiceModels;
+using gAPI.AutoClient.SignalR.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.Contexts
+namespace gAPI.AutoClient.SignalR
 {
     internal class ServiceContext
     {
         internal ServiceContext(Compilation compilation, ClientConfig config)
         {
-            Config = config ?? throw new Exception("ServerConfig cannot be null");
+            Config = config ?? throw new Exception("ClientConfig cannot be null");
 
             var allSymbols = compilation.GlobalNamespace.GetAllTypes();
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateClientHandlerAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 
@@ -48,25 +48,12 @@ namespace gAPI.AutoClient.SignalR.Contexts
             Dtos = collector.Dtos
                 .Select(namedTypeSymbol => new Dto(this, namedTypeSymbol))
                 .ToArray();
-
-            //State = allSymbols
-            //    .Where(t =>
-            //        t.TypeKind == TypeKind.Class &&
-            //        t.HasAttribute("gAPI.Attributes.IsStateDtoAttribute"))
-            //    .Select(a => new SharedReference(a))
-            //    .FirstOrDefault() ?? throw new InvalidOperationException(
-            //        "The `State` dto is missing or does not have the required " +
-            //        "`gAPI.Attributes.IsStateDtoAttribute`. " +
-            //        "Ensure your shared project defines a `State` dto and that it is annotated with " +
-            //        "`[IsStateDtoAttribute]`.");
-
         }
 
         public ClientConfig Config { get; }
         public Interface[] Interfaces { get; }
         public EnumDto[] Enums { get; }
         public Dto[] Dtos { get; }
-        //public SharedReference State { get; }
-
+        //public ClientHandler[] ClientHandlers { get; }
     }
 }

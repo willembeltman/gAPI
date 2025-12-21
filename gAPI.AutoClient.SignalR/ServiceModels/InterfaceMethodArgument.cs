@@ -1,8 +1,7 @@
-﻿using gAPI.AutoClient.SignalR.Contexts;
-using gAPI.AutoClient.SignalR.Helpers;
+﻿using gAPI.AutoClient.SignalR.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoClient.SignalR.ServiceModels
+namespace gAPI.AutoClient.SignalR.Models
 {
     internal class InterfaceMethodArgument
     {
@@ -18,9 +17,6 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
                 parameterSymbol.NullableAnnotation == NullableAnnotation.Annotated;
 
             IsIFormFile = ParameterSymbol.Type.Name == "IFormFile";
-            if (IsIFormFile)
-            {
-            }
             IsValueType = parameterSymbol.Type.IsValueType;
         }
 
@@ -47,7 +43,7 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
         {
             get
             {
-                _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.TypeSymbol, IsNullable);
+                _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.Type);
                 return _ParameterTypeRapport;
             }
         }

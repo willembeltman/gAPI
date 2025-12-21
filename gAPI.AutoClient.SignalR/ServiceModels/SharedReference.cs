@@ -1,19 +1,22 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoClient.SignalR.ServiceModels
+namespace gAPI.AutoClient.SignalR.Models
 {
     internal class SharedReference
     {
-        public SharedReference(ISymbol clientAuthenticationService)
+        public SharedReference()
         {
-            Symbol = clientAuthenticationService;
-            Name = clientAuthenticationService.Name;
-            Namespace = clientAuthenticationService.ContainingNamespace.ToDisplayString();
+
         }
 
-        public ISymbol Symbol { get; }
-        public string Name { get; }
-        public string Namespace { get; }
+        public SharedReference(INamedTypeSymbol a)
+        {
+            Name = a.Name;
+            Namespace = a.ContainingNamespace.ToDisplayString();
+        }
+
+        public string Name { get; set; }
+        public string Namespace { get; set; }
         public string FullName => $"{Namespace}.{Name}";
     }
 }

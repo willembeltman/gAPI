@@ -10,8 +10,8 @@
     "Namespace": "BSD.Api.Controllers"
   },
   // Where / in what namespace should we store your virtual 
-  // AddAutoApi.SignalRServices() extention?
-  "AddAutoApi.SignalRServices_Destination": {
+  // AddAutoClient.SignalRServices() extention?
+  "AddAutoClient.SignalRServices_Destination": {
     "Directory": "Services",
     "Namespace": "BSD.Business.Services"
   }

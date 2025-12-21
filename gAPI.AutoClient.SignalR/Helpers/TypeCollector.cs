@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using gAPI.AutoClient.SignalR.Configs;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,7 +9,8 @@ namespace gAPI.AutoClient.SignalR.Helpers
     {
         private readonly HashSet<ITypeSymbol> Seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         private readonly HashSet<ITypeSymbol> Added = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-        internal TypeCollector(Configs.ClientConfig config)
+
+        internal TypeCollector(ClientConfig config)
         {
             Config = config;
         }
@@ -16,7 +18,7 @@ namespace gAPI.AutoClient.SignalR.Helpers
         internal List<INamedTypeSymbol> Dtos { get; } = new List<INamedTypeSymbol>();
         internal List<INamedTypeSymbol> Enums { get; } = new List<INamedTypeSymbol>();
         //public List<INamedTypeSymbol> Services { get; } = new List<INamedTypeSymbol>();
-        internal Configs.ClientConfig Config { get; }
+        internal ClientConfig Config { get; }
 
         internal void Add(ITypeSymbol type)
         {

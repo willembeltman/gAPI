@@ -3,8 +3,8 @@
     internal class ClientConfig
     {
         public string[] BaseNamespaces { get; set; }
-        public NamespaceConfig Clients_Destination { get; set; }
-        public NamespaceConfig Helpers_Destination { get; set; }
-        //public NamespaceConfig Authentication_Destination { get; internal set; }
+
+        public NamespaceConfig HubClients_Destination { get; set; }
+        public NamespaceConfig AddAutoHubClientServices_Destination { get; set; }
     }
 }

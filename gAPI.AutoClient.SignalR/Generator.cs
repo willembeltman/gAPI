@@ -1,8 +1,8 @@
 ﻿using gAPI.AutoClient.SignalR.Configs;
-using gAPI.AutoClient.SignalR.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,42 +12,77 @@ namespace gAPI.AutoClient.SignalR
     [Generator]
     public class Generator : IIncrementalGenerator
     {
+        public SourceProductionContext CurrentSpc { get; private set; }
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
-                .Select((file, ct) => file.GetText(ct)?.ToString())
-                .Collect()
-                .Select((configs, _) => configs.FirstOrDefault()); // string?
+                var configFile = context.AdditionalTextsProvider
+                    .Where(file => Path.GetFileName(file.Path).Equals("gapisettings.json", StringComparison.OrdinalIgnoreCase))
+                    .Select((file, ct) => file.GetText(ct)?.ToString())
+                    .Collect()
+                    .Select((configs, _) => configs.FirstOrDefault()); // string?
 
-            var combined = context.CompilationProvider.Combine(configFile);
+                var combined = context.CompilationProvider.Combine(configFile);
 
-            context.RegisterSourceOutput(combined, (spc, tuple) =>
-            {
-                var (compilation, configText) = tuple;
-
-                if (string.IsNullOrWhiteSpace(configText))
+                context.RegisterSourceOutput(combined, (spc, tuple) =>
                 {
-                    spc.AddSource("Gapi_Error.g.cs", SourceText.From(
-                        $"// Config parse error: Config file is empty", Encoding.UTF8));
-                    return;
-                }
+                    var (compilation, configText) = tuple;
 
-                //#if DEBUG
-                //                if (!Debugger.IsAttached)
-                //                {
-                //                    Debugger.Launch(); // Triggert dialoog om te attachen
-                //                }
-                //#endif
+                    CurrentSpc = spc;
 
-                var config = ClientConfigParser.Parse(configText);
-                var dataModel = new ServiceContext(compilation, config);
-                var generatedDataModel = new ClientsGenerator(dataModel, spc);
-            });
+                    if (string.IsNullOrWhiteSpace(configText))
+                    {
+                        ShowError($"#error Config parse error: Config file is empty", spc);
+                        return;
+                    }
+
+//#if DEBUG
+//                    if (!Debugger.IsAttached)
+//                    {
+//                        Debugger.Launch(); // Triggert dialoog om te attachen
+//                    }
+//#endif
+                    try
+                    {
+                        var config = ClientConfigParser.Parse(configText);
+                        var dataModel = new ServiceContext(compilation, config);
+                        var signalRGenerator = new SignalRHostGenerator(dataModel, spc);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowError(ex.ToString(), spc);
+                        throw;
+                    }
+
+                });
         }
 
+        public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
+        {
+            //throw new Exception(errorMessage); // Helps while debugging
+            var sourceCode = $"#error gAPI AutoComponents has thrown an error: \\r\\n{errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+            CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        }
 
-        //        private static void CreateAccessFile(SourceProductionContext spc, DataModel dataModel)
+        //public void ShowError(Exception exception)
+        //{
+        //    ShowError(exception.Message);
+        //}
+
+        //public void ShowError(string errorMessage)
+        //{
+        //    //throw new Exception(errorMessage); // Helps while debugging
+        //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+        //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        //}
+
+        //public void ShowWarning(string warningMessage)
+        //{
+        //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+        //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        //}
+
+        //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
         //        {
         //            var sbEnums = new StringBuilder();
         //            var sbDtos = new StringBuilder();
@@ -61,19 +96,25 @@ namespace gAPI.AutoClient.SignalR
         //            {
         //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
         //            }
-
         //            var sbInterfaces = new StringBuilder();
+        //            var sbServices = new StringBuilder();
+
         //            foreach (var @enum in dataModel.Interfaces)
         //            {
         //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
         //            }
 
+        //            foreach (var dto in dataModel.ClientHandlers)
+        //            {
+        //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+        //            }
+
         //            var sb = $@"
-        //namespace gAPI.AutoClient.SignalR
+        //namespace GeneratorTypes
         //{{
-        //    internal static class AccessedTypes
+        //    internal static class AllControllers
         //    {{
-        //        internal static void ConsoleListAll()
+        //        internal static void ListAll()
         //        {{
         //            System.Console.WriteLine(""Enums:"");
         //{sbEnums}
@@ -81,12 +122,14 @@ namespace gAPI.AutoClient.SignalR
         //{sbDtos}
         //            System.Console.WriteLine(""Interfaces:"");
         //{sbInterfaces}
+        //            System.Console.WriteLine(""Services:"");
+        //{sbServices}
         //        }}
         //    }}
         //}}";
 
 
-        //            spc.AddSource("AccessedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         //        }
     }
 }

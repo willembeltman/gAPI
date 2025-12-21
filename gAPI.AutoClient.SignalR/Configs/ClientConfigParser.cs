@@ -11,9 +11,10 @@ namespace gAPI.AutoClient.SignalR.Configs
             return new ClientConfig
             {
                 BaseNamespaces = ParseStringList(json, nameof(ClientConfig.BaseNamespaces)),
-                Clients_Destination = ParseBlock(json, nameof(ClientConfig.Clients_Destination)),
-                Helpers_Destination = ParseBlock(json, nameof(ClientConfig.Helpers_Destination)),
-                //Authentication_Destination = ParseBlock(json, nameof(ClientConfig.Authentication_Destination)),
+                //ServiceInterfaceNamespaces = ParseStringList(json, nameof(ClientConfig.ServiceInterfaceNamespaces)),
+                HubClients_Destination = ParseBlock(json, nameof(ClientConfig.HubClients_Destination)),
+                AddAutoHubClientServices_Destination = ParseBlock(json, nameof(ClientConfig.AddAutoHubClientServices_Destination)),
+                //Interfaces = ParseBlock(json, nameof(ClientConfig.Interfaces))
             };
         }
 

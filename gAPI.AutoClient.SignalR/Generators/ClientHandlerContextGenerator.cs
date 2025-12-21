@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System;
 
-namespace gAPI.AutoApi.SignalR.Generators
+namespace gAPI.AutoClient.SignalR.Generators
 {
     internal class ClientHandlerContextGenerator : BaseGenerator
     {
@@ -14,8 +14,8 @@ namespace gAPI.AutoApi.SignalR.Generators
             SignalRHub = signalRHub;
             ClientHandler = clientHandler;
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+            Directory = dataModel.Config.HubClients_Destination.Directory;
+            Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
             Name = ClientHandler.Interface.ApiName + "ClientHandlerContext";
             FileName = $"{Name}.g.cs";

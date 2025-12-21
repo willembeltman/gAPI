@@ -1,10 +1,9 @@
-﻿using gAPI.AutoClient.SignalR.Contexts;
-using gAPI.AutoClient.SignalR.Helpers;
+﻿using gAPI.AutoClient.SignalR.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.ServiceModels
+namespace gAPI.AutoClient.SignalR.Models
 {
     internal class Interface
     {
@@ -18,13 +17,7 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
 
             ApiName = Name;
             ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-            var apiNameAttr = NamedTypeSymbol.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == "ApiNameAttribute");
-            if (apiNameAttr != null)
-            {
-                ApiName = apiNameAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? ApiName;
-            }
-            ApiName = ServiceNameHelper.RemoveServiceName(ApiName);
+            ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
 
             IsAuthorized = NamedTypeSymbol.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
@@ -40,12 +33,12 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
                 .Select(methodSymbol => new InterfaceMethod(dataModel, this, methodSymbol))
                 .ToArray();
 
-            Client = allSymbols
-                .Where(a =>
-                    a.TypeKind == TypeKind.Class &&
-                    a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
-                .Select(a => new Client(this, a))
-                .SingleOrDefault();
+            //ClientHandler = allSymbols
+            //    .Where(a =>
+            //        a.TypeKind == TypeKind.Class &&
+            //        a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
+            //    .Select(a => new ClientHandler(this, a))
+            //    .SingleOrDefault();
         }
 
         public INamedTypeSymbol NamedTypeSymbol { get; }
@@ -56,6 +49,6 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
         public bool IsAuthorized { get; }
         public bool IsHidden { get; }
         public InterfaceMethod[] Methods { get; }
-        public Client Client { get; }
+        //public ClientHandler ClientHandler { get; }
     }
 }

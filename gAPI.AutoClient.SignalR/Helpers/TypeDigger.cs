@@ -1,5 +1,4 @@
-﻿using gAPI.AutoClient.SignalR.Contexts;
-using gAPI.AutoClient.SignalR.ServiceModels;
+﻿using gAPI.AutoClient.SignalR.Models;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
@@ -7,20 +6,17 @@ namespace gAPI.AutoClient.SignalR.Helpers
 {
     internal class TypeDigger
     {
-        public TypeDigger(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
+        public TypeDigger(ServiceContext dataModel, ITypeSymbol type)
         {
-            StartTypeSymbol = typeSymbol;
-            StartType = new TypeHelper(dataModel, typeSymbol, isNullable);
+            StartType = type;
             DataModel = dataModel;
 
-            TypeSymbol = DigTillBase(typeSymbol);
-            Type = new TypeHelper(dataModel, TypeSymbol, isNullable);
+            Type = DigTillBase(type);
 
-            Name = TypeSymbol.Name;
-            FullName = TypeSymbol.ToDisplayString();
-            Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
-            IsValueType = TypeSymbol.IsValueType;
-            IsNullable = isNullable;
+            Name = Type.Name;
+            FullName = Type.ToDisplayString();
+            Namespace = Type.ContainingNamespace.ToDisplayString();
+            IsValueType = Type.IsValueType;
 
             (Dto, Enum) = FindDtoOrEnum(dataModel, FullName);
         }
@@ -129,15 +125,12 @@ namespace gAPI.AutoClient.SignalR.Helpers
 
         public Dto Dto { get; }
         public EnumDto Enum { get; }
-        public ITypeSymbol StartTypeSymbol { get; }
-        public TypeHelper StartType { get; }
+        public ITypeSymbol StartType { get; }
         public ServiceContext DataModel { get; }
-        public ITypeSymbol TypeSymbol { get; }
-        public TypeHelper Type { get; }
+        public ITypeSymbol Type { get; }
         public string Name { get; }
         public string FullName { get; }
         public string Namespace { get; }
         public bool IsValueType { get; }
-        public bool IsNullable { get; }
     }
 }

@@ -1,9 +1,8 @@
-﻿using gAPI.AutoClient.SignalR.Contexts;
-using gAPI.AutoClient.SignalR.Helpers;
+﻿using gAPI.AutoClient.SignalR.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoClient.SignalR.ServiceModels
+namespace gAPI.AutoClient.SignalR.Models
 {
     internal class DtoProperty
     {
@@ -38,12 +37,10 @@ namespace gAPI.AutoClient.SignalR.ServiceModels
         public bool IsUnique { get; }
         public bool IsKey { get; }
         public bool IsStorageFile { get; }
-
         TypeHelper _PropertyType { get; set; }
-        public TypeHelper Type => _PropertyType = _PropertyType ?? new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
+        public TypeHelper PropertyType => _PropertyType = _PropertyType ?? new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
 
         TypeDigger _TypeRapport { get; set; }
         public TypeDigger TypeRapport => _TypeRapport = _TypeRapport ?? new TypeDigger(DataModel, ResponseTypeSymbol);
-
     }
 }

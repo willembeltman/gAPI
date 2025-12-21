@@ -11,10 +11,8 @@ namespace gAPI.AutoApi.SignalR.Configs
             return new ServerConfig
             {
                 BaseNamespaces = ParseStringList(json, nameof(ServerConfig.BaseNamespaces)),
-                //ServiceInterfaceNamespaces = ParseStringList(json, nameof(ServerConfig.ServiceInterfaceNamespaces)),
-                Controllers_Destination = ParseBlock(json, nameof(ServerConfig.Controllers_Destination)),
-                AddAutoApiServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoApiServices_Destination)),
-                //Interfaces = ParseBlock(json, nameof(ServerConfig.Interfaces))
+                Hubs_Destination = ParseBlock(json, nameof(ServerConfig.Hubs_Destination)),
+                AddAutoHubServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoHubServices_Destination))
             };
         }
 
