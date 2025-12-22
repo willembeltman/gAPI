@@ -26,7 +26,7 @@ namespace gAPI.AutoApi
                 .ToArray();
 
             if (Interfaces.Any(a => a.Service == null))
-                throw new Exception("Not all [Generate] interfaces are implemented");
+                throw new Exception("Not all [GenerateApi] interfaces are implemented");
 
             Services = Interfaces
                 .Select(a => a.Service)

@@ -25,13 +25,6 @@ namespace gAPI.AutoHub
                 .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
                 .ToArray();
 
-            //if (Interfaces.Any(a => a.ClientHandler == null))
-            //    throw new Exception("Not all [Generate] interfaces are implemented");
-
-            //ClientHandlers = Interfaces
-            //    .Select(a => a.ClientHandler)
-            //    .ToArray();
-
             var collector = new TypeCollector(config);
             foreach (var swi in interfaceSymbols)
             {

@@ -79,7 +79,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         {
             Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
-[Generate]{(Entity.IsAuthorize ? "\r\n[IsAuthorized]" : "")}
+[GenerateApi]{(Entity.IsAuthorize ? "\r\n[IsAuthorized]" : "")}
 public interface {Name}
 {{
     [IsCreate]
@@ -108,7 +108,7 @@ public interface {Name}
         {
             Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
-[Generate]{(Entity.IsAuthorize ? "\r\n[IsAuthorized]" : "")}
+[GenerateApi]{(Entity.IsAuthorize ? "\r\n[IsAuthorized]" : "")}
 public interface {Name}
 {{
     [IsCreate]
