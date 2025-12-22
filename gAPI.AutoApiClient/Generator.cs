@@ -45,7 +45,7 @@ namespace gAPI.AutoApiClient
                 {
                     var config = ClientConfigParser.Parse(configText);
                     var dataModel = new ServiceContext(compilation, config);
-                    var generatedDataModel = new ClientsGenerator(dataModel, spc);
+                    var generatedDataModel = new ApiClientsGenerator(dataModel, spc);
                 }
                 catch (Exception ex)
                 {

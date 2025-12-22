@@ -1,11 +1,11 @@
-﻿using gAPI.AutoComponent.Helpers;
+﻿using gAPI.AutoService.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoComponent.Models.ServiceModels
+namespace gAPI.AutoService.Models
 {
-    public class InterfaceMethodArgument
+    internal class InterfaceMethodArgument
     {
-        public InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
+        internal InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
         {
             DataModel = dataModel;
             ServiceMethod = serviceMethod;
@@ -17,9 +17,6 @@ namespace gAPI.AutoComponent.Models.ServiceModels
                 parameterSymbol.NullableAnnotation == NullableAnnotation.Annotated;
 
             IsIFormFile = ParameterSymbol.Type.Name == "IFormFile";
-            if (IsIFormFile)
-            {
-            }
             IsValueType = parameterSymbol.Type.IsValueType;
         }
 
@@ -31,7 +28,7 @@ namespace gAPI.AutoComponent.Models.ServiceModels
         public bool IsIFormFile { get; }
         public bool IsValueType { get; }
 
-        TypeHelper? _ParameterType { get; set; }
+        TypeHelper _ParameterType { get; set; }
         public TypeHelper ParameterType
         {
             get
@@ -41,12 +38,12 @@ namespace gAPI.AutoComponent.Models.ServiceModels
             }
         }
 
-        TypeDigger? _ParameterTypeRapport { get; set; }
+        TypeDigger _ParameterTypeRapport { get; set; }
         public TypeDigger ParameterTypeRapport
         {
             get
             {
-                _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.TypeSymbol, IsNullable);
+                _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.Type);
                 return _ParameterTypeRapport;
             }
         }

@@ -47,7 +47,7 @@ namespace gAPI.AutoHubClient
                 {
                     var config = ClientConfigParser.Parse(configText);
                     var dataModel = new ServiceContext(compilation, config);
-                    SignalRHostGenerator.Generate(dataModel, spc);
+                    HubClientsGenerator.Generate(dataModel, spc);
                 }
                 catch (Exception ex)
                 {

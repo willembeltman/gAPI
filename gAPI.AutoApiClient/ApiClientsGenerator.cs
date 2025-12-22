@@ -8,9 +8,9 @@ using System.Text;
 
 namespace gAPI.AutoApiClient
 {
-    internal class ClientsGenerator
+    internal class ApiClientsGenerator
     {
-        public ClientsGenerator(ServiceContext dataModel, Microsoft.CodeAnalysis.SourceProductionContext spc)
+        public ApiClientsGenerator(ServiceContext dataModel, Microsoft.CodeAnalysis.SourceProductionContext spc)
         {
             ServiceContext = dataModel;
             Config = dataModel.Config;

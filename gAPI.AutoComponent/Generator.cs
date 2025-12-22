@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoComponent.Configs;
-using gAPI.AutoComponent.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -45,7 +44,7 @@ namespace gAPI.AutoComponent
                 {
                     var config = ClientConfigParser.Parse(configText!);
                     var serviceContext = new ServiceContext(compilation, config);
-                    var generatedViews = new ViewsGenerator(serviceContext, spc);
+                    var generatedViews = new ComponentsGenerator(serviceContext, spc);
                     generatedViews.GenerateViews();
                     //CreateDebugFile(spc, generatedViews);
                 }
@@ -57,7 +56,7 @@ namespace gAPI.AutoComponent
             });
         }
 
-        private static void CreateDebugFile(SourceProductionContext spc, ViewsGenerator generatedViews)
+        private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
         {
             var str = "";
             foreach (var crudl in generatedViews.CrudlContext.Crudls)

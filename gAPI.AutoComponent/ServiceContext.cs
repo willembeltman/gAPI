@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Contexts
+namespace gAPI.AutoComponent
 {
     public class ServiceContext
     {

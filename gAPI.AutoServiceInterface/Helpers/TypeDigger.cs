@@ -1,34 +1,30 @@
-﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.Models.ServiceModels;
+﻿using gAPI.AutoServiceInterface.Models;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Helpers
+namespace gAPI.AutoServiceInterface.Helpers
 {
-    public class TypeDigger : ITypeDigger
+    internal class TypeDigger
     {
-        public TypeDigger(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
+        public TypeDigger(ServiceContext dataModel, ITypeSymbol type)
         {
-            StartTypeSymbol = typeSymbol;
-            StartType = new TypeHelper(dataModel, typeSymbol, isNullable);
+            StartType = type;
             DataModel = dataModel;
 
-            TypeSymbol = DigTillBase(typeSymbol);
-            Type = new TypeHelper(dataModel, TypeSymbol, isNullable);
+            Type = DigTillBase(type);
 
-            Name = TypeSymbol.Name;
-            FullName = TypeSymbol.ToDisplayString();
-            Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
-            IsValueType = TypeSymbol.IsValueType;
-            IsNullable = isNullable;
+            Name = Type.Name;
+            FullName = Type.ToDisplayString();
+            Namespace = Type.ContainingNamespace.ToDisplayString();
+            IsValueType = Type.IsValueType;
 
             (Dto, Enum) = FindDtoOrEnum(dataModel, FullName);
         }
 
-        private (Dto? Dto, EnumDto? Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
+        private (Dto Dto, EnumDto Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
         {
-            Dto? foundDto = null;
-            EnumDto? foundEnum = null;
+            Dto foundDto = null;
+            EnumDto foundEnum = null;
             foreach (var dto in dataModel.Dtos)
             {
                 if (dto.FullName == fullName)
@@ -57,7 +53,7 @@ namespace gAPI.AutoComponent.Helpers
             while (true)
             {
                 if (IsArrayType(resolved, out var arrayType))
-                    resolved = GetUnderlayingTypeArray(arrayType!);
+                    resolved = GetUnderlayingTypeArray(arrayType);
 
                 if (!IsGenericType(resolved))
                     break;
@@ -71,7 +67,7 @@ namespace gAPI.AutoComponent.Helpers
             }
             return resolved;
         }
-        private bool IsArrayType(ITypeSymbol resolved, out IArrayTypeSymbol? arrayTypeSymbol)
+        private bool IsArrayType(ITypeSymbol resolved, out IArrayTypeSymbol arrayTypeSymbol)
         {
             arrayTypeSymbol = null;
             if (resolved is IArrayTypeSymbol arr)
@@ -127,17 +123,14 @@ namespace gAPI.AutoComponent.Helpers
         }
 
 
-        public Dto? Dto { get; }
-        public EnumDto? Enum { get; }
-        public ITypeSymbol StartTypeSymbol { get; }
-        public TypeHelper StartType { get; }
+        public Dto Dto { get; }
+        public EnumDto Enum { get; }
+        public ITypeSymbol StartType { get; }
         public ServiceContext DataModel { get; }
-        public ITypeSymbol TypeSymbol { get; }
-        public TypeHelper Type { get; }
+        public ITypeSymbol Type { get; }
         public string Name { get; }
         public string FullName { get; }
         public string Namespace { get; }
         public bool IsValueType { get; }
-        public bool IsNullable { get; }
     }
 }

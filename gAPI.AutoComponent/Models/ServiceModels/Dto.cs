@@ -1,5 +1,4 @@
-﻿using gAPI.AutoComponent.Contexts;
-using gAPI.AutoComponent.Helpers;
+﻿using gAPI.AutoComponent.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;

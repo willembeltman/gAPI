@@ -1,16 +1,14 @@
-﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Helpers;
+﻿using gAPI.AutoServiceInterface.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Models.ServiceModels
+namespace gAPI.AutoServiceInterface.Models
 {
-    public class InterfaceMethod
+    internal class InterfaceMethod
     {
         public InterfaceMethod(ServiceContext dataModel, Interface @interface, IMethodSymbol methodSymbol)
         {
-            DataModel = dataModel;
             Interface = @interface;
             MethodSymbol = methodSymbol;
 
@@ -19,8 +17,7 @@ namespace gAPI.AutoComponent.Models.ServiceModels
             IsNullable =
                 methodSymbol.ReturnNullableAnnotation == NullableAnnotation.Annotated;
 
-            ResponseTypeSymbol = methodSymbol.ReturnType;
-            ResponseType = new TypeHelper(dataModel, ResponseTypeSymbol, IsNullable);
+            ResponseType = new TypeHelper(dataModel, methodSymbol.ReturnType, IsNullable);
 
             ApiName = Name;
             var apiNameAttr = methodSymbol.GetAttributes()
@@ -88,6 +85,22 @@ namespace gAPI.AutoComponent.Models.ServiceModels
                     throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
             }
 
+            var isListNotByAttr = methodSymbol.GetAttributes()
+                .FirstOrDefault(a => a.AttributeClass?.Name == "IsListNotByAttribute");
+            if (isListNotByAttr != null)
+            {
+                IsListNotBy = true;
+                IsListNotByName = isListNotByAttr.ConstructorArguments[0].Value?.ToString();
+                if (isListNotByAttr.ConstructorArguments[1].Kind == TypedConstantKind.Type &&
+                    isListNotByAttr.ConstructorArguments[1].Value is ITypeSymbol targetTypeSymbol)
+                {
+                    IsListNotByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
+                }
+
+                if (Arguments.Length != 4)
+                    throw new Exception("Kan niet delete method hebben met anders dan 1 parameter");
+            }
+
             IsFileUpdate = methodSymbol.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "IsFileUpdateAttribute");
             if (IsFileUpdate && Arguments.Length != 2)
@@ -131,71 +144,33 @@ namespace gAPI.AutoComponent.Models.ServiceModels
             IsAsync = ResponseType._Name == "Task";
         }
 
-        public ServiceContext DataModel { get; }
         public Interface Interface { get; }
         public IMethodSymbol MethodSymbol { get; }
-        public ITypeSymbol ResponseTypeSymbol { get; }
-        public TypeHelper ResponseType { get; }
         public string Name { get; }
+        public bool IsNullable { get; }
+        public TypeHelper ResponseType { get; }
         public string ApiName { get; }
         public InterfaceMethodArgument[] Arguments { get; }
-
-        public bool IsNullable { get; }
-        public bool IsAuthorized { get; }
-        public bool IsHidden { get; }
-        public bool IsAsync { get; }
-
         public bool IsCreate { get; }
         public bool IsRead { get; }
         public bool IsUpdate { get; }
         public bool IsDelete { get; }
-        public TypeHelper? IsDeleteType { get; }
+        public TypeHelper IsDeleteType { get; }
         public bool IsList { get; }
         public bool IsListBy { get; }
-        public string? IsListByName { get; }
-        public TypeHelper? IsListByForeignType { get; }
+        public string IsListByName { get; }
+        public TypeHelper IsListByForeignType { get; }
+        public bool IsListNotBy { get; }
+        public string IsListNotByName { get; }
+        public TypeHelper IsListNotByForeignType { get; }
         public bool IsFileUpdate { get; }
         public bool IsFileDelete { get; }
-        public TypeHelper? IsFileDeleteType { get; }
+        public TypeHelper IsFileDeleteType { get; }
         public bool IsPage { get; }
-        public string? IsPageRoute { get; }
-
-        public CrudlMethodTypeEnum CrudlMethodType
-        {
-            get
-            {
-                if (IsCreate)
-                    return CrudlMethodTypeEnum.Create;
-                else if (IsRead)
-                    return CrudlMethodTypeEnum.Read;
-                else if (IsUpdate)
-                    return CrudlMethodTypeEnum.Update;
-                else if (IsDelete)
-                    return CrudlMethodTypeEnum.Delete;
-                else if (IsList)
-                    return CrudlMethodTypeEnum.List;
-                else if (IsListBy)
-                    return CrudlMethodTypeEnum.ListBy;
-                else if (IsPage)
-                    return CrudlMethodTypeEnum.IsPage;
-                else if (IsFileUpdate)
-                    return CrudlMethodTypeEnum.FileUpdate;
-                else if (IsFileDelete)
-                    return CrudlMethodTypeEnum.FileDelete;
-                else
-                    return CrudlMethodTypeEnum.NotSet;
-            }
-        }
-
-
-        TypeDigger? _ResponseTypeDigger { get; set; }
-        public TypeDigger ResponseTypeDigger
-        {
-            get
-            {
-                _ResponseTypeDigger = _ResponseTypeDigger ?? new TypeDigger(DataModel, ResponseTypeSymbol, IsNullable);
-                return _ResponseTypeDigger;
-            }
-        }
+        public string IsPageRoute { get; }
+        public bool IsAuthorize { get; }
+        public bool IsAsync { get; }
+        public bool IsAuthorized { get; }
+        public bool IsHidden { get; }
     }
 }

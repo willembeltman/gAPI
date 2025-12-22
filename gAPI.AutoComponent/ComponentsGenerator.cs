@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoComponent.Configs;
-using gAPI.AutoComponent.Contexts;
 using gAPI.AutoComponent.Generators.Components;
 using gAPI.AutoComponent.Generators.Helpers;
 using Microsoft.CodeAnalysis.Text;
@@ -9,9 +8,9 @@ using System.Text;
 
 namespace gAPI.AutoComponent
 {
-    public class ViewsGenerator
+    public class ComponentsGenerator
     {
-        public ViewsGenerator(
+        public ComponentsGenerator(
             ServiceContext serviceContext,
             Microsoft.CodeAnalysis.SourceProductionContext spc)
         {

@@ -1,5 +1,4 @@
-﻿using gAPI.AutoComponent.Contexts;
-using gAPI.AutoComponent.Helpers;
+﻿using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Models.ServiceModels;
 
 namespace gAPI.AutoComponent.Models.PageModels

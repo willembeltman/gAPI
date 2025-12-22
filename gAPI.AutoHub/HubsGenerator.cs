@@ -7,7 +7,7 @@ using System.Text;
 
 namespace gAPI.AutoHub
 {
-    internal class SignalRHostGenerator
+    internal class HubsGenerator
     {
         internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
         {

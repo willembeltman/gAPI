@@ -4,7 +4,7 @@ using gAPI.AutoComponent.Models.PageModels;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Contexts
+namespace gAPI.AutoComponent
 {
     public class CrudlContext
     {

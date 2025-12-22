@@ -1,14 +1,13 @@
-﻿using gAPI.AutoComponent.Helpers;
-using gAPI.AutoComponent.Interfaces;
+﻿using gAPI.AutoServiceInterface.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Models.ServiceModels
+namespace gAPI.AutoServiceInterface.Models
 {
-    public class Interface : ISharedReference
+    internal class Interface
     {
-        public Interface(ServiceContext serviceContext, INamedTypeSymbol namedTypeSymbol, IEnumerable<INamedTypeSymbol> allSymbols)
+        public Interface(ServiceContext dataModel, INamedTypeSymbol namedTypeSymbol, IEnumerable<INamedTypeSymbol> allSymbols)
         {
             NamedTypeSymbol = namedTypeSymbol;
 
@@ -37,14 +36,14 @@ namespace gAPI.AutoComponent.Models.ServiceModels
                 .OfType<IMethodSymbol>()
                 .Where(m => m.MethodKind == MethodKind.Ordinary)
                 .Where(m => !m.GetAttributes().Any(attr => attr.AttributeClass?.Name == "IsHiddenAttribute"))
-                .Select(methodSymbol => new InterfaceMethod(serviceContext, this, methodSymbol))
+                .Select(methodSymbol => new InterfaceMethod(dataModel, this, methodSymbol))
                 .ToArray();
 
-            Client = allSymbols
+            Service = allSymbols
                 .Where(a =>
                     a.TypeKind == TypeKind.Class &&
                     a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
-                .Select(a => new Client(this, a))
+                .Select(a => new Service(this, a))
                 .SingleOrDefault();
         }
 
@@ -56,6 +55,6 @@ namespace gAPI.AutoComponent.Models.ServiceModels
         public bool IsAuthorized { get; }
         public bool IsHidden { get; }
         public InterfaceMethod[] Methods { get; }
-        public Client Client { get; }
+        public Service Service { get; }
     }
 }
