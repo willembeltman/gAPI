@@ -58,12 +58,12 @@ namespace gAPI.AutoHubClient.Generators
                 {
                     Reg(i);
                     return @$"
-    public async Task RegisterEventHandlerAsync({i.Name} implementation)
+    public async Task RegisterHubClientAsync({i.Name} implementation)
     {{
         {i.ApiName}s.Add(implementation);
         await StartAsync();
     }}
-    public void UnRegisterEventHandlerAsync({i.Name} implementation)
+    public void UnRegisterHubClient({i.Name} implementation)
     {{
         {i.ApiName}s.Remove(implementation);
     }}";
