@@ -19,7 +19,7 @@ namespace gAPI.AutoHub.Generators
             Directory = dataModel.Config.Hubs_Destination.Directory;
             Namespace = dataModel.Config.Hubs_Destination.Namespace;
 
-            Name = "I" + ClientHandler.Interface.ApiName + "ClientHandlerContext";
+            Name = "I" + ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
         }
 
@@ -38,8 +38,8 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {IClientHandler.Name} All {{ get; }}
-    {IClientHandler.Name} ByUserId(object userId);
+    {IClientHandler.Name} ToAll {{ get; }}
+    {IClientHandler.Name} ToUser(object userId);
 }}
 ";
         }

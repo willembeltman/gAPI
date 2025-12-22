@@ -28,7 +28,7 @@ namespace gAPI.AutoHubClient.Generators
                         Reg(a);
                         return @$"
     Task RegisterHubClientAsync({a.Name} implementation);
-    void UnRegisterHubClient({a.Name} implementation);
+    Task UnRegisterHubClientAsync({a.Name} implementation);
 ";
                     }));
             Code = @$"{GetNamespacesCode()}#nullable enable

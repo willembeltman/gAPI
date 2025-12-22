@@ -63,9 +63,10 @@ namespace gAPI.AutoHubClient.Generators
         {i.ApiName}s.Add(implementation);
         await StartAsync();
     }}
-    public void UnRegisterHubClient({i.Name} implementation)
+    public Task UnRegisterHubClientAsync({i.Name} implementation)
     {{
         {i.ApiName}s.Remove(implementation);
+        return Task.CompletedTask;
     }}";
                 }));
 

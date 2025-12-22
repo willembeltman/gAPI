@@ -20,7 +20,7 @@ namespace gAPI.AutoHub.Generators
             Directory = dataModel.Config.Hubs_Destination.Directory;
             Namespace = dataModel.Config.Hubs_Destination.Namespace;
 
-            Name = ClientHandler.Interface.ApiName + "ClientHandlerContext";
+            Name = ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
         }
 
@@ -44,9 +44,9 @@ public class {Name}(
     IHubContext<SignalRHub> hubContext)
     : {IClientHandlerContext.Name}
 {{
-    public {IClientHandler.Name} All
+    public {IClientHandler.Name} ToAll
         => new {ClientHandler.Name}(hubContext.Clients.All);
-    public {IClientHandler.Name} ByUserId(object userId)
+    public {IClientHandler.Name} ToUser(object userId)
         => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()));
 }}
 ";

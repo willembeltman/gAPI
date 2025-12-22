@@ -17,9 +17,9 @@ namespace gAPI.AutoHub.Models
 
             ApiName = Name;
             ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-            ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
-            ApiName = ServiceNameHelper.RemoveHubName(ApiName);
-            ApiName = ServiceNameHelper.RemoveHubClientName(ApiName);
+            //ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
+            //ApiName = ServiceNameHelper.RemoveHubName(ApiName);
+            //ApiName = ServiceNameHelper.RemoveHubClientName(ApiName);
 
             IsAuthorized = NamedTypeSymbol.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
