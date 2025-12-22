@@ -33,6 +33,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="..\gAPI.Test.Frontend.BlazorWebassembly\Pages\Component.razor" Link="Component.razor" />
 		<None Include="README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 

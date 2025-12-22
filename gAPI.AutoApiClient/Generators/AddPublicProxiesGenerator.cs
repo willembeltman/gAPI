@@ -4,7 +4,7 @@ namespace gAPI.AutoApiClient.Generators
 {
     internal class AddAutoClientServicesGenerator : BaseGenerator
     {
-        public AddAutoClientServicesGenerator(ClientGenerator[] clients, ClientConfig config)
+        public AddAutoClientServicesGenerator(ApiClientGenerator[] clients, ClientConfig config)
         {
             Clients = clients;
 
@@ -16,7 +16,7 @@ namespace gAPI.AutoApiClient.Generators
             Clients = clients;
         }
 
-        public ClientGenerator[] Clients { get; }
+        public ApiClientGenerator[] Clients { get; }
 
         public void GenerateCode()
         {

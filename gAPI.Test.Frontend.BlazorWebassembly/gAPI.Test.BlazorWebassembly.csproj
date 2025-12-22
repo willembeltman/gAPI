@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.11" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.11" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.AutoApiClient\gAPI.AutoApiClient.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.AutoHubClient\gAPI.AutoHubClient.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.Test.Shared\gAPI.Test.Shared.csproj" />
+		<ProjectReference Include="..\gAPI\gAPI.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<AdditionalFiles Include="gapi.autoapiclient.json" />
+		<AdditionalFiles Include="gapi.autohubclient.json" />
+	</ItemGroup>
+
+</Project>

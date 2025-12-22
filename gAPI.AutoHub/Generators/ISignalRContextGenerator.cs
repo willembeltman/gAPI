@@ -2,9 +2,9 @@
 
 namespace gAPI.AutoHub.Generators
 {
-    internal class IHubServiceContextGenerator : BaseGenerator
+    internal class ISignalRContextGenerator : BaseGenerator
     {
-        internal IHubServiceContextGenerator(
+        internal ISignalRContextGenerator(
             ServiceContext dataModel,
             SignalRHubGenerator signalRHub,
             ClientHandlerContextGenerator[] clientHandlerContexts)
@@ -16,7 +16,7 @@ namespace gAPI.AutoHub.Generators
             Directory = dataModel.Config.HubServices_Destination.Directory;
             Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
-            Name = "IHubServiceContext";
+            Name = "ISignalRContext";
             FileName = $"{Name}.g.cs";
         }
 

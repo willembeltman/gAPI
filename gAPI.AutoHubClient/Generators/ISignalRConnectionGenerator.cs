@@ -33,8 +33,6 @@ namespace gAPI.AutoHubClient.Generators
                     }));
             Code = @$"{GetNamespacesCode()}#nullable enable
 
-using BSD.Shared;
-
 namespace {Namespace};
 
 public interface {Name} : IAsyncDisposable

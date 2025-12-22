@@ -28,17 +28,16 @@ namespace gAPI.AutoComponent
 
                 if (string.IsNullOrWhiteSpace(configText))
                 {
-                    spc.AddSource("Gapi_Error.g.cs", SourceText.From(
-                        $"// Config parse error: Config file is empty", Encoding.UTF8));
+                    ShowError($"Config parse error: Config file is empty", spc);
                     return;
                 }
 
-//#if DEBUG
-//                if (!Debugger.IsAttached)
-//                {
-//                    Debugger.Launch(); // Triggert dialoog om te attachen
-//                }
-//#endif
+                //#if DEBUG
+                //                if (!Debugger.IsAttached)
+                //                {
+                //                    Debugger.Launch(); // Triggert dialoog om te attachen
+                //                }
+                //#endif
 
                 try
                 {
@@ -51,41 +50,46 @@ namespace gAPI.AutoComponent
                 catch (Exception ex)
                 {
                     ShowError(ex.ToString(), spc);
-                    throw;
+                    //throw;
                 }
             });
         }
 
-        private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
+        public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
         {
-            var str = "";
-            foreach (var crudl in generatedViews.CrudlContext.Crudls)
-            {
-                str += $"// Crudl: {crudl.Name}\r\n";
-                foreach (var method in crudl.Methods)
-                {
-                    str += $"//    Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
-                }
-            }
-            str += "\r\n// All Crudl Methods:\r\n";
-            foreach (var method in generatedViews.CrudlContext.AllCrudlMethods)
-            {
-                str += $"// Crudl: {method.Type.Name} Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
-            }
-            spc.AddSource("Debug.g.cs", SourceText.From(str, Encoding.UTF8));
+            ShowError(exception.Message, CurrentSpc);
         }
 
         public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
         {
             //throw new Exception(errorMessage); // Helps while debugging
-            var sourceCode = $"#error gAPI AutoComponents has thrown an error: \\r\\n{errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-            CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+            var sourceCode = $"#error gAPI.AutoComponents: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+            CurrentSpc.AddSource("Gapi_Error.AutoComponent.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
         }
 
-        public void ShowWarning(string warningMessage, SourceProductionContext CurrentSpc)
-        {
-            var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-            CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        }
+        //private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
+        //{
+        //    var str = "";
+        //    foreach (var crudl in generatedViews.CrudlContext.Crudls)
+        //    {
+        //        str += $"// Crudl: {crudl.Name}\r\n";
+        //        foreach (var method in crudl.Methods)
+        //        {
+        //            str += $"//    Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+        //        }
+        //    }
+        //    str += "\r\n// All Crudl Methods:\r\n";
+        //    foreach (var method in generatedViews.CrudlContext.AllCrudlMethods)
+        //    {
+        //        str += $"// Crudl: {method.Type.Name} Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+        //    }
+        //    spc.AddSource("Debug.g.cs", SourceText.From(str, Encoding.UTF8));
+        //}
+
+        //public void ShowWarning(string warningMessage, SourceProductionContext CurrentSpc)
+        //{
+        //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+        //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        //}
     }
 }

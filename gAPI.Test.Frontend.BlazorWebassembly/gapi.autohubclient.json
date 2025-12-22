@@ -1,0 +1,16 @@
+{
+  // Used for detecting dtos, enums and services, give the start name
+  // of the namespaces that contain all your dtos, enums and services
+  "BaseNamespaces": [
+    "gAPI.Test"
+  ],
+  // Where / in what namespace should we store the virtual clients?
+  "HubClients_Destination": {
+    "Directory": "",
+    "Namespace": "gAPI.Test.BlazorWebassembly.HubClients"
+  },
+  "AddAutoHubClientServices_Destination": {
+    "Directory": "",
+    "Namespace": "gAPI.Test.BlazorWebassembly.HubClients"
+  }
+}

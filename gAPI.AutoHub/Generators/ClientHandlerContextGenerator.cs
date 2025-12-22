@@ -48,7 +48,7 @@ public class {Name}(
     public {IClientHandler.Name} ToAll
         => new {ClientHandler.Name}(hubContext.Clients.All);
     public {IClientHandler.Name} ToUser(object userId)
-        => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()));
+        => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()!));
 }}
 ";
         }

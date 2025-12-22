@@ -14,7 +14,7 @@ namespace gAPI.AutoHub.Generators
             Directory = dataModel.Config.HubServices_Destination.Directory;
             Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
-            Name = Interface.ApiName + "Handler";
+            Name = Interface.ApiName;
             FileName = $"{Name}.g.cs";
         }
 
@@ -31,9 +31,7 @@ namespace gAPI.AutoHub.Generators
 
 namespace {Namespace};
 
-public class {Name}(
-    IClientProxy clientProxy)
-    : {Interface.Name}
+public class {Name}(IClientProxy clientProxy) : {Interface.Name}
 {{
 {methodsCode}}}
 ";
@@ -53,11 +51,15 @@ public class {Name}(
 
                 var hasFile = method.Arguments.Any(a => a.IsIFormFile);
                 if (hasFile)
-                    throw new Exception("IFormFile is not supported by SignalR");
+                    throw new Exception(
+                        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` " + 
+                        "IFormFile is not supported by SignalR");
 
-                var isTask = method.ResponseType.Name != "void" || method.ResponseType.Name != "Task";
+                var isTask = method.ResponseType.Name != "Void" || method.ResponseType.Name != "Task";
                 if (isTask == false || method.ResponseType.UnderlayingTypes.Length > 0)
-                    throw new Exception("Only one-way calls are allowed, there is no return value, use the API directly for this");
+                    throw new Exception(
+                        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                        "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
 
                 RegRange(method.Arguments.SelectMany(b => b.ParameterType.Namespaces));
                 var methodArguments = method.Arguments
@@ -75,14 +77,22 @@ public class {Name}(
 
                 if (method.IsAsync)
                 {
+                    if (method.ResponseType.Name != "Task")
+                        throw new Exception(
+                        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                        "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
                     code += $"    public async Task {method.Name}({methodSignature})" + Environment.NewLine;
                     code += $"        => await clientProxy.SendAsync(\"{Interface.ApiName}.{method.Name}\", {methodCall});" + Environment.NewLine;
                 }
                 else
                 {
+                    if (method.ResponseType.Name != "Void")
+                        throw new Exception(
+                        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                        "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
                     code += $"    #warning For better performance please change the method `{Interface.Name}.{method.Name}({methodSignature})` to be async." + Environment.NewLine;
                     code += $"    public void {method.Name}({methodSignature})" + Environment.NewLine;
-                    code += $"        => clientProxy.SendAsync(\"{Interface.ApiName}.{method.Name}\", {methodCall}).Result;" + Environment.NewLine;
+                    code += $"        => clientProxy.SendAsync(\"{Interface.ApiName}.{method.Name}\", {methodCall}).GetAwaiter().GetResult();" + Environment.NewLine;
                 }
             }
 

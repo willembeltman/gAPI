@@ -1,12 +1,13 @@
-﻿using gAPI.AutoApiClient.Contexts;
+﻿using gAPI.AutoApiClient.Configs;
+using gAPI.AutoApiClient.Contexts;
 using gAPI.AutoApiClient.Models;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Generators
 {
-    internal class ClientGenerator : BaseGenerator
+    internal class ApiClientGenerator : BaseGenerator
     {
-        public ClientGenerator(Interface service, Configs.ClientConfig config)
+        public ApiClientGenerator(Interface service, ClientConfig config)
         {
             Interface = service;
 
@@ -233,8 +234,15 @@ namespace gAPI.AutoApiClient.Generators
                     }
                     else
                     {
-                        code += $"        var responseData = await response.Content.ReadFromJsonAsync<{method.ResponseType.UnderlayingTypes[0].Name}>()" + Environment.NewLine;
-                        code += $"            ?? throw new Exception(\"Could not cast response data\");" + Environment.NewLine;
+                        if (method.ResponseType.IsNullable)
+                        {
+                            code += $"        var responseData = await response.Content.ReadFromJsonAsync<{method.ResponseType.UnderlayingTypes[0].Name}>()" + Environment.NewLine;
+                            code += $"            ?? throw new Exception(\"Could not cast response data\");" + Environment.NewLine;
+                        }
+                        else
+                        {
+                            code += $"        var responseData = await response.Content.ReadFromJsonAsync<{method.ResponseType.UnderlayingTypes[0].Name}>();" + Environment.NewLine;
+                        }
                         code += $"        await clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData);" + Environment.NewLine;
                         code += $"        return responseData;" + Environment.NewLine;
                     }
@@ -363,8 +371,15 @@ namespace gAPI.AutoApiClient.Generators
                     }
                     else
                     {
-                        code += $"        var responseData = response.Content.ReadFromJsonAsync<{method.ResponseType.Name}>().Result" + Environment.NewLine;
-                        code += $"            ?? throw new Exception(\"Could not cast response data\");" + Environment.NewLine;
+                        if (method.ResponseType.IsNullable)
+                        {
+                            code += $"        var responseData = response.Content.ReadFromJsonAsync<{method.ResponseType.Name}>().Result" + Environment.NewLine;
+                            code += $"            ?? throw new Exception(\"Could not cast response data\");" + Environment.NewLine;
+                        }
+                        else
+                        {
+                            code += $"        var responseData = response.Content.ReadFromJsonAsync<{method.ResponseType.Name}>().Result;" + Environment.NewLine;
+                        }
                         code += $"        clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData).GetAwaiter().GetResult();" + Environment.NewLine;
                         code += $"        return responseData;" + Environment.NewLine;
                     }

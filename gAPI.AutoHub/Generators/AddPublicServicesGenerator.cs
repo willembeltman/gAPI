@@ -3,13 +3,13 @@
 
     internal class AddAutoHubServicesGenerator : BaseGenerator
     {
-        internal AddAutoHubServicesGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, IHubServiceContextGenerator signalRContext1, HubServiceContextGenerator signalRContext)
+        internal AddAutoHubServicesGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
         {
             ServiceContext = dataModel;
             SignalRHub = signalRHub;
             ClientHandlers = clientHandlers;
             ClientHandlerContexts = clientHandlerContexts;
-            HubServiceContext = signalRContext;
+            SignalRContext = signalRContext;
 
             Directory = dataModel.Config.AddAutoHubServices_Destination.Directory;
             Namespace = dataModel.Config.AddAutoHubServices_Destination.Namespace;
@@ -22,12 +22,12 @@
         public SignalRHubGenerator SignalRHub { get; }
         public ClientHandlerGenerator[] ClientHandlers { get; }
         public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
-        public HubServiceContextGenerator HubServiceContext { get; }
+        public SignalRContextGenerator SignalRContext { get; }
 
         internal void GenerateCode()
         {
             Reg("Microsoft.Extensions.DependencyInjection");
-            var propertiesCode = $"        services.AddScoped<IHubServiceContext, HubServiceContext>();\r\n";
+            var propertiesCode = $"        services.AddScoped<ISignalRContext, SignalRContext>();\r\n";
             foreach (var clientHandlerContext in ClientHandlerContexts)
             {
                 Reg(clientHandlerContext);

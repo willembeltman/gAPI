@@ -1,6 +1,6 @@
 using gAPI.Interfaces;
-using gAPI.Test.Backend;
-using gAPI.Test.Backend.Services;
+using gAPI.Test.Api;
+using gAPI.Test.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

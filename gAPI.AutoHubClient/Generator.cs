@@ -32,16 +32,16 @@ namespace gAPI.AutoHubClient
 
                 if (string.IsNullOrWhiteSpace(configText))
                 {
-                    ShowError($"#error Config parse error: Config file is empty", spc);
+                    ShowError($"Config parse error: Config file is empty", spc);
                     return;
                 }
 
-//#if DEBUG
-//                if (!Debugger.IsAttached)
-//                {
-//                    Debugger.Launch(); // Triggert dialoog om te attachen
-//                }
-//#endif
+                //#if DEBUG
+                //                if (!Debugger.IsAttached)
+                //                {
+                //                    Debugger.Launch(); // Triggert dialoog om te attachen
+                //                }
+                //#endif
 
                 try
                 {
@@ -52,17 +52,22 @@ namespace gAPI.AutoHubClient
                 catch (Exception ex)
                 {
                     ShowError(ex.ToString(), spc);
-                    throw;
+                    //throw;
                 }
 
             });
         }
 
+        public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
+        {
+            ShowError(exception.Message, CurrentSpc);
+        }
+
         public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
         {
             //throw new Exception(errorMessage); // Helps while debugging
-            var sourceCode = $"#error gAPI AutoComponents has thrown an error: \\r\\n{errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-            CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+            var sourceCode = $"#error gAPI.AutoHubClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+            CurrentSpc.AddSource("Gapi_Error.AutoHubClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
         }
 
         //public void ShowError(Exception exception)

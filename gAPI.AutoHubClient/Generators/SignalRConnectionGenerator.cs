@@ -47,7 +47,7 @@ namespace gAPI.AutoHubClient.Generators
         {{
             foreach (var item in {i.ApiName}s)
             {{
-                await item.{m.Name}({arguments2});
+                {(m.IsAsync ? $"await " : $"")}item.{m.Name}({arguments2});
             }}
         }});";
                         }));

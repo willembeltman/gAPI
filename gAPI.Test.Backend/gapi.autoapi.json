@@ -7,12 +7,12 @@
   // Where / in what namespace should we store the virtual controllers?
   "Controllers_Destination": {
     "Directory": "Controllers",
-    "Namespace": "gAPI.Test.Backend.Controllers"
+    "Namespace": "gAPI.Test.Api.Controllers"
   },
   // Where / in what namespace should we store your virtual 
   // AddAutoAPIServices() extention?
   "AddAutoApiServices_Destination": {
     "Directory": "Services",
-    "Namespace": "gAPI.Test.Backend.Services"
+    "Namespace": "gAPI.Test.Api.Services"
   }
 }

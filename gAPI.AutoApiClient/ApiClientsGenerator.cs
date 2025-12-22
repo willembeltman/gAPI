@@ -36,7 +36,7 @@ namespace gAPI.AutoApiClient
             //spc.AddSource(listDataSourceFullName, SourceText.From(ListDataSource.Code, Encoding.UTF8));
 
             Clients = ServiceContext.Interfaces
-                .Select(service => new ClientGenerator(service, Config))
+                .Select(service => new ApiClientGenerator(service, Config))
                 .ToArray();
 
             foreach (var client in Clients)
@@ -54,7 +54,7 @@ namespace gAPI.AutoApiClient
 
         public ServiceContext ServiceContext { get; }
         public ClientConfig Config { get; }
-        public ClientGenerator[] Clients { get; }
+        public ApiClientGenerator[] Clients { get; }
         public AddAutoClientServicesGenerator AddAutoClientServices { get; }
         public FormFileGenerator FormFile { get; }
         public ToFormFileAsyncExtentionGenerator ToFormFileAsyncExtention { get; }

@@ -2,35 +2,35 @@
 
 namespace gAPI.AutoHub.Generators
 {
-    internal class HubServiceContextGenerator : BaseGenerator
+    internal class SignalRContextGenerator : BaseGenerator
     {
-        internal HubServiceContextGenerator(
+        internal SignalRContextGenerator(
             ServiceContext dataModel,
             SignalRHubGenerator signalRHub,
             ClientHandlerContextGenerator[] clientHandlerContexts,
-            IHubServiceContextGenerator iHubServiceContext)
+            ISignalRContextGenerator iSignalRContext)
         {
             DataModel = dataModel;
             SignalRHub = signalRHub;
             ClientHandlerContexts = clientHandlerContexts;
-            IHubServiceContext = iHubServiceContext;
+            ISignalRContext = iSignalRContext;
 
             Directory = dataModel.Config.HubServices_Destination.Directory;
             Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
-            Name = "HubServiceContext";
+            Name = "SignalRContext";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
         public SignalRHubGenerator SignalRHub { get; }
         public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
-        public IHubServiceContextGenerator IHubServiceContext { get; }
+        public ISignalRContextGenerator ISignalRContext { get; }
 
         public void GenerateCode()
         {
             Reg(SignalRHub);
-            Reg(IHubServiceContext);
+            Reg(ISignalRContext);
             Reg("Microsoft.AspNetCore.SignalR");
             var properties = string.Join(
                 Environment.NewLine,
@@ -48,7 +48,7 @@ namespace {Namespace};
 
 public class {Name}(
     IHubContext<SignalRHub> hubContext)
-    : {IHubServiceContext.Name}
+    : {ISignalRContext.Name}
 {{
 {properties}
 }}

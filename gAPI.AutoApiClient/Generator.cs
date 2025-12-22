@@ -29,8 +29,7 @@ namespace gAPI.AutoApiClient
 
                 if (string.IsNullOrWhiteSpace(configText))
                 {
-                    spc.AddSource("Gapi_Error.g.cs", SourceText.From(
-                        $"// Config parse error: Config file is empty", Encoding.UTF8));
+                    ShowError($"Config parse error: Config file is empty", spc);
                     return;
                 }
 
@@ -50,16 +49,21 @@ namespace gAPI.AutoApiClient
                 catch (Exception ex)
                 {
                     ShowError(ex.ToString(), spc);
-                    throw;
+                    //throw;
                 }
             });
+        }
+
+        public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
+        {
+            ShowError(exception.Message, CurrentSpc);
         }
 
         public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
         {
             //throw new Exception(errorMessage); // Helps while debugging
-            var sourceCode = $"#error gAPI AutoComponents has thrown an error: \\r\\n{errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-            CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+            var sourceCode = $"#error gAPI.AutoApiClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+            CurrentSpc.AddSource("Gapi_Error.AutoApiClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
         }
 
 
