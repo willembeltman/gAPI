@@ -11,12 +11,11 @@ namespace gAPI.AutoHub
     {
         internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
         {
-            var Config = dataModel.Config;
-
             var SignalRHub = new SignalRHubGenerator(dataModel);
             SignalRHub.GenerateCode();
-            var signalRHubFullName = Path.Combine(Config.Hubs_Destination.Directory, SignalRHub.FileName);
-            spc.AddSource(signalRHubFullName, SourceText.From(SignalRHub.Code, Encoding.UTF8));
+            spc.AddSource(
+                Path.Combine(SignalRHub.Directory, SignalRHub.FileName), 
+                SourceText.From(SignalRHub.Code, Encoding.UTF8));
 
             var ClientHandlers = dataModel.Interfaces
                 .Select(@interface => new ClientHandlerGenerator(dataModel, @interface))
@@ -25,8 +24,9 @@ namespace gAPI.AutoHub
             foreach (var clientHandler in ClientHandlers)
             {
                 clientHandler.GenerateCode();
-                var fullName = Path.Combine(Config.Hubs_Destination.Directory, clientHandler.FileName);
-                spc.AddSource(fullName, SourceText.From(clientHandler.Code, Encoding.UTF8));
+                spc.AddSource(
+                    Path.Combine(clientHandler.Directory, clientHandler.FileName),
+                    SourceText.From(clientHandler.Code, Encoding.UTF8));
             }
 
             var IClientHandlerContexts = ClientHandlers
@@ -35,8 +35,9 @@ namespace gAPI.AutoHub
             foreach (var iClientHandlerContext in IClientHandlerContexts)
             {
                 iClientHandlerContext.GenerateCode();
-                var fullName = Path.Combine(Config.Hubs_Destination.Directory, iClientHandlerContext.FileName);
-                spc.AddSource(fullName, SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
+                spc.AddSource(
+                    Path.Combine(iClientHandlerContext.Directory, iClientHandlerContext.FileName), 
+                    SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
             }
 
             var ClientHandlerContexts = IClientHandlerContexts
@@ -46,24 +47,28 @@ namespace gAPI.AutoHub
             foreach (var clientHandlerContext in ClientHandlerContexts)
             {
                 clientHandlerContext.GenerateCode();
-                var fullName = Path.Combine(Config.Hubs_Destination.Directory, clientHandlerContext.FileName);
-                spc.AddSource(fullName, SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
+                spc.AddSource(
+                    Path.Combine(clientHandlerContext.Directory, clientHandlerContext.FileName), 
+                    SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
             }
 
-            var ISignalRContext = new ISignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts);
-            ISignalRContext.GenerateCode();
-            var iSignalRContextFullName = Path.Combine(Config.Hubs_Destination.Directory, ISignalRContext.FileName);
-            spc.AddSource(iSignalRContextFullName, SourceText.From(ISignalRContext.Code, Encoding.UTF8));
+            var IHubServiceContext = new IHubServiceContextGenerator(dataModel, SignalRHub, ClientHandlerContexts);
+            IHubServiceContext.GenerateCode();
+            spc.AddSource(
+                Path.Combine(IHubServiceContext.Directory, IHubServiceContext.FileName),
+                SourceText.From(IHubServiceContext.Code, Encoding.UTF8));
 
-            var SignalRContext = new SignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts, ISignalRContext);
-            SignalRContext.GenerateCode();
-            var signalRContextFullName = Path.Combine(Config.Hubs_Destination.Directory, SignalRContext.FileName);
-            spc.AddSource(signalRContextFullName, SourceText.From(SignalRContext.Code, Encoding.UTF8));
+            var HubServiceContext = new HubServiceContextGenerator(dataModel, SignalRHub, ClientHandlerContexts, IHubServiceContext);
+            HubServiceContext.GenerateCode();
+            spc.AddSource(
+                Path.Combine(HubServiceContext.Directory, HubServiceContext.FileName),
+                SourceText.From(HubServiceContext.Code, Encoding.UTF8));
 
-            var AddAutoClientServices = new AddAutoHubServicesGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, ISignalRContext, SignalRContext);
+            var AddAutoClientServices = new AddAutoHubServicesGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, IHubServiceContext, HubServiceContext);
             AddAutoClientServices.GenerateCode();
-            var addServicesFullName = Path.Combine(Config.AddAutoHubServices_Destination.Directory, AddAutoClientServices.FileName);
-            spc.AddSource(addServicesFullName, SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
+            spc.AddSource(
+                Path.Combine(AddAutoClientServices.Directory, AddAutoClientServices.FileName), 
+                SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
         }
     }
 }

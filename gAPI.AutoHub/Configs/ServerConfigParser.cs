@@ -12,6 +12,7 @@ namespace gAPI.AutoHub.Configs
             {
                 BaseNamespaces = ParseStringList(json, nameof(ServerConfig.BaseNamespaces)),
                 Hubs_Destination = ParseBlock(json, nameof(ServerConfig.Hubs_Destination)),
+                HubServices_Destination = ParseBlock(json, nameof(ServerConfig.HubServices_Destination)),
                 AddAutoHubServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoHubServices_Destination))
             };
         }

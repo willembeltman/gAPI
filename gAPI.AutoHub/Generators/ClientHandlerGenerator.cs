@@ -11,10 +11,10 @@ namespace gAPI.AutoHub.Generators
             DataModel = dataModel;
             Interface = @interface;
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+            Directory = dataModel.Config.HubServices_Destination.Directory;
+            Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
-            Name = Interface.ApiName + "ClientHandler";
+            Name = Interface.ApiName + "Handler";
             FileName = $"{Name}.g.cs";
         }
 

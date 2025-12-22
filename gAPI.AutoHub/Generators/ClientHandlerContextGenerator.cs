@@ -17,8 +17,8 @@ namespace gAPI.AutoHub.Generators
             ClientHandler = IClientHandlerContext.ClientHandler;
             IClientHandler = ClientHandler.Interface; 
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+            Directory = dataModel.Config.HubServices_Destination.Directory;
+            Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
             Name = ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
@@ -32,6 +32,7 @@ namespace gAPI.AutoHub.Generators
 
         public void GenerateCode()
         {
+            Reg(SignalRHub);
             Reg(IClientHandlerContext);
             Reg(IClientHandler);
             Reg(ClientHandler);

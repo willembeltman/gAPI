@@ -16,8 +16,8 @@ namespace gAPI.AutoHub.Generators
             ClientHandler = clientHandler;
             IClientHandler = ClientHandler.Interface;
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+            Directory = dataModel.Config.HubServices_Destination.Directory;
+            Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
             Name = "I" + ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
