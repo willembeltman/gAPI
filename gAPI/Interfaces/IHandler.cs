@@ -1,9 +1,10 @@
-﻿using System.Linq;
+﻿using gAPI.AutoMapper;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace gAPI.AutoMapper
+namespace gAPI.Interfaces
 {
-    public interface IRepositoryHandler<TEntity, TDto, TKey>
+    public interface IHandler<TEntity, TDto, TKey> : ISecurityHandler<TDto>
     {
         Task<TEntity?> FindByMatchAsync(TDto dto); 
         Task<TEntity?> FindByIdAsync(TKey id);
