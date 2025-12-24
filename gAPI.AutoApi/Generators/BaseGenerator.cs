@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Generators
 {
-
     internal class BaseGenerator : SharedReference
     {
         public string Directory { get; protected set; }

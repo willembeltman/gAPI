@@ -64,11 +64,17 @@ namespace gAPI.AutoHub
                 Path.Combine(SignalRContext.Directory, SignalRContext.FileName),
                 SourceText.From(SignalRContext.Code, Encoding.UTF8));
 
-            var AddAutoClientServices = new AddAutoHubServicesGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, ISignalRContext, SignalRContext);
-            AddAutoClientServices.GenerateCode();
+            var AddAutoHub = new AddAutoHubExtentionGenerator(dataModel, SignalRHub);
+            AddAutoHub.GenerateCode();
             spc.AddSource(
-                Path.Combine(AddAutoClientServices.Directory, AddAutoClientServices.FileName), 
-                SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
+                Path.Combine(AddAutoHub.Directory, AddAutoHub.FileName),
+                SourceText.From(AddAutoHub.Code, Encoding.UTF8));
+
+            var AddAutoHubServices = new AddAutoHubServicesExtentionGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, ISignalRContext, SignalRContext);
+            AddAutoHubServices.GenerateCode();
+            spc.AddSource(
+                Path.Combine(AddAutoHubServices.Directory, AddAutoHubServices.FileName),
+                SourceText.From(AddAutoHubServices.Code, Encoding.UTF8));
         }
     }
 }

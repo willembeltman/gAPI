@@ -8,30 +8,28 @@ using System.Text;
 
 namespace gAPI.AutoApi
 {
-    internal class ApisGenerator
+    internal static class ApisGenerator
     {
-        public ApisGenerator(ServiceContext dataModel, SourceProductionContext spc)
+        public static void Generate(ServiceContext dataModel, SourceProductionContext spc)
         {
-            Config = dataModel.Config;
-            Apis = dataModel.Services
+            var Config = dataModel.Config;
+            var Apis = dataModel.Services
                 .Select(service => new ControllerGenerator(dataModel, service))
                 .ToArray();
 
             foreach (var api in Apis)
             {
                 api.GenerateCode();
-                var apiFullName = Path.Combine(Config.Controllers_Destination.Directory, api.FileName);
-                spc.AddSource(apiFullName, SourceText.From(api.Code, Encoding.UTF8));
+                spc.AddSource(Path.Combine(Config.Controllers_Destination.Directory, api.FileName), SourceText.From(api.Code, Encoding.UTF8));
             }
 
-            AddAutoApiServices = new AddAutoApiServicesGenerator(dataModel);
+            var AddAutoApiServices = new AddAutoApiServicesExtentionGenerator(dataModel);
             AddAutoApiServices.GenerateCode();
-            var addServicesFullName = Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApiServices.FileName);
-            spc.AddSource(addServicesFullName, SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
-        }
+            spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApiServices.FileName), SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
 
-        public ServerConfig Config { get; private set; }
-        public ControllerGenerator[] Apis { get; }
-        public AddAutoApiServicesGenerator AddAutoApiServices { get; }
+            var AddAutoApi = new AddAutoApiExtentionGenerator(dataModel);
+            AddAutoApi.GenerateCode();
+            spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApi.FileName), SourceText.From(AddAutoApi.Code, Encoding.UTF8));
+        }
     }
 }

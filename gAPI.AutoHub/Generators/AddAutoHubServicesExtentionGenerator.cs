@@ -1,9 +1,9 @@
 ﻿namespace gAPI.AutoHub.Generators
 {
 
-    internal class AddAutoHubServicesGenerator : BaseGenerator
+    internal class AddAutoHubServicesExtentionGenerator : BaseGenerator
     {
-        internal AddAutoHubServicesGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
+        internal AddAutoHubServicesExtentionGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
         {
             ServiceContext = dataModel;
             SignalRHub = signalRHub;

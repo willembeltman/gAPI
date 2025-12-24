@@ -1,9 +1,9 @@
 ﻿namespace gAPI.AutoApi.Generators
 {
 
-    internal class AddAutoApiServicesGenerator : BaseGenerator
+    internal class AddAutoApiServicesExtentionGenerator : BaseGenerator
     {
-        internal AddAutoApiServicesGenerator(ServiceContext serviceContext)
+        internal AddAutoApiServicesExtentionGenerator(ServiceContext serviceContext)
         {
             ServiceContext = serviceContext;
 

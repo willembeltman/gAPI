@@ -47,7 +47,7 @@ namespace gAPI.AutoApi
                 {
                     var config = ServerConfigParser.Parse(configText);
                     var dataModel = new ServiceContext(compilation, config);
-                    var apisGenerator = new ApisGenerator(dataModel, spc);
+                    ApisGenerator.Generate(dataModel, spc);
                 }
                 catch (Exception ex)
                 {

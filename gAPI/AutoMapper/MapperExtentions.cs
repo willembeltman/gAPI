@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -9,10 +10,12 @@ namespace gAPI.AutoMapper
     {
         public static void AddCustomMappings(this IServiceCollection serviceCollection, params Assembly[] assembliesToScan)
         {
-            // Als geen assemblies opgegeven zijn, neem de entry assembly
             if (assembliesToScan == null || assembliesToScan.Length == 0)
             {
-                assembliesToScan = new[] { Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly() };
+                assembliesToScan = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .Where(a => !a.IsDynamic)
+                    .ToArray();
             }
 
             var customMappings = assembliesToScan
