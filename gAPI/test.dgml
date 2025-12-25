@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+	<Nodes>
+		<Node Id="BlazorMaui" Category="Frontend" Label="MyApp.BlazorMaui" />
+		<Node Id="BlazorWasm" Category="Frontend" Label="MyApp.BlazorWebAssembly" />
+		<Node Id="Razor" Category="Frontend" Label="MyApp.Razor" />
+		<Node Id="gAPICodeGenFrontend" Category="Generator" Label="gAPI.CodeGen.Frontend" />
+
+		<Node Id="RazorComponents" Category="Frontend" Label="MyApp.Razor.Component" />
+		<Node Id="gAPIAutoComponent" Category="Analyzer" Label="gAPI.AutoComponent" />
+		
+		<Node Id="RazorClients" Category="Frontend" Label="MyApp.Razor.Client" />
+		<Node Id="gAPIAutoApiClient" Category="Analyzer" Label="gAPI.AutoApiClient" />
+		<Node Id="gAPIAutoHubClient" Category="Analyzer" Label="gAPI.AutoHubClient" />
+
+		<Node Id="Api" Category="Backend" Label="MyApp.Api" />
+		<Node Id="gAPIAutoApi" Category="Analyzer" Label="gAPI.AutoApi" />
+		
+		<Node Id="Business" Category="Backend" Label="MyApp.Business" />
+		<Node Id="gAPIAutoHub" Category="Analyzer" Label="gAPI.AutoHub" />
+		<Node Id="gAPICodeGenBackend" Category="Generator" Label="gAPI.CodeGen.Backend" />
+		
+		<Node Id="Data" Category="Backend" Label="MyApp.Data" />
+		
+		<Node Id="Shared" Category="Platform" Label="MyApp.Shared(Contracts / DTOs)" />
+		
+		<Node Id="Storage" Category="Backend" Label="MyApp.StorageApi" />
+		<Node Id="gAPIStorageServer" Category="Platform" Label="gAPI.Storage.Server" />
+	</Nodes>
+	<Links>
+		<Link Source="BlazorMaui" Target="Razor" />
+		<Link Source="BlazorWasm" Target="Razor" />
+
+		<Link Source="Razor" Target="RazorComponents" />
+		<Link Source="Razor" Target="gAPICodeGenFrontend" Label="Codegen" />
+		<Link Source="RazorComponents" Target="RazorClients" />
+		<Link Source="RazorComponents" Target="gAPIAutoComponent" Label="Analyzer" />
+		<Link Source="RazorClients" Target="Api" Label="Rest / SignalR" />
+		<Link Source="RazorClients" Target="gAPIAutoApiClient" Label="Analyzer" />
+		<Link Source="RazorClients" Target="gAPIAutoHubClient" Label="Analyzer" />
+
+		<Link Source="Api" Target="Business" />
+		<Link Source="Api" Target="Storage" Label="Rest" />
+		<Link Source="Api" Target="gAPIAutoApi" Label="Analyzer" />
+
+		<Link Source="Business" Target="Data" />
+		<Link Source="Business" Target="gAPIAutoHub" Label="Analyzer" />
+		<Link Source="Business" Target="gAPICodeGenBackend" Label="Codegen" />
+		
+		<Link Source="Api" Target="Shared" />
+		<Link Source="Business" Target="Shared" />
+		<Link Source="Data" Target="Shared" />
+		<Link Source="RazorClients" Target="Shared" />
+		<Link Source="RazorComponents" Target="Shared" />
+		<Link Source="Razor" Target="Shared" />
+		<Link Source="Shared" Target="gAPICodeGenBackend" Label="Codegen" />
+		
+		<Link Source="Storage" Target="gAPIStorageServer" />
+	</Links>
+	<Categories>
+		<Category Id="Internet" Background="#FFD3D3D3" />
+		<Category Id="Platform" Background="#FFFFFFE0" />
+		<Category Id="Frontend" Background="#FFADD8E6" />
+		<Category Id="Backend" Background="#FF90EE90" />
+		<Category Id="Storage" Background="#FFFFE4E1" />
+	</Categories>
+	<Properties>
+		<Property Id="Background" Label="Background" Description="The background color" DataType="System.Windows.Media.Brush" />
+		<Property Id="Bounds" DataType="System.Windows.Rect" />
+		<Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+		<Property Id="LabelBounds" DataType="System.Windows.Rect" />
+		<Property Id="UseManualLocation" DataType="System.Boolean" />
+	</Properties>
+</DirectedGraph>
