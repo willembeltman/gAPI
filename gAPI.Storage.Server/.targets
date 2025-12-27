@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="Inject_gAPI_Storage_Config" BeforeTargets="PrepareForBuild">
+    <Exec Command="gapi-config &quot;$(MSBuildThisFileDirectory)..\contentFiles\any\any\appsettings.gapi.storage.json&quot; &quot;$(MSBuildProjectDirectory)\appsettings.json&quot;" />
+  </Target>
+</Project>

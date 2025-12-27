@@ -19,13 +19,22 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>gAPI.Storage.Server is a out of the box file server you can reference and have it work.</Title>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Remove="Test\**" />
 		<EmbeddedResource Remove="Test\**" />
 		<None Remove="Test\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="contentFiles\any\any\appsettings.gapi.storage.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -42,6 +51,21 @@
 		<None Update="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>
+		</None>
+		<None Update="tools\net9.0\any\gAPI.ConfigTool.deps.json">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="tools\net9.0\any\gAPI.ConfigTool.dll">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="tools\net9.0\any\gAPI.ConfigTool.exe">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="tools\net9.0\any\gAPI.ConfigTool.pdb">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="tools\net9.0\any\gAPI.ConfigTool.runtimeconfig.json">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 

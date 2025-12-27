@@ -1,74 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
-	<Nodes>
-		<Node Id="BlazorMaui" Category="Frontend" Label="MyApp.BlazorMaui" />
-		<Node Id="BlazorWasm" Category="Frontend" Label="MyApp.BlazorWebAssembly" />
-		<Node Id="Razor" Category="Frontend" Label="MyApp.Razor" />
-		<Node Id="gAPICodeGenFrontend" Category="Generator" Label="gAPI.CodeGen.Frontend" />
-
-		<Node Id="RazorComponents" Category="Frontend" Label="MyApp.Razor.Component" />
-		<Node Id="gAPIAutoComponent" Category="Analyzer" Label="gAPI.AutoComponent" />
-		
-		<Node Id="RazorClients" Category="Frontend" Label="MyApp.Razor.Client" />
-		<Node Id="gAPIAutoApiClient" Category="Analyzer" Label="gAPI.AutoApiClient" />
-		<Node Id="gAPIAutoHubClient" Category="Analyzer" Label="gAPI.AutoHubClient" />
-
-		<Node Id="Api" Category="Backend" Label="MyApp.Api" />
-		<Node Id="gAPIAutoApi" Category="Analyzer" Label="gAPI.AutoApi" />
-		
-		<Node Id="Business" Category="Backend" Label="MyApp.Business" />
-		<Node Id="gAPIAutoHub" Category="Analyzer" Label="gAPI.AutoHub" />
-		<Node Id="gAPICodeGenBackend" Category="Generator" Label="gAPI.CodeGen.Backend" />
-		
-		<Node Id="Data" Category="Backend" Label="MyApp.Data" />
-		
-		<Node Id="Shared" Category="Platform" Label="MyApp.Shared(Contracts / DTOs)" />
-		
-		<Node Id="Storage" Category="Backend" Label="MyApp.StorageApi" />
-		<Node Id="gAPIStorageServer" Category="Platform" Label="gAPI.Storage.Server" />
-	</Nodes>
-	<Links>
-		<Link Source="BlazorMaui" Target="Razor" />
-		<Link Source="BlazorWasm" Target="Razor" />
-
-		<Link Source="Razor" Target="RazorComponents" />
-		<Link Source="Razor" Target="gAPICodeGenFrontend" Label="Codegen" />
-		<Link Source="RazorComponents" Target="RazorClients" />
-		<Link Source="RazorComponents" Target="gAPIAutoComponent" Label="Analyzer" />
-		<Link Source="RazorClients" Target="Api" Label="Rest / SignalR" />
-		<Link Source="RazorClients" Target="gAPIAutoApiClient" Label="Analyzer" />
-		<Link Source="RazorClients" Target="gAPIAutoHubClient" Label="Analyzer" />
-
-		<Link Source="Api" Target="Business" />
-		<Link Source="Api" Target="Storage" Label="Rest" />
-		<Link Source="Api" Target="gAPIAutoApi" Label="Analyzer" />
-
-		<Link Source="Business" Target="Data" />
-		<Link Source="Business" Target="gAPIAutoHub" Label="Analyzer" />
-		<Link Source="Business" Target="gAPICodeGenBackend" Label="Codegen" />
-		
-		<Link Source="Api" Target="Shared" />
-		<Link Source="Business" Target="Shared" />
-		<Link Source="Data" Target="Shared" />
-		<Link Source="RazorClients" Target="Shared" />
-		<Link Source="RazorComponents" Target="Shared" />
-		<Link Source="Razor" Target="Shared" />
-		<Link Source="Shared" Target="gAPICodeGenBackend" Label="Codegen" />
-		
-		<Link Source="Storage" Target="gAPIStorageServer" />
-	</Links>
-	<Categories>
-		<Category Id="Internet" Background="#FFD3D3D3" />
-		<Category Id="Platform" Background="#FFFFFFE0" />
-		<Category Id="Frontend" Background="#FFADD8E6" />
-		<Category Id="Backend" Background="#FF90EE90" />
-		<Category Id="Storage" Background="#FFFFE4E1" />
-	</Categories>
-	<Properties>
-		<Property Id="Background" Label="Background" Description="The background color" DataType="System.Windows.Media.Brush" />
-		<Property Id="Bounds" DataType="System.Windows.Rect" />
-		<Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
-		<Property Id="LabelBounds" DataType="System.Windows.Rect" />
-		<Property Id="UseManualLocation" DataType="System.Boolean" />
-	</Properties>
+<DirectedGraph ZoomLevel="1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="Api" Category="Backend" Bounds="677.61986328125,306.015317285102,78.73,25.96" Label="MyApp.Api" UseManualLocation="True" />
+    <Node Id="BlazorMaui" Category="Frontend" Bounds="566.428297932943,-8.10196083918551,120.133333333333,25.96" Label="MyApp.BlazorMaui" UseManualLocation="True" />
+    <Node Id="BlazorWasm" Category="Frontend" Bounds="716.561641845703,-8.10196083918551,167.93,25.96" Label="MyApp.BlazorWebAssembly" UseManualLocation="True" />
+    <Node Id="Business" Category="Backend" Bounds="675.152589111328,361.975417285102,85.9400000000001,25.96" Label="MyApp.Core" UseManualLocation="True" />
+    <Node Id="Data" Category="Backend" Bounds="843.824537384398,424.664149780273,159.316666666667,25.96" Label="MyApp.Infrastructure.Data" UseManualLocation="True" />
+    <Node Id="Database" Category="Storage" Bounds="843.019529825846,482.606563110352,69.2233333333334,25.96" UseManualLocation="True" />
+    <Node Id="PaymentProvider" Category="Storage" Bounds="401.589513753255,481.606563110352,64.0933333333334,25.96" Label="Provider" UseManualLocation="True" />
+    <Node Id="PaymentProxy" Category="Backend" Bounds="399.417864278158,424.037318725586,178.716666666667,25.96" Label="MyApp.Infrastructure.Provider" UseManualLocation="True" />
+    <Node Id="Razor" Category="Frontend" Bounds="671.465039876302,47.8581391608145,90.9433333333334,25.96" Label="MyApp.Razor" UseManualLocation="True" />
+    <Node Id="RazorClients" Category="Frontend" Bounds="654.153794759115,159.778339160815,129.013333333333,25.96" Label="MyApp.Razor.Clients" UseManualLocation="True" />
+    <Node Id="RazorComponents" Category="Frontend" Bounds="637.763306884766,103.818239160815,161.44,25.96" Label="MyApp.Razor.Components" UseManualLocation="True" />
+    <Node Id="Shared" Category="Platform" Bounds="934.539010009766,203.870365172283,111.33,25.9600000000002" Label="MyApp.Contracts" UseManualLocation="True" />
+    <Node Id="Storage" Category="Storage" Bounds="609.582895507812,483.412684936523,119.436666666667,25.96" Label="MyApp.StorageApi" UseManualLocation="True" />
+    <Node Id="Test" Category="Reference" Bounds="527.582895507812,482.412654418945,50,25.96" UseManualLocation="True" />
+    <Node Id="Test1" Category="Reference" Bounds="759.019562174479,482.606563110352,50,25.96" Label="Test" UseManualLocation="True" />
+    <Node Id="Test2" Category="Reference" Bounds="952.742844807943,482.606563110352,50,25.96" Label="Test" UseManualLocation="True" />
+    <Node Id="Test3" Category="Analyzer" Bounds="339.718333333333,358.423313994408,50,25.96" Label="Test" UseManualLocation="True" />
+    <Node Id="Test5" Bounds="690.668095296224,247.738437194824,50,25.96" Label="Test" UseManualLocation="True" />
+    <Node Id="gAPIAutoApi" Category="Analyzer" Bounds="518.692261149088,304.209375964355,90.6466666666668,25.96" Label="gAPI.AutoApi" UseManualLocation="True" />
+    <Node Id="gAPIAutoApiClient" Category="Analyzer" Bounds="503.644761962891,247.876330871582,121.023333333333,25.96" Label="gAPI.AutoApiClient" UseManualLocation="True" />
+    <Node Id="gAPIAutoComponent" Category="Analyzer" Bounds="412.26806640625,103.956137691243,135.75,25.96" Label="gAPI.AutoComponent" UseManualLocation="True" />
+    <Node Id="gAPIAutoHub" Category="Analyzer" Bounds="433.039549560547,360.169475964355,95.3099999999999,25.96" Label="gAPI.AutoHub" UseManualLocation="True" />
+    <Node Id="gAPIAutoHubClient" Category="Analyzer" Bounds="418.059315592448,183.916237691243,125.686666666667,25.96" Label="gAPI.AutoHubClient" UseManualLocation="True" />
+    <Node Id="gAPICodeGenBackend" Category="Generator" Bounds="971.228405761719,364.193494906184,143.65,25.96" Label="gAPI.CodeGen.Backend" UseManualLocation="True" />
+    <Node Id="gAPICodeGenFrontend" Category="Generator" Bounds="896.491656358507,48.0651774597168,147.076666666667,25.96" Label="gAPI.CodeGen.Frontend" UseManualLocation="True" />
+    <Node Id="gAPIStorage" Category="Reference" Bounds="674.971197611491,423.014705200195,88.0266666666666,25.96" Label="gAPI.Storage" UseManualLocation="True" />
+    <Node Id="gAPIStorageServer" Category="Reference" Bounds="607.129639078776,542.71928245599,123.646666666667,25.96" Label="gAPI.Storage.Server" UseManualLocation="True" />
+  </Nodes>
+  <Links>
+    <Link Source="Api" Target="Business" Bounds="717.248759901778,331.975317285102,0.426991227774124,21.0019594999664" />
+    <Link Source="Api" Target="Shared" Bounds="751.70399967694,232.982028546247,195.350748316648,73.0332887388553" />
+    <Link Source="Api" Target="gAPIAutoApi" Bounds="618.338300673582,317.830704909285,59.2815626076681,0.699872754261719" Label="Analyzer" LabelBounds="625.342138470713,322.180641296128,45.2266666666667,15.96" />
+    <Link Source="BlazorMaui" Target="Razor" Bounds="647.473015218261,17.8580391608145,40.8322075961592,25.2645998540457" />
+    <Link Source="BlazorWasm" Target="Razor" Bounds="743.804271436731,17.8580391608145,37.3336030509887,24.9933458200116" />
+    <Link Source="Business" Target="Data" Bounds="759.498105991438,387.585798823622,112.856072908047,34.4506937254193" />
+    <Link Source="Business" Target="PaymentProxy" Bounds="545.430625072654,386.469134031682,130.143648126832,35.2173069318084" />
+    <Link Source="Business" Target="Shared" Bounds="740.459742770034,234.352200260874,219.625532287253,127.623217024228" />
+    <Link Source="Business" Target="gAPIAutoHub" Bounds="537.349289222929,373.580407102758,137.803299888399,1.04816884254541" Label="Analyzer" LabelBounds="583.62239373766,378.104491525704,45.2266666666667,15.96" />
+    <Link Source="Business" Target="gAPICodeGenBackend" Bounds="761.092589111328,375.248743711818,201.136026336187,1.37301633439608" Label="Codegen" LabelBounds="837.705921242698,355.97525187793,47.9366666666667,15.96" />
+    <Link Source="Business" Target="gAPIStorage" Bounds="718.305880977615,387.935417285102,0.368280878357155,26.0801851053954" />
+    <Link Source="Data" Target="Database" Bounds="893.487556821528,450.624149780273,19.7238271348062,24.9248509156379" Label="Tcp" LabelBounds="904.91781759214,464.327658253118,17.7133333333334,15.96" />
+    <Link Source="Data" Target="Shared" Bounds="927.405265496861,238.445597288242,56.2729335956691,186.218552492031" />
+    <Link Source="Data" Target="Test2" Bounds="935.637947167151,450.624149780273,23.7980351525646,25.4131265702613" />
+    <Link Source="PaymentProxy" Target="PaymentProvider" Bounds="452.293820919159,449.997318725586,24.0500887442211,25.1096301181977" Label="Rest" LabelBounds="465.763224017174,463.935545462713,22.2633333333333,15.96" />
+    <Link Source="PaymentProxy" Target="Test" Bounds="502.963883709688,449.997318725586,28.7910249067528,26.3402714652073" />
+    <Link Source="Razor" Target="RazorComponents" Bounds="717.295442006925,73.8181391608145,0.580486361783642,21.0035352871425" />
+    <Link Source="Razor" Target="Shared" Bounds="742.068664550781,73.8181381225586,218.716613769531,125.431526184082" />
+    <Link Source="Razor" Target="gAPICodeGenFrontend" Bounds="762.408373209635,60.875336420251,125.083286160161,0.102322078506035" Label="Codegen" LabelBounds="800.983319019,40.9664974595038,47.9366666666665,15.96" />
+    <Link Source="RazorClients" Target="Shared" Bounds="783.127200904711,183.22615976934,142.528159489124,23.1430845929947" />
+    <Link Source="RazorClients" Target="gAPIAutoApiClient" Bounds="594.738751942936,185.738339160815,101.157713315043,57.6799920870845" Label="Analyzer" LabelBounds="646.308275183498,216.315741236707,45.2266666666667,15.9600000000003" />
+    <Link Source="RazorClients" Target="gAPIAutoHubClient" Bounds="552.699956558339,179.307252772376,101.453838200776,10.2999031925093" Label="Analyzer" LabelBounds="583.827661033356,188.457256942805,45.2266666666667,15.9600000000002" />
+    <Link Source="RazorComponents" Target="RazorClients" Bounds="718.524398054052,129.778239160815,0.0664807794497619,21.0001450979566" />
+    <Link Source="RazorComponents" Target="Shared" Bounds="753.734279224507,129.778239160815,192.773110924739,70.9822967629812" />
+    <Link Source="RazorComponents" Target="gAPIAutoComponent" Bounds="557.018064899862,116.844942014491,80.7452419849044,0.0467174581447694" Label="Analyzer" LabelBounds="574.778509715716,120.868300743563,45.2266666666667,15.9599999999999" />
+    <Link Source="Shared" Target="gAPICodeGenBackend" Bounds="994.482776011895,229.830365172283,41.4742186968371,125.815564211053" Label="Codegen" LabelBounds="1019.22520713437,282.540317462773,47.9366666666647,15.9599999999998" />
+    <Link Source="Storage" Target="gAPIStorageServer" Bounds="669.082041058655,509.372684936523,0.142967452241919,24.3467526843898" />
+    <Link Source="Test5" Target="gAPIAutoApi" Bounds="607.307568421241,270.027703192169,83.3605268749834,31.041012734322" />
+    <Link Source="gAPIAutoApiClient" Target="gAPIAutoApi" Bounds="564.0705450108,273.836330871582,0.0534332652071043,21.373073218254" Label="Rest" LabelBounds="568.097261643423,276.54786751956,22.2633333333338,15.9600000000002" />
+    <Link Source="gAPIAutoHub" Target="Test3" Bounds="398.717313404514,371.915209691203,34.3222361560335,0.516762707465773" />
+    <Link Source="gAPIAutoHub" Target="gAPIAutoHubClient" Bounds="480.709874837899,218.876231418184,0.166822662607785,141.293244546171" Label="SignalR" LabelBounds="437.466619502535,281.540492325065,39.3266666666666,15.96" />
+    <Link Source="gAPIStorage" Target="Storage" Bounds="685.696070371659,448.974705200195,22.6111289120558,27.4874343697203" Label="Rest" LabelBounds="698.546200464711,463.988980133811,22.2633333333333,15.96" />
+    <Link Source="gAPIStorage" Target="Test1" Bounds="733.150135692936,448.974705200195,30.0682358197887,27.5516441324459" />
+  </Links>
+  <Categories>
+    <Category Id="Analyzer" />
+    <Category Id="Backend" Background="#FF90EE90" />
+    <Category Id="Frontend" Background="#FFADD8E6" />
+    <Category Id="Generator" />
+    <Category Id="Platform" Background="#FFFFF2A8" />
+    <Category Id="Reference" />
+    <Category Id="Storage" Background="#FFFFC1C1" />
+  </Categories>
+  <Properties>
+    <Property Id="Background" Label="Background" Description="The background color" DataType="System.Windows.Media.Brush" />
+    <Property Id="Bounds" DataType="System.Windows.Rect" />
+    <Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+    <Property Id="LabelBounds" DataType="System.Windows.Rect" />
+    <Property Id="UseManualLocation" DataType="System.Boolean" />
+    <Property Id="ZoomLevel" DataType="System.String" />
+  </Properties>
 </DirectedGraph>

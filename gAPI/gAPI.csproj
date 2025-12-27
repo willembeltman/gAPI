@@ -18,7 +18,8 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>gAPI commen library</Title>
 	</PropertyGroup>
 
 	<ItemGroup>
