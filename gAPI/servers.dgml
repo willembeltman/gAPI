@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph ZoomLevel="1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+	<Nodes>
+		<Node Id="DNS" Category="Internet" Label="DNS" />
+		<Node Id="LoadBalancer1" Category="LoadBalancer" Label="LoadBalancer1" />
+		<Node Id="LoadBalancer2" Category="LoadBalancer" Label="LoadBalancer2" />
+		<Node Id="VirtualIp" Category="LoadBalancer" Label="VirtualIp" />
+		<Node Id="Node1" Category="Node" Label="Node1" />
+		<Node Id="Node2" Category="Node" Label="Node2" />
+		<Node Id="Node3" Category="Node" Label="Node3" />
+		<Node Id="Node4" Category="Node" Label="Node4" />
+		<Node Id="Node5" Category="Node" Label="Node5" />
+		<Node Id="Node6" Category="Node" Label="Node6" />
+		<Node Id="Node7" Category="Node" Label="Node7" />
+		<Node Id="Node8" Category="Node" Label="Node8" />
+		<Node Id="DataNode1" Category="DataNode" Label="DataNode1" />
+		<Node Id="DataNode2" Category="DataNode" Label="DataNode2" />
+		<Node Id="DataNode3" Category="DataNode" Label="DataNode3" />
+		<Node Id="DataNode4" Category="DataNode" Label="DataNode4" />
+		<Node Id="Fabric1" Category="Fabric" Label="Fabric1" />
+		<Node Id="Fabric2" Category="Fabric" Label="Fabric2" />
+		
+	</Nodes>
+	<Links>
+		<Link Source="DNS" Target="VirtualIp" />
+		<Link Source="VirtualIp" Target="LoadBalancer1" />
+		<Link Source="VirtualIp" Target="LoadBalancer2" />
+		<Link Source="LoadBalancer1" Target="Node1" />
+		<Link Source="LoadBalancer1" Target="Node2" />
+		<Link Source="LoadBalancer1" Target="Node3" />
+		<Link Source="LoadBalancer1" Target="Node4" />
+		<Link Source="LoadBalancer1" Target="Node5" />
+		<Link Source="LoadBalancer1" Target="Node6" />
+		<Link Source="LoadBalancer1" Target="Node7" />
+		<Link Source="LoadBalancer1" Target="Node8" />
+		
+		<Link Source="LoadBalancer2" Target="Node1" />
+		<Link Source="LoadBalancer2" Target="Node2" />
+		<Link Source="LoadBalancer2" Target="Node3" />
+		<Link Source="LoadBalancer2" Target="Node4" />
+		<Link Source="LoadBalancer2" Target="Node5" />
+		<Link Source="LoadBalancer2" Target="Node6" />
+		<Link Source="LoadBalancer2" Target="Node7" />
+		<Link Source="LoadBalancer2" Target="Node8" />
+
+		<Link Source="Node1" Target="DataNode1" />
+		<Link Source="Node2" Target="DataNode1" />
+		<Link Source="Node3" Target="DataNode1" />
+		<Link Source="Node4" Target="DataNode1" />
+		<Link Source="Node5" Target="DataNode1" />
+		<Link Source="Node6" Target="DataNode1" />
+		<Link Source="Node7" Target="DataNode1" />
+		<Link Source="Node8" Target="DataNode1" />
+
+		<Link Source="Node1" Target="DataNode2" />
+		<Link Source="Node2" Target="DataNode2" />
+		<Link Source="Node3" Target="DataNode2" />
+		<Link Source="Node4" Target="DataNode2" />
+		<Link Source="Node5" Target="DataNode2" />
+		<Link Source="Node6" Target="DataNode2" />
+		<Link Source="Node7" Target="DataNode2" />
+		<Link Source="Node8" Target="DataNode2" />
+
+		<Link Source="Node1" Target="DataNode3" />
+		<Link Source="Node2" Target="DataNode3" />
+		<Link Source="Node3" Target="DataNode3" />
+		<Link Source="Node4" Target="DataNode3" />
+		<Link Source="Node5" Target="DataNode3" />
+		<Link Source="Node6" Target="DataNode3" />
+		<Link Source="Node7" Target="DataNode3" />
+		<Link Source="Node8" Target="DataNode3" />
+
+		<Link Source="Node1" Target="DataNode4" />
+		<Link Source="Node2" Target="DataNode4" />
+		<Link Source="Node3" Target="DataNode4" />
+		<Link Source="Node4" Target="DataNode4" />
+		<Link Source="Node5" Target="DataNode4" />
+		<Link Source="Node6" Target="DataNode4" />
+		<Link Source="Node7" Target="DataNode4" />
+		<Link Source="Node8" Target="DataNode4" />
+
+		<Link Source="Node1" Target="Fabric1" />
+		<Link Source="Node2" Target="Fabric1" />
+		<Link Source="Node3" Target="Fabric1" />
+		<Link Source="Node4" Target="Fabric1" />
+		<Link Source="Node5" Target="Fabric1" />
+		<Link Source="Node6" Target="Fabric1" />
+		<Link Source="Node7" Target="Fabric1" />
+		<Link Source="Node8" Target="Fabric1" />
+
+		<Link Source="Node1" Target="Fabric2" />
+		<Link Source="Node2" Target="Fabric2" />
+		<Link Source="Node3" Target="Fabric2" />
+		<Link Source="Node4" Target="Fabric2" />
+		<Link Source="Node5" Target="Fabric2" />
+		<Link Source="Node6" Target="Fabric2" />
+		<Link Source="Node7" Target="Fabric2" />
+		<Link Source="Node8" Target="Fabric2" />
+	</Links>
+	<Categories>
+		<Category Id="Internet" />
+		<Category Id="DataCenter" />
+	</Categories>
+	<Properties>
+		<Property Id="Background" Label="Background" Description="The background color" DataType="System.Windows.Media.Brush" />
+		<Property Id="Bounds" DataType="System.Windows.Rect" />
+		<Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+		<Property Id="LabelBounds" DataType="System.Windows.Rect" />
+		<Property Id="UseManualLocation" DataType="System.Boolean" />
+		<Property Id="ZoomLevel" DataType="System.String" />
+	</Properties>
+</DirectedGraph>
