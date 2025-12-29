@@ -1,8 +1,7 @@
-﻿namespace gAPI.Fabric;
+﻿namespace gAPI.Fabric.Types;
 
-public enum ServerMessageTypeEnum
+public enum ReceivedMessageType
 {
-    Ping = 0,
     Subscribe = 1,
     UnSubscribe = 2,
     PublishToAll = 3,

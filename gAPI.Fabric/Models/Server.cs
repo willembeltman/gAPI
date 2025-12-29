@@ -1,15 +1,13 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-namespace gAPI.Fabric;
+namespace gAPI.Fabric.Models;
 
-public sealed class BusServer(int port) : IAsyncDisposable
+public sealed class Server(int port) : IAsyncDisposable
 {
     private readonly TcpListener Listener = new TcpListener(IPAddress.Any, port);
     private readonly CancellationTokenSource Cts = new();
-
-    public ConnectionRegistry Connections { get; } = new();
-    public ServiceRegistry Services { get; } = new();
+    private readonly State State = new();
 
     public async Task StartAsync()
     {
@@ -18,8 +16,8 @@ public sealed class BusServer(int port) : IAsyncDisposable
         while (!Cts.IsCancellationRequested)
         {
             var tcpClient = await Listener.AcceptTcpClientAsync(Cts.Token);
-            var busClient = new BusClient(this, tcpClient);
-            _ = busClient.RunAsync();
+            var connection = new Connection(State, tcpClient);
+            _ = connection.RunAsync();
         }
     }
 

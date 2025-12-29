@@ -1,30 +1,25 @@
-﻿using System.Collections;
+﻿using gAPI.Fabric.Models;
+using gAPI.Fabric.Types;
+using System.Collections;
 using System.Collections.Concurrent;
 
-namespace gAPI.Fabric;
+namespace gAPI.Fabric.Collections;
 
-public class ServiceRegistry : IEnumerable<Service>
+public class ServiceCollection : IEnumerable<Service>
 {
     private readonly ConcurrentDictionary<ServiceId, Service> Services = new();
     public int Count => Services.Count;
 
-    public Service GetOrCreate(ServiceId serviceId)
-    {
-        return Services.GetOrAdd(serviceId, _ => new Service(serviceId));
-    }
-
+    public Service GetOrCreate(ServiceId serviceId) => Services.GetOrAdd(serviceId, _ => new Service(serviceId));
     public Service? TryGet(ServiceId serviceId)
     {
         if (!Services.TryGetValue(serviceId, out var service))
             return null;
         return service;
     }
-
-    public bool Remove(ServiceId serviceId)
-    {
-        return Services.TryRemove(serviceId, out _);
-    }
+    public bool Remove(ServiceId serviceId) => Services.TryRemove(serviceId, out _);
 
     public IEnumerator<Service> GetEnumerator() => Services.Values.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
 }
