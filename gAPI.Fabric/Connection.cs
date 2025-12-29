@@ -1,8 +1,9 @@
 ﻿using gAPI.Fabric.Collections;
+using gAPI.Fabric.Models;
 using gAPI.Fabric.Types;
 using System.Net.Sockets;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.Fabric;
 
 /// <summary>
 /// ClientA => AutoHubA => FabricA: 
@@ -20,7 +21,7 @@ namespace gAPI.Fabric.Models;
 /// <returns></returns>
 public sealed class Connection : IAsyncDisposable
 {
-    private readonly State State;
+    private readonly State ServerState;
     private readonly TcpClient TcpClient;
     private readonly NetworkStream Stream;
     private readonly BinaryReader Reader;
@@ -32,18 +33,18 @@ public sealed class Connection : IAsyncDisposable
 
     public Connection(State state, TcpClient tcpClient)
     {
-        State = state;
+        Id = state.AddConnection(this);
+        ServerState = state;
         TcpClient = tcpClient;
         Stream = tcpClient.GetStream();
         Reader = new BinaryReader(Stream);
         Writer = new BinaryWriter(Stream);
         SendQueue = new SendQueue();
-        Id = State.AddConnection(this);
     }
 
-    public void SendMessage(ServiceId serviceId, byte[] messageData)
+    public void SendMessage(ServiceId serviceId, UserId? userId, ScopeId? scopeId, byte[] messageData)
     {
-        SendQueue.Enqueue(serviceId, messageData);
+        SendQueue.Enqueue(serviceId, userId, scopeId, messageData);
     }
 
     public async Task RunAsync()
@@ -51,7 +52,7 @@ public sealed class Connection : IAsyncDisposable
         await Task.WhenAll(
             ReceiveLoop(),
             SendLoop());
-        State.RemoveConnection(this);
+        await DisposeAsync();
     }
     private Task ReceiveLoop()
     {
@@ -60,19 +61,19 @@ public sealed class Connection : IAsyncDisposable
             switch (ReadMessageType())
             {
                 case ReceivedMessageType.Subscribe:
-                    State.Subscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
+                    ServerState.Subscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
                     break;
                 case ReceivedMessageType.UnSubscribe:
-                    State.UnSubscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
+                    ServerState.UnSubscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
                     break;
                 case ReceivedMessageType.PublishToAll:
-                    State.PublishToAll(ReadServiceId(), ReadMessageData());
+                    ServerState.PublishToAll(ReadServiceId(), ReadMessageData());
                     break;
                 case ReceivedMessageType.PublishToUser:
-                    State.PublishToUser(ReadServiceId(), ReadUserId(), ReadMessageData());
+                    ServerState.PublishToUser(ReadServiceId(), ReadUserId(), ReadMessageData());
                     break;
                 case ReceivedMessageType.PublishToScope:
-                    State.PublishToScope(ReadServiceId(), ReadScopeId(), ReadMessageData());
+                    ServerState.PublishToScope(ReadServiceId(), ReadScopeId(), ReadMessageData());
                     break;
             }
         }
@@ -80,6 +81,7 @@ public sealed class Connection : IAsyncDisposable
     }
     private Task SendLoop()
     {
+        Writer.Write(Id.Value); // Protocol version
         foreach (var message in SendQueue)
         {
             Writer.Write(message.ServiceId.Value);
@@ -133,6 +135,8 @@ public sealed class Connection : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        ServerState.RemoveConnection(this);
+
         await Stream.DisposeAsync();
         TcpClient.Dispose();
         SendQueue.Dispose();

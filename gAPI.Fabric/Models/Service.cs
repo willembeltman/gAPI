@@ -7,20 +7,20 @@ namespace gAPI.Fabric.Models;
 public record Service(ServiceId Id) : IPublishable
 {
     public SubscriptionCollection Subscriptions { get; } = new();
-    public ServiceUserCollection Users { get; } = new();
-    public ServiceScopeCollection Scopes { get; } = new();
+    public UserCollection Users { get; } = new();
+    public ScopeCollection Scopes { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, Connection busClient)
+    public void Subscribe(SubscriptionId subscriberId, Connection connection)
     {
-        var subscriber = Subscriptions.GetOrCreate(subscriberId, busClient);
+        var subscriber = Subscriptions.GetOrCreate(subscriberId, connection);
         var user = Users.GetOrCreate(subscriberId.UserId);
         var scope = Scopes.GetOrCreate(subscriberId.ScopeId);
-        
-        user.Subscribe(subscriberId, busClient);
-        scope.Subscribe(subscriberId, busClient);
+
+        user.Subscribe(subscriberId, connection);
+        scope.Subscribe(subscriberId, connection);
     }
 
-    public void UnSubscribe(SubscriptionId subscriberId, Connection busClient)
+    public void UnSubscribe(SubscriptionId subscriberId, Connection connection)
     {
         var user = Users.TryGet(subscriberId.UserId);
         var scope = Scopes.TryGet(subscriberId.ScopeId);
@@ -33,5 +33,13 @@ public record Service(ServiceId Id) : IPublishable
             Scopes.Remove(subscriberId.ScopeId);
         if (user?.Subscriptions.Count == 0)
             Users.Remove(subscriberId.UserId);
+    }
+
+    public void Publish(ServiceId serviceId, byte[] messageData)
+    {
+        foreach (var subscriber in Subscriptions)
+        {
+            subscriber.Connection.SendMessage(serviceId, null, null, messageData);
+        }
     }
 }

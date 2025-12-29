@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\gAPI.Fabric.Types\gAPI.Fabric.Types.csproj" />
+  </ItemGroup>
+
 </Project>

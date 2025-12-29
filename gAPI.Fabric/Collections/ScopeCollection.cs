@@ -5,13 +5,13 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Collections;
 
-public class ServiceScopeCollection : IEnumerable<ServiceScope>
+public class ScopeCollection : IEnumerable<Scope>
 {
-    private readonly ConcurrentDictionary<ScopeId, ServiceScope> Scopes = new();
+    private readonly ConcurrentDictionary<ScopeId, Scope> Scopes = new();
     public int Count => Scopes.Count;
 
-    public ServiceScope GetOrCreate(ScopeId scopeId) => Scopes.GetOrAdd(scopeId, _ => new ServiceScope(scopeId));
-    public ServiceScope? TryGet(ScopeId scopeId)
+    public Scope GetOrCreate(ScopeId scopeId) => Scopes.GetOrAdd(scopeId, _ => new Scope(scopeId));
+    public Scope? TryGet(ScopeId scopeId)
     {
         if (!Scopes.TryGetValue(scopeId, out var scope))
             return null;
@@ -19,6 +19,6 @@ public class ServiceScopeCollection : IEnumerable<ServiceScope>
     }
     public bool Remove(ScopeId scopeId) => Scopes.TryRemove(scopeId, out _);
 
-    public IEnumerator<ServiceScope> GetEnumerator() => Scopes.Values.GetEnumerator();
+    public IEnumerator<Scope> GetEnumerator() => Scopes.Values.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

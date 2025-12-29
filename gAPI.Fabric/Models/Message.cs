@@ -3,5 +3,7 @@
 namespace gAPI.Fabric.Models;
 
 public record Message(
-    ServiceId ServiceId, 
+    ServiceId ServiceId,
+    UserId? userId,
+    ScopeId? scopeId,
     byte[] Data);

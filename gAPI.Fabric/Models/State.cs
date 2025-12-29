@@ -20,19 +20,19 @@ public class State
 
     public void Subscribe(ServiceId serviceId, UserId userId, ScopeId scopeId, Connection connection)
     {
-        var subscriberId = new SubscriptionId(serviceId, userId, scopeId, connection.Id);
-        var service = Services.GetOrCreate(subscriberId.ServiceId);
+        var subscriberId = new SubscriptionId(userId, scopeId, connection.Id);
+        var service = Services.GetOrCreate(serviceId);
         service.Subscribe(subscriberId, connection);
     }
     public void UnSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId, Connection connection)
     {
-        var subscriberId = new SubscriptionId(serviceId, userId, scopeId, connection.Id);
-        var service = Services.TryGet(subscriberId.ServiceId);
+        var subscriberId = new SubscriptionId(userId, scopeId, connection.Id);
+        var service = Services.TryGet(serviceId);
         if (service == null)
             return;
         service.UnSubscribe(subscriberId, connection);
         if (service.Users.Count == 0 && service.Scopes.Count == 0)
-            Services.Remove(subscriberId.ServiceId);
+            Services.Remove(serviceId);
     }
     
     public void PublishToAll(ServiceId serviceId, byte[] messageData)

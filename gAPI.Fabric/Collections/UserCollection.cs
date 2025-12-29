@@ -5,13 +5,13 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Collections;
 
-public class ServiceUserCollection : IEnumerable<ServiceUser>
+public class UserCollection : IEnumerable<User>
 {
-    private readonly ConcurrentDictionary<UserId, ServiceUser> Users = new();
+    private readonly ConcurrentDictionary<UserId, User> Users = new();
     public int Count => Users.Count;
 
-    public ServiceUser GetOrCreate(UserId userId) => Users.GetOrAdd(userId, _ => new ServiceUser(userId));
-    public ServiceUser? TryGet(UserId userId)
+    public User GetOrCreate(UserId userId) => Users.GetOrAdd(userId, _ => new User(userId));
+    public User? TryGet(UserId userId)
     {
         if (!Users.TryGetValue(userId, out var user))
             return null;
@@ -19,6 +19,6 @@ public class ServiceUserCollection : IEnumerable<ServiceUser>
     }
     public bool Remove(UserId userId) => Users.TryRemove(userId, out _);
 
-    public IEnumerator<ServiceUser> GetEnumerator() => Users.Values.GetEnumerator();
+    public IEnumerator<User> GetEnumerator() => Users.Values.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -4,4 +4,4 @@ namespace gAPI.Fabric.Models;
 
 public record Subscription(
     SubscriptionId Id,
-    Connection BusClient);
+    Connection Connection);

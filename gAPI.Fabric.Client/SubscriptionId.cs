@@ -1,7 +1,9 @@
-﻿namespace gAPI.Fabric.Types;
+﻿using gAPI.Fabric.Types;
+
+namespace gAPI.Fabric.Client;
 
 public readonly record struct SubscriptionId(
-    //ServiceId ServiceId,
+    ServiceId ServiceId,
     UserId UserId,
     ScopeId ScopeId,
     ConnectionId ClientId

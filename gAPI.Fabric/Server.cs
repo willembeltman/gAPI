@@ -1,7 +1,8 @@
-﻿using System.Net;
+﻿using gAPI.Fabric.Models;
+using System.Net;
 using System.Net.Sockets;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.Fabric;
 
 public sealed class Server(int port) : IAsyncDisposable
 {

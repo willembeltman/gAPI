@@ -11,9 +11,9 @@ public class SendQueue : IEnumerable<Message>, IDisposable
     private readonly AutoResetEvent SendSignal = new(false);
     private bool KillSwitch = false;
 
-    public void Enqueue(ServiceId serviceId, byte[] messageData)
+    public void Enqueue(ServiceId serviceId, UserId? userId, ScopeId? scopeId, byte[] messageData)
     {
-        Queue.Enqueue(new Message(serviceId, messageData));
+        Queue.Enqueue(new Message(serviceId, userId, scopeId, messageData));
         SendSignal.Set();
     }
 

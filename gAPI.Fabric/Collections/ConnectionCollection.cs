@@ -1,5 +1,4 @@
-﻿using gAPI.Fabric.Models;
-using gAPI.Fabric.Types;
+﻿using gAPI.Fabric.Types;
 using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Collections;

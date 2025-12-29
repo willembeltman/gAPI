@@ -10,14 +10,21 @@ public class SubscriptionCollection : IEnumerable<Subscription>
     private readonly ConcurrentDictionary<SubscriptionId, Subscription> Subscriptions = new();
     public int Count => Subscriptions.Count;
 
-    public Subscription GetOrCreate(SubscriptionId subscriberId, Connection busClient) => Subscriptions.GetOrAdd(subscriberId, _ => new Subscription(subscriberId, busClient));
+    public Subscription GetOrCreate(SubscriptionId subscriberId, Connection connection)
+    {
+        return Subscriptions.GetOrAdd(subscriberId, _ => new Subscription(subscriberId, connection));
+    }
+
     internal Subscription? TryGet(SubscriptionId subscriberId)
     {
         if (!Subscriptions.TryGetValue(subscriberId, out var subscriber))
             return null;
         return subscriber;
     }
-    public bool Remove(SubscriptionId subscriberId) => Subscriptions.TryRemove(subscriberId, out _);
+    public bool Remove(SubscriptionId subscriberId)
+    {
+        return Subscriptions.TryRemove(subscriberId, out _);
+    }
 
     public IEnumerator<Subscription> GetEnumerator() => Subscriptions.Values.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
