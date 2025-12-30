@@ -13,6 +13,6 @@
   // AddAutoClient.SignalRServices() extention?
   "AddAutoClient.SignalRServices_Destination": {
     "Directory": "Services",
-    "Namespace": "BSD.Business.Services"
+    "Namespace": "BSD.Core.Services"
   }
 }

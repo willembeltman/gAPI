@@ -1,5 +1,7 @@
 ﻿namespace gAPI.Fabric.Types;
 
-public class SseMessage
-{
-}
+public record SseMessage(
+    ServiceId ServiceId,
+    UserId? UserId,
+    SessionId? SessionId,
+    string Data);

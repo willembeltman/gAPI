@@ -36,8 +36,12 @@ public record Service(ServiceId Id)
 
     public void Publish(ServiceId serviceId, string messageData)
     {
-        foreach (var subscriber in Subscriptions)
-            subscriber.Connection.SendMessage(
-                new SendMessage(serviceId, null, null, messageData));
+        foreach (var connection in Subscriptions
+            .GroupBy(a => a.Connection)
+            .Select(a => a.Key))
+        {
+            connection.SendMessage(
+                new SseMessage(serviceId, null, null, messageData));
+        }
     }
 }

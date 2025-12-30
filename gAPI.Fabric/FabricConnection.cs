@@ -9,7 +9,7 @@ public sealed class FabricConnection : IAsyncDisposable
     private readonly ConnectionManager Manager;
     private readonly TcpClient TcpClient;
     private readonly NetworkStream Stream;
-    private readonly SendQueue<SendMessage> SendQueue;
+    private readonly AutoResetQueue<SseMessage> SendQueue;
     private readonly FabricConnectionReceiver Receiver;
     private readonly FabricConnectionSender Sender;
 
@@ -22,7 +22,7 @@ public sealed class FabricConnection : IAsyncDisposable
         Manager = manager;
         TcpClient = tcpClient;
         Stream = tcpClient.GetStream();
-        SendQueue = new SendQueue<SendMessage>();
+        SendQueue = new AutoResetQueue<SseMessage>();
         Receiver = new FabricConnectionReceiver(this, Stream, Manager);
         Sender = new FabricConnectionSender(this, Stream, SendQueue);
     }
@@ -35,7 +35,7 @@ public sealed class FabricConnection : IAsyncDisposable
         await DisposeAsync();
     }
 
-    public void SendMessage(SendMessage message)
+    public void SendMessage(SseMessage message)
     {
         SendQueue.Enqueue(message);
     }
@@ -49,4 +49,3 @@ public sealed class FabricConnection : IAsyncDisposable
         SendQueue.Dispose();
     }
 }
-

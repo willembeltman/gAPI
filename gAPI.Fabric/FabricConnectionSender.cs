@@ -1,5 +1,4 @@
-﻿using gAPI.Fabric.Models;
-using gAPI.Fabric.Types;
+﻿using gAPI.Fabric.Types;
 using System.Net.Sockets;
 
 namespace gAPI.Fabric;
@@ -7,7 +6,7 @@ namespace gAPI.Fabric;
 internal class FabricConnectionSender(
     FabricConnection Connection,
     NetworkStream Stream, 
-    SendQueue<SendMessage> SendQueue)
+    AutoResetQueue<SseMessage> SendQueue)
 {
     public Task SendLoop(CancellationToken ct)
     {

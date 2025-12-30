@@ -4,7 +4,8 @@ public enum ReceivedMessageType
 {
     Subscribe = 1,
     UnSubscribe = 2,
-    PublishToAll = 3,
-    PublishToUser = 4,
-    PublishToScope = 5,
+    Publish = 3,
+    //PublishToAll = 4,
+    //PublishToUser = 5,
+    //PublishToScope =6,
 }

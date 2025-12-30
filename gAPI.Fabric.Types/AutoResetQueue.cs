@@ -2,7 +2,7 @@
 
 namespace gAPI.Fabric.Types;
 
-public class SendQueue<T> : IDisposable
+public class AutoResetQueue<T> : IDisposable
 {
     private readonly ConcurrentQueue<T> Queue = new();
     private readonly AutoResetEvent SendSignal = new(false);

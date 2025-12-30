@@ -8,7 +8,7 @@ public sealed class Server(int port) : IAsyncDisposable
 {
     private readonly TcpListener Listener = new TcpListener(IPAddress.Any, port);
     private readonly CancellationTokenSource Cts = new();
-    private readonly ConnectionManager State = new();
+    private readonly ConnectionManager Manager = new();
 
     public async Task StartAsync()
     {
@@ -17,7 +17,7 @@ public sealed class Server(int port) : IAsyncDisposable
         while (!Cts.IsCancellationRequested)
         {
             var tcpClient = await Listener.AcceptTcpClientAsync(Cts.Token);
-            var connection = new FabricConnection(State, tcpClient);
+            var connection = new FabricConnection(Manager, tcpClient);
             _ = connection.RunAsync(Cts.Token);
         }
     }

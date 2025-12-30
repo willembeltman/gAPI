@@ -13,6 +13,6 @@
   // AddAutoApiServices() extention?
   "AddAutoApiServices_Destination": {
     "Directory": "Services",
-    "Namespace": "BSD.Business.Services"
+    "Namespace": "BSD.Core.Services"
   }
 }

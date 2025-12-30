@@ -33,27 +33,53 @@ public class ConnectionManager
         if (service.Users.Count == 0 && service.Scopes.Count == 0)
             Services.Remove(serviceId);
     }
-    
-    public void PublishToAll(ServiceId serviceId, string messageData)
+
+    internal void Publish(ServiceId serviceId, UserId? userId, SessionId? sessionId, string messageData)
     {
-        var service = Services.TryGet(serviceId);
-        if (service == null) return;
-        service.Publish(serviceId, messageData);
+        if (userId != null)
+        {
+            var service = Services.TryGet(serviceId);
+            if (service == null) return;
+            var user = service.Users.TryGet(userId.Value);
+            if (user == null) return;
+            user.Publish(serviceId, messageData);
+        }
+        else if (sessionId != null)
+        {
+            var service = Services.TryGet(serviceId);
+            if (service == null) return;
+            var scope = service.Scopes.TryGet(sessionId.Value);
+            if (scope == null) return;
+            scope.Publish(serviceId, messageData);
+        }
+        else
+        {
+            var service = Services.TryGet(serviceId);
+            if (service == null) return;
+            service.Publish(serviceId, messageData);
+        }
     }
-    public void PublishToUser(ServiceId serviceId, UserId userId, string messageData)
-    {
-        var service = Services.TryGet(serviceId);
-        if (service == null) return;
-        var user = service.Users.TryGet(userId);
-        if (user == null) return;
-        user.Publish(serviceId, messageData);
-    }
-    public void PublishToScope(ServiceId serviceId, SessionId sessionId, string messageData)
-    {
-        var service = Services.TryGet(serviceId);
-        if (service == null) return;
-        var scope = service.Scopes.TryGet(sessionId);
-        if (scope == null) return;
-        scope.Publish(serviceId, messageData);
-    }
+
+    //public void PublishToAll(ServiceId serviceId, string messageData)
+    //{
+    //    var service = Services.TryGet(serviceId);
+    //    if (service == null) return;
+    //    service.Publish(serviceId, messageData);
+    //}
+    //public void PublishToUser(ServiceId serviceId, UserId userId, string messageData)
+    //{
+    //    var service = Services.TryGet(serviceId);
+    //    if (service == null) return;
+    //    var user = service.Users.TryGet(userId);
+    //    if (user == null) return;
+    //    user.Publish(serviceId, messageData);
+    //}
+    //public void PublishToScope(ServiceId serviceId, SessionId sessionId, string messageData)
+    //{
+    //    var service = Services.TryGet(serviceId);
+    //    if (service == null) return;
+    //    var scope = service.Scopes.TryGet(sessionId);
+    //    if (scope == null) return;
+    //    scope.Publish(serviceId, messageData);
+    //}
 }
