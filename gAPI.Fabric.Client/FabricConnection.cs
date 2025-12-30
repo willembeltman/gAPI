@@ -27,6 +27,12 @@ public sealed class FabricConnection : IAsyncDisposable
         Port = port;
     }
 
+    public IAsyncEnumerable<SseMessage> StreamMessages(ScopeId scopeId, UserId userId, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+
     #region Lifecycle
 
     public async Task ConnectAsync()
@@ -56,18 +62,16 @@ public sealed class FabricConnection : IAsyncDisposable
 
     #endregion
 
-
-
     #region Gateway
 
-    private void SendSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId)
+    public void SendSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId)
     {
         var sub = new SubscriptionId(serviceId, userId, scopeId, ClientId);
         ActiveSubscriptions.Add(sub);
         SendSubscribe(sub);
     }
 
-    private void SendSubscribe(SubscriptionId sub)
+    public void SendSubscribe(SubscriptionId sub)
     {
         Enqueue(w =>
         {
@@ -78,7 +82,7 @@ public sealed class FabricConnection : IAsyncDisposable
         });
     }
 
-    private void SendUnSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId)
+    public void SendUnSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId)
     {
         var sub = new SubscriptionId(serviceId, userId, scopeId, ClientId);
         ActiveSubscriptions.Remove(sub);
@@ -91,7 +95,7 @@ public sealed class FabricConnection : IAsyncDisposable
         });
     }
 
-    private void SendPublishToAll(ServiceId serviceId, byte[] data)
+    public void SendPublishToAll(ServiceId serviceId, byte[] data)
     {
         Enqueue(w =>
         {
@@ -101,7 +105,7 @@ public sealed class FabricConnection : IAsyncDisposable
         });
     }
 
-    private void SendPublishToUser(ServiceId serviceId, UserId userId, byte[] data)
+    public void SendPublishToUser(ServiceId serviceId, UserId userId, byte[] data)
     {
         Enqueue(w =>
         {
@@ -112,7 +116,7 @@ public sealed class FabricConnection : IAsyncDisposable
         });
     }
 
-    private void SendPublishToScope(ServiceId serviceId, ScopeId scopeId, byte[] data)
+    public void SendPublishToScope(ServiceId serviceId, ScopeId scopeId, byte[] data)
     {
         Enqueue(w =>
         {
@@ -182,11 +186,11 @@ public sealed class FabricConnection : IAsyncDisposable
     private static void WriteUserId(BinaryWriter w, UserId id)
     {
         w.Write(id.Value == null);
-        if (id.Value != null) w.Write(id.Value.Value.ToByteArray());
+        if (id.Value != null) w.Write(id.Value);
     }
     private static void WriteScopeId(BinaryWriter w, ScopeId id)
     {
-        w.Write(id.Value.ToByteArray());
+        w.Write(id.Value);
     }
     private static void WriteMessageData(BinaryWriter w, byte[] data)
     {

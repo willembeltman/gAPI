@@ -21,7 +21,7 @@ namespace gAPI.Fabric;
 /// <returns></returns>
 public sealed class Connection : IAsyncDisposable
 {
-    private readonly State ServerState;
+    private readonly State State;
     private readonly TcpClient TcpClient;
     private readonly NetworkStream Stream;
     private readonly BinaryReader Reader;
@@ -33,13 +33,13 @@ public sealed class Connection : IAsyncDisposable
 
     public Connection(State state, TcpClient tcpClient)
     {
-        Id = state.AddConnection(this);
-        ServerState = state;
+        State = state;
         TcpClient = tcpClient;
         Stream = tcpClient.GetStream();
         Reader = new BinaryReader(Stream);
         Writer = new BinaryWriter(Stream);
         SendQueue = new SendQueue();
+        Id = state.AddConnection(this);
     }
 
     public void SendMessage(ServiceId serviceId, UserId? userId, ScopeId? scopeId, byte[] messageData)
@@ -61,19 +61,19 @@ public sealed class Connection : IAsyncDisposable
             switch (ReadMessageType())
             {
                 case ReceivedMessageType.Subscribe:
-                    ServerState.Subscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
+                    State.Subscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
                     break;
                 case ReceivedMessageType.UnSubscribe:
-                    ServerState.UnSubscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
+                    State.UnSubscribe(ReadServiceId(), ReadUserId(), ReadScopeId(), this);
                     break;
                 case ReceivedMessageType.PublishToAll:
-                    ServerState.PublishToAll(ReadServiceId(), ReadMessageData());
+                    State.PublishToAll(ReadServiceId(), ReadMessageData());
                     break;
                 case ReceivedMessageType.PublishToUser:
-                    ServerState.PublishToUser(ReadServiceId(), ReadUserId(), ReadMessageData());
+                    State.PublishToUser(ReadServiceId(), ReadUserId(), ReadMessageData());
                     break;
                 case ReceivedMessageType.PublishToScope:
-                    ServerState.PublishToScope(ReadServiceId(), ReadScopeId(), ReadMessageData());
+                    State.PublishToScope(ReadServiceId(), ReadScopeId(), ReadMessageData());
                     break;
             }
         }
@@ -135,7 +135,7 @@ public sealed class Connection : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        ServerState.RemoveConnection(this);
+        State.RemoveConnection(this);
 
         await Stream.DisposeAsync();
         TcpClient.Dispose();

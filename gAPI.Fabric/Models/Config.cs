@@ -4,7 +4,7 @@ namespace gAPI.Fabric.Models;
 
 public class Config
 {
-    public int Port { get; set; } = 8080;
+    public int Port { get; set; } = 9494;
 
     public async static Task<Config> LoadAsync()
     {

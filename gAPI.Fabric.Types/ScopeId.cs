@@ -1,3 +1,3 @@
 ﻿namespace gAPI.Fabric.Types;
 
-public readonly record struct ScopeId(Guid Value);
+public readonly record struct ScopeId(string Value);
