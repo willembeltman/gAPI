@@ -101,7 +101,7 @@ public class {Name} : {ISignalRConnection.Name}
             Started = true;
         }}
 
-        await Connection.InvokeAsync(""InitializeAsync"", ClientAuthenticationService.ScopeIdentifier);
+        await Connection.InvokeAsync(""InitializeAsync"", ClientAuthenticationService.SessionId);
     }}{properties}
 
     public async ValueTask DisposeAsync()

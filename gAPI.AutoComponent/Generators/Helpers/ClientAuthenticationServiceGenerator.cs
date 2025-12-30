@@ -55,7 +55,7 @@ namespace {Namespace}
         {{
             NavigationManager = navigationManager;
             HttpClient = httpClientFactory.CreateClient(""WithCookies"");
-            ScopeIdentifier = Guid.NewGuid();
+            SessionId = Guid.NewGuid();
         }}
 
         private readonly NavigationManager NavigationManager;
@@ -63,7 +63,7 @@ namespace {Namespace}
         public event {StateChangedHandler.Name}? OnStateHasChanged;
 
         protected virtual HttpClient HttpClient {{ get; }}
-        public virtual Guid ScopeIdentifier {{ get; }} 
+        public virtual Guid SessionId {{ get; }} 
 
         protected virtual {State.Name}? State {{ get; set; }}
         protected virtual DateTime? LastChecked {{ get; set; }}
@@ -140,15 +140,15 @@ namespace {Namespace}
 
         protected virtual Task DecorateHttpClientAsync()
         {{
-            string? scopeIdentifier = null;
+            string? sessionId = null;
             bool reload = false;
-            if (HttpClient.DefaultRequestHeaders.TryGetValues(""ScopeIdentifier"", out var values))
+            if (HttpClient.DefaultRequestHeaders.TryGetValues(""SessionId"", out var values))
             {{
                 foreach (var value in values)
                 {{
-                    if (scopeIdentifier == null)
+                    if (sessionId == null)
                     {{
-                        scopeIdentifier = value;
+                        sessionId = value;
                     }}
                     else
                     {{
@@ -157,13 +157,13 @@ namespace {Namespace}
                     }}
                 }}
             }}
-            if (scopeIdentifier != ScopeIdentifier.ToString() || reload)
+            if (sessionId != SessionId.ToString() || reload)
             {{
-                while (HttpClient.DefaultRequestHeaders.Contains(""ScopeIdentifier""))
+                while (HttpClient.DefaultRequestHeaders.Contains(""SessionId""))
                 {{
-                    HttpClient.DefaultRequestHeaders.Remove(""ScopeIdentifier"");
+                    HttpClient.DefaultRequestHeaders.Remove(""SessionId"");
                 }}
-                HttpClient.DefaultRequestHeaders.Add(""ScopeIdentifier"", ScopeIdentifier.ToString());
+                HttpClient.DefaultRequestHeaders.Add(""SessionId"", SessionId.ToString());
             }}
             return Task.CompletedTask;
         }}

@@ -8,9 +8,9 @@ namespace gAPI.Interfaces
         /// <summary>
         /// Is called to see if the request is authenticated. Return true if client is authenticated, otherwise return false.
         /// </summary>
-        /// <param name="scopeIdentifier"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
-        Task<bool> InitializeAsync(Guid scopeIdentifier);
+        Task<bool> InitializeAsync(Guid sessionId);
         /// <summary>
         /// Asynchronously retrieves the unique identifier of the current user, if available.
         /// </summary>
@@ -20,6 +20,6 @@ namespace gAPI.Interfaces
         /// <summary>
         /// Gets the unique identifier that defines the scope for the current context, if available.
         /// </summary>
-        Guid? ScopeIdentifier { get; }
+        Guid? SessionId { get; }
     }
 }

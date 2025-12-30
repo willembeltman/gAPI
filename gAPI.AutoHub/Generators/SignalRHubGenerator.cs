@@ -34,9 +34,9 @@ public class {Name}(gAPI.Interfaces.IServerAuthenticationService authenticationS
         await base.OnConnectedAsync();
     }}
 
-    public async Task InitializeAsync(Guid scopeIdentifier)
+    public async Task InitializeAsync(Guid sessionId)
     {{
-        await authenticationService.InitializeAsync(scopeIdentifier);
+        await authenticationService.InitializeAsync(sessionId);
         var userId = await authenticationService.GetUserId();
         if (userId == null) return;
 

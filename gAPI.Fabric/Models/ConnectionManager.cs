@@ -1,32 +1,31 @@
 ﻿using gAPI.Fabric.Collections;
-using gAPI.Fabric.Helpers;
 using gAPI.Fabric.Types;
 
 namespace gAPI.Fabric.Models;
 
-public class State
+public class ConnectionManager
 {
-    private ConnectionCollection Connections = new();
+    private FabricConnectionCollection Connections = new();
     private ServiceCollection Services = new();
-
-    public ConnectionId AddConnection(Connection connection)
+    
+    public FabricConnectionId AddConnection(FabricConnection connection)
     {
         return Connections.AddConnection(connection);
     }
-    public void RemoveConnection(Connection connection)
+    public void RemoveConnection(FabricConnection connection)
     {
         Connections.RemoveConnection(connection.Id);
     }
 
-    public void Subscribe(ServiceId serviceId, UserId userId, ScopeId scopeId, Connection connection)
+    public void Subscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricConnection connection)
     {
-        var subscriberId = new SubscriptionId(userId, scopeId, connection.Id);
+        var subscriberId = new SubscriptionId(userId, sessionId, connection.Id);
         var service = Services.GetOrCreate(serviceId);
         service.Subscribe(subscriberId, connection);
     }
-    public void UnSubscribe(ServiceId serviceId, UserId userId, ScopeId scopeId, Connection connection)
+    public void UnSubscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricConnection connection)
     {
-        var subscriberId = new SubscriptionId(userId, scopeId, connection.Id);
+        var subscriberId = new SubscriptionId(userId, sessionId, connection.Id);
         var service = Services.TryGet(serviceId);
         if (service == null)
             return;
@@ -35,13 +34,13 @@ public class State
             Services.Remove(serviceId);
     }
     
-    public void PublishToAll(ServiceId serviceId, byte[] messageData)
+    public void PublishToAll(ServiceId serviceId, string messageData)
     {
         var service = Services.TryGet(serviceId);
         if (service == null) return;
         service.Publish(serviceId, messageData);
     }
-    public void PublishToUser(ServiceId serviceId, UserId userId, byte[] messageData)
+    public void PublishToUser(ServiceId serviceId, UserId userId, string messageData)
     {
         var service = Services.TryGet(serviceId);
         if (service == null) return;
@@ -49,11 +48,11 @@ public class State
         if (user == null) return;
         user.Publish(serviceId, messageData);
     }
-    public void PublishToScope(ServiceId serviceId, ScopeId scopeId, byte[] messageData)
+    public void PublishToScope(ServiceId serviceId, SessionId sessionId, string messageData)
     {
         var service = Services.TryGet(serviceId);
         if (service == null) return;
-        var scope = service.Scopes.TryGet(scopeId);
+        var scope = service.Scopes.TryGet(sessionId);
         if (scope == null) return;
         scope.Publish(serviceId, messageData);
     }

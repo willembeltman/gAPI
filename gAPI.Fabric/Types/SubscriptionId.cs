@@ -3,6 +3,6 @@
 public readonly record struct SubscriptionId(
     //ServiceId ServiceId,
     UserId UserId,
-    ScopeId ScopeId,
-    ConnectionId ClientId
+    SessionId SessionId,
+    FabricConnectionId ConnectionId
     );

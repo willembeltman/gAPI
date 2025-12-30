@@ -10,7 +10,7 @@ public class SubscriptionCollection : IEnumerable<Subscription>
     private readonly ConcurrentDictionary<SubscriptionId, Subscription> Subscriptions = new();
     public int Count => Subscriptions.Count;
 
-    public Subscription GetOrCreate(SubscriptionId subscriberId, Connection connection)
+    public Subscription GetOrCreate(SubscriptionId subscriberId, FabricConnection connection)
     {
         return Subscriptions.GetOrAdd(subscriberId, _ => new Subscription(subscriberId, connection));
     }

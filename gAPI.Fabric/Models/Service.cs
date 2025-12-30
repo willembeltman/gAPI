@@ -1,45 +1,43 @@
 ﻿using gAPI.Fabric.Collections;
-using gAPI.Fabric.Helpers;
 using gAPI.Fabric.Types;
 
 namespace gAPI.Fabric.Models;
 
-public record Service(ServiceId Id) : IPublishable
+public record Service(ServiceId Id)
 {
     public SubscriptionCollection Subscriptions { get; } = new();
     public UserCollection Users { get; } = new();
-    public ScopeCollection Scopes { get; } = new();
+    public SessionCollection Scopes { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, Connection connection)
+    public void Subscribe(SubscriptionId subscriberId, FabricConnection connection)
     {
         var subscriber = Subscriptions.GetOrCreate(subscriberId, connection);
         var user = Users.GetOrCreate(subscriberId.UserId);
-        var scope = Scopes.GetOrCreate(subscriberId.ScopeId);
+        var scope = Scopes.GetOrCreate(subscriberId.SessionId);
 
         user.Subscribe(subscriberId, connection);
         scope.Subscribe(subscriberId, connection);
     }
 
-    public void UnSubscribe(SubscriptionId subscriberId, Connection connection)
+    public void UnSubscribe(SubscriptionId subscriberId, FabricConnection connection)
     {
         var user = Users.TryGet(subscriberId.UserId);
-        var scope = Scopes.TryGet(subscriberId.ScopeId);
+        var scope = Scopes.TryGet(subscriberId.SessionId);
 
         scope?.UnSubscribe(subscriberId);
         user?.UnSubscribe(subscriberId);
 
         Subscriptions.Remove(subscriberId);
         if (scope?.Subscriptions.Count == 0)
-            Scopes.Remove(subscriberId.ScopeId);
+            Scopes.Remove(subscriberId.SessionId);
         if (user?.Subscriptions.Count == 0)
             Users.Remove(subscriberId.UserId);
     }
 
-    public void Publish(ServiceId serviceId, byte[] messageData)
+    public void Publish(ServiceId serviceId, string messageData)
     {
         foreach (var subscriber in Subscriptions)
-        {
-            subscriber.Connection.SendMessage(serviceId, null, null, messageData);
-        }
+            subscriber.Connection.SendMessage(
+                new SendMessage(serviceId, null, null, messageData));
     }
 }

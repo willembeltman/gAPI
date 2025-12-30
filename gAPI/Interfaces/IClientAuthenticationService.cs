@@ -6,7 +6,7 @@ namespace gAPI.Interfaces
 {
     public interface IClientAuthenticationService
     {
-        Guid ScopeIdentifier { get; }
+        Guid SessionId { get; }
         Task<bool> IsAuthenticated();
         Task<HttpResponseMessage> GetAsync(string path);
         Task<HttpResponseMessage> PostAsync(string path, MultipartFormDataContent content);
