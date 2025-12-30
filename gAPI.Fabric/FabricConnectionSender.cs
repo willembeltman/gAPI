@@ -3,12 +3,13 @@ using System.Net.Sockets;
 
 namespace gAPI.Fabric;
 
-internal class FabricConnectionSender(
+public class FabricConnectionSender(
     FabricConnection Connection,
     NetworkStream Stream, 
-    AutoResetQueue<SseMessage> SendQueue)
+    AutoResetQueue<SseMessage> SendQueue,
+    CancellationToken ct)
 {
-    public Task SendLoop(CancellationToken ct)
+    public async Task SendLoop()
     {
         var Writer = new BinaryWriter(Stream);
         Writer.Write(Connection.Id.Value); 
@@ -19,6 +20,10 @@ internal class FabricConnectionSender(
             Writer.Write(message.Data);
             if (ct.IsCancellationRequested) break;
         }
-        return Task.CompletedTask;
+    }
+
+    public void SendMessage(SseMessage message)
+    {
+        SendQueue.Enqueue(message);
     }
 }

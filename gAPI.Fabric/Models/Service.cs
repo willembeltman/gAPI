@@ -40,7 +40,7 @@ public record Service(ServiceId Id)
             .GroupBy(a => a.Connection)
             .Select(a => a.Key))
         {
-            connection.SendMessage(
+            connection.Sender.SendMessage(
                 new SseMessage(serviceId, null, null, messageData));
         }
     }

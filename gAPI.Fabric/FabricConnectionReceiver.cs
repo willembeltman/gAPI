@@ -4,9 +4,13 @@ using System.Net.Sockets;
 
 namespace gAPI.Fabric;
 
-public class FabricConnectionReceiver(FabricConnection connection, NetworkStream stream, ConnectionManager manager)
+public class FabricConnectionReceiver(
+    FabricConnection connection, 
+    NetworkStream stream, 
+    ConnectionManager manager,
+    CancellationToken ct)
 {
-    public Task ReceiveLoop(CancellationToken ct)
+    public Task ReceiveLoop()
     {
         var c = new FabricConverter();
         var r = new BinaryReader(stream);

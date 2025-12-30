@@ -23,7 +23,7 @@ public record User(UserId Id)
             .GroupBy(a => a.Connection)
             .Select(a => a.Key))
         {
-            connection.SendMessage(
+            connection.Sender.SendMessage(
                 new SseMessage(serviceId, Id, null, messageData));
         }
     }

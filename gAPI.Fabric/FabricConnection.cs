@@ -8,36 +8,32 @@ public sealed class FabricConnection : IAsyncDisposable
 {
     private readonly ConnectionManager Manager;
     private readonly TcpClient TcpClient;
+    private readonly CancellationToken Ct;
     private readonly NetworkStream Stream;
     private readonly AutoResetQueue<SseMessage> SendQueue;
-    private readonly FabricConnectionReceiver Receiver;
-    private readonly FabricConnectionSender Sender;
+    public FabricConnectionReceiver Receiver { get; }
+    public FabricConnectionSender Sender { get; }
 
     public FabricConnectionId Id { get; }
 
-    public FabricConnection(ConnectionManager manager, TcpClient tcpClient)
+    public FabricConnection(ConnectionManager manager, TcpClient tcpClient, CancellationToken ct)
     {
         Id = manager.AddConnection(this);
 
         Manager = manager;
         TcpClient = tcpClient;
+        Ct = ct;
         Stream = tcpClient.GetStream();
         SendQueue = new AutoResetQueue<SseMessage>();
-        Receiver = new FabricConnectionReceiver(this, Stream, Manager);
-        Sender = new FabricConnectionSender(this, Stream, SendQueue);
+        Receiver = new FabricConnectionReceiver(this, Stream, Manager, Ct);
+        Sender = new FabricConnectionSender(this, Stream, SendQueue, Ct);
     }
 
-    public async Task RunAsync(CancellationToken ct)
+    public async Task RunAsync()
     {
-        await Task.WhenAll(
-            Receiver.ReceiveLoop(ct),
-            Sender.SendLoop(ct));
-        await DisposeAsync();
-    }
-
-    public void SendMessage(SseMessage message)
-    {
-        SendQueue.Enqueue(message);
+        _ = Task.Run(Receiver.ReceiveLoop);
+        _ = Task.Run(Sender.SendLoop);
+        //await DisposeAsync();
     }
 
     public async ValueTask DisposeAsync()
