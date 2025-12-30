@@ -4,4 +4,4 @@ namespace gAPI.Fabric.Models;
 
 public record Subscription(
     SubscriptionId Id,
-    FabricConnection Connection);
+    FabricHost Connection);

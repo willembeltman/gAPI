@@ -3,22 +3,22 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Collections;
 
-public sealed class FabricConnectionCollection
+public sealed class FabricHostCollection
 {
     private long _nextId;
-    private readonly ConcurrentDictionary<FabricConnectionId, FabricConnection> Clients = new();
+    private readonly ConcurrentDictionary<FabricHostId, FabricHost> Clients = new();
 
-    public FabricConnectionId AddConnection(FabricConnection client)
+    public FabricHostId AddConnection(FabricHost client)
     {
-        var id = new FabricConnectionId(Interlocked.Increment(ref _nextId));
+        var id = new FabricHostId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
         return id;
     }
 
-    public bool RemoveConnection(FabricConnectionId id)
+    public bool RemoveConnection(FabricHostId id)
     {
         return Clients.TryRemove(id, out _);
     }
 
-    public IEnumerable<FabricConnection> All => Clients.Values;
+    public IEnumerable<FabricHost> All => Clients.Values;
 }

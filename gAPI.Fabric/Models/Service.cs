@@ -9,7 +9,7 @@ public record Service(ServiceId Id)
     public UserCollection Users { get; } = new();
     public SessionCollection Scopes { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, FabricConnection connection)
+    public void Subscribe(SubscriptionId subscriberId, FabricHost connection)
     {
         var subscriber = Subscriptions.GetOrCreate(subscriberId, connection);
         var user = Users.GetOrCreate(subscriberId.UserId);
@@ -19,7 +19,7 @@ public record Service(ServiceId Id)
         scope.Subscribe(subscriberId, connection);
     }
 
-    public void UnSubscribe(SubscriptionId subscriberId, FabricConnection connection)
+    public void UnSubscribe(SubscriptionId subscriberId, FabricHost connection)
     {
         var user = Users.TryGet(subscriberId.UserId);
         var scope = Scopes.TryGet(subscriberId.SessionId);

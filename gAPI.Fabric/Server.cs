@@ -17,7 +17,7 @@ public sealed class Server(int port) : IAsyncDisposable
         while (!Cts.IsCancellationRequested)
         {
             var tcpClient = await Listener.AcceptTcpClientAsync(Cts.Token);
-            var connection = new FabricConnection(Manager, tcpClient, Cts.Token);
+            var connection = new FabricHost(Manager, tcpClient, Cts.Token);
             await connection.RunAsync();
         }
     }

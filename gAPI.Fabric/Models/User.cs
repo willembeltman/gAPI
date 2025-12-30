@@ -7,7 +7,7 @@ public record User(UserId Id)
 {
     public SubscriptionCollection Subscriptions { get; } = new();
 
-    public Subscription Subscribe(SubscriptionId subscriberId, FabricConnection connection)
+    public Subscription Subscribe(SubscriptionId subscriberId, FabricHost connection)
     {
         return Subscriptions.GetOrCreate(subscriberId, connection);
     }

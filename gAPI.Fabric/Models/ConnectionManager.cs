@@ -5,25 +5,25 @@ namespace gAPI.Fabric.Models;
 
 public class ConnectionManager
 {
-    private FabricConnectionCollection Connections = new();
+    private FabricHostCollection Connections = new();
     private ServiceCollection Services = new();
     
-    public FabricConnectionId AddConnection(FabricConnection connection)
+    public FabricHostId AddConnection(FabricHost connection)
     {
         return Connections.AddConnection(connection);
     }
-    public void RemoveConnection(FabricConnection connection)
+    public void RemoveConnection(FabricHost connection)
     {
         Connections.RemoveConnection(connection.Id);
     }
 
-    public void Subscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricConnection connection)
+    public void Subscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricHost connection)
     {
         var subscriberId = new SubscriptionId(userId, sessionId, connection.Id);
         var service = Services.GetOrCreate(serviceId);
         service.Subscribe(subscriberId, connection);
     }
-    public void UnSubscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricConnection connection)
+    public void UnSubscribe(ServiceId serviceId, UserId userId, SessionId sessionId, FabricHost connection)
     {
         var subscriberId = new SubscriptionId(userId, sessionId, connection.Id);
         var service = Services.TryGet(serviceId);

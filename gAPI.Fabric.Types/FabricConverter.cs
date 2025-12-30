@@ -6,9 +6,9 @@ public class FabricConverter
     {
         return (ReceivedMessageType)Reader.ReadByte();
     }
-    public FabricConnectionId ReadFabricConnectionId(BinaryReader binaryReader)
+    public FabricHostId ReadFabricHostId(BinaryReader binaryReader)
     {
-        return new FabricConnectionId(binaryReader.ReadInt64());
+        return new FabricHostId(binaryReader.ReadInt64());
     }
     public ServiceId ReadServiceId(BinaryReader Reader)
     {

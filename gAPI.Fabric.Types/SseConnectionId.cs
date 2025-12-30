@@ -1,3 +1,3 @@
 ﻿namespace gAPI.Fabric.Types;
 
-public readonly record struct SseConnectionId(long Value);
+public readonly record struct SseHostId(long Value);

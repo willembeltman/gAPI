@@ -7,7 +7,7 @@ public record Session(SessionId Id)
 {
     public SubscriptionCollection Subscriptions { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, FabricConnection connection)
+    public void Subscribe(SubscriptionId subscriberId, FabricHost connection)
     {
         Subscriptions.GetOrCreate(subscriberId, connection);
     }

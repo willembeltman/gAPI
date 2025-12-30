@@ -4,8 +4,8 @@ using System.Net.Sockets;
 
 namespace gAPI.Fabric;
 
-public class FabricConnectionReceiver(
-    FabricConnection connection, 
+public class FabricHostReceiver(
+    FabricHost connection, 
     NetworkStream stream, 
     ConnectionManager manager,
     CancellationToken ct)

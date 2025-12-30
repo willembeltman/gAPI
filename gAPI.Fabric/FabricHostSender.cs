@@ -3,8 +3,8 @@ using System.Net.Sockets;
 
 namespace gAPI.Fabric;
 
-public class FabricConnectionSender(
-    FabricConnection Connection,
+public class FabricHostSender(
+    FabricHost Connection,
     NetworkStream Stream, 
     AutoResetQueue<SseMessage> SendQueue,
     CancellationToken ct)
