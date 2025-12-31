@@ -1,6 +1,6 @@
 ﻿namespace gAPI.Fabric.Types;
 
-public enum ReceivedMessageType
+public enum ClientToHostMessageType
 {
     Subscribe = 1,
     UnSubscribe = 2,

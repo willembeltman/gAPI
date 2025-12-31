@@ -4,9 +4,13 @@ namespace gAPI.Fabric.Types;
 
 public class FabricConverter
 {
-    public ReceivedMessageType ReadMessageType(BinaryReader Reader)
+    public ClientToHostMessageType ReadClientToHostMessageType(BinaryReader Reader)
     {
-        return (ReceivedMessageType)Reader.ReadByte();
+        return (ClientToHostMessageType)Reader.ReadByte();
+    }
+    public HostToClientMessageType ReadHostToClientMessageType(BinaryReader Reader)
+    {
+        return (HostToClientMessageType)Reader.ReadByte();
     }
     public FabricHostId ReadFabricHostId(BinaryReader binaryReader)
     {
@@ -48,7 +52,11 @@ public class FabricConverter
     }
 
 
-    public void WriteMessageType(BinaryWriter w, ReceivedMessageType type)
+    public void WriteClientToHostMessageType(BinaryWriter w, ClientToHostMessageType type)
+    {
+        w.Write((byte)type);
+    }
+    public void WriteHostToClientMessageType(BinaryWriter w, HostToClientMessageType type)
     {
         w.Write((byte)type);
     }
