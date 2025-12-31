@@ -29,26 +29,26 @@ namespace gAPI.AutoComponent
             var stateChangedHandlerFullName = Path.Combine(StateChangedHandler.Directory, StateChangedHandler.FileName);
             Spc.AddSource(stateChangedHandlerFullName, SourceText.From(StateChangedHandler.Code, Encoding.UTF8));
 
-            var IClientAuthenticationService = new IClientAuthenticationServiceGenerator(
-                ServiceContext.State,
-                StateChangedHandler,
-                Config.Authentication_Destination.Directory,
-                Config.Authentication_Destination.Namespace);
-            IClientAuthenticationService.GenerateCode();
-            var iClientAuthenticationServiceFullName = Path.Combine(IClientAuthenticationService.Directory, IClientAuthenticationService.FileName);
-            Spc.AddSource(iClientAuthenticationServiceFullName, SourceText.From(IClientAuthenticationService.Code, Encoding.UTF8));
+            //var IClientAuthenticationService = new IClientAuthenticationServiceGenerator(
+            //    ServiceContext.State,
+            //    StateChangedHandler,
+            //    Config.Authentication_Destination.Directory,
+            //    Config.Authentication_Destination.Namespace);
+            //IClientAuthenticationService.GenerateCode();
+            //var iClientAuthenticationServiceFullName = Path.Combine(IClientAuthenticationService.Directory, IClientAuthenticationService.FileName);
+            //Spc.AddSource(iClientAuthenticationServiceFullName, SourceText.From(IClientAuthenticationService.Code, Encoding.UTF8));
 
-            var ClientAuthenticationService = new ClientAuthenticationServiceGenerator(
-                ServiceContext.BaseResponse,
-                ServiceContext.BaseResponseT,
-                ServiceContext.State,
-                IClientAuthenticationService,
-                StateChangedHandler,
-                Config.Authentication_Destination.Directory,
-                Config.Authentication_Destination.Namespace);
-            ClientAuthenticationService.GenerateCode();
-            var clientAuthenticationServiceFullName = Path.Combine(ClientAuthenticationService.Directory, ClientAuthenticationService.FileName);
-            Spc.AddSource(clientAuthenticationServiceFullName, SourceText.From(ClientAuthenticationService.Code, Encoding.UTF8));
+            //var ClientAuthenticationService = new ClientAuthenticationServiceGenerator(
+            //    ServiceContext.BaseResponse,
+            //    ServiceContext.BaseResponseT,
+            //    ServiceContext.State,
+            //    IClientAuthenticationService,
+            //    StateChangedHandler,
+            //    Config.Authentication_Destination.Directory,
+            //    Config.Authentication_Destination.Namespace);
+            //ClientAuthenticationService.GenerateCode();
+            //var clientAuthenticationServiceFullName = Path.Combine(ClientAuthenticationService.Directory, ClientAuthenticationService.FileName);
+            //Spc.AddSource(clientAuthenticationServiceFullName, SourceText.From(ClientAuthenticationService.Code, Encoding.UTF8));
 
             var ItemDataSource = new ItemDataSourceGenerator(
                 ServiceContext.BaseResponseT,
@@ -141,7 +141,6 @@ namespace gAPI.AutoComponent
                 .Where(a => a.Dto != null)
                 .Select(crudl => new AutoGridEditGenerator(
                     crudl,
-                    IClientAuthenticationService,
                     ItemDataSource,
                     ListDataSource,
                     ServiceContext.FormFile,

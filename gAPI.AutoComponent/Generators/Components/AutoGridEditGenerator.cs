@@ -7,7 +7,6 @@ public class AutoGridEditGenerator : BaseGenerator
 {
     public AutoGridEditGenerator(
         ICrudlType crudlType,
-        ISharedReference iClientAuthenticationService,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference formFile,

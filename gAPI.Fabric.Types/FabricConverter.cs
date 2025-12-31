@@ -1,4 +1,6 @@
-﻿namespace gAPI.Fabric.Types;
+﻿using System.IO;
+
+namespace gAPI.Fabric.Types;
 
 public class FabricConverter
 {
@@ -49,6 +51,10 @@ public class FabricConverter
     public void WriteMessageType(BinaryWriter w, ReceivedMessageType type)
     {
         w.Write((byte)type);
+    }
+    public void WriteFabricHostId(BinaryWriter w, FabricHostId id)
+    {
+        w.Write(id.Value);
     }
     public void WriteServiceId(BinaryWriter w, ServiceId id)
     {
