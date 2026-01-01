@@ -85,6 +85,7 @@ namespace gAPI.FabricClient
 
         public void SendMessage(SseMessage message)
         {
+            //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: FabricHost.SendMessage");
             Enqueue(w =>
             {
                 fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendMessage);

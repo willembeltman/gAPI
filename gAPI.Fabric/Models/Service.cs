@@ -37,6 +37,7 @@ public record Service(ServiceId Id)
 
     public void Publish(ServiceId serviceId, string messageData)
     {
+        //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: Service.Publish");
         foreach (var connection in Subscriptions
             .GroupBy(a => a.Connection)
             .Select(a => a.Key))

@@ -37,6 +37,7 @@ namespace gAPI.FabricClient.Models
 
         public void Publish(ServiceId serviceId, UserId? userId, SessionId? sessionId, string messageData)
         {
+            //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: ConnectionManager.Publish");
             if (userId != null)
             {
                 var service = Services.TryGet(serviceId);
