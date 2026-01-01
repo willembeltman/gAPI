@@ -243,7 +243,7 @@ namespace gAPI.AutoApiClient.Generators
                         {
                             code += $"        var responseData = await response.Content.ReadFromJsonAsync<{method.ResponseType.UnderlayingTypes[0].Name}>();" + Environment.NewLine;
                         }
-                        code += $"        await clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData);" + Environment.NewLine;
+                        code += $"        await clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData!);" + Environment.NewLine;
                         code += $"        return responseData;" + Environment.NewLine;
                     }
                 }
@@ -380,7 +380,7 @@ namespace gAPI.AutoApiClient.Generators
                         {
                             code += $"        var responseData = response.Content.ReadFromJsonAsync<{method.ResponseType.Name}>().Result;" + Environment.NewLine;
                         }
-                        code += $"        clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData).GetAwaiter().GetResult();" + Environment.NewLine;
+                        code += $"        clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData!).GetAwaiter().GetResult();" + Environment.NewLine;
                         code += $"        return responseData;" + Environment.NewLine;
                     }
                 }

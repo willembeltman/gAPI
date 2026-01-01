@@ -1,4 +1,4 @@
-﻿using gAPI.Fabric.Types;
+﻿using gAPI.Types;
 
 namespace gAPI.Fabric.Models;
 

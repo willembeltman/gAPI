@@ -8,7 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\gAPI.Fabric.Types\gAPI.Fabric.Types.csproj" />
+    <ProjectReference Include="..\gAPI\gAPI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Types\" />
   </ItemGroup>
 
 </Project>

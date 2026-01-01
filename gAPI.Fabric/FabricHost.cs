@@ -1,5 +1,5 @@
 ﻿using gAPI.Fabric.Models;
-using gAPI.Fabric.Types;
+using gAPI.Sse;
 using System.Net.Sockets;
 using System.Threading.Channels;
 
@@ -13,7 +13,6 @@ public sealed class FabricHost : IAsyncDisposable
     private readonly NetworkStream Stream;
     private readonly Channel<Action<BinaryWriter>> channel;
     private readonly FabricConverter fc = new();
-    //private readonly AutoResetQueue<Action<BinaryWriter>> SendQueue = new();
     
     public FabricHostId Id { get; }
 
@@ -45,21 +44,21 @@ public sealed class FabricHost : IAsyncDisposable
         {
             switch (fc.ReadClientToHostMessageType(r))
             {
-                case ClientToHostMessageType.Subscribe:
+                case FabricClientToHostMessageType.Subscribe:
                     Manager.Subscribe(
                         fc.ReadServiceId(r), 
                         fc.ReadUserId(r), 
                         fc.ReadSessionId(r), 
                         this);
                     break;
-                case ClientToHostMessageType.UnSubscribe:
+                case FabricClientToHostMessageType.UnSubscribe:
                     Manager.UnSubscribe(
                         fc.ReadServiceId(r),
                         fc.ReadUserId(r), 
                         fc.ReadSessionId(r),
                         this);
                     break;
-                case ClientToHostMessageType.Publish:
+                case FabricClientToHostMessageType.Publish:
                     Manager.Publish(
                         fc.ReadServiceId(r),
                         fc.ReadNullableUserId(r),
@@ -85,7 +84,7 @@ public sealed class FabricHost : IAsyncDisposable
     {
         Enqueue(w =>
         {
-            fc.WriteHostToClientMessageType(w, HostToClientMessageType.SendMessage);
+            fc.WriteHostToClientMessageType(w, FabricHostToClientMessageType.SendMessage);
             fc.WriteServiceId(w, message.ServiceId);
             fc.WriteNullableUserId(w, message.UserId);
             fc.WriteNullableSessionId(w, message.SessionId);
