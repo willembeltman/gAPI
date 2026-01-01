@@ -1,5 +1,5 @@
-﻿using gAPI.Fabric;
-using gAPI.Fabric.Models;
+﻿using gAPI.FabricClient;
+using gAPI.FabricClient.Models;
 
 Console.WriteLine("Getting the config");
 var config = await Config.LoadAsync();

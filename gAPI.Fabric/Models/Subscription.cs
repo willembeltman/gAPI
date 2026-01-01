@@ -1,6 +1,6 @@
 ﻿using gAPI.Types;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.FabricClient.Models;
 
 public record Subscription(
     SubscriptionId Id,

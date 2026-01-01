@@ -1,107 +1,111 @@
-﻿using gAPI.Fabric.Models;
+﻿using gAPI.Fabric;
+using gAPI.FabricClient.Models;
 using gAPI.Sse;
 using System.Net.Sockets;
 using System.Threading.Channels;
 
-namespace gAPI.Fabric;
-
-public sealed class FabricHost : IAsyncDisposable
+namespace gAPI.FabricClient
 {
-    private readonly ConnectionManager Manager;
-    private readonly TcpClient TcpClient;
-    private readonly CancellationTokenSource Cts;
-    private readonly NetworkStream Stream;
-    private readonly Channel<Action<BinaryWriter>> channel;
-    private readonly FabricConverter fc = new();
-    
-    public FabricHostId Id { get; }
-
-    public FabricHost(ConnectionManager manager, TcpClient tcpClient)
+    public sealed class FabricHost
     {
-        Id = manager.AddConnection(this);
+        private readonly ConnectionManager Manager;
+        private readonly TcpClient TcpClient;
+        private readonly CancellationTokenSource Cts;
+        private readonly NetworkStream Stream;
+        private readonly Channel<Action<BinaryWriter>> channel;
+        private readonly FabricConverter fc = new();
 
-        Manager = manager;
-        TcpClient = tcpClient;
-        Cts = new CancellationTokenSource();
-        Stream = tcpClient.GetStream();
-        channel = Channel.CreateBounded<Action<BinaryWriter>>(1024);
-    }
+        public FabricHostId Id { get; }
 
-    public async Task RunAsync()
-    {
-        //await Task.WhenAll(
-        //    ReceiveLoop(),
-        //    SendLoop());
-
-        _ = Task.Run(ReceiveLoop);
-        _ = Task.Run(SendLoop);
-        //await DisposeAsync();
-    }
-    private async Task ReceiveLoop()
-    {
-        var r = new BinaryReader(Stream);
-        while (!Cts.IsCancellationRequested)
+        public FabricHost(ConnectionManager manager, TcpClient tcpClient)
         {
-            switch (fc.ReadClientToHostMessageType(r))
+            Id = manager.AddConnection(this);
+
+            Manager = manager;
+            TcpClient = tcpClient;
+            Cts = new CancellationTokenSource();
+            Stream = tcpClient.GetStream();
+            channel = Channel.CreateUnbounded<Action<BinaryWriter>>();
+        }
+
+        public async Task RunAsync()
+        {
+            //await Task.WhenAll(
+            //    ReceiveLoop(),
+            //    SendLoop());
+
+            _ = Task.Run(ReceiveLoop);
+            _ = Task.Run(SendLoop);
+            //await DisposeAsync();
+        }
+        private async Task ReceiveLoop()
+        {
+            var r = new BinaryReader(Stream);
+            while (!Cts.IsCancellationRequested)
             {
-                case FabricClientToHostMessageType.Subscribe:
-                    Manager.Subscribe(
-                        fc.ReadServiceId(r), 
-                        fc.ReadUserId(r), 
-                        fc.ReadSessionId(r), 
-                        this);
-                    break;
-                case FabricClientToHostMessageType.UnSubscribe:
-                    Manager.UnSubscribe(
-                        fc.ReadServiceId(r),
-                        fc.ReadUserId(r), 
-                        fc.ReadSessionId(r),
-                        this);
-                    break;
-                case FabricClientToHostMessageType.Publish:
-                    Manager.Publish(
-                        fc.ReadServiceId(r),
-                        fc.ReadNullableUserId(r),
-                        fc.ReadNullableSessionId(r), 
-                        fc.ReadMessageData(r));
-                    break;
+                switch (fc.ReadClientToHostMessageType(r))
+                {
+                    case FabricClientToHostMessageEnum.Subscribe:
+                        Manager.Subscribe(
+                            fc.ReadServiceId(r),
+                            fc.ReadUserId(r),
+                            fc.ReadSessionId(r),
+                            this);
+                        break;
+                    case FabricClientToHostMessageEnum.UnSubscribe:
+                        Manager.UnSubscribe(
+                            fc.ReadServiceId(r),
+                            fc.ReadUserId(r),
+                            fc.ReadSessionId(r),
+                            this);
+                        break;
+                    case FabricClientToHostMessageEnum.Publish:
+                        Manager.Publish(
+                            fc.ReadServiceId(r),
+                            fc.ReadNullableUserId(r),
+                            fc.ReadNullableSessionId(r),
+                            fc.ReadMessageData(r));
+                        break;
+                }
             }
+            await DisposeAsync();
         }
-    }
-    private async Task SendLoop()
-    {
-        var w = new BinaryWriter(Stream);
-        fc.WriteFabricHostId(w, Id);
-        await foreach (var item in channel.Reader.ReadAllAsync(Cts.Token))
+        private async Task SendLoop()
         {
-            item(w);
-            w.Flush();
-            if (Cts.IsCancellationRequested) break;
+            var w = new BinaryWriter(Stream);
+            fc.WriteFabricHostId(w, Id);
+            await foreach (var item in channel.Reader.ReadAllAsync(Cts.Token))
+            {
+                item(w);
+                w.Flush();
+                if (Cts.IsCancellationRequested) break;
+            }
+            await DisposeAsync();
         }
-    }
 
-    public void SendMessage(SseMessage message)
-    {
-        Enqueue(w =>
+        public void SendMessage(SseMessage message)
         {
-            fc.WriteHostToClientMessageType(w, FabricHostToClientMessageType.SendMessage);
-            fc.WriteServiceId(w, message.ServiceId);
-            fc.WriteNullableUserId(w, message.UserId);
-            fc.WriteNullableSessionId(w, message.SessionId);
-            fc.WriteMessageData(w, message.Data);
-        });
-    }
-    private void Enqueue(Action<BinaryWriter> write)
-    {
-        channel.Writer.TryWrite(write);
-    }
+            Enqueue(w =>
+            {
+                fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendMessage);
+                fc.WriteServiceId(w, message.ServiceId);
+                fc.WriteNullableUserId(w, message.UserId);
+                fc.WriteNullableSessionId(w, message.SessionId);
+                fc.WriteMessageData(w, message.Data);
+            });
+        }
+        private void Enqueue(Action<BinaryWriter> write)
+        {
+            channel.Writer.TryWrite(write);
+        }
 
-    public async ValueTask DisposeAsync()
-    {
-        Cts.Dispose();
-        Manager.RemoveConnection(this);
+        public async ValueTask DisposeAsync()
+        {
+            Cts.Dispose();
+            Manager.RemoveConnection(this);
 
-        await Stream.DisposeAsync();
-        TcpClient.Dispose();
+            await Stream.DisposeAsync();
+            TcpClient.Dispose();
+        }
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using gAPI.Fabric;
+using System.Collections.Concurrent;
 
-namespace gAPI.Fabric.Collections;
+namespace gAPI.FabricClient.Collections;
 
 public sealed class FabricHostCollection
 {

@@ -6,13 +6,13 @@ namespace gAPI.Fabric
 {
     public class FabricConverter
     {
-        public FabricClientToHostMessageType ReadClientToHostMessageType(BinaryReader Reader)
+        public FabricClientToHostMessageEnum ReadClientToHostMessageType(BinaryReader Reader)
         {
-            return (FabricClientToHostMessageType)Reader.ReadByte();
+            return (FabricClientToHostMessageEnum)Reader.ReadByte();
         }
-        public FabricHostToClientMessageType ReadHostToClientMessageType(BinaryReader Reader)
+        public FabricHostToClientMessageEnum ReadHostToClientMessageType(BinaryReader Reader)
         {
-            return (FabricHostToClientMessageType)Reader.ReadByte();
+            return (FabricHostToClientMessageEnum)Reader.ReadByte();
         }
         public FabricHostId ReadFabricHostId(BinaryReader binaryReader)
         {
@@ -54,11 +54,11 @@ namespace gAPI.Fabric
         }
 
 
-        public void WriteClientToHostMessageType(BinaryWriter w, FabricClientToHostMessageType type)
+        public void WriteClientToHostMessageType(BinaryWriter w, FabricClientToHostMessageEnum type)
         {
             w.Write((byte)type);
         }
-        public void WriteHostToClientMessageType(BinaryWriter w, FabricHostToClientMessageType type)
+        public void WriteHostToClientMessageType(BinaryWriter w, FabricHostToClientMessageEnum type)
         {
             w.Write((byte)type);
         }

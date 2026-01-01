@@ -1,9 +1,9 @@
-﻿using gAPI.Fabric.Models;
+﻿using gAPI.FabricClient.Models;
 using gAPI.Types;
 using System.Collections;
 using System.Collections.Concurrent;
 
-namespace gAPI.Fabric.Collections;
+namespace gAPI.FabricClient.Collections;
 
 public class SessionCollection : IEnumerable<Session>
 {

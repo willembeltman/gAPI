@@ -1,8 +1,8 @@
-﻿using gAPI.Fabric.Collections;
+﻿using gAPI.FabricClient.Collections;
 using gAPI.Sse;
 using gAPI.Types;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.FabricClient.Models;
 
 public record Service(ServiceId Id)
 {

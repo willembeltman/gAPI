@@ -1,21 +1,22 @@
 ﻿using gAPI.Fabric;
 
-namespace gAPI.Types;
-
-public readonly struct SubscriptionId
+namespace gAPI.Types
 {
-    public SubscriptionId(
-        UserId userId,
-        SessionId sessionId,
-        FabricHostId connectionId
-    )
+    public readonly struct SubscriptionId
     {
-        UserId = userId;
-        SessionId = sessionId;
-        ConnectionId = connectionId;
-    }
+        public SubscriptionId(
+            UserId userId,
+            SessionId sessionId,
+            FabricHostId connectionId
+        )
+        {
+            UserId = userId;
+            SessionId = sessionId;
+            ConnectionId = connectionId;
+        }
 
-    public UserId UserId { get; }
-    public SessionId SessionId { get; }
-    public FabricHostId ConnectionId { get; }
+        public UserId UserId { get; }
+        public SessionId SessionId { get; }
+        public FabricHostId ConnectionId { get; }
+    }
 }
