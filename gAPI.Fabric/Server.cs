@@ -21,11 +21,22 @@ namespace gAPI.FabricClient
                 await connection.RunAsync();
             }
         }
-
-        public async ValueTask DisposeAsync()
+        public async Task StopAsync()
         {
             await Cts.CancelAsync();
             Listener.Stop();
+        }
+
+        public async Task ForceRestart()
+        {
+            await Manager.StopAllAsync();
+            //await StopAsync();
+            //await StartAsync();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopAsync();
             Listener.Dispose();
             Cts.Dispose();
         }

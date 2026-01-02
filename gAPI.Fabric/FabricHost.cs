@@ -30,16 +30,15 @@ namespace gAPI.FabricClient
 
         public async Task RunAsync()
         {
-            //await Task.WhenAll(
-            //    ReceiveLoop(),
-            //    SendLoop());
-
             _ = Task.Run(ReceiveLoop);
             _ = Task.Run(SendLoop);
-            //await DisposeAsync();
         }
         private async Task ReceiveLoop()
         {
+            Console.WriteLine();
+            Console.WriteLine($"FabricHost #{Id.Value} started");
+            Console.WriteLine();
+
             var r = new BinaryReader(Stream);
             while (!Cts.IsCancellationRequested)
             {

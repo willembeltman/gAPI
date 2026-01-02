@@ -61,5 +61,11 @@ namespace gAPI.FabricClient.Models
                 service.Publish(serviceId, messageData);
             }
         }
+
+        internal async Task StopAllAsync()
+        {
+            foreach (var conn in Connections.All)
+                await conn.DisposeAsync();
+        }
     }
 }
