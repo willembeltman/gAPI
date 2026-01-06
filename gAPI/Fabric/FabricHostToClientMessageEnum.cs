@@ -2,6 +2,6 @@
 {
     public enum FabricHostToClientMessageEnum
     {
-        SendMessage = 1,
+        SendMessageToClient = 1,
     }
 }

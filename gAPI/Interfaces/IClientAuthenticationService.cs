@@ -8,13 +8,15 @@ namespace gAPI.Interfaces
 {
     public interface IClientAuthenticationService
     {
+        HttpClient HttpClient { get; }
+
         Guid SessionId { get; }
-        Task<bool> IsAuthenticated(CancellationToken? token = null);
-        Task<Stream> GetStreamAsync(string url, CancellationToken? token = null);
-        Task<HttpResponseMessage> GetAsync(string path, CancellationToken? token = null, HttpCompletionOption? option = null);
-        Task<HttpResponseMessage> PostAsync(string path, MultipartFormDataContent content, CancellationToken? token = null);
-        Task<HttpResponseMessage> PutAsync(string path, MultipartFormDataContent content, CancellationToken? token = null);
-        Task<HttpResponseMessage> DeleteAsync(string path, CancellationToken? token = null);
-        Task AfterReceivedResponseIsParsedAsync(object response, CancellationToken? token = null);
+        Task<bool> IsAuthenticated(CancellationToken? ct = null);
+        Task<Stream> GetStreamAsync(string url, CancellationToken ct);
+        Task<HttpResponseMessage> GetAsync(string path, CancellationToken? ct = null, HttpCompletionOption? option = null);
+        Task<HttpResponseMessage> PostAsync(string path, MultipartFormDataContent content, CancellationToken? ct = null);
+        Task<HttpResponseMessage> PutAsync(string path, MultipartFormDataContent content, CancellationToken? ct = null);
+        Task<HttpResponseMessage> DeleteAsync(string path, CancellationToken? ct = null);
+        Task AfterReceivedResponseIsParsedAsync(object response, CancellationToken? ct = null);
     }
 }

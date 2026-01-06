@@ -1,6 +1,6 @@
 ﻿using Azure.Core.Pipeline;
-using gAPI.FabricClient;
-using gAPI.FabricClient.Models;
+using gAPI.FabricNode;
+using gAPI.FabricNode.Models;
 
 Console.WriteLine("Getting the config");
 var config = await Config.LoadAsync();
@@ -26,6 +26,6 @@ while (true)
     {
         Console.Write("Restarting, please wait");
         Console.WriteLine();
-        await server.ForceRestart();
+        await server.DisconnectAll();
     }
 }

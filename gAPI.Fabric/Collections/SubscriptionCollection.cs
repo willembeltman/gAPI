@@ -1,9 +1,9 @@
-﻿using gAPI.FabricClient.Models;
+﻿using gAPI.FabricNode.Models;
 using gAPI.Types;
 using System.Collections;
 using System.Collections.Concurrent;
 
-namespace gAPI.FabricClient.Collections;
+namespace gAPI.FabricNode.Collections;
 
 public class SubscriptionCollection : IEnumerable<Subscription>
 {

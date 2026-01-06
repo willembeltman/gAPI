@@ -1,93 +1,49 @@
 ﻿using gAPI.Fabric;
-using gAPI.FabricClient.Models;
+using gAPI.FabricNode.Collections;
 using gAPI.Sse;
 using System.Net.Sockets;
 using System.Threading.Channels;
 
-namespace gAPI.FabricClient
+namespace gAPI.FabricNode
 {
     public sealed class FabricHost
     {
-        private readonly ConnectionManager Manager;
+        private readonly FabricManager Manager;
         private readonly TcpClient TcpClient;
+        private readonly FabricHostCollection Connections;
         private readonly CancellationTokenSource Cts;
         private readonly NetworkStream Stream;
-        private readonly Channel<Action<BinaryWriter>> channel;
+        private readonly Channel<Action<BinaryWriter>> SendQueue;
         private readonly FabricConverter fc = new();
 
         public FabricHostId Id { get; }
 
-        public FabricHost(ConnectionManager manager, TcpClient tcpClient)
+        public FabricHost(
+            FabricManager manager, 
+            TcpClient tcpClient,
+            FabricHostCollection connections)
         {
-            Id = manager.AddConnection(this);
-
             Manager = manager;
             TcpClient = tcpClient;
+            Connections = connections;
             Cts = new CancellationTokenSource();
             Stream = tcpClient.GetStream();
-            channel = Channel.CreateUnbounded<Action<BinaryWriter>>();
+            SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
+            Id = Connections.AddConnection(this);
         }
 
-        public async Task RunAsync()
+        public Task RunAsync()
         {
             _ = Task.Run(ReceiveLoop);
             _ = Task.Run(SendLoop);
-        }
-        private async Task ReceiveLoop()
-        {
-            Console.WriteLine();
-            Console.WriteLine($"FabricHost #{Id.Value} started");
-            Console.WriteLine();
-
-            var r = new BinaryReader(Stream);
-            while (!Cts.IsCancellationRequested)
-            {
-                switch (fc.ReadClientToHostMessageType(r))
-                {
-                    case FabricClientToHostMessageEnum.Subscribe:
-                        Manager.Subscribe(
-                            fc.ReadServiceId(r),
-                            fc.ReadUserId(r),
-                            fc.ReadSessionId(r),
-                            this);
-                        break;
-                    case FabricClientToHostMessageEnum.UnSubscribe:
-                        Manager.UnSubscribe(
-                            fc.ReadServiceId(r),
-                            fc.ReadUserId(r),
-                            fc.ReadSessionId(r),
-                            this);
-                        break;
-                    case FabricClientToHostMessageEnum.Publish:
-                        Manager.Publish(
-                            fc.ReadServiceId(r),
-                            fc.ReadNullableUserId(r),
-                            fc.ReadNullableSessionId(r),
-                            fc.ReadMessageData(r));
-                        break;
-                }
-            }
-            await DisposeAsync();
-        }
-        private async Task SendLoop()
-        {
-            var w = new BinaryWriter(Stream);
-            fc.WriteFabricHostId(w, Id);
-            await foreach (var item in channel.Reader.ReadAllAsync(Cts.Token))
-            {
-                item(w);
-                w.Flush();
-                if (Cts.IsCancellationRequested) break;
-            }
-            await DisposeAsync();
+            return Task.CompletedTask;
         }
 
-        public void SendMessage(SseMessage message)
+        public void SendMessageToClient(SseMessage message)
         {
-            //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: FabricHost.SendMessage");
             Enqueue(w =>
             {
-                fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendMessage);
+                fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendMessageToClient);
                 fc.WriteServiceId(w, message.ServiceId);
                 fc.WriteNullableUserId(w, message.UserId);
                 fc.WriteNullableSessionId(w, message.SessionId);
@@ -96,13 +52,73 @@ namespace gAPI.FabricClient
         }
         private void Enqueue(Action<BinaryWriter> write)
         {
-            channel.Writer.TryWrite(write);
+            SendQueue.Writer.TryWrite(write);
+        }
+        private async Task SendLoop()
+        {
+            var w = new BinaryWriter(Stream);
+            fc.WriteFabricHostId(w, Id);
+            await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
+            {
+                item(w);
+                w.Flush();
+                if (Cts.IsCancellationRequested) break;
+            }
+            await DisposeAsync();
+        }
+
+        private async Task ReceiveLoop()
+        {
+            Console.WriteLine();
+            Console.WriteLine($"FabricHost {Id} started");
+            Console.WriteLine();
+
+            try
+            {
+                var r = new BinaryReader(Stream);
+                while (!Cts.IsCancellationRequested)
+                {
+                    switch (fc.ReadClientToHostMessageType(r))
+                    {
+                        case FabricClientToHostMessageEnum.Subscribe:
+                            Manager.Subscribe(
+                                this,
+                                fc.ReadServiceId(r),
+                                fc.ReadUserId(r),
+                                fc.ReadSessionId(r));
+                            break;
+                        case FabricClientToHostMessageEnum.UnSubscribe:
+                            Manager.Unsubscribe(
+                                this,
+                                fc.ReadServiceId(r),
+                                fc.ReadUserId(r),
+                                fc.ReadSessionId(r));
+                            break;
+                        case FabricClientToHostMessageEnum.Publish:
+                            Manager.Publish(
+                                this,
+                                fc.ReadServiceId(r),
+                                fc.ReadNullableUserId(r),
+                                fc.ReadNullableSessionId(r),
+                                fc.ReadMessageData(r));
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"FabricClient #{Id.Value}: Exception occured, restarting fabric client");
+                Console.WriteLine($"{ex}");
+                Console.WriteLine();
+            }
+            await DisposeAsync();
         }
 
         public async ValueTask DisposeAsync()
         {
             Cts.Dispose();
-            Manager.RemoveConnection(this);
+            Connections.RemoveConnection(Id);
 
             await Stream.DisposeAsync();
             TcpClient.Dispose();

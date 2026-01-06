@@ -1,49 +1,52 @@
-﻿using gAPI.FabricClient.Collections;
+﻿using gAPI.Fabric;
+using gAPI.FabricNode.Collections;
 using gAPI.Sse;
 using gAPI.Types;
+using System.Collections.Concurrent;
 
-namespace gAPI.FabricClient.Models;
+namespace gAPI.FabricNode.Models;
 
-public record Service(ServiceId Id)
+public record Service(ServiceId id)
 {
-    public SubscriptionCollection Subscriptions { get; } = new();
+    public ServiceId Id { get; } = id;
+    public ConcurrentDictionary<FabricHostId, FabricHost> Connections { get; } = new();
     public UserCollection Users { get; } = new();
-    public SessionCollection Scopes { get; } = new();
+    public SessionCollection Sessions { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, FabricHost connection)
+    public void Subscribe(FabricHost connection, UserId userId, SessionId sessionId)
     {
-        var subscriber = Subscriptions.GetOrCreate(subscriberId, connection);
-        var user = Users.GetOrCreate(subscriberId.UserId);
-        var scope = Scopes.GetOrCreate(subscriberId.SessionId);
-
-        user.Subscribe(subscriberId, connection);
-        scope.Subscribe(subscriberId, connection);
+        Connections.TryAdd(connection.Id, connection);
+        Users.TryAdd(userId, connection);
+        Sessions.TryAdd(sessionId, connection);
     }
-
-    public void UnSubscribe(SubscriptionId subscriberId, FabricHost connection)
+    public void Unsubscribe(FabricHost connection, UserId userId, SessionId sessionId)
     {
-        var user = Users.TryGet(subscriberId.UserId);
-        var scope = Scopes.TryGet(subscriberId.SessionId);
-
-        scope?.UnSubscribe(subscriberId);
-        user?.UnSubscribe(subscriberId);
-
-        Subscriptions.Remove(subscriberId);
-        if (scope?.Subscriptions.Count == 0)
-            Scopes.Remove(subscriberId.SessionId);
-        if (user?.Subscriptions.Count == 0)
-            Users.Remove(subscriberId.UserId);
+        Connections.TryRemove(connection.Id, out _);
+        Users.TryRemove(userId, connection);
+        Sessions.TryRemove(sessionId, connection);
     }
-
-    public void Publish(ServiceId serviceId, string messageData)
+    public void Publish(UserId? userId, SessionId? sessionId, string messageData)
     {
-        //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: Service.Publish");
-        foreach (var connection in Subscriptions
-            .GroupBy(a => a.Connection)
-            .Select(a => a.Key))
+        if (userId != null)
         {
-            connection.SendMessage(
-                new SseMessage(serviceId, null, null, messageData));
+            var user = Users.TryGet(userId.Value);
+            if (user == null) return;
+            user.Publish(this, messageData);
+        }
+        else if (sessionId != null)
+        {
+            var scope = Sessions.TryGet(sessionId.Value);
+            if (scope == null) return;
+            scope.Publish(this, messageData);
+        }
+        else
+        {
+            //Console.WriteLine($"{DateTime.Now:HH:mm:ss.FFF}: Service.Publish");
+            foreach (var fabricHost in Connections.Values)
+            {
+                fabricHost.SendMessageToClient(
+                    new SseMessage(Id, null, null, messageData));
+            }
         }
     }
 }

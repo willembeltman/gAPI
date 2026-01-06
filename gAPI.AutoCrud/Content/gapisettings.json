@@ -1,0 +1,21 @@
+{
+  // Used for detecting dtos, enums and services, give the start name
+  // of the namespaces that contain all your dtos, enums and services
+  "BaseNamespaces": [
+    "Your",
+    "Your.Namespace"
+  ], // "Your.Namespace" not need in this case as it is the same as "Your"
+  // Where / in what namespace should we store the virtual clients?
+  "Clients_Destination": {
+    "Directory": "Clients",
+    "Namespace": "Your.Namespace.Clients"
+  },
+  "Components_Destination": {
+    "Directory": "Components",
+    "Namespace": "Your.Namespace.Components"
+  },
+  "Helpers_Destination": {
+    "Directory": "Helpers",
+    "Namespace": "Your.Namespace.Helpers"
+  }
+}

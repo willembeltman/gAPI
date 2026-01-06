@@ -1,31 +1,30 @@
-﻿using gAPI.FabricClient.Collections;
+﻿using gAPI.Fabric;
 using gAPI.Sse;
 using gAPI.Types;
+using System.Collections.Concurrent;
 
-namespace gAPI.FabricClient.Models;
+namespace gAPI.FabricNode.Models;
 
-public record Session(SessionId Id)
+public record Session(SessionId id)
 {
-    public SubscriptionCollection Subscriptions { get; } = new();
+    public SessionId Id { get; } = id;
+    public ConcurrentDictionary<FabricHostId, FabricHost> Connections { get; } = new();
 
-    public void Subscribe(SubscriptionId subscriberId, FabricHost connection)
+    public void Subscribe(FabricHost connection)
     {
-        Subscriptions.GetOrCreate(subscriberId, connection);
+        Connections[connection.Id] = connection;
+    }
+    public void Unsubscribe(FabricHost connection)
+    {
+        Connections.TryRemove(connection.Id, out _);
     }
 
-    public void UnSubscribe(SubscriptionId subscriberId)
+    public void Publish(Service service, string messageData)
     {
-        Subscriptions.Remove(subscriberId);
-    }
-
-    public void Publish(ServiceId serviceId, string messageData)
-    {
-        foreach (var connection in Subscriptions
-            .GroupBy(a => a.Connection)
-            .Select(a => a.Key))
+        foreach (var connection in Connections.Values)
         {
-            connection.SendMessage(
-                new SseMessage(serviceId, null, Id, messageData));
+            connection.SendMessageToClient(
+                new SseMessage(service.Id, null, Id, messageData));
         }
     }
 }

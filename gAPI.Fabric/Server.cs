@@ -1,44 +1,36 @@
-﻿using gAPI.FabricClient.Models;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 
-namespace gAPI.FabricClient
+namespace gAPI.FabricNode
 {
     public sealed class Server(int port) : IAsyncDisposable
     {
-        private readonly TcpListener Listener = new TcpListener(IPAddress.Any, port);
-        private readonly CancellationTokenSource Cts = new();
-        private readonly ConnectionManager Manager = new();
+        private readonly TcpListener Listener = new(IPAddress.Any, port);
+        private readonly CancellationTokenSource ListenerCts = new();
+        private readonly FabricManager Manager = new();
 
         public async Task StartAsync()
         {
             Listener.Start();
-
-            while (!Cts.IsCancellationRequested)
+            while (!ListenerCts.IsCancellationRequested)
             {
-                var tcpClient = await Listener.AcceptTcpClientAsync(Cts.Token);
-                var connection = new FabricHost(Manager, tcpClient);
-                await connection.RunAsync();
+                var tcpClient = await Listener.AcceptTcpClientAsync(ListenerCts.Token);
+                await Manager.StartFabricHost(tcpClient);
             }
         }
-        public async Task StopAsync()
-        {
-            await Cts.CancelAsync();
-            Listener.Stop();
-        }
 
-        public async Task ForceRestart()
+        public async Task DisconnectAll()
         {
-            await Manager.StopAllAsync();
-            //await StopAsync();
-            //await StartAsync();
+            await Manager.DisconnectAllAsync();
         }
 
         public async ValueTask DisposeAsync()
         {
-            await StopAsync();
+            Listener.Stop();
             Listener.Dispose();
-            Cts.Dispose();
+            await ListenerCts.CancelAsync();
+            ListenerCts.Dispose();
+            await Manager.DisposeAsync();
         }
     }
 }
