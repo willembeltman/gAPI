@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\gAPI\gAPI.csproj" />
+    <Compile Remove="Types\**" />
+    <EmbeddedResource Remove="Types\**" />
+    <None Remove="Types\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Types\" />
+    <ProjectReference Include="..\gAPI\gAPI.csproj" />
   </ItemGroup>
 
 </Project>
