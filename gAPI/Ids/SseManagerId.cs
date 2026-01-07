@@ -1,4 +1,4 @@
-﻿namespace gAPI.Sse
+﻿namespace gAPI.Ids
 {
     public readonly struct SseManagerId
     {

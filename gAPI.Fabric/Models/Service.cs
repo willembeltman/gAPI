@@ -1,14 +1,13 @@
-﻿using gAPI.Fabric;
-using gAPI.FabricNode.Collections;
+﻿using gAPI.FabricNode.Collections;
 using gAPI.Sse;
-using gAPI.Types;
+using gAPI.Ids;
 using System.Collections.Concurrent;
 
 namespace gAPI.FabricNode.Models;
 
-public record Service(ServiceId id)
+public record Service(SseServiceId id)
 {
-    public ServiceId Id { get; } = id;
+    public SseServiceId Id { get; } = id;
     public ConcurrentDictionary<FabricHostId, FabricHost> Connections { get; } = new();
     public UserCollection Users { get; } = new();
     public SessionCollection Sessions { get; } = new();
@@ -25,19 +24,19 @@ public record Service(ServiceId id)
         Users.TryRemove(userId, connection);
         Sessions.TryRemove(sessionId, connection);
     }
-    public void Publish(UserId? userId, SessionId? sessionId, string messageData)
+    public void Publish(SseServiceMethodId sseServiceMethodId, UserId? userId, SessionId? sessionId, string messageData)
     {
         if (userId != null)
         {
             var user = Users.TryGet(userId.Value);
             if (user == null) return;
-            user.Publish(this, messageData);
+            user.Publish(this, sseServiceMethodId, messageData);
         }
         else if (sessionId != null)
         {
             var scope = Sessions.TryGet(sessionId.Value);
             if (scope == null) return;
-            scope.Publish(this, messageData);
+            scope.Publish(this, sseServiceMethodId, messageData);
         }
         else
         {
@@ -45,7 +44,7 @@ public record Service(ServiceId id)
             foreach (var fabricHost in Connections.Values)
             {
                 fabricHost.SendMessageToClient(
-                    new SseMessage(Id, null, null, messageData));
+                    new SseMessage(Id, sseServiceMethodId, null, null, messageData));
             }
         }
     }

@@ -1,8 +1,8 @@
-﻿namespace gAPI.Fabric
+﻿namespace gAPI.Ids
 {
-    public readonly struct FabricHostId
+    public readonly struct SseHostId
     {
-        public FabricHostId(long value)
+        public SseHostId(long value)
         {
             Value = value;
         }

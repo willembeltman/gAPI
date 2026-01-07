@@ -1,6 +1,5 @@
-﻿using gAPI.Fabric;
-using gAPI.Sse;
-using gAPI.Types;
+﻿using gAPI.Sse;
+using gAPI.Ids;
 using System.Collections.Concurrent;
 
 namespace gAPI.FabricNode.Models;
@@ -18,12 +17,12 @@ public record User(UserId id)
     {
         Connections.TryRemove(connection.Id, out _);
     }
-    public void Publish(Service service, string messageData)
+    public void Publish(Service service, SseServiceMethodId sseServiceMethodId, string messageData)
     {
         foreach (var connection in Connections.Values)
         {
             connection.SendMessageToClient(
-                new SseMessage(service.Id, Id, null, messageData));
+                new SseMessage(service.Id, sseServiceMethodId, Id, null, messageData));
         }
     }
 }

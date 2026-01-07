@@ -1,4 +1,4 @@
-﻿namespace gAPI.Types
+﻿namespace gAPI.Ids
 {
     public readonly struct UserId
     {

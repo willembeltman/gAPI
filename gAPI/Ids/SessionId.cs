@@ -1,8 +1,8 @@
-﻿namespace gAPI.Types
+﻿namespace gAPI.Ids
 {
-    public readonly struct ServiceId
+    public readonly struct SessionId
     {
-        public ServiceId(string value)
+        public SessionId(string value)
         {
             Value = value;
         }

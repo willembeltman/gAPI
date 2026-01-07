@@ -1,7 +1,8 @@
-﻿using System;
+﻿using gAPI.Sse;
+using System;
 using System.Threading.Tasks;
 
-namespace gAPI.Sse
+namespace gAPI.Interfaces
 {
     public interface ISseManagerBase : IAsyncDisposable
     {

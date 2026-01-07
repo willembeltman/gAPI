@@ -1,5 +1,5 @@
 ﻿using gAPI.FabricNode.Collections;
-using gAPI.Types;
+using gAPI.Ids;
 using System.Net.Sockets;
 
 namespace gAPI.FabricNode
@@ -19,7 +19,7 @@ namespace gAPI.FabricNode
             return Task.CompletedTask;
         }
 
-        public void Subscribe(FabricHost connection,ServiceId serviceId, UserId userId, SessionId sessionId)
+        public void Subscribe(FabricHost connection,SseServiceId serviceId, UserId userId, SessionId sessionId)
         {
             Console.WriteLine(
                 $"Subscribe " +
@@ -30,7 +30,7 @@ namespace gAPI.FabricNode
             Services[serviceId]
                 .Subscribe(connection, userId, sessionId);
         }
-        public void Unsubscribe(FabricHost connection, ServiceId serviceId, UserId userId, SessionId sessionId)
+        public void Unsubscribe(FabricHost connection, SseServiceId serviceId, UserId userId, SessionId sessionId)
         {
             Console.WriteLine(
                 $"Unsubscribe " +
@@ -41,7 +41,7 @@ namespace gAPI.FabricNode
             Services[serviceId]
                 .Unsubscribe(connection, userId, sessionId);
         }
-        public void Publish(FabricHost connection, ServiceId serviceId, UserId? userId, SessionId? sessionId, string messageData)
+        public void Publish(FabricHost connection, SseServiceId serviceId, SseServiceMethodId sseServiceMethodId, UserId? userId, SessionId? sessionId, string messageData)
         {
             Console.WriteLine(
                 $"Publish " +
@@ -50,7 +50,7 @@ namespace gAPI.FabricNode
                 $"(userId {userId}, " +
                 $"sessionId {sessionId})");
             Services[serviceId]
-                .Publish(userId,  sessionId, messageData);
+                .Publish(sseServiceMethodId, userId,  sessionId, messageData);
         }
 
         public async Task DisconnectAllAsync()

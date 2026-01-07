@@ -1,5 +1,6 @@
 ﻿using gAPI.Fabric;
 using gAPI.FabricNode.Collections;
+using gAPI.Ids;
 using gAPI.Sse;
 using System.Net.Sockets;
 using System.Threading.Channels;
@@ -45,6 +46,7 @@ namespace gAPI.FabricNode
             {
                 fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendSseMessageToClient);
                 fc.WriteServiceId(w, message.ServiceId);
+                fc.WriteServiceMethodId(w, message.ServiceMethodId);
                 fc.WriteNullableUserId(w, message.UserId);
                 fc.WriteNullableSessionId(w, message.SessionId);
                 fc.WriteMessageData(w, message.Data);
@@ -98,6 +100,7 @@ namespace gAPI.FabricNode
                             Manager.Publish(
                                 this,
                                 fc.ReadServiceId(r),
+                                fc.ReadServiceMethodId(r),
                                 fc.ReadNullableUserId(r),
                                 fc.ReadNullableSessionId(r),
                                 fc.ReadMessageData(r));

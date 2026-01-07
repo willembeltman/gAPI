@@ -1,5 +1,5 @@
 ﻿using gAPI.FabricNode.Models;
-using gAPI.Types;
+using gAPI.Ids;
 using System.Collections;
 using System.Collections.Concurrent;
 
@@ -7,9 +7,9 @@ namespace gAPI.FabricNode.Collections;
 
 public class ServiceCollection : IEnumerable<Service>
 {
-    private readonly ConcurrentDictionary<ServiceId, Service> Services = new();
+    private readonly ConcurrentDictionary<SseServiceId, Service> Services = new();
 
-    public Service this[ServiceId serviceId]
+    public Service this[SseServiceId serviceId]
     {
         get => Services.GetOrAdd(
             serviceId, 
@@ -17,14 +17,14 @@ public class ServiceCollection : IEnumerable<Service>
         set => Services[serviceId] = value;
     }
 
-    public Service? TryGet(ServiceId serviceId)
+    public Service? TryGet(SseServiceId serviceId)
     {
         if (!Services.TryGetValue(serviceId, out var service))
             return null;
         return service;
     }
 
-    public bool Remove(ServiceId serviceId)
+    public bool Remove(SseServiceId serviceId)
     {
         return Services.TryRemove(serviceId, out _);
     }
