@@ -3,6 +3,7 @@ using gAPI.AutoSse.Helpers;
 using gAPI.AutoSse.Models;
 using Microsoft.CodeAnalysis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoSse
@@ -48,12 +49,38 @@ namespace gAPI.AutoSse
             Dtos = collector.Dtos
                 .Select(namedTypeSymbol => new Dto(this, namedTypeSymbol))
                 .ToArray();
+
+            FabricClient = Find("gAPI.Fabric.FabricClient", allSymbols);
+            SseHostCollection = Find("gAPI.Sse.SseHostCollection", allSymbols);
+        }
+
+        private SharedReference Find(string typeFullName, IEnumerable<INamedTypeSymbol> allSymbols)
+        {
+            foreach (var symbol in allSymbols)
+            {
+                if (IsExactType(symbol, typeFullName))
+                    return new SharedReference(symbol);
+            }
+
+            throw new Exception($"Cannot find type '{typeFullName}'");
+        }
+
+        private static readonly SymbolDisplayFormat FullNameFormat =
+            new SymbolDisplayFormat(
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
+        private static bool IsExactType(INamedTypeSymbol symbol, string fullName)
+        {
+            return symbol.ToDisplayString(FullNameFormat) == fullName;
         }
 
         public ServerConfig Config { get; }
         public Interface[] Interfaces { get; }
         public EnumDto[] Enums { get; }
         public Dto[] Dtos { get; }
-        //public ClientHandler[] ClientHandlers { get; }
+        public SharedReference FabricClient { get; }
+        public SharedReference SseHostCollection { get; internal set; }
     }
 }

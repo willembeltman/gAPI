@@ -13,10 +13,10 @@ namespace gAPI.AutoSse.Generators
             ClientHandlerContexts = clientHandlerContexts;
             ISignalRContext = iSignalRContext;
 
-            Directory = dataModel.Config.SseServices_Destination.Directory;
-            Namespace = dataModel.Config.SseServices_Destination.Namespace;
+            Directory = dataModel.Config.SseContexts_Destination.Directory;
+            Namespace = dataModel.Config.SseContexts_Destination.Namespace;
 
-            Name = "SignalRContext";
+            Name = "SseContext";
             FileName = $"{Name}.g.cs";
         }
 

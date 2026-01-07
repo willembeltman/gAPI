@@ -6,8 +6,8 @@
         {
             DataModel = dataModel;
 
-            Directory = dataModel.Config.SseServices_Destination.Directory;
-            Namespace = dataModel.Config.SseServices_Destination.Namespace;
+            Directory = dataModel.Config.SseHostController_Destination.Directory;
+            Namespace = dataModel.Config.SseHostController_Destination.Namespace;
 
             Name = "SseHostController";
             FileName = $"{Name}.g.cs";

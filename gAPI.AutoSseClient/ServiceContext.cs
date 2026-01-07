@@ -57,6 +57,7 @@ namespace gAPI.AutoSseClient
             SseMessage = Find("gAPI.Sse.SseMessage", allSymbols);
             SseManagerCollection = Find("gAPI.Sse.SseManagerCollection", allSymbols);
         }
+
         private SharedReference Find(string typeFullName, IEnumerable<INamedTypeSymbol> allSymbols)
         {
             foreach (var symbol in allSymbols)

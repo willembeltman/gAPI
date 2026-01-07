@@ -11,9 +11,10 @@ namespace gAPI.AutoSse.Configs
             return new ServerConfig
             {
                 BaseNamespaces = ParseStringList(json, nameof(ServerConfig.BaseNamespaces)),
-                Sses_Destination = ParseBlock(json, nameof(ServerConfig.Sses_Destination)),
+                SseContexts_Destination = ParseBlock(json, nameof(ServerConfig.SseContexts_Destination)),
                 SseServices_Destination = ParseBlock(json, nameof(ServerConfig.SseServices_Destination)),
-                AddAutoSseServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoSseServices_Destination))
+                AddAutoSseServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoSseServices_Destination)),
+                SseHostController_Destination = ParseBlock(json, nameof(ServerConfig.SseHostController_Destination))
             };
         }
 

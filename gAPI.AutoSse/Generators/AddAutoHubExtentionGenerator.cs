@@ -1,10 +1,20 @@
-﻿namespace gAPI.AutoSse.Generators
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace gAPI.AutoSse.Generators
 {
     internal class AddAutoSseExtentionGenerator : BaseGenerator
     {
-        internal AddAutoSseExtentionGenerator(ServiceContext serviceContext)
+        internal AddAutoSseExtentionGenerator(
+            ServiceContext serviceContext,
+            IEnumerable<SseServiceGenerator> sseServices,
+            ISseContextGenerator iSseContext, 
+            SseContextGenerator sseContext)
         {
             ServiceContext = serviceContext;
+            SseServices = sseServices;
+            ISseContext = iSseContext;
+            SseContext = sseContext;
 
             Directory = serviceContext.Config.AddAutoSseServices_Destination.Directory;
             Namespace = serviceContext.Config.AddAutoSseServices_Destination.Namespace;
@@ -14,15 +24,30 @@
         }
 
         public ServiceContext ServiceContext { get; }
+        public IEnumerable<SseServiceGenerator> SseServices { get; }
+        public ISseContextGenerator ISseContext { get; }
+        public SseContextGenerator SseContext { get; }
 
         internal void GenerateCode()
         {
-            //using gAPI.Fabric;
-            //using gAPI.Sse;
-            //using Microsoft.Extensions.DependencyInjection;
-            Reg("gAPI.Fabric");
-            Reg("gAPI.Sse");
+            //Reg("gAPI.Fabric");
+            //Reg("gAPI.Sse");
+            //Reg("BSD.Core.SseContexts");
+            //Reg("BSD.Core.SseServices");
+            Reg(ISseContext);
+            Reg(SseContext);
+            Reg(ServiceContext.SseHostCollection);
+            Reg(ServiceContext.FabricClient);
             Reg("Microsoft.Extensions.DependencyInjection");
+
+            var services = string.Join(Environment.NewLine, SseServices.Select(s =>
+            {
+                var i = s.Interface;
+                Reg(i);
+                Reg(s);
+                return $@"
+        services.AddScoped<{i.Name}, {s.Name}>();";
+            }));
 
             Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
@@ -32,14 +57,13 @@ public static class {Name}
     {{
         var fabricClient =
             server == null
-            ? new FabricClient()                     // Don't use a fabricNode
-            : new FabricClient(server, port.Value);  // Use the settings
+            ? new {ServiceContext.FabricClient}()                     // Don't use a fabricNode
+            : new {ServiceContext.FabricClient}(server, port.Value);  // Use the settings
         _ = Task.Run(fabricClient.ConnectAsync);
-        var sseHostCollection = new SseHostCollection();
+        var sseHostCollection = new {ServiceContext.SseHostCollection}();
         services.AddSingleton(fabricClient);
         services.AddSingleton(sseHostCollection);
-        services.AddScoped<ISseContext, SseContext>();
-        services.AddScoped<ITestClientServiceContext, TestClientServiceContext>();
+        services.AddScoped<{ISseContext}, {SseContext}>();
     }}
 }}
 ";

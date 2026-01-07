@@ -20,7 +20,6 @@ namespace gAPI.AutoSse
             var SseServices = dataModel.Interfaces
                 .Select(@interface => new SseServiceGenerator(dataModel, @interface))
                 .ToArray();
-
             foreach (var clientHandler in SseServices)
             {
                 clientHandler.GenerateCode();
@@ -64,7 +63,7 @@ namespace gAPI.AutoSse
                 Path.Combine(SseContext.Directory, SseContext.FileName),
                 SourceText.From(SseContext.Code, Encoding.UTF8));
 
-            var AddAutoSseExtention = new AddAutoSseExtentionGenerator(dataModel);
+            var AddAutoSseExtention = new AddAutoSseExtentionGenerator(dataModel, SseServices, ISseContext, SseContext);
             AddAutoSseExtention.GenerateCode();
             spc.AddSource(
                 Path.Combine(AddAutoSseExtention.Directory, AddAutoSseExtention.FileName),
