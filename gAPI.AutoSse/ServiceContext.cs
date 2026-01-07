@@ -17,7 +17,7 @@ namespace gAPI.AutoSse
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateHubAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateSseAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 

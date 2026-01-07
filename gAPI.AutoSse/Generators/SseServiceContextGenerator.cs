@@ -4,35 +4,33 @@ using gAPI.AutoSse.Models;
 
 namespace gAPI.AutoSse.Generators
 {
-    internal class ClientHandlerContextGenerator : BaseGenerator
+    internal class SseServiceContextGenerator : BaseGenerator
     {
-        internal ClientHandlerContextGenerator(
+        internal SseServiceContextGenerator(
             ServiceContext dataModel,
-            SignalRHubGenerator signalRHub,
-            IClientHandlerContextGenerator iClientHandlerContext)
+            ISseServiceContextGenerator iClientHandlerContext)
         {
             DataModel = dataModel;
-            SignalRHub = signalRHub;
             IClientHandlerContext = iClientHandlerContext;
             ClientHandler = IClientHandlerContext.ClientHandler;
             IClientHandler = ClientHandler.Interface; 
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
             Name = ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public IClientHandlerContextGenerator IClientHandlerContext { get; }
-        public ClientHandlerGenerator ClientHandler { get; }
+        public ISseServiceContextGenerator IClientHandlerContext { get; }
+        public SseServiceGenerator ClientHandler { get; }
         public Interface IClientHandler { get; }
 
         public void GenerateCode()
         {
-            Reg(SignalRHub);
+            Code = "";
+            return;
             Reg(IClientHandlerContext);
             Reg(IClientHandler);
             Reg(ClientHandler);
@@ -42,13 +40,13 @@ namespace gAPI.AutoSse.Generators
 namespace {Namespace};
 
 public class {Name}(
-    IHubContext<SignalRHub> hubContext)
+    ISseContext<SignalRSse> sseContext)
     : {IClientHandlerContext.Name}
 {{
     public {IClientHandler.Name} ToAll
-        => new {ClientHandler.Name}(hubContext.Clients.All);
+        => new {ClientHandler.Name}(sseContext.Clients.All);
     public {IClientHandler.Name} ToUser(object userId)
-        => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()!));
+        => new {ClientHandler.Name}(sseContext.Clients.Group(userId.ToString()!));
 }}
 ";
         }

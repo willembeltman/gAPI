@@ -18,8 +18,8 @@ namespace gAPI.AutoSse.Models
             ApiName = Name;
             ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
             //ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
-            //ApiName = ServiceNameHelper.RemoveHubName(ApiName);
-            //ApiName = ServiceNameHelper.RemoveHubClientName(ApiName);
+            //ApiName = ServiceNameHelper.RemoveSseName(ApiName);
+            //ApiName = ServiceNameHelper.RemoveSseClientName(ApiName);
 
             IsAuthorized = NamedTypeSymbol.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");

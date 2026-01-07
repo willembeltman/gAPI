@@ -2,34 +2,32 @@
 
 namespace gAPI.AutoSse.Generators
 {
-    internal class SignalRContextGenerator : BaseGenerator
+    internal class SseContextGenerator : BaseGenerator
     {
-        internal SignalRContextGenerator(
+        internal SseContextGenerator(
             ServiceContext dataModel,
-            SignalRHubGenerator signalRHub,
-            ClientHandlerContextGenerator[] clientHandlerContexts,
-            ISignalRContextGenerator iSignalRContext)
+            SseServiceContextGenerator[] clientHandlerContexts,
+            ISseContextGenerator iSignalRContext)
         {
             DataModel = dataModel;
-            SignalRHub = signalRHub;
             ClientHandlerContexts = clientHandlerContexts;
             ISignalRContext = iSignalRContext;
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
             Name = "SignalRContext";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
-        public ISignalRContextGenerator ISignalRContext { get; }
+        public SseServiceContextGenerator[] ClientHandlerContexts { get; }
+        public ISseContextGenerator ISignalRContext { get; }
 
         public void GenerateCode()
         {
-            Reg(SignalRHub);
+            Code = "";
+            return;
             Reg(ISignalRContext);
             Reg("Microsoft.AspNetCore.SignalR");
             var properties = string.Join(
@@ -39,7 +37,7 @@ namespace gAPI.AutoSse.Generators
                     {
                         Reg(a);
                         Reg(a.IClientHandlerContext);
-                        return $"    public {a.IClientHandlerContext.Name} {a.ClientHandler.Interface.ApiName} {{ get; }} = new {a.Name}(hubContext);";
+                        return $"    public {a.IClientHandlerContext.Name} {a.ClientHandler.Interface.ApiName} {{ get; }} = new {a.Name}(sseContext);";
                     }));
 
             Code = @$"{GetNamespacesCode()}#nullable enable
@@ -47,7 +45,7 @@ namespace gAPI.AutoSse.Generators
 namespace {Namespace};
 
 public class {Name}(
-    IHubContext<SignalRHub> hubContext)
+    ISseContext<SignalRSse> sseContext)
     : {ISignalRContext.Name}
 {{
 {properties}

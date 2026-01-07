@@ -2,30 +2,29 @@
 
 namespace gAPI.AutoSse.Generators
 {
-    internal class ISignalRContextGenerator : BaseGenerator
+    internal class ISseContextGenerator : BaseGenerator
     {
-        internal ISignalRContextGenerator(
+        internal ISseContextGenerator(
             ServiceContext dataModel,
-            SignalRHubGenerator signalRHub,
-            ClientHandlerContextGenerator[] clientHandlerContexts)
+            SseServiceContextGenerator[] clientHandlerContexts)
         {
             DataModel = dataModel;
-            SignalRHub = signalRHub;
             ClientHandlerContexts = clientHandlerContexts;
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
             Name = "ISignalRContext";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
+        public SseServiceContextGenerator[] ClientHandlerContexts { get; }
 
         public void GenerateCode()
         {
+            Code = "";
+            return;
             var properties = string.Join(
                 Environment.NewLine,
                 ClientHandlerContexts

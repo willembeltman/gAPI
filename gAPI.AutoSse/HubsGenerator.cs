@@ -7,21 +7,21 @@ using System.Text;
 
 namespace gAPI.AutoSse
 {
-    internal class HubsGenerator
+    internal class SsesGenerator
     {
         internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
         {
-            var SignalRHub = new SignalRHubGenerator(dataModel);
-            SignalRHub.GenerateCode();
+            var SseHostController = new SseHostControllerGenerator(dataModel);
+            SseHostController.GenerateCode();
             spc.AddSource(
-                Path.Combine(SignalRHub.Directory, SignalRHub.FileName), 
-                SourceText.From(SignalRHub.Code, Encoding.UTF8));
+                Path.Combine(SseHostController.Directory, SseHostController.FileName),
+                SourceText.From(SseHostController.Code, Encoding.UTF8));
 
-            var ClientHandlers = dataModel.Interfaces
-                .Select(@interface => new ClientHandlerGenerator(dataModel, @interface))
+            var SseServices = dataModel.Interfaces
+                .Select(@interface => new SseServiceGenerator(dataModel, @interface))
                 .ToArray();
 
-            foreach (var clientHandler in ClientHandlers)
+            foreach (var clientHandler in SseServices)
             {
                 clientHandler.GenerateCode();
                 spc.AddSource(
@@ -29,10 +29,10 @@ namespace gAPI.AutoSse
                     SourceText.From(clientHandler.Code, Encoding.UTF8));
             }
 
-            var IClientHandlerContexts = ClientHandlers
-                .Select(clientHandler => new IClientHandlerContextGenerator(dataModel, SignalRHub, clientHandler))
+            var ISseServiceContexts = SseServices
+                .Select(clientHandler => new ISseServiceContextGenerator(dataModel, clientHandler))
                 .ToArray();
-            foreach (var iClientHandlerContext in IClientHandlerContexts)
+            foreach (var iClientHandlerContext in ISseServiceContexts)
             {
                 iClientHandlerContext.GenerateCode();
                 spc.AddSource(
@@ -40,11 +40,11 @@ namespace gAPI.AutoSse
                     SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
             }
 
-            var ClientHandlerContexts = IClientHandlerContexts
-                .Select(clientHandler => new ClientHandlerContextGenerator(dataModel, SignalRHub, clientHandler))
+            var SseServiceContexts = ISseServiceContexts
+                .Select(clientHandler => new SseServiceContextGenerator(dataModel, clientHandler))
                 .ToArray();
 
-            foreach (var clientHandlerContext in ClientHandlerContexts)
+            foreach (var clientHandlerContext in SseServiceContexts)
             {
                 clientHandlerContext.GenerateCode();
                 spc.AddSource(
@@ -52,29 +52,23 @@ namespace gAPI.AutoSse
                     SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
             }
 
-            var ISignalRContext = new ISignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts);
-            ISignalRContext.GenerateCode();
+            var ISseContext = new ISseContextGenerator(dataModel, SseServiceContexts);
+            ISseContext.GenerateCode();
             spc.AddSource(
-                Path.Combine(ISignalRContext.Directory, ISignalRContext.FileName),
-                SourceText.From(ISignalRContext.Code, Encoding.UTF8));
+                Path.Combine(ISseContext.Directory, ISseContext.FileName),
+                SourceText.From(ISseContext.Code, Encoding.UTF8));
 
-            var SignalRContext = new SignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts, ISignalRContext);
-            SignalRContext.GenerateCode();
+            var SseContext = new SseContextGenerator(dataModel, SseServiceContexts, ISseContext);
+            SseContext.GenerateCode();
             spc.AddSource(
-                Path.Combine(SignalRContext.Directory, SignalRContext.FileName),
-                SourceText.From(SignalRContext.Code, Encoding.UTF8));
+                Path.Combine(SseContext.Directory, SseContext.FileName),
+                SourceText.From(SseContext.Code, Encoding.UTF8));
 
-            var AddAutoSse = new AddAutoSseExtentionGenerator(dataModel, SignalRHub);
-            AddAutoSse.GenerateCode();
+            var AddAutoSseExtention = new AddAutoSseExtentionGenerator(dataModel);
+            AddAutoSseExtention.GenerateCode();
             spc.AddSource(
-                Path.Combine(AddAutoSse.Directory, AddAutoSse.FileName),
-                SourceText.From(AddAutoSse.Code, Encoding.UTF8));
-
-            var AddAutoSseServices = new AddAutoSseServicesExtentionGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, ISignalRContext, SignalRContext);
-            AddAutoSseServices.GenerateCode();
-            spc.AddSource(
-                Path.Combine(AddAutoSseServices.Directory, AddAutoSseServices.FileName),
-                SourceText.From(AddAutoSseServices.Code, Encoding.UTF8));
+                Path.Combine(AddAutoSseExtention.Directory, AddAutoSseExtention.FileName),
+                SourceText.From(AddAutoSseExtention.Code, Encoding.UTF8));
         }
     }
 }

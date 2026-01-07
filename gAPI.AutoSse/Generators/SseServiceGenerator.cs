@@ -4,15 +4,15 @@ using System;
 
 namespace gAPI.AutoSse.Generators
 {
-    internal class ClientHandlerGenerator : BaseGenerator
+    internal class SseServiceGenerator : BaseGenerator
     {
-        internal ClientHandlerGenerator(ServiceContext dataModel, Interface @interface)
+        internal SseServiceGenerator(ServiceContext dataModel, Interface @interface)
         {
             DataModel = dataModel;
             Interface = @interface;
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
             Name = Interface.ApiName;
             FileName = $"{Name}.g.cs";
@@ -24,6 +24,8 @@ namespace gAPI.AutoSse.Generators
 
         public void GenerateCode()
         {
+            Code = "";
+            return;
             Reg(Interface);
             Reg("Microsoft.AspNetCore.SignalR");
             var methodsCode = GenerateMethods();

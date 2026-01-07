@@ -2,10 +2,9 @@
 {
     internal class AddAutoSseExtentionGenerator : BaseGenerator
     {
-        internal AddAutoSseExtentionGenerator(ServiceContext serviceContext, SignalRHubGenerator signalRHub)
+        internal AddAutoSseExtentionGenerator(ServiceContext serviceContext)
         {
             ServiceContext = serviceContext;
-            SignalRHub = signalRHub;
 
             Directory = serviceContext.Config.AddAutoSseServices_Destination.Directory;
             Namespace = serviceContext.Config.AddAutoSseServices_Destination.Namespace;
@@ -15,29 +14,32 @@
         }
 
         public ServiceContext ServiceContext { get; }
-        public SignalRHubGenerator SignalRHub { get; }
 
         internal void GenerateCode()
         {
-            Reg(SignalRHub);
+            //using gAPI.Fabric;
+            //using gAPI.Sse;
+            //using Microsoft.Extensions.DependencyInjection;
+            Reg("gAPI.Fabric");
+            Reg("gAPI.Sse");
             Reg("Microsoft.Extensions.DependencyInjection");
-            Reg("Microsoft.AspNetCore.Routing");
-            Reg("Microsoft.AspNetCore.Builder");
-            Reg("System.Reflection");
 
             Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
 public static class {Name}
 {{
-    public static void AddAutoSse(this IServiceCollection services)
+    public static void AddAutoSse(this IServiceCollection services, string? server, int? port = 9494)
     {{
-        services.AddSignalR();
-        services.AddAutoSseServices();
-    }}
-
-    public static void MapAutoSse(this IEndpointRouteBuilder app)
-    {{
-        app.MapHub<{SignalRHub.Name}>(""/hubs/signalrhub"");
+        var fabricClient =
+            server == null
+            ? new FabricClient()                     // Don't use a fabricNode
+            : new FabricClient(server, port.Value);  // Use the settings
+        _ = Task.Run(fabricClient.ConnectAsync);
+        var sseHostCollection = new SseHostCollection();
+        services.AddSingleton(fabricClient);
+        services.AddSingleton(sseHostCollection);
+        services.AddScoped<ISseContext, SseContext>();
+        services.AddScoped<ITestClientServiceContext, TestClientServiceContext>();
     }}
 }}
 ";

@@ -17,7 +17,7 @@ namespace gAPI.AutoSse
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohub.json", StringComparison.OrdinalIgnoreCase))
+                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autosse.json", StringComparison.OrdinalIgnoreCase))
                 .Select((file, ct) => file.GetText(ct)?.ToString())
                 .Collect()
                 .Select((configs, _) => configs.FirstOrDefault()); // string?
@@ -36,23 +36,23 @@ namespace gAPI.AutoSse
                     return;
                 }
 
-                //#if DEBUG
-                //                    if (!Debugger.IsAttached)
-                //                    {
-                //                        Debugger.Launch(); // Triggert dialoog om te attachen
-                //                    }
-                //#endif
+//#if DEBUG
+//                if (!Debugger.IsAttached)
+//                {
+//                    Debugger.Launch(); // Triggert dialoog om te attachen
+//                }
+//#endif
 
                 try
                 {
                     var config = ServerConfigParser.Parse(configText);
                     var dataModel = new ServiceContext(compilation, config);
-                    HubsGenerator.Generate(dataModel, spc);
+                    SsesGenerator.Generate(dataModel, spc);
                 }
                 catch (Exception ex)
                 {
                     ShowError(ex.ToString(), spc);
-                    //throw;
+                    throw;
                 }
 
             });

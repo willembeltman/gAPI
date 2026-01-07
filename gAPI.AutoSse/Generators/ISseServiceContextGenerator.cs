@@ -4,32 +4,31 @@ using gAPI.AutoSse.Models;
 
 namespace gAPI.AutoSse.Generators
 {
-    internal class IClientHandlerContextGenerator : BaseGenerator
+    internal class ISseServiceContextGenerator : BaseGenerator
     {
-        internal IClientHandlerContextGenerator(
+        internal ISseServiceContextGenerator(
             ServiceContext dataModel,
-            SignalRHubGenerator signalRHub,
-            ClientHandlerGenerator clientHandler)
+            SseServiceGenerator clientHandler)
         {
             DataModel = dataModel;
-            SignalRHub = signalRHub;
             ClientHandler = clientHandler;
             IClientHandler = ClientHandler.Interface;
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
             Name = "I" + ClientHandler.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public ClientHandlerGenerator ClientHandler { get; }
+        public SseServiceGenerator ClientHandler { get; }
         public Interface IClientHandler { get; }
 
         public void GenerateCode()
         {
+            Code = "";
+            return;
             Reg(IClientHandler);
             Reg(ClientHandler);
             Code = @$"{GetNamespacesCode()}#nullable enable
