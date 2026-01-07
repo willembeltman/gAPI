@@ -11,8 +11,8 @@ namespace gAPI.AutoSse.Generators
             DataModel = dataModel;
             ClientHandlerContexts = clientHandlerContexts;
 
-            Directory = dataModel.Config.SseContexts_Destination.Directory;
-            Namespace = dataModel.Config.SseContexts_Destination.Namespace;
+            Directory = dataModel.Config.SseContextInterfaces_Destination.Directory;
+            Namespace = dataModel.Config.SseContextInterfaces_Destination.Namespace;
 
             Name = "ISseContext";
             FileName = $"{Name}.g.cs";

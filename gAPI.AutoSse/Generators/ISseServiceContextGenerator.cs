@@ -14,8 +14,8 @@ namespace gAPI.AutoSse.Generators
             SseService = sseService;
             ISseService = sseService.Interface;
 
-            Directory = dataModel.Config.SseServices_Destination.Directory;
-            Namespace = dataModel.Config.SseServices_Destination.Namespace;
+            Directory = dataModel.Config.SseServiceInterfaces_Destination.Directory;
+            Namespace = dataModel.Config.SseServiceInterfaces_Destination.Namespace;
 
             Name = SseService.Interface.Name + "Context";
             FileName = $"{Name}.g.cs";

@@ -14,7 +14,9 @@ namespace gAPI.AutoSse.Configs
                 SseContexts_Destination = ParseBlock(json, nameof(ServerConfig.SseContexts_Destination)),
                 SseServices_Destination = ParseBlock(json, nameof(ServerConfig.SseServices_Destination)),
                 AddAutoSseServices_Destination = ParseBlock(json, nameof(ServerConfig.AddAutoSseServices_Destination)),
-                SseHostController_Destination = ParseBlock(json, nameof(ServerConfig.SseHostController_Destination))
+                SseHostController_Destination = ParseBlock(json, nameof(ServerConfig.SseHostController_Destination)),
+                SseContextInterfaces_Destination = ParseBlock(json, nameof(ServerConfig.SseContextInterfaces_Destination)),
+                SseServiceInterfaces_Destination = ParseBlock(json, nameof(ServerConfig.SseServiceInterfaces_Destination))
             };
         }
 
