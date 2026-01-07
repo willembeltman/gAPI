@@ -54,6 +54,7 @@ namespace gAPI.AutoSseClient
             ISseManagerBase = Find("gAPI.Interfaces.ISseManagerBase", allSymbols);
             SseServiceId = Find("gAPI.Ids.SseServiceId", allSymbols);
             SseHostId = Find("gAPI.Ids.SseHostId", allSymbols);
+            SseMessage = Find("gAPI.Sse.SseMessage", allSymbols);
             SseManagerCollection = Find("gAPI.Sse.SseManagerCollection", allSymbols);
         }
         private SharedReference Find(string typeFullName, IEnumerable<INamedTypeSymbol> allSymbols)
@@ -88,5 +89,6 @@ namespace gAPI.AutoSseClient
         public SharedReference SseServiceId { get; }
         public SharedReference SseHostId { get; }
         public SharedReference SseManagerCollection { get; }
+        public SharedReference SseMessage { get; internal set; }
     }
 }

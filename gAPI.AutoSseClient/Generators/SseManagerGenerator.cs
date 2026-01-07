@@ -50,7 +50,7 @@ namespace gAPI.AutoSseClient.Generators
                     return @$"
         public async Task SubscribeAsync({i.Name} implementation)
         {{
-            var serviceId = new ServiceId(nameof({i.Name}));
+            var serviceId = new {DataModel.SseServiceId}(nameof({i.Name}));
             var client = ServiceClients.AddOrUpdate(
                 serviceId,
                 serviceId =>
@@ -68,7 +68,7 @@ namespace gAPI.AutoSseClient.Generators
         }}
         public async Task UnsubscribeAsync({i.Name} implementation)
         {{
-            var serviceId = new ServiceId(nameof({i.Name}));
+            var serviceId = new {DataModel.SseServiceId}(nameof({i.Name}));
             ImmutableInterlocked.Update(ref {i.ApiName}s, list => list.Remove(implementation));
             if ({i.ApiName}s.Length == 0 &&
                 ServiceClients.TryRemove(serviceId, out var client))
@@ -82,44 +82,40 @@ namespace gAPI.AutoSseClient.Generators
                 .Select(i =>
                 {
                     Reg(i);
-
-                    //            var methods = string.Join(Environment.NewLine, i.Methods
-                    //                .Select(m =>
-                    //                {
-                    //                    var arguments = string.Join(", ", m.Arguments.Select(p => p.ParameterType.Name));
-                    //                    var arguments2 = string.Join(", ", m.Arguments.Select(p => p.Name));
-                    //                    return @$"
-                    //Connection.On<{arguments}> (""{i.ApiName}.{m.Name}"", async ({arguments2}) =>
-                    //{{
-                    //    foreach (var item in {i.ApiName}s)
-                    //    {{
-                    //        {(m.IsAsync ? $"await " : $"")}item.{m.Name}({arguments2});
-                    //    }}
-                    //}});";
-                    //                }));
-                    return @$"
-                case nameof({i.Name}):
-                    var messageReceived = JsonConvert.DeserializeObject<TestClientService_MessageReceived>(message.Data);
-                    if (messageReceived == null) return;
-                    foreach (var item in {i.ApiName}s)
-                    {{
-                        await item.ServerToClientMethod(messageReceived.message);
+                    return $@"
+                case ""ITestClientService"":
+                    switch(message.ServiceMethodId.Value)
+                    {{{string.Join(Environment.NewLine, i.Methods.Select(m => $@"
+                        case ""{m.Name}"":
+                            var {m.Name.ToLower()} = JsonConvert.DeserializeObject<{i.ApiName}_{m.Name}>(message.Data);
+                            if ({m.Name.ToLower()} == null) return;
+                            foreach (var item in {i.ApiName}s)
+                            {{
+                                await item.{m.Name}({m.Name.ToLower()}.message);
+                            }}
+                            break;"))}
                     }}
-                    break;
-";
+                    break;";
                 }));
 
-            var callbackModels = string.Join(Environment.NewLine, DataModel.Interfaces
+            var callbacks = string.Join(Environment.NewLine, DataModel.Interfaces
                 .Select(i =>
                 {
                     Reg(i);
                     return string.Join(Environment.NewLine, i.Methods
-                        .Select(m => @$"
+                        .Select(m =>
+                        {
+                            return @$"
         public class {i.ApiName}_{m.Name}
-        {{{string.Join(Environment.NewLine, m.Arguments.Select(p => @$"
-            public {p.ParameterType.Name} {p.Name} {{ get; set; }}"))}
+        {{{string.Join(Environment.NewLine, m.Arguments.Select(p =>
+                            {
+                                RegRange(p.ParameterType.Namespaces);
+                                return @$"
+            public {p.ParameterType.Name} {p.Name} {{ get; set; }}";
+                            }))}
         }}
-"));
+";
+                        }));
                 }));
 
 
@@ -146,14 +142,12 @@ namespace {Namespace}
             ClientAuthenticationService = clientAuthenticationService;
             SseManagerCollection = sseManagerCollection;
             Id = SseManagerCollection.Add(this);
-        }}
+        }}{subscibe}
 
-{arrays}
         public async Task MessageReceived(SseMessage message)
         {{
             switch (message.ServiceId.Value)
-            {{
-{received}
+            {{{received}
             }}
         }}
 
@@ -167,7 +161,7 @@ namespace {Namespace}
             }}
             SseManagerCollection.Remove(Id);
         }}
-{callbackModels}
+{callbacks}
     }}
 }}";
         }

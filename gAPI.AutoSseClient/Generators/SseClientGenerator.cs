@@ -28,6 +28,7 @@ namespace gAPI.AutoSseClient.Generators
             Reg(DataModel.ISseManagerBase);
             Reg(DataModel.SseServiceId);
             Reg(DataModel.SseHostId);
+            Reg(DataModel.SseMessage);
 
             Code = @$"{GetNamespacesCode()}#nullable enable
 
@@ -124,7 +125,7 @@ namespace {Namespace}
             }}
             else if (eventName == ""SseMessage"")
             {{
-                var message = JsonConvert.DeserializeObject<SseMessage>(data);
+                var message = JsonConvert.DeserializeObject<{DataModel.SseMessage}>(data);
                 if (message != null)
                     _ = sseManager.MessageReceived(message);
             }}

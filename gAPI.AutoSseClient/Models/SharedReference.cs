@@ -18,5 +18,10 @@ namespace gAPI.AutoSseClient.Models
         public string Name { get; set; }
         public string Namespace { get; set; }
         public string FullName => $"{Namespace}.{Name}";
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }
