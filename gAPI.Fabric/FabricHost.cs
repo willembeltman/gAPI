@@ -33,11 +33,10 @@ namespace gAPI.FabricNode
             Id = Connections.AddConnection(this);
         }
 
-        public Task RunAsync()
+        public void Start()
         {
             _ = Task.Run(ReceiveLoop);
             _ = Task.Run(SendLoop);
-            return Task.CompletedTask;
         }
 
         public void SendMessageToClient(SseMessage message)

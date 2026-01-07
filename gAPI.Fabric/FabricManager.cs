@@ -9,14 +9,14 @@ namespace gAPI.FabricNode
         private readonly FabricHostCollection Connections = new();
         private readonly ServiceCollection Services = new();
 
-        public Task StartFabricHost(TcpClient tcpClient)
+        public void StartNewFabricHost(TcpClient tcpClient)
         {
+            // FabricHost abonneert zichzelf op connections
             var fabricHost = new FabricHost(
                 this,
                 tcpClient, 
                 Connections);
-            _ = Task.Run(fabricHost.RunAsync);
-            return Task.CompletedTask;
+            fabricHost.Start();
         }
 
         public void Subscribe(FabricHost connection,SseServiceId serviceId, UserId userId, SessionId sessionId)
@@ -55,12 +55,12 @@ namespace gAPI.FabricNode
 
         public async Task DisconnectAllAsync()
         {
-            await DisposeAsync();
+            foreach (var conn in Connections.All)
+                await conn.DisposeAsync();
         }
         public async Task DisposeAsync()
         {
-            foreach (var conn in Connections.All)
-                await conn.DisposeAsync();
+            await DisconnectAllAsync();
         }
 }
 }

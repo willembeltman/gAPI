@@ -15,11 +15,11 @@ namespace gAPI.FabricNode
             while (!ListenerCts.IsCancellationRequested)
             {
                 var tcpClient = await Listener.AcceptTcpClientAsync(ListenerCts.Token);
-                await Manager.StartFabricHost(tcpClient);
+                Manager.StartNewFabricHost(tcpClient);
             }
         }
 
-        public async Task DisconnectAll()
+        public async Task DisconnectAllAsync()
         {
             await Manager.DisconnectAllAsync();
         }
