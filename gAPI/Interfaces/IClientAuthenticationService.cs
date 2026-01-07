@@ -8,8 +8,6 @@ namespace gAPI.Interfaces
 {
     public interface IClientAuthenticationService
     {
-        HttpClient HttpClient { get; }
-
         Guid SessionId { get; }
         Task<bool> IsAuthenticated(CancellationToken? ct = null);
         Task<Stream> GetStreamAsync(string url, CancellationToken ct);

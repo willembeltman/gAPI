@@ -83,7 +83,7 @@ namespace gAPI.AutoSseClient.Generators
                 {
                     Reg(i);
                     return $@"
-                case ""ITestClientService"":
+                case ""{i.Name}"":
                     switch(message.ServiceMethodId.Value)
                     {{{string.Join(Environment.NewLine, i.Methods.Select(m => $@"
                         case ""{m.Name}"":
