@@ -23,15 +23,24 @@ namespace gAPI.AutoSse.Generators
 
         public void GenerateCode()
         {
-            Code = "";
-            return;
+            Code = $@"#nullable enable
+
+using BSD.Core.SseServices;
+
+namespace BSD.Core.SseContexts;
+
+public interface ISseContext
+{{
+    ITestClientServiceContext TestClientService {{ get; }}
+}}
+";
             var properties = string.Join(
                 Environment.NewLine,
                 ClientHandlerContexts
                     .Select(a =>
                     {
-                        Reg(a.IClientHandlerContext);
-                        return $"    {a.IClientHandlerContext.Name} {a.ClientHandler.Interface.ApiName} {{ get; }}";
+                        Reg(a.ISseServiceContext);
+                        return $"    {a.ISseServiceContext.Name} {a.SseService.Interface.ApiName} {{ get; }}";
                     }));
             Code = @$"{GetNamespacesCode()}#nullable enable
 

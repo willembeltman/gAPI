@@ -8,37 +8,36 @@ namespace gAPI.AutoSse.Generators
     {
         internal ISseServiceContextGenerator(
             ServiceContext dataModel,
-            SseServiceGenerator clientHandler)
+            SseServiceGenerator sseService)
         {
             DataModel = dataModel;
-            ClientHandler = clientHandler;
-            IClientHandler = ClientHandler.Interface;
+            SseService = sseService;
+            ISseService = sseService.Interface;
 
             Directory = dataModel.Config.SseServices_Destination.Directory;
             Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
-            Name = ClientHandler.Interface.Name + "Context";
+            Name = SseService.Interface.Name + "Context";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public SseServiceGenerator ClientHandler { get; }
-        public Interface IClientHandler { get; }
+        public SseServiceGenerator SseService { get; }
+        public Interface ISseService { get; }
 
         public void GenerateCode()
         {
-            Code = "";
-            return;
-            Reg(IClientHandler);
-            Reg(ClientHandler);
+            Reg(ISseService);
+            Reg(SseService);
             Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
 public interface {Name}
 {{
-    {IClientHandler.Name} ToAll {{ get; }}
-    {IClientHandler.Name} ToUser(object userId);
+    {ISseService.Name} ToAll {{ get; }}
+    {ISseService.Name} ToUser(string userId);
+    {ISseService.Name} ToSession(string sessionId);
 }}
 ";
         }

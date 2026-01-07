@@ -8,45 +8,47 @@ namespace gAPI.AutoSse.Generators
     {
         internal SseServiceContextGenerator(
             ServiceContext dataModel,
-            ISseServiceContextGenerator iClientHandlerContext)
+            ISseServiceContextGenerator iSseServiceContext)
         {
             DataModel = dataModel;
-            IClientHandlerContext = iClientHandlerContext;
-            ClientHandler = IClientHandlerContext.ClientHandler;
-            IClientHandler = ClientHandler.Interface; 
+            ISseServiceContext = iSseServiceContext;
+            SseService = iSseServiceContext.SseService;
+            ISseService = SseService.Interface; 
 
             Directory = dataModel.Config.SseServices_Destination.Directory;
             Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
-            Name = ClientHandler.Interface.ApiName + "Context";
+            Name = SseService.Interface.ApiName + "Context";
             FileName = $"{Name}.g.cs";
         }
 
         public ServiceContext DataModel { get; }
-        public ISseServiceContextGenerator IClientHandlerContext { get; }
-        public SseServiceGenerator ClientHandler { get; }
-        public Interface IClientHandler { get; }
+        public ISseServiceContextGenerator ISseServiceContext { get; }
+        public SseServiceGenerator SseService { get; }
+        public Interface ISseService { get; }
 
         public void GenerateCode()
         {
-            Code = "";
-            return;
-            Reg(IClientHandlerContext);
-            Reg(IClientHandler);
-            Reg(ClientHandler);
-            Reg("Microsoft.AspNetCore.SignalR");
+            Reg(ISseServiceContext);
+            Reg(ISseService);
+            Reg(SseService);
+            Reg(DataModel.FabricClient);
+            Reg(DataModel.UserId);
+            Reg(DataModel.SessionId);
             Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
 public class {Name}(
-    ISseContext<SignalRSse> sseContext)
-    : {IClientHandlerContext.Name}
+    {DataModel.FabricClient} fabricClient)
+    : {ISseServiceContext.Name}
 {{
-    public {IClientHandler.Name} ToAll
-        => new {ClientHandler.Name}(sseContext.Clients.All);
-    public {IClientHandler.Name} ToUser(object userId)
-        => new {ClientHandler.Name}(sseContext.Clients.Group(userId.ToString()!));
+    public {ISseService.Name} ToAll
+        => new {SseService.Name}(fabricClient);
+    public {ISseService.Name} ToUser(string userId)
+        => new {SseService.Name}(fabricClient, new {DataModel.UserId}(userId));
+    public {ISseService.Name} ToSession(string sessionId)
+        => new {SseService.Name}(fabricClient, null, new {DataModel.SessionId}(sessionId));
 }}
 ";
         }

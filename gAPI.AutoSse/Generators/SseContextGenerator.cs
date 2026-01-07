@@ -6,12 +6,12 @@ namespace gAPI.AutoSse.Generators
     {
         internal SseContextGenerator(
             ServiceContext dataModel,
-            SseServiceContextGenerator[] clientHandlerContexts,
-            ISseContextGenerator iSignalRContext)
+            SseServiceContextGenerator[] sseServiceContexts,
+            ISseContextGenerator iSseContext)
         {
             DataModel = dataModel;
-            ClientHandlerContexts = clientHandlerContexts;
-            ISignalRContext = iSignalRContext;
+            SseServiceContexts = sseServiceContexts;
+            ISseContext = iSseContext;
 
             Directory = dataModel.Config.SseContexts_Destination.Directory;
             Namespace = dataModel.Config.SseContexts_Destination.Namespace;
@@ -21,23 +21,36 @@ namespace gAPI.AutoSse.Generators
         }
 
         public ServiceContext DataModel { get; }
-        public SseServiceContextGenerator[] ClientHandlerContexts { get; }
-        public ISseContextGenerator ISignalRContext { get; }
+        public SseServiceContextGenerator[] SseServiceContexts { get; }
+        public ISseContextGenerator ISseContext { get; }
 
         public void GenerateCode()
         {
-            Code = "";
-            return;
-            Reg(ISignalRContext);
-            Reg("Microsoft.AspNetCore.SignalR");
+            Code = $@"using BSD.Core.SseServices;
+using gAPI.Fabric;
+
+#nullable enable
+
+namespace BSD.Core.SseContexts;
+
+public class SseContext(
+    FabricClient fabricClient)
+    : ISseContext
+{{
+    public ITestClientServiceContext TestClientService {{ get; }} = new TestClientServiceContext(FabricClient);
+}}
+";
+            //return;
+            Reg(ISseContext);
+            Reg(DataModel.FabricClient);
             var properties = string.Join(
                 Environment.NewLine,
-                ClientHandlerContexts
+                SseServiceContexts
                     .Select(a =>
                     {
                         Reg(a);
-                        Reg(a.IClientHandlerContext);
-                        return $"    public {a.IClientHandlerContext.Name} {a.ClientHandler.Interface.ApiName} {{ get; }} = new {a.Name}(sseContext);";
+                        Reg(a.ISseServiceContext);
+                        return $"    public {a.ISseServiceContext.Name} {a.SseService.Interface.ApiName} {{ get; }} = new {a.Name}(fabricClient);";
                     }));
 
             Code = @$"{GetNamespacesCode()}#nullable enable
@@ -45,8 +58,8 @@ namespace gAPI.AutoSse.Generators
 namespace {Namespace};
 
 public class {Name}(
-    ISseContext<SignalRSse> sseContext)
-    : {ISignalRContext.Name}
+    {DataModel.FabricClient} fabricClient)
+    : {ISseContext}
 {{
 {properties}
 }}
