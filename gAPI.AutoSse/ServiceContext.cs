@@ -18,7 +18,7 @@ namespace gAPI.AutoSse
             var interfaceSymbols = allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateSseAttribute") &&
+                    t.HasAttribute("gAPI.Attributes.GenerateHubAttribute") &&
                     Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
                 .ToArray();
 
@@ -52,6 +52,11 @@ namespace gAPI.AutoSse
 
             FabricClient = Find("gAPI.Fabric.FabricClient", allSymbols);
             SseHostCollection = Find("gAPI.Sse.SseHostCollection", allSymbols);
+            SseHost = Find("gAPI.Sse.SseHost", allSymbols);
+            SseServiceId = Find("gAPI.Ids.SseServiceId", allSymbols);
+            SseServiceMethodId = Find("gAPI.Ids.SseServiceMethodId", allSymbols);
+            UserId = Find("gAPI.Ids.UserId", allSymbols);
+            SessionId = Find("gAPI.Ids.SessionId", allSymbols);
         }
 
         private SharedReference Find(string typeFullName, IEnumerable<INamedTypeSymbol> allSymbols)
@@ -82,5 +87,10 @@ namespace gAPI.AutoSse
         public Dto[] Dtos { get; }
         public SharedReference FabricClient { get; }
         public SharedReference SseHostCollection { get; internal set; }
+        public SharedReference SseHost { get; internal set; }
+        public SharedReference SseServiceId { get; internal set; }
+        public SharedReference SseServiceMethodId { get; internal set; }
+        public SharedReference UserId { get; internal set; }
+        public SharedReference SessionId { get; internal set; }
     }
 }

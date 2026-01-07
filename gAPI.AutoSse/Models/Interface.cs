@@ -52,5 +52,10 @@ namespace gAPI.AutoSse.Models
         public bool IsHidden { get; }
         public InterfaceMethod[] Methods { get; }
         //public ClientHandler ClientHandler { get; }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

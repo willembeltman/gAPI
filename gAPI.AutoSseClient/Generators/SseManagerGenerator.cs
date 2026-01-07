@@ -98,7 +98,7 @@ namespace gAPI.AutoSseClient.Generators
                     break;";
                 }));
 
-            var callbacks = string.Join(Environment.NewLine, DataModel.Interfaces
+            var dtos = string.Join(Environment.NewLine, DataModel.Interfaces
                 .Select(i =>
                 {
                     Reg(i);
@@ -161,7 +161,7 @@ namespace {Namespace}
             }}
             SseManagerCollection.Remove(Id);
         }}
-{callbacks}
+{dtos}
     }}
 }}";
         }
