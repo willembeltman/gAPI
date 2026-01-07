@@ -43,7 +43,7 @@ namespace gAPI.FabricNode
         {
             Enqueue(w =>
             {
-                fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendMessageToClient);
+                fc.WriteHostToClientMessageType(w, FabricHostToClientMessageEnum.SendSseMessageToClient);
                 fc.WriteServiceId(w, message.ServiceId);
                 fc.WriteNullableUserId(w, message.UserId);
                 fc.WriteNullableSessionId(w, message.SessionId);
@@ -56,12 +56,12 @@ namespace gAPI.FabricNode
         }
         private async Task SendLoop()
         {
-            var w = new BinaryWriter(Stream);
-            fc.WriteFabricHostId(w, Id);
+            var writer = new BinaryWriter(Stream);
+            fc.WriteFabricHostId(writer, Id);
             await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
             {
-                item(w);
-                w.Flush();
+                item(writer);
+                writer.Flush();
                 if (Cts.IsCancellationRequested) break;
             }
             await DisposeAsync();

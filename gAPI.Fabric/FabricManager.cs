@@ -22,33 +22,33 @@ namespace gAPI.FabricNode
         public void Subscribe(FabricHost connection,ServiceId serviceId, UserId userId, SessionId sessionId)
         {
             Console.WriteLine(
-                $"ConnectionManager.Subscribe " +
-                $"serviceId {serviceId}, " +
-                $"userId {userId}, " +
-                $"sessionId {sessionId}, " +
-                $"connectionId {connection.Id}"); 
+                $"Subscribe " +
+                $"connectionId {connection.Id}: " +
+                $"{serviceId} " +
+                $"(userId {userId}, " +
+                $"sessionId {sessionId})");
             Services[serviceId]
                 .Subscribe(connection, userId, sessionId);
         }
         public void Unsubscribe(FabricHost connection, ServiceId serviceId, UserId userId, SessionId sessionId)
         {
             Console.WriteLine(
-                $"ConnectionManager.Unsubscribe " +
-                $"serviceId {serviceId}, " +
-                $"userId {userId}, " +
-                $"sessionId {sessionId}, " +
-                $"connectionId {connection.Id}");
+                $"Unsubscribe " +
+                $"connectionId {connection.Id}: " +
+                $"{serviceId} " +
+                $"(userId {userId}, " +
+                $"sessionId {sessionId})");
             Services[serviceId]
                 .Unsubscribe(connection, userId, sessionId);
         }
         public void Publish(FabricHost connection, ServiceId serviceId, UserId? userId, SessionId? sessionId, string messageData)
         {
             Console.WriteLine(
-                $"ConnectionManager.Publish " +
-                $"serviceId {serviceId}, " +
-                $"userId {userId}," +
-                $"sessionId {sessionId}," +
-                $"connectionId {connection.Id}");
+                $"Publish " +
+                $"connectionId {connection.Id}: " +
+                $"{serviceId} " +
+                $"(userId {userId}, " +
+                $"sessionId {sessionId})");
             Services[serviceId]
                 .Publish(userId,  sessionId, messageData);
         }
