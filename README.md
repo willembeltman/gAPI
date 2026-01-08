@@ -1,54 +1,54 @@
-﻿# gAPI
+﻿# gAPI – Full-stack Code Generation & App Scaffolding for .NET 10
 
-Core library for the gAPI framework – fast, type-safe API generation and data abstraction for .NET.
+**gAPI** is a powerful, end-to-end code generation platform for .NET 10, designed to turn your backend Service Model into a fully wired application — backend, frontend, storage, and real-time streaming included.
 
-gAPI forms the foundation of the gAPI (Generated API Framework) ecosystem.
-It provides the essential building blocks that power gAPI’s automatic API generation, serialization, and data-mapping systems.
+It combines **reflection, Roslyn analyzers, and source generators** to automate repetitive tasks, enforce consistency, and dramatically accelerate application development.
 
-## 🔧 What’s inside
+With gAPI, your **Service Model is the single source of truth**: define your services, DTOs, and contracts once, and gAPI generates a complete, type-safe, fully functional application stack.
 
-This package contains the core components that are reused across the gAPI ecosystem:
+---
 
-### AutoComparer – Deep, type-aware object comparison utilities.
-Supports custom equality logic and recursive comparison for complex models.
+## Core Features
 
-### AutoMapper – A lightweight, reflection-based mapping engine for DTO ↔ Entity conversion.
-Includes type models, factories, and customizable mapping extensions.
+- Automatic backend and frontend scaffolding  
+- CRUD services, mappings, and handlers generated from DbContext  
+- Real-time streaming with SSE or SignalR, both server and client sides  
+- Fully generated Blazor WebAssembly, Blazor MAUI, and shared Razor projects  
+- Built-in storage server for file and database management  
+- Modular, pluggable architecture for flexibility and extensibility  
 
-### AutoSerializer – Unified serialization infrastructure for efficient, version-safe data exchange.
+---
 
-### EntityFrameworkDisk – A local, disk-based implementation of DbContext and DbSet for offline persistence.
-Ideal for caching, testing, or lightweight storage scenarios.
+## Packages Overview
 
-### Storage – Abstractions for file-based and cloud storage, with implementations for
+| Package | Purpose |
+|---------|---------|
+| **gAPI.AutoApi** | Server-side API generator. Automatically generates endpoints based on your Service Model. |
+| **gAPI.AutoApiClient** | Client-side API generator. Generates type-safe API clients for your frontend. |
+| **gAPI.AutoComponent** | Generates Blazor components automatically from your Service Model. |
+| **gAPI.AutoCrud** | Generates CRUD services and mapping extensions for your entities. |
+| **gAPI.AutoHub** | Generates SignalR infrastructure on the server side based on your interfaces. |
+| **gAPI.AutoHubClient** | Generates SignalR client infrastructure for Blazor components based on interfaces. |
+| **gAPI.AutoSse** | Generates server-side SSE (Server-Sent Events) infrastructure based on interfaces. |
+| **gAPI.AutoSseClient** | Generates SSE client infrastructure for Blazor components based on interfaces. |
+| **gAPI.CodeGen.Backend** | Backend generator: generates domain models, DTOs, services, CRUD handlers, and mappings. |
+| **gAPI.CodeGen.Frontend** | Frontend generator: generates Blazor WASM, MAUI, and shared Razor projects from the backend. |
+| **gAPI.ConfigTool** | Utility to manage and update appconfig.json references across projects. |
+| **gAPI.Fabric** | Distributed event bus and messaging fabric for syncing data, streaming, and microservices communication. |
+| **gAPI.Storage.Server** | File and database server that integrates directly with your projects for simple deployment. |
 
-Mock (in-memory)
+---
 
-Azure Blob Storage
+## Why gAPI?
 
-gAPI StorageServer
+1. **Productivity** – Generate complete backend and frontend layers in minutes.  
+2. **Consistency** – Keep all your code type-safe and fully wired to your Service Model.  
+3. **Real-time** – SSE and SignalR generators provide instant streaming without boilerplate.  
+4. **Flexibility** – Modular packages let you adopt only what you need.  
+5. **Scalability** – Designed to support complex enterprise-grade apps with minimal manual wiring.  
 
-## 🧠 Purpose
+---
 
-gAPI is not a standalone API framework — it’s the common core used by:
+## License
 
-gAPI.AutoApi – generated backend APIs
-
-gAPI.AutoClient – generated client SDKs
-
-gAPI.AutoComponents – generated component SDKs
-
-gAPI.CodeGen.* – code generation tools
-
-gAPI.StorageServer – storage and persistence services
-
-Together, these packages allow developers to generate complete, type-safe, fully linked client–server systems with minimal boilerplate.
-
-## 🚀 Status
-
-This project is part of the early-stage development of gAPI.
-The first pre-release version (v0.0.1) will become available soon.
-
-Stay tuned for documentation and samples.
-
-— Willem-Jan Beltman
+MIT – free for commercial and personal use.
