@@ -1,10 +1,20 @@
 ﻿# gAPI – Full-stack Code Generation & App Scaffolding for .NET 10
 
-**gAPI** is a powerful, end-to-end code generation platform for .NET 10, designed to turn your backend Service Model into a fully wired application — backend, frontend, storage, and real-time streaming included.
+**gAPI** is a powerful, end-to-end code generation platform for .NET 10, designed to turn your backend data model into a fully wired application — backend, frontend, storage, and real-time streaming included.
 
 It combines **reflection, Roslyn analyzers, and source generators** to automate repetitive tasks, enforce consistency, and dramatically accelerate application development.
 
-With gAPI, your **Service Model is the single source of truth**: define your services, DTOs, and contracts once, and gAPI generates a complete, type-safe, fully functional application stack.
+The platform is built around multiple layers of models and responsibilities:
+
+- **Data Models / Entities** are used to generate the full backend business logic, including `Shared/Dtos`, `Shared/Interfaces`, `Core/Models`, `Core/Services` (base), `Core/CrudServices`, `Core/CrudMappings`, `Core/CrudHandlers`, and `Core/CrudMappingExtensions`.
+- Developers are expected to **customize the CrudHandlers**, as these contain the core business logic of the application per table.
+- Developers can also **add custom CRUD services or normal services by hand**. gAPI automatically generates the corresponding frontend components (`Index`, `Create`, `Details`, `Edit`, `Delete`) for crud services, which you can map to an external API for example. All services can be accessed from the frontend in a gRPC-like manner, and the `[IsPage]` attribute can be used on handwritten service methods to generate full pages automatically based on the method contract. 
+- Together, all of these elements form the **Service Model**, which drives both the API communication and the frontend generation.
+- On the frontend, developers have two options:
+  - **CodeGen.Frontend** generates fully editable code directly into the Razor project.
+  - **AutoComponents** generate the same code but by analyzer, so they update automatically whenever the Service Model changes. Developers can enable this by prefixing components with `Auto` (e.g., `<AutoCompanyForm ... />`), avoiding manual updates when the model evolves. 
+
+By centralizing business logic, service contracts, and UI generation, gAPI allows developers to focus on application-specific features while automating repetitive scaffolding across the entire stack.
 
 ---
 
