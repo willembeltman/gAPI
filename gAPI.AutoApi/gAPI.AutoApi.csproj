@@ -8,7 +8,7 @@
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.AutoApi</PackageId>
-		<Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
+		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET 10.</Description>
 		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>

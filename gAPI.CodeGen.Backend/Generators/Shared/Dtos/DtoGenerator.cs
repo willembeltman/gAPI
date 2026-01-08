@@ -16,9 +16,8 @@ public class DtoGenerator : BaseGenerator
         BackendGenerator context,
         DbSet dbSet,
         DirectoryInfo dtoDirectory, string dtoNamespace,
-        DirectoryInfo CrudHandlerInterfacesDirectory, string CrudHandlerInterfacesNamespace,
         DirectoryInfo CrudHandlersDirectory, string CrudHandlersNamespace,
-        DirectoryInfo CustomMappingsDirectory, string CustomMappingsNamespace,
+        DirectoryInfo CrudMappingsDirectory, string CrudMappingsNamespace,
         DirectoryInfo CrudServiceInterfacesDirectory, string CrudServiceInterfacesNamespace,
         DirectoryInfo CrudServicesDirectory, string CrudServicesNamespace)
     {
@@ -28,11 +27,6 @@ public class DtoGenerator : BaseGenerator
         Directory = dtoDirectory;
         Namespace = dtoNamespace;
 
-        //HandlerInterface = new CrudHandlerInterfaceGenerator(
-        //    this,
-        //    CrudHandlerInterfacesDirectory,
-        //    CrudHandlerInterfacesNamespace);
-
         // Generate Service Handlers
         Handler = new CrudHandlerGenerator(
             this,
@@ -41,8 +35,8 @@ public class DtoGenerator : BaseGenerator
 
         CustomMapping = new CrudMappingGenerator(
             Handler,
-            CustomMappingsDirectory,
-            CustomMappingsNamespace);
+            CrudMappingsDirectory,
+            CrudMappingsNamespace);
 
         // Generate Service Interfaces
         ServiceInterface = new CrudServiceInterfaceGenerator(

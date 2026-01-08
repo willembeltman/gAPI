@@ -1,0 +1,29 @@
+{
+  "BaseNamespaces": [
+    "YourApp"
+  ],
+  "SseContextInterfaces_Destination": {
+    "Directory": "Interfaces",
+    "Namespace": "YourApp.Core.Interfaces"
+  },
+  "SseContexts_Destination": {
+    "Directory": "SseContexts",
+    "Namespace": "YourApp.Core.SseContexts"
+  },
+  "SseServiceInterfaces_Destination": {
+    "Directory": "Interfaces",
+    "Namespace": "YourApp.Core.Interfaces"
+  },
+  "SseServices_Destination": {
+    "Directory": "SseServices",
+    "Namespace": "YourApp.Core.SseServices"
+  },
+  "SseHostController_Destination": {
+    "Directory": "",
+    "Namespace": "YourApp.Core"
+  },
+  "AddAutoSseServices_Destination": {
+    "Directory": "",
+    "Namespace": "YourApp.Core"
+  }
+}

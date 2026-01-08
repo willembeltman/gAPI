@@ -48,7 +48,6 @@ public class BackendGenerator
             .Select(dbSet => new DtoGenerator(
                 this, dbSet,
                 config.DtoDirectory, config.DtoNamespace,
-                config.CrudHandlerInterfacesDirectory, config.CrudHandlerInterfacesNamespace,
                 config.CrudHandlersDirectory, config.CrudHandlersNamespace,
                 config.CustomMappingsDirectory, config.CustomMappingsNamespace,
                 config.CrudServiceInterfacesDirectory, config.CrudServiceInterfacesNamespace,

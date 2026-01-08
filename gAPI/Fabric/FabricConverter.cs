@@ -1,6 +1,7 @@
-﻿using gAPI.Types;
+﻿using gAPI.Ids;
 using System;
 using System.IO;
+using System.Reflection.PortableExecutable;
 
 namespace gAPI.Fabric
 {
@@ -18,10 +19,16 @@ namespace gAPI.Fabric
         {
             return new FabricHostId(binaryReader.ReadInt64());
         }
-        public ServiceId ReadServiceId(BinaryReader Reader)
+        public SseServiceId ReadServiceId(BinaryReader Reader)
         {
             var serviceName = Reader.ReadString();
-            var serviceId = new ServiceId(serviceName);
+            var serviceId = new SseServiceId(serviceName);
+            return serviceId;
+        }
+        public SseServiceMethodId ReadServiceMethodId(BinaryReader reader)
+        {
+            var serviceName = reader.ReadString();
+            var serviceId = new SseServiceMethodId(serviceName);
             return serviceId;
         }
         public UserId ReadUserId(BinaryReader Reader)
@@ -66,7 +73,11 @@ namespace gAPI.Fabric
         {
             w.Write(id.Value);
         }
-        public void WriteServiceId(BinaryWriter w, ServiceId id)
+        public void WriteServiceId(BinaryWriter w, SseServiceId id)
+        {
+            w.Write(id.Value);
+        }
+        public void WriteServiceMethodId(BinaryWriter w, SseServiceMethodId id)
         {
             w.Write(id.Value);
         }

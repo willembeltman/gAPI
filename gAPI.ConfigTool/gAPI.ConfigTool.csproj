@@ -6,6 +6,7 @@
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>gapi-config</ToolCommandName>
 		<PackageId>gAPI.ConfigTool</PackageId>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 </Project>

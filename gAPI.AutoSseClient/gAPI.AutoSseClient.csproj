@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+
+		<Version>0.0.1-alpha</Version>
+
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
+
+		<PackageId>gAPI.AutoSseClient</PackageId>
+
+		<Title>
+			gAPI.AutoSseClient – Automatic SSE/SignalR-like streaming for Blazor components
+		</Title>
+
+		<Description>
+			gAPI.AutoSseClient is a source-generator and analyzer powered library that enables automatic
+			server-to-client streaming for Blazor components.
+
+			Just define an interface in your shared contracts project, decorate it with [GenerateHub],
+			implement it in your Blazor component, and subscribe via SseManager.
+
+			It automatically wires up the component to receive server messages, mimicking SignalR functionality
+			without any manual client boilerplate.
+		</Description>
+
+		<PackageTags>
+			blazor;signalr;sse;streaming;sourcegenerator;codegen;rpc;api;client;gapi
+		</PackageTags>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+
+		<!-- Critical for analyzers and source generation -->
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<IncludeBuildOutput>true</IncludeBuildOutput>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+	  <AdditionalFiles Include="Content\gapi.autosseclient.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<!-- Package the analyzer -->
+	<ItemGroup>
+		<None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers\dotnet\cs\$(AssemblyName).dll" Visible="false" />
+	</ItemGroup>
+
+	<!-- Package additional files -->
+	<ItemGroup>
+
+		<!-- MSBuild target om gapisettings.json toe te voegen -->
+		<None Include="Build\$(PackageId).targets" Pack="true" PackagePath="build\$(PackageId).targets" Condition="Exists('build\$(PackageId).targets')" />
+
+		<!-- Template gapisettings.json -->
+	</ItemGroup>
+
+</Project>

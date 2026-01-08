@@ -47,7 +47,7 @@ public static class {Name}
         services.AddAutoApiServices();
 
         // Add custom mappings from Business project
-        services.AddCustomMappings(assembliesToScan);
+        //services.AddCustomMappings(assembliesToScan);
 
         // Add Cors
         services.AddCors(options =>
@@ -69,7 +69,7 @@ public static class {Name}
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
         }});
 
-        app.AttachMapper();
+        //app.AttachMapper();
         app.UseCors(""AllowSpecificOrigin"");
 
         app.MapControllers();

@@ -4,67 +4,45 @@ public class BackendConfig
 {
     public BackendConfig(
         Type dbContextType,
-        DirectoryInfo dtoDirectory, string dtoNamespace,
-        DirectoryInfo requestDtoDirectory, string requestDtoNamespace,
-        DirectoryInfo responseDtoDirectory, string responseDtoNamespace,
-        DirectoryInfo businessInterfacesDirectory, string businessInterfacesNamespace,
-        DirectoryInfo businessExtentionsDirectory, string businessExtentionsNamespace,
-        DirectoryInfo businessModelsDirectory, string businessModelsNamespace,
-        DirectoryInfo businessServicesDirectory, string businessServicesNamespace,
-        DirectoryInfo crudHandlerInterfacesDirectory, string crudHandlerInterfacesNamespace,
-        DirectoryInfo crudHandlersDirectory, string crudHandlersNamespace,
-        DirectoryInfo crudMappingsDirectory, string crudMappingsNamespace,
+        DirectoryInfo sharedDtoDirectory, string sharedDtoNamespace,
+        DirectoryInfo sharedResponseDtoDirectory, string sharedResponseDtoNamespace,
+        DirectoryInfo coreInterfacesDirectory, string coreInterfacesNamespace,
+        DirectoryInfo coreModelsDirectory, string coreModelsNamespace,
+        DirectoryInfo coreCrudHandlersDirectory, string coreCrudHandlersNamespace,
+        DirectoryInfo coreCrudMappingsDirectory, string coreCrudMappingsNamespace,
         DirectoryInfo sharedInterfacesDirectory, string sharedInterfacesNamespace,
-        DirectoryInfo crudServicesDirectory, string crudServicesNamespace)
+        DirectoryInfo coreCrudServicesDirectory, string coreCrudServicesNamespace)
     {
         DbContextType = dbContextType;
-        DtoDirectory = dtoDirectory;
-        DtoNamespace = dtoNamespace;
-        RequestDtoDirectory = requestDtoDirectory;
-        RequestDtoNamespace = requestDtoNamespace;
-        ResponseDtoDirectory = responseDtoDirectory;
-        ResponseDtoNamespace = responseDtoNamespace;
-        BusinessInterfacesDirectory = businessInterfacesDirectory;
-        BusinessInterfacesNamespace = businessInterfacesNamespace;
-        BusinessModelsDirectory = businessModelsDirectory;
-        BusinessModelsNamespace = businessModelsNamespace;
-        BusinessServicesDirectory = businessServicesDirectory;
-        BusinessServicesNamespace = businessServicesNamespace;
-        BusinessExtentionsDirectory = businessExtentionsDirectory;
-        BusinessExtentionsNamespace = businessExtentionsNamespace;
-        CrudHandlerInterfacesDirectory = crudHandlerInterfacesDirectory;
-        CrudHandlerInterfacesNamespace = crudHandlerInterfacesNamespace;
-        CrudHandlersDirectory = crudHandlersDirectory;
-        CrudHandlersNamespace = crudHandlersNamespace;
-        CustomMappingsDirectory = crudMappingsDirectory;
-        CustomMappingsNamespace = crudMappingsNamespace;
+        DtoDirectory = sharedDtoDirectory;
+        DtoNamespace = sharedDtoNamespace;
+        ResponseDtoDirectory = sharedResponseDtoDirectory;
+        ResponseDtoNamespace = sharedResponseDtoNamespace;
+        BusinessInterfacesDirectory = coreInterfacesDirectory;
+        BusinessInterfacesNamespace = coreInterfacesNamespace;
+        BusinessModelsDirectory = coreModelsDirectory;
+        BusinessModelsNamespace = coreModelsNamespace;
+        CrudHandlersDirectory = coreCrudHandlersDirectory;
+        CrudHandlersNamespace = coreCrudHandlersNamespace;
+        CustomMappingsDirectory = coreCrudMappingsDirectory;
+        CustomMappingsNamespace = coreCrudMappingsNamespace;
         CrudServiceInterfacesDirectory = sharedInterfacesDirectory;
         CrudServiceInterfacesNamespace = sharedInterfacesNamespace;
-        CrudServicesDirectory = crudServicesDirectory;
-        CrudServicesNamespace = crudServicesNamespace;
+        CrudServicesDirectory = coreCrudServicesDirectory;
+        CrudServicesNamespace = coreCrudServicesNamespace;
     }
     public Type DbContextType { get; }
     public DirectoryInfo DtoDirectory { get; }
     public string DtoNamespace { get; }
-
-    public DirectoryInfo RequestDtoDirectory { get; }
-    public string RequestDtoNamespace { get; }
 
     public DirectoryInfo ResponseDtoDirectory { get; }
     public string ResponseDtoNamespace { get; }
 
     public DirectoryInfo BusinessModelsDirectory { get; }
     public string BusinessModelsNamespace { get; }
-    public DirectoryInfo BusinessServicesDirectory { get; }
-    public string BusinessServicesNamespace { get; }
-    public DirectoryInfo BusinessExtentionsDirectory { get; }
-    public string BusinessExtentionsNamespace { get; }
 
     public DirectoryInfo BusinessInterfacesDirectory { get; }
     public string BusinessInterfacesNamespace { get; }
-
-    public DirectoryInfo CrudHandlerInterfacesDirectory { get; internal set; }
-    public string CrudHandlerInterfacesNamespace { get; internal set; }
 
     public DirectoryInfo CrudHandlersDirectory { get; }
     public string CrudHandlersNamespace { get; }

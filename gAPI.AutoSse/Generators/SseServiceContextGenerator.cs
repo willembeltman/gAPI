@@ -1,0 +1,56 @@
+﻿using System.Linq;
+using System;
+using gAPI.AutoSse.Models;
+
+namespace gAPI.AutoSse.Generators
+{
+    internal class SseServiceContextGenerator : BaseGenerator
+    {
+        internal SseServiceContextGenerator(
+            ServiceContext dataModel,
+            ISseServiceContextGenerator iSseServiceContext)
+        {
+            DataModel = dataModel;
+            ISseServiceContext = iSseServiceContext;
+            SseService = iSseServiceContext.SseService;
+            ISseService = SseService.Interface; 
+
+            Directory = dataModel.Config.SseServices_Destination.Directory;
+            Namespace = dataModel.Config.SseServices_Destination.Namespace;
+
+            Name = SseService.Interface.ApiName + "Context";
+            FileName = $"{Name}.g.cs";
+        }
+
+        public ServiceContext DataModel { get; }
+        public ISseServiceContextGenerator ISseServiceContext { get; }
+        public SseServiceGenerator SseService { get; }
+        public Interface ISseService { get; }
+
+        public void GenerateCode()
+        {
+            Reg(ISseServiceContext);
+            Reg(ISseService);
+            Reg(SseService);
+            Reg(DataModel.FabricClient);
+            Reg(DataModel.UserId);
+            Reg(DataModel.SessionId);
+            Code = @$"{GetNamespacesCode()}#nullable enable
+
+namespace {Namespace};
+
+public class {Name}(
+    {DataModel.FabricClient} fabricClient)
+    : {ISseServiceContext.Name}
+{{
+    public {ISseService.Name} ToAll
+        => new {SseService.Name}(fabricClient);
+    public {ISseService.Name} ToUser(string userId)
+        => new {SseService.Name}(fabricClient, new {DataModel.UserId}(userId));
+    public {ISseService.Name} ToSession(string sessionId)
+        => new {SseService.Name}(fabricClient, null, new {DataModel.SessionId}(sessionId));
+}}
+";
+        }
+    }
+}

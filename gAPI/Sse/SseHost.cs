@@ -1,0 +1,56 @@
+﻿using gAPI.Ids;
+using Newtonsoft.Json;
+using System.Net.ServerSentEvents;
+using System.Runtime.CompilerServices;
+using System.Threading.Channels;
+using gAPI.Fabric;
+
+namespace gAPI.Sse
+{
+    public class SseHost(
+        SseHostCollection sseHostCollection,
+        FabricClient fabricClient,
+        SseServiceId serviceId,
+        UserId userId,
+        SessionId sessionId)
+    {
+        private byte closed;
+
+        public Channel<SseEvent> Channel { get; } = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
+        public SseHostId Id { get; private set; }
+        public SseServiceId ServiceId { get; } = serviceId;
+        public SessionId SessionId { get; } = sessionId;
+        public UserId UserId { get; } = userId;
+
+        public async IAsyncEnumerable<SseItem<string>> GetStrings([EnumeratorCancellation] CancellationToken ct = default)
+        {
+            Id = sseHostCollection.Add(this);
+            Console.WriteLine($"SseHost {Id} started");
+            fabricClient.Subscribe(this);
+            try
+            {
+                yield return new SseItem<string>(Id.Value.ToString(), "SseHostId");
+                await foreach (var sseMessage in Channel.Reader.ReadAllAsync(ct))
+                {
+                    if (sseMessage.SseMessage == null) continue;
+                    var json = JsonConvert.SerializeObject(sseMessage.SseMessage);
+                    yield return new SseItem<string>(json, "SseMessage");
+                }
+            }
+            finally
+            {
+                if (Interlocked.Exchange(ref closed, 1) == 0)
+                {
+                    fabricClient.Unsubscribe(this);
+                    sseHostCollection.Remove(Id);
+                }
+            }
+            //finally
+            //{
+            //    fabricClient.Unsubscribe(this);
+            //    sseHostCollection.Remove(Id);
+            //    Console.WriteLine($"SseHost {Id} closed its connection");
+            //}
+        }
+    }
+}

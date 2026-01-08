@@ -1,23 +1,53 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
 		<Version>0.0.1-alpha</Version>
+
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
+
 		<PackageId>gAPI.CodeGen.Frontend</PackageId>
-		<Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
-		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
+
+		<Title>
+			gAPI.CodeGen.Frontend – Full Blazor WASM/MAUI frontend generator for gAPI backends
+		</Title>
+
+		<Description>
+			gAPI.CodeGen.Frontend is the primary frontend code generator for the gAPI platform.
+			It generates complete Blazor WebAssembly, Blazor MAUI and Shared Razor projects directly from your backend Service Model.
+
+			Based on reflection and Roslyn analyzers, it scans all [GenerateApi] services and generated CRUD services
+			and produces a fully working frontend including:
+			- Layouts
+			- Pages
+			- Components
+			- Navigation
+			- Imports
+			- Client bindings
+
+			Your backend becomes the single source of truth.
+			No manual frontend wiring. No DTO duplication. No broken contracts.
+			Run the generator — get a working app.
+		</Description>
+
+		<PackageTags>
+			blazor;wasm;maui;frontend;codegen;generator;razor;rpc;microservice;api;gapi
+		</PackageTags>
+
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
+
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
 

@@ -7,21 +7,42 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 
 		<Version>0.0.1-alpha</Version>
+
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
+
 		<PackageId>gAPI.Storage.Server</PackageId>
-		<Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
-		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
+
+		<Title>
+			gAPI.Storage.Server – Zero-config embedded file &amp; database server for ASP.NET Core
+		</Title>
+
+		<Description>
+			gAPI.Storage.Server turns any ASP.NET Core WebAPI into a fully working file and database server with zero configuration.
+			When referenced, it automatically provisions a local /Files and /Database folder inside your project and exposes them through secure HTTP endpoints.
+
+			Designed for ultra-fast prototyping, microservices and serverless-style deployments.
+			Perfect for deploying small but powerful storage services on free Azure App Service plans.
+		</Description>
+
+		<PackageTags>
+			storage;fileserver;database;embedded;aspnetcore;webapi;azure;serverless;microservice;rpc;gapi
+		</PackageTags>
+
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Title>gAPI.Storage.Server is a out of the box file server you can reference and have it work.</Title>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
+
 
 	<ItemGroup>
 		<Compile Remove="Test\**" />
@@ -51,21 +72,6 @@
 		<None Update="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>
-		</None>
-		<None Update="tools\net10.0\any\gAPI.ConfigTool.deps.json">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="tools\net10.0\any\gAPI.ConfigTool.dll">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="tools\net10.0\any\gAPI.ConfigTool.exe">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="tools\net10.0\any\gAPI.ConfigTool.pdb">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="tools\net10.0\any\gAPI.ConfigTool.runtimeconfig.json">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 

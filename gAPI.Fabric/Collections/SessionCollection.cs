@@ -1,24 +1,37 @@
-﻿using gAPI.FabricClient.Models;
-using gAPI.Types;
-using System.Collections;
+﻿using gAPI.FabricNode.Models;
+using gAPI.Ids;
 using System.Collections.Concurrent;
 
-namespace gAPI.FabricClient.Collections;
+namespace gAPI.FabricNode.Collections;
 
-public class SessionCollection : IEnumerable<Session>
+public class SessionCollection 
 {
-    private readonly ConcurrentDictionary<SessionId, Session> Scopes = new();
-    public int Count => Scopes.Count;
+    private readonly ConcurrentDictionary<SessionId, Session> Sessions = new();
 
-    public Session GetOrCreate(SessionId sessionId) => Scopes.GetOrAdd(sessionId, _ => new Session(sessionId));
+    public Session this[SessionId sessionId]
+    {
+        get => Sessions.GetOrAdd(
+            sessionId,
+            sessionId => new Session(sessionId));
+        set => Sessions[sessionId] = value;
+    }
+
     public Session? TryGet(SessionId sessionId)
     {
-        if (!Scopes.TryGetValue(sessionId, out var scope))
+        if (!Sessions.TryGetValue(sessionId, out var scope))
             return null;
         return scope;
     }
-    public bool Remove(SessionId sessionId) => Scopes.TryRemove(sessionId, out _);
-
-    public IEnumerator<Session> GetEnumerator() => Scopes.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    internal void TryAdd(SessionId sessionId, FabricHost connection)
+    {
+        var session = Sessions.GetOrAdd(sessionId, sessionId => new Session(sessionId));
+        session.Subscribe(connection);
+    }
+    internal void TryRemove(SessionId sessionId, FabricHost connection)
+    {
+        if (!Sessions.TryGetValue(sessionId, out var session)) return;
+        session.Unsubscribe(connection);
+        if (session.Connections.Count == 0)
+            Sessions.TryRemove(sessionId, out _);
+    }
 }

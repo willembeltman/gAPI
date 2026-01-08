@@ -1,0 +1,56 @@
+﻿using System.Linq;
+
+namespace gAPI.AutoSse.Generators
+{
+    internal class ISseContextGenerator : BaseGenerator
+    {
+        internal ISseContextGenerator(
+            ServiceContext dataModel,
+            SseServiceContextGenerator[] clientHandlerContexts)
+        {
+            DataModel = dataModel;
+            ClientHandlerContexts = clientHandlerContexts;
+
+            Directory = dataModel.Config.SseContextInterfaces_Destination.Directory;
+            Namespace = dataModel.Config.SseContextInterfaces_Destination.Namespace;
+
+            Name = "ISseContext";
+            FileName = $"{Name}.g.cs";
+        }
+
+        public ServiceContext DataModel { get; }
+        public SseServiceContextGenerator[] ClientHandlerContexts { get; }
+
+        public void GenerateCode()
+        {
+            Code = $@"#nullable enable
+
+using BSD.Core.SseServices;
+
+namespace BSD.Core.SseContexts;
+
+public interface ISseContext
+{{
+    ITestClientServiceContext TestClientService {{ get; }}
+}}
+";
+            var properties = string.Join(
+                Environment.NewLine,
+                ClientHandlerContexts
+                    .Select(a =>
+                    {
+                        Reg(a.ISseServiceContext);
+                        return $"    {a.ISseServiceContext.Name} {a.SseService.Interface.ApiName} {{ get; }}";
+                    }));
+            Code = @$"{GetNamespacesCode()}#nullable enable
+
+namespace {Namespace};
+
+public interface {Name}
+{{
+{properties}
+}}
+";
+        }
+    }
+}
