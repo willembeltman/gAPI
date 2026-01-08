@@ -1,0 +1,16 @@
+{
+  // Used for detecting dtos, enums and services, give the start name
+  // of the namespaces that contain all your dtos, enums and services
+  "BaseNamespaces": [
+    "YourApp"
+  ],
+  // Where / in what namespace should we store the virtual clients?
+  "HubClients_Destination": {
+    "Directory": "Clients",
+    "Namespace": "YourApp.Razor.Clients"
+  },
+  "AddAutoHubClientServices_Destination": {
+    "Directory": "Clients",
+    "Namespace": "YourApp.Razor.Clients"
+  }
+}

@@ -8,7 +8,7 @@
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.AutoApi.SignalR</PackageId>
-		<Description>Reserved package for gAPI - a fast, smart, auto-generated API and RPC system for .NET.</Description>
+		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET 10.</Description>
 		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
@@ -26,6 +26,10 @@
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <AdditionalFiles Include="Content\gapi.autohub.json" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
@@ -50,7 +54,6 @@
 		<None Include="Build\$(PackageId).targets" Pack="true" PackagePath="build\$(PackageId).targets" Condition="Exists('build\$(PackageId).targets')" />
 
 		<!-- Template gapisettings.json -->
-		<None Include="Content\gapisettings.json" Pack="true" PackagePath="contentFiles\any\any\gapisettings.json" Condition="Exists('content\gapisettings.json')" />
 	</ItemGroup>
 
 </Project>

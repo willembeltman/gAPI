@@ -1,0 +1,15 @@
+<Project>
+  <Target Name="Inject_gAPI_Storage_Config"
+          BeforeTargets="PrepareForBuild">
+
+    <PropertyGroup>
+      <AppSettings>$(MSBuildProjectDirectory)\appsettings.json</AppSettings>
+      <Template>$(MSBuildThisFileDirectory)..\contentFiles\appsettings.gapi.storage.json</Template>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="gAPI.Storage.Server installing config..."/>
+
+    <!-- Only if not present -->
+    <Exec Command="dotnet gapi-config merge &quot;$(Template)&quot; &quot;$(AppSettings)&quot;" />
+  </Target>
+</Project>

@@ -1,6 +1,6 @@
 # gAPI.Storage.Server
 
-## A lightweight storage server package for ASP.NET Core 9.0.
+## A lightweight storage server package for .NET 10.0.
 By installing this NuGet package into a blank ASP.NET project, you instantly transform it into a fully functional storage server.
 
 ## How it works
