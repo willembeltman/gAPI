@@ -1,8 +1,7 @@
-﻿namespace gAPI.Interfaces
+﻿namespace gAPI.Interfaces;
+
+public interface ICrudEntity
 {
-    public interface ICrudEntity
-    {
-        bool CanUpdate { get; set; }
-        bool CanDelete { get; set; }
-    }
+    bool CanUpdate { get; set; }
+    bool CanDelete { get; set; }
 }

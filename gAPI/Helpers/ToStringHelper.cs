@@ -3,17 +3,16 @@ using System.Globalization;
 
 #pragma warning disable IDE0060
 
-namespace gAPI.Helpers
+namespace gAPI.Helpers;
+
+public static class ToStringHelper
 {
-    public static class ToStringHelper
+    public static string ToString(this Guid guid, CultureInfo cultureInfo)
     {
-        public static string ToString(this Guid guid, CultureInfo cultureInfo)
-        {
-            return guid.ToString();
-        }
-        public static string ToString(this Enum guid, CultureInfo cultureInfo)
-        {
-            return guid.ToString();
-        }
+        return guid.ToString();
+    }
+    public static string ToString(this Enum guid, CultureInfo cultureInfo)
+    {
+        return guid.ToString();
     }
 }

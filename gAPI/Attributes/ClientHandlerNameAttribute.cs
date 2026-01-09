@@ -1,13 +1,12 @@
 ﻿using System;
 
-namespace gAPI.Attributes
+namespace gAPI.Attributes;
+
+public class ClientHandlerNameAttribute : Attribute
 {
-    public class ClientHandlerNameAttribute : Attribute
+    public ClientHandlerNameAttribute(string name)
     {
-        public ClientHandlerNameAttribute(string name)
-        {
-            Name = name;
-        }
-        public string? Name { get; }
+        Name = name;
     }
+    public string? Name { get; }
 }

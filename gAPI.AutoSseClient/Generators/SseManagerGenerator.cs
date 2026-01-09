@@ -1,53 +1,53 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoSseClient.Generators
+namespace gAPI.AutoSseClient.Generators;
+
+internal class SseManagerGenerator : BaseGenerator
 {
-    internal class SseManagerGenerator : BaseGenerator
+    internal SseManagerGenerator(
+        ServiceContext dataModel,
+        ISseManagerGenerator iSseManager,
+        SseClientGenerator sseClient)
     {
-        internal SseManagerGenerator(
-            ServiceContext dataModel,
-            ISseManagerGenerator iSseManager,
-            SseClientGenerator sseClient)
-        {
-            DataModel = dataModel;
-            ISseManager = iSseManager;
-            SseClient = sseClient;
+        DataModel = dataModel;
+        ISseManager = iSseManager;
+        SseClient = sseClient;
 
-            Directory = dataModel.Config.HubClients_Destination.Directory;
-            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+        Directory = dataModel.Config.HubClients_Destination.Directory;
+        Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
-            Name = "SseManager";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SseManager";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public ISseManagerGenerator ISseManager { get; }
-        public SseClientGenerator SseClient { get; }
+    public ServiceContext DataModel { get; }
+    public ISseManagerGenerator ISseManager { get; }
+    public SseClientGenerator SseClient { get; }
 
-        public void GenerateCode()
-        {
-            Reg("Newtonsoft.Json");
-            Reg("System.Collections.Concurrent");
-            Reg("System.Collections.Immutable");
-            Reg(ISseManager);
-            Reg(SseClient);
-            Reg(DataModel.IClientAuthenticationService);
-            Reg(DataModel.SseManagerCollection);
-            Reg(DataModel.SseServiceId);
+    public void GenerateCode()
+    {
+        Reg("Newtonsoft.Json");
+        Reg("System.Collections.Concurrent");
+        Reg("System.Collections.Immutable");
+        Reg(ISseManager);
+        Reg(SseClient);
+        Reg(DataModel.IClientAuthenticationService);
+        Reg(DataModel.SseManagerCollection);
+        Reg(DataModel.SseServiceId);
 
-            var arrays = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return @$"
+        var arrays = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return @$"
         private ImmutableArray<{i.Name}> {i.ApiName}s = [];";
-                }));
+            }));
 
-            var subscibe = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return @$"
+        var subscibe = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return @$"
         public async Task SubscribeAsync({i.Name} implementation)
         {{
             var serviceId = new {DataModel.SseServiceId}(nameof({i.Name}));
@@ -76,13 +76,13 @@ namespace gAPI.AutoSseClient.Generators
                 await client.DisposeAsync();
             }}
         }}";
-                }));
+            }));
 
-            var received = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return $@"
+        var received = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return $@"
                 case ""{i.Name}"":
                     switch(message.ServiceMethodId.Value)
                     {{{string.Join(Environment.NewLine, i.Methods.Select(m => $@"
@@ -96,31 +96,31 @@ namespace gAPI.AutoSseClient.Generators
                             break;"))}
                     }}
                     break;";
-                }));
+            }));
 
-            var dtos = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return string.Join(Environment.NewLine, i.Methods
-                        .Select(m =>
-                        {
-                            return @$"
+        var dtos = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return string.Join(Environment.NewLine, i.Methods
+                    .Select(m =>
+                    {
+                        return @$"
         public class {i.ApiName}_{m.Name}
         {{{string.Join(Environment.NewLine, m.Arguments.Select(p =>
-                            {
-                                RegRange(p.ParameterType.Namespaces);
-                                return @$"
+                        {
+                            RegRange(p.ParameterType.Namespaces);
+                            return @$"
             public {p.ParameterType.Name} {p.Name} {{ get; set; }}";
-                            }))}
+                        }))}
         }}
 ";
-                        }));
-                }));
+                    }));
+            }));
 
 
 
-            Code = @$"{GetNamespacesCode()}#nullable enable
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace}
 {{
@@ -164,6 +164,5 @@ namespace {Namespace}
 {dtos}
     }}
 }}";
-        }
     }
 }

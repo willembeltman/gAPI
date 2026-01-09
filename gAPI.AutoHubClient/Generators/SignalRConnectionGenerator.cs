@@ -1,48 +1,48 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoHubClient.Generators
+namespace gAPI.AutoHubClient.Generators;
+
+internal class SignalRConnectionGenerator : BaseGenerator
 {
-    internal class SignalRConnectionGenerator : BaseGenerator
+    internal SignalRConnectionGenerator(
+        ServiceContext dataModel,
+        ISignalRConnectionGenerator iSignalRConnection)
     {
-        internal SignalRConnectionGenerator(
-            ServiceContext dataModel,
-            ISignalRConnectionGenerator iSignalRConnection)
-        {
-            DataModel = dataModel;
-            ISignalRConnection = iSignalRConnection;
+        DataModel = dataModel;
+        ISignalRConnection = iSignalRConnection;
 
-            Directory = dataModel.Config.HubClients_Destination.Directory;
-            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+        Directory = dataModel.Config.HubClients_Destination.Directory;
+        Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
-            Name = "SignalRConnection";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SignalRConnection";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public ISignalRConnectionGenerator ISignalRConnection { get; }
+    public ServiceContext DataModel { get; }
+    public ISignalRConnectionGenerator ISignalRConnection { get; }
 
-        public void GenerateCode()
-        {
-            Reg("Microsoft.AspNetCore.SignalR.Client");
-            Reg(ISignalRConnection);
-            var propertiesHeader = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return @$"
+    public void GenerateCode()
+    {
+        Reg("Microsoft.AspNetCore.SignalR.Client");
+        Reg(ISignalRConnection);
+        var propertiesHeader = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return @$"
     private readonly List<{i.Name}> {i.ApiName}s = [];";
-                }));
+            }));
 
-            var hookups = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return string.Join(Environment.NewLine, i.Methods
-                        .Select(m =>
-                        {
-                            var arguments = string.Join(", ", m.Arguments.Select(p => p.ParameterType.Name));
-                            var arguments2 = string.Join(", ", m.Arguments.Select(p => p.Name));
-                            return @$"
+        var hookups = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return string.Join(Environment.NewLine, i.Methods
+                    .Select(m =>
+                    {
+                        var arguments = string.Join(", ", m.Arguments.Select(p => p.ParameterType.Name));
+                        var arguments2 = string.Join(", ", m.Arguments.Select(p => p.Name));
+                        return @$"
         Connection.On<{arguments}> (""{i.ApiName}.{m.Name}"", async ({arguments2}) =>
         {{
             foreach (var item in {i.ApiName}s)
@@ -50,14 +50,14 @@ namespace gAPI.AutoHubClient.Generators
                 {(m.IsAsync ? $"await " : $"")}item.{m.Name}({arguments2});
             }}
         }});";
-                        }));
-                }));
+                    }));
+            }));
 
-            var properties = string.Join(Environment.NewLine, DataModel.Interfaces
-                .Select(i =>
-                {
-                    Reg(i);
-                    return @$"
+        var properties = string.Join(Environment.NewLine, DataModel.Interfaces
+            .Select(i =>
+            {
+                Reg(i);
+                return @$"
     public async Task RegisterHubClientAsync({i.Name} implementation)
     {{
         {i.ApiName}s.Add(implementation);
@@ -68,9 +68,9 @@ namespace gAPI.AutoHubClient.Generators
         {i.ApiName}s.Remove(implementation);
         return Task.CompletedTask;
     }}";
-                }));
+            }));
 
-            Code = @$"{GetNamespacesCode()}#nullable enable
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -109,6 +109,5 @@ public class {Name} : {ISignalRConnection.Name}
         await Connection.DisposeAsync();
     }}
 }}";
-        }
     }
 }

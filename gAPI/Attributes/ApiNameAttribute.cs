@@ -1,13 +1,12 @@
 ﻿using System;
 
-namespace gAPI.Attributes
+namespace gAPI.Attributes;
+
+public class ApiNameAttribute : Attribute
 {
-    public class ApiNameAttribute : Attribute
+    public ApiNameAttribute(string name)
     {
-        public ApiNameAttribute(string name)
-        {
-            Name = name;
-        }
-        public string? Name { get; }
+        Name = name;
     }
+    public string? Name { get; }
 }

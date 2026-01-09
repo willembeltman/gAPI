@@ -1,14 +1,13 @@
-﻿namespace gAPI.AutoApiClient.Enums
+﻿namespace gAPI.AutoApiClient.Enums;
+
+public enum CrudlMethodTypeEnum
 {
-    public enum CrudlMethodTypeEnum
-    {
-        NotSet,
-        Create,
-        Read,
-        Update,
-        Delete,
-        List,
-        ListBy,
-        Page
-    }
+    NotSet,
+    Create,
+    Read,
+    Update,
+    Delete,
+    List,
+    ListBy,
+    Page
 }

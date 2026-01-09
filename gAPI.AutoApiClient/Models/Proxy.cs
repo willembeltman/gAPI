@@ -1,23 +1,22 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoApiClient.Models
+namespace gAPI.AutoApiClient.Models;
+
+internal class Client
 {
-    internal class Client
+    public Client(Interface @interface, INamedTypeSymbol namedTypeSymbol)
     {
-        public Client(Interface @interface, INamedTypeSymbol namedTypeSymbol)
-        {
-            Interface = @interface;
-            NamedTypeSymbol = namedTypeSymbol;
+        Interface = @interface;
+        NamedTypeSymbol = namedTypeSymbol;
 
-            Name = NamedTypeSymbol.Name;
-            FullName = NamedTypeSymbol.ToDisplayString();
-            Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
-        }
-
-        public Interface Interface { get; }
-        public INamedTypeSymbol NamedTypeSymbol { get; }
-        public string Name { get; }
-        public string FullName { get; }
-        public string Namespace { get; }
+        Name = NamedTypeSymbol.Name;
+        FullName = NamedTypeSymbol.ToDisplayString();
+        Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
     }
+
+    public Interface Interface { get; }
+    public INamedTypeSymbol NamedTypeSymbol { get; }
+    public string Name { get; }
+    public string FullName { get; }
+    public string Namespace { get; }
 }

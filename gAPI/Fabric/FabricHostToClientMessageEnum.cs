@@ -1,7 +1,6 @@
-﻿namespace gAPI.Fabric
+﻿namespace gAPI.Fabric;
+
+public enum FabricHostToClientMessageEnum
 {
-    public enum FabricHostToClientMessageEnum
-    {
-        SendSseMessageToClient = 1,
-    }
+    SendSseMessageToClient = 1,
 }

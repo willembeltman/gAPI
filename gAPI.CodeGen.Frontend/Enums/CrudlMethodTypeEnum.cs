@@ -1,15 +1,14 @@
-﻿namespace gAPI.CodeGen.Frontend.Enums
+﻿namespace gAPI.CodeGen.Frontend.Enums;
+
+public enum CrudlMethodTypeEnum
 {
-    public enum CrudlMethodTypeEnum
-    {
-        NotSet,
-        Create,
-        Read,
-        Update,
-        Delete,
-        List,
-        ListBy,
-        Page,
-        ListNotBy
-    }
+    NotSet,
+    Create,
+    Read,
+    Update,
+    Delete,
+    List,
+    ListBy,
+    Page,
+    ListNotBy
 }

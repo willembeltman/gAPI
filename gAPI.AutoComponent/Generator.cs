@@ -7,89 +7,88 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoComponent
+namespace gAPI.AutoComponent;
+
+[Generator]
+public class Generator : IIncrementalGenerator
 {
-    [Generator]
-    public class Generator : IIncrementalGenerator
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        public void Initialize(IncrementalGeneratorInitializationContext context)
+        var configFile = context.AdditionalTextsProvider
+            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autocomponent.json", StringComparison.OrdinalIgnoreCase))
+            .Select((file, ct) => file.GetText(ct)?.ToString())
+            .Collect()
+            .Select((configs, _) => configs.FirstOrDefault()); // string?
+
+        var combined = context.CompilationProvider.Combine(configFile);
+
+        context.RegisterSourceOutput(combined, (spc, tuple) =>
         {
-            var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autocomponent.json", StringComparison.OrdinalIgnoreCase))
-                .Select((file, ct) => file.GetText(ct)?.ToString())
-                .Collect()
-                .Select((configs, _) => configs.FirstOrDefault()); // string?
+            var (compilation, configText) = tuple;
 
-            var combined = context.CompilationProvider.Combine(configFile);
-
-            context.RegisterSourceOutput(combined, (spc, tuple) =>
+            if (string.IsNullOrWhiteSpace(configText))
             {
-                var (compilation, configText) = tuple;
+                ShowError($"Config parse error: Config file is empty", spc);
+                return;
+            }
 
-                if (string.IsNullOrWhiteSpace(configText))
-                {
-                    ShowError($"Config parse error: Config file is empty", spc);
-                    return;
-                }
+            //#if DEBUG
+            //                if (!Debugger.IsAttached)
+            //                {
+            //                    Debugger.Launch(); // Triggert dialoog om te attachen
+            //                }
+            //#endif
 
-                //#if DEBUG
-                //                if (!Debugger.IsAttached)
-                //                {
-                //                    Debugger.Launch(); // Triggert dialoog om te attachen
-                //                }
-                //#endif
-
-                try
-                {
-                    var config = ClientConfigParser.Parse(configText!);
-                    var serviceContext = new ServiceContext(compilation, config);
-                    var generatedViews = new ComponentsGenerator(serviceContext, spc);
-                    generatedViews.GenerateViews();
-                    //CreateDebugFile(spc, generatedViews);
-                }
-                catch (Exception ex)
-                {
-                    ShowError(ex.ToString(), spc);
-                    //throw;
-                }
-            });
-        }
-
-        public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
-        {
-            ShowError(exception.Message, CurrentSpc);
-        }
-
-        public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
-        {
-            //throw new Exception(errorMessage); // Helps while debugging
-            var sourceCode = $"#error gAPI.AutoComponents: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-            CurrentSpc.AddSource("Gapi_Error.AutoComponent.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        }
-
-        //private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
-        //{
-        //    var str = "";
-        //    foreach (var crudl in generatedViews.CrudlContext.Crudls)
-        //    {
-        //        str += $"// Crudl: {crudl.Name}\r\n";
-        //        foreach (var method in crudl.Methods)
-        //        {
-        //            str += $"//    Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
-        //        }
-        //    }
-        //    str += "\r\n// All Crudl Methods:\r\n";
-        //    foreach (var method in generatedViews.CrudlContext.AllCrudlMethods)
-        //    {
-        //        str += $"// Crudl: {method.Type.Name} Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
-        //    }
-        //    spc.AddSource("Debug.g.cs", SourceText.From(str, Encoding.UTF8));
-        //}
-
-        //public void ShowWarning(string warningMessage, SourceProductionContext CurrentSpc)
-        //{
-        //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-        //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        //}
+            try
+            {
+                var config = ClientConfigParser.Parse(configText!);
+                var serviceContext = new ServiceContext(compilation, config);
+                var generatedViews = new ComponentsGenerator(serviceContext, spc);
+                generatedViews.GenerateViews();
+                //CreateDebugFile(spc, generatedViews);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.ToString(), spc);
+                //throw;
+            }
+        });
     }
+
+    public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
+    {
+        ShowError(exception.Message, CurrentSpc);
+    }
+
+    public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
+    {
+        //throw new Exception(errorMessage); // Helps while debugging
+        var sourceCode = $"#error gAPI.AutoComponents: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoComponent.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    }
+
+    //private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
+    //{
+    //    var str = "";
+    //    foreach (var crudl in generatedViews.CrudlContext.Crudls)
+    //    {
+    //        str += $"// Crudl: {crudl.Name}\r\n";
+    //        foreach (var method in crudl.Methods)
+    //        {
+    //            str += $"//    Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+    //        }
+    //    }
+    //    str += "\r\n// All Crudl Methods:\r\n";
+    //    foreach (var method in generatedViews.CrudlContext.AllCrudlMethods)
+    //    {
+    //        str += $"// Crudl: {method.Type.Name} Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+    //    }
+    //    spc.AddSource("Debug.g.cs", SourceText.From(str, Encoding.UTF8));
+    //}
+
+    //public void ShowWarning(string warningMessage, SourceProductionContext CurrentSpc)
+    //{
+    //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
 }

@@ -1,9 +1,8 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Requests
+﻿namespace gAPI.Storage.StorageServer.Dtos.Requests;
+
+public class Request
 {
-    public class Request
-    {
-        public string BaseUrl { get; set; } = string.Empty;
-        public string TypeName { get; set; } = string.Empty;
-        public string Id { get; set; } = string.Empty;
-    }
+    public string BaseUrl { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
 }

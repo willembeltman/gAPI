@@ -1,9 +1,8 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Responses
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Responses;
 
-    public class Response
-    {
-        public bool Success { get; set; }
-        public string? Message { get; set; }
-    }
+
+public class Response
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
 }

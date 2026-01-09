@@ -1,33 +1,33 @@
-﻿namespace gAPI.AutoSse.Generators
+﻿namespace gAPI.AutoSse.Generators;
+
+internal class SseHostControllerGenerator : BaseGenerator
 {
-    internal class SseHostControllerGenerator : BaseGenerator
+    internal SseHostControllerGenerator(ServiceContext dataModel)
     {
-        internal SseHostControllerGenerator(ServiceContext dataModel)
-        {
-            DataModel = dataModel;
+        DataModel = dataModel;
 
-            Directory = dataModel.Config.SseHostController_Destination.Directory;
-            Namespace = dataModel.Config.SseHostController_Destination.Namespace;
+        Directory = dataModel.Config.SseHostController_Destination.Directory;
+        Namespace = dataModel.Config.SseHostController_Destination.Namespace;
 
-            Name = "SseHostController";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SseHostController";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
+    public ServiceContext DataModel { get; }
 
-        public void GenerateCode()
-        {
-            Reg("Microsoft.AspNetCore.Mvc");
-            Reg("Microsoft.AspNetCore.Http");
-            Reg(DataModel.IServerAuthenticationService);
-            Reg(DataModel.SseHostCollection);
-            Reg(DataModel.FabricClient);
-            Reg(DataModel.SseHost);
-            Reg(DataModel.SseServiceId);
-            Reg(DataModel.UserId);
-            Reg(DataModel.SessionId);
+    public void GenerateCode()
+    {
+        Reg("Microsoft.AspNetCore.Mvc");
+        Reg("Microsoft.AspNetCore.Http");
+        Reg(DataModel.IServerAuthenticationService);
+        Reg(DataModel.SseHostCollection);
+        Reg(DataModel.FabricClient);
+        Reg(DataModel.SseHost);
+        Reg(DataModel.SseServiceId);
+        Reg(DataModel.UserId);
+        Reg(DataModel.SessionId);
 
-            Code = @$"{GetNamespacesCode()}namespace {Namespace};
+        Code = @$"{GetNamespacesCode()}namespace {Namespace};
 
 [ApiController]
 [Route(""ssehost"")]
@@ -55,7 +55,6 @@ public class SseHostController(
         return Results.ServerSentEvents(sseHost.ReadAllAsync());
     }}
 }}";
-            return;
-        }
+        return;
     }
 }

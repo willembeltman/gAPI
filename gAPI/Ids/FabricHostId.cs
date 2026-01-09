@@ -1,17 +1,16 @@
-﻿namespace gAPI.Ids
+﻿namespace gAPI.Ids;
+
+public readonly struct FabricHostId
 {
-    public readonly struct FabricHostId
+    public FabricHostId(long value)
     {
-        public FabricHostId(long value)
-        {
-            Value = value;
-        }
+        Value = value;
+    }
 
-        public long Value { get; }
+    public long Value { get; }
 
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
+    public override string ToString()
+    {
+        return Value.ToString();
     }
 }

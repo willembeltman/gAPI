@@ -1,8 +1,7 @@
-﻿namespace gAPI.AutoHub.Configs
+﻿namespace gAPI.AutoHub.Configs;
+
+internal class NamespaceConfig
 {
-    internal class NamespaceConfig
-    {
-        internal string Directory { get; set; }
-        internal string Namespace { get; set; }
-    }
+    internal string Directory { get; set; }
+    internal string Namespace { get; set; }
 }

@@ -1,32 +1,32 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoSse.Generators
+namespace gAPI.AutoSse.Generators;
+
+internal class SseContextGenerator : BaseGenerator
 {
-    internal class SseContextGenerator : BaseGenerator
+    internal SseContextGenerator(
+        ServiceContext dataModel,
+        SseServiceContextGenerator[] sseServiceContexts,
+        ISseContextGenerator iSseContext)
     {
-        internal SseContextGenerator(
-            ServiceContext dataModel,
-            SseServiceContextGenerator[] sseServiceContexts,
-            ISseContextGenerator iSseContext)
-        {
-            DataModel = dataModel;
-            SseServiceContexts = sseServiceContexts;
-            ISseContext = iSseContext;
+        DataModel = dataModel;
+        SseServiceContexts = sseServiceContexts;
+        ISseContext = iSseContext;
 
-            Directory = dataModel.Config.SseContexts_Destination.Directory;
-            Namespace = dataModel.Config.SseContexts_Destination.Namespace;
+        Directory = dataModel.Config.SseContexts_Destination.Directory;
+        Namespace = dataModel.Config.SseContexts_Destination.Namespace;
 
-            Name = "SseContext";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SseContext";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public SseServiceContextGenerator[] SseServiceContexts { get; }
-        public ISseContextGenerator ISseContext { get; }
+    public ServiceContext DataModel { get; }
+    public SseServiceContextGenerator[] SseServiceContexts { get; }
+    public ISseContextGenerator ISseContext { get; }
 
-        public void GenerateCode()
-        {
-            Code = $@"using BSD.Core.SseServices;
+    public void GenerateCode()
+    {
+        Code = $@"using BSD.Core.SseServices;
 using gAPI.Fabric;
 
 #nullable enable
@@ -40,20 +40,20 @@ public class SseContext(
     public ITestClientServiceContext TestClientService {{ get; }} = new TestClientServiceContext(FabricClient);
 }}
 ";
-            //return;
-            Reg(ISseContext);
-            Reg(DataModel.FabricClient);
-            var properties = string.Join(
-                Environment.NewLine,
-                SseServiceContexts
-                    .Select(a =>
-                    {
-                        Reg(a);
-                        Reg(a.ISseServiceContext);
-                        return $"    public {a.ISseServiceContext.Name} {a.SseService.Interface.ApiName} {{ get; }} = new {a.Name}(fabricClient);";
-                    }));
+        //return;
+        Reg(ISseContext);
+        Reg(DataModel.FabricClient);
+        var properties = string.Join(
+            Environment.NewLine,
+            SseServiceContexts
+                .Select(a =>
+                {
+                    Reg(a);
+                    Reg(a.ISseServiceContext);
+                    return $"    public {a.ISseServiceContext.Name} {a.SseService.Interface.ApiName} {{ get; }} = new {a.Name}(fabricClient);";
+                }));
 
-            Code = @$"{GetNamespacesCode()}#nullable enable
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -64,6 +64,5 @@ public class {Name}(
 {properties}
 }}
 ";
-        }
     }
 }

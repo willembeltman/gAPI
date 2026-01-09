@@ -1,36 +1,36 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoSseClient.Generators
+namespace gAPI.AutoSseClient.Generators;
+
+internal class SseClientGenerator : BaseGenerator
 {
-    internal class SseClientGenerator : BaseGenerator
+    internal SseClientGenerator(
+        ServiceContext dataModel)
     {
-        internal SseClientGenerator(
-            ServiceContext dataModel)
-        {
-            DataModel = dataModel;
+        DataModel = dataModel;
 
-            Directory = dataModel.Config.HubClients_Destination.Directory;
-            Namespace = dataModel.Config.HubClients_Destination.Namespace;
+        Directory = dataModel.Config.HubClients_Destination.Directory;
+        Namespace = dataModel.Config.HubClients_Destination.Namespace;
 
-            Name = "SseClient";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SseClient";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
+    public ServiceContext DataModel { get; }
 
-        public void GenerateCode()
-        {
-            Reg("Newtonsoft.Json");
-            Reg("System.Net");
-            Reg("System.Text");
+    public void GenerateCode()
+    {
+        Reg("Newtonsoft.Json");
+        Reg("System.Net");
+        Reg("System.Text");
 
-            Reg(DataModel.IClientAuthenticationService);
-            Reg(DataModel.ISseManagerBase);
-            Reg(DataModel.SseServiceId);
-            Reg(DataModel.SseHostId);
-            Reg(DataModel.SseMessage);
+        Reg(DataModel.IClientAuthenticationService);
+        Reg(DataModel.ISseManagerBase);
+        Reg(DataModel.SseServiceId);
+        Reg(DataModel.SseHostId);
+        Reg(DataModel.SseMessage);
 
-            Code = @$"{GetNamespacesCode()}#nullable enable
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace}
 {{
@@ -140,6 +140,5 @@ namespace {Namespace}
         }}
     }}
 }}";
-        }
     }
 }

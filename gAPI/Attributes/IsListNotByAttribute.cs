@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace gAPI.Attributes
+namespace gAPI.Attributes;
+
+public class IsListNotByAttribute : Attribute
 {
-    public class IsListNotByAttribute : Attribute
-    {
-        public IsListNotByAttribute(string foreignKeyName, Type foreignType) { }
-    }
+    public IsListNotByAttribute(string foreignKeyName, Type foreignType) { }
 }

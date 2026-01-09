@@ -2,42 +2,42 @@
 using System;
 using gAPI.AutoHub.Models;
 
-namespace gAPI.AutoHub.Generators
+namespace gAPI.AutoHub.Generators;
+
+internal class ClientHandlerContextGenerator : BaseGenerator
 {
-    internal class ClientHandlerContextGenerator : BaseGenerator
+    internal ClientHandlerContextGenerator(
+        ServiceContext dataModel,
+        SignalRHubGenerator signalRHub,
+        IClientHandlerContextGenerator iClientHandlerContext)
     {
-        internal ClientHandlerContextGenerator(
-            ServiceContext dataModel,
-            SignalRHubGenerator signalRHub,
-            IClientHandlerContextGenerator iClientHandlerContext)
-        {
-            DataModel = dataModel;
-            SignalRHub = signalRHub;
-            IClientHandlerContext = iClientHandlerContext;
-            ClientHandler = IClientHandlerContext.ClientHandler;
-            IClientHandler = ClientHandler.Interface; 
+        DataModel = dataModel;
+        SignalRHub = signalRHub;
+        IClientHandlerContext = iClientHandlerContext;
+        ClientHandler = IClientHandlerContext.ClientHandler;
+        IClientHandler = ClientHandler.Interface; 
 
-            Directory = dataModel.Config.HubServices_Destination.Directory;
-            Namespace = dataModel.Config.HubServices_Destination.Namespace;
+        Directory = dataModel.Config.HubServices_Destination.Directory;
+        Namespace = dataModel.Config.HubServices_Destination.Namespace;
 
-            Name = ClientHandler.Interface.ApiName + "Context";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = ClientHandler.Interface.ApiName + "Context";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public IClientHandlerContextGenerator IClientHandlerContext { get; }
-        public ClientHandlerGenerator ClientHandler { get; }
-        public Interface IClientHandler { get; }
+    public ServiceContext DataModel { get; }
+    public SignalRHubGenerator SignalRHub { get; }
+    public IClientHandlerContextGenerator IClientHandlerContext { get; }
+    public ClientHandlerGenerator ClientHandler { get; }
+    public Interface IClientHandler { get; }
 
-        public void GenerateCode()
-        {
-            Reg(SignalRHub);
-            Reg(IClientHandlerContext);
-            Reg(IClientHandler);
-            Reg(ClientHandler);
-            Reg("Microsoft.AspNetCore.SignalR");
-            Code = @$"{GetNamespacesCode()}#nullable enable
+    public void GenerateCode()
+    {
+        Reg(SignalRHub);
+        Reg(IClientHandlerContext);
+        Reg(IClientHandler);
+        Reg(ClientHandler);
+        Reg("Microsoft.AspNetCore.SignalR");
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -51,6 +51,5 @@ public class {Name}(
         => new {ClientHandler.Name}(hubContext.Clients.Group(userId.ToString()!));
 }}
 ";
-        }
     }
 }

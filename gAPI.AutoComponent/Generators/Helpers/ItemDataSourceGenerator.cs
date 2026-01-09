@@ -1,38 +1,38 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 
-namespace gAPI.AutoComponent.Generators.Helpers
+namespace gAPI.AutoComponent.Generators.Helpers;
+
+public class ItemDataSourceGenerator : BaseGenerator
 {
-    public class ItemDataSourceGenerator : BaseGenerator
+    public ItemDataSourceGenerator(
+        ISharedReference baseResponseT,
+        ISharedReference baseResponse,
+        ISharedReference toFormFileAsync,
+        string directory,
+        string @namespace) : base(directory, @namespace)
     {
-        public ItemDataSourceGenerator(
-            ISharedReference baseResponseT,
-            ISharedReference baseResponse,
-            ISharedReference toFormFileAsync,
-            string directory,
-            string @namespace) : base(directory, @namespace)
-        {
-            BaseResponseT = baseResponseT;
-            BaseResponse = baseResponse;
-            ToFormFileAsync = toFormFileAsync;
+        BaseResponseT = baseResponseT;
+        BaseResponse = baseResponse;
+        ToFormFileAsync = toFormFileAsync;
 
-            Name = "ItemDataSource";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "ItemDataSource";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ISharedReference BaseResponseT { get; }
-        public ISharedReference BaseResponse { get; }
-        public ISharedReference ToFormFileAsync { get; }
+    public ISharedReference BaseResponseT { get; }
+    public ISharedReference BaseResponse { get; }
+    public ISharedReference ToFormFileAsync { get; }
 
-        public void GenerateCode()
-        {
-            Reg(BaseResponseT);
-            Reg(BaseResponse);
-            Reg(ToFormFileAsync);
-            Reg("gAPI.Storage");
-            Reg("Microsoft.AspNetCore.Components.Forms");
-            Reg("Microsoft.AspNetCore.Http");
+    public void GenerateCode()
+    {
+        Reg(BaseResponseT);
+        Reg(BaseResponse);
+        Reg(ToFormFileAsync);
+        Reg("gAPI.Storage");
+        Reg("Microsoft.AspNetCore.Components.Forms");
+        Reg("Microsoft.AspNetCore.Http");
 
-            Code = $@"{GetNamespacesCode()}
+        Code = $@"{GetNamespacesCode()}
 #nullable enable
 namespace {Namespace}
 {{
@@ -214,6 +214,5 @@ namespace {Namespace}
     }}
 }}
 ";
-        }
     }
 }

@@ -1,25 +1,25 @@
 ﻿using gAPI.AutoApiClient.Configs;
 
-namespace gAPI.AutoApiClient.Generators
+namespace gAPI.AutoApiClient.Generators;
+
+internal class FormFileGenerator : BaseGenerator
 {
-    internal class FormFileGenerator : BaseGenerator
+    private readonly ClientConfig config;
+
+    public FormFileGenerator(ClientConfig config)
     {
-        private readonly ClientConfig config;
+        this.config = config;
 
-        public FormFileGenerator(ClientConfig config)
-        {
-            this.config = config;
+        Directory = config.Helpers_Destination.Directory;
+        Namespace = config.Helpers_Destination.Namespace;
 
-            Directory = config.Helpers_Destination.Directory;
-            Namespace = config.Helpers_Destination.Namespace;
+        Name = "FormFile";
+        FileName = $"{Name}.g.cs";
+    }
 
-            Name = "FormFile";
-            FileName = $"{Name}.g.cs";
-        }
-
-        public void GenerateCode()
-        {
-            Code = $@"
+    public void GenerateCode()
+    {
+        Code = $@"
 using gAPI.Attributes;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
@@ -67,6 +67,5 @@ namespace {Namespace}
 }}
 
 ";
-        }
     }
 }

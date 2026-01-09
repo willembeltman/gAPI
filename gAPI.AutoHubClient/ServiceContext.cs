@@ -5,55 +5,54 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoHubClient
+namespace gAPI.AutoHubClient;
+
+internal class ServiceContext
 {
-    internal class ServiceContext
+    internal ServiceContext(Compilation compilation, ClientConfig config)
     {
-        internal ServiceContext(Compilation compilation, ClientConfig config)
+        Config = config ?? throw new Exception("ClientConfig cannot be null");
+
+        var allSymbols = compilation.GlobalNamespace.GetAllTypes();
+        var interfaceSymbols = allSymbols
+            .Where(t =>
+                t.TypeKind == TypeKind.Interface &&
+                t.HasAttribute("gAPI.Attributes.GenerateHubAttribute") &&
+                Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
+            .ToArray();
+
+        Interfaces = interfaceSymbols
+            .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .ToArray();
+
+        var collector = new TypeCollector(config);
+        foreach (var swi in interfaceSymbols)
         {
-            Config = config ?? throw new Exception("ClientConfig cannot be null");
-
-            var allSymbols = compilation.GlobalNamespace.GetAllTypes();
-            var interfaceSymbols = allSymbols
-                .Where(t =>
-                    t.TypeKind == TypeKind.Interface &&
-                    t.HasAttribute("gAPI.Attributes.GenerateHubAttribute") &&
-                    Config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
-                .ToArray();
-
-            Interfaces = interfaceSymbols
-                .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
-                .ToArray();
-
-            var collector = new TypeCollector(config);
-            foreach (var swi in interfaceSymbols)
+            foreach (var method in swi.GetMembers().OfType<IMethodSymbol>())
             {
-                foreach (var method in swi.GetMembers().OfType<IMethodSymbol>())
+                if (method.DeclaredAccessibility != Accessibility.Public)
+                    continue;
+
+                foreach (var param in method.Parameters)
                 {
-                    if (method.DeclaredAccessibility != Accessibility.Public)
-                        continue;
-
-                    foreach (var param in method.Parameters)
-                    {
-                        collector.Add(param.Type);
-                    }
-
-                    collector.Add(method.ReturnType);
+                    collector.Add(param.Type);
                 }
-            }
 
-            Enums = collector.Enums
-                .Select(namedTypeSymbol => new EnumDto(namedTypeSymbol))
-                .ToArray();
-            Dtos = collector.Dtos
-                .Select(namedTypeSymbol => new Dto(this, namedTypeSymbol))
-                .ToArray();
+                collector.Add(method.ReturnType);
+            }
         }
 
-        public ClientConfig Config { get; }
-        public Interface[] Interfaces { get; }
-        public EnumDto[] Enums { get; }
-        public Dto[] Dtos { get; }
-        //public ClientHandler[] ClientHandlers { get; }
+        Enums = collector.Enums
+            .Select(namedTypeSymbol => new EnumDto(namedTypeSymbol))
+            .ToArray();
+        Dtos = collector.Dtos
+            .Select(namedTypeSymbol => new Dto(this, namedTypeSymbol))
+            .ToArray();
     }
+
+    public ClientConfig Config { get; }
+    public Interface[] Interfaces { get; }
+    public EnumDto[] Enums { get; }
+    public Dto[] Dtos { get; }
+    //public ClientHandler[] ClientHandlers { get; }
 }

@@ -1,43 +1,43 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 
-namespace gAPI.AutoComponent.Generators.Helpers
+namespace gAPI.AutoComponent.Generators.Helpers;
+
+public class ListDataSourceGenerator : BaseGenerator
 {
-    public class ListDataSourceGenerator : BaseGenerator
+    public ListDataSourceGenerator(
+        ISharedReference baseListResponseT,
+        ISharedReference baseResponseT,
+        ISharedReference baseResponse,
+        ItemDataSourceGenerator itemDataSource,
+        string directory,
+        string @namespace) : base(directory, @namespace)
     {
-        public ListDataSourceGenerator(
-            ISharedReference baseListResponseT,
-            ISharedReference baseResponseT,
-            ISharedReference baseResponse,
-            ItemDataSourceGenerator itemDataSource,
-            string directory,
-            string @namespace) : base(directory, @namespace)
-        {
-            BaseListResponseT = baseListResponseT;
-            BaseResponseT = baseResponseT;
-            BaseResponse = baseResponse;
-            ItemDataSource = itemDataSource;
+        BaseListResponseT = baseListResponseT;
+        BaseResponseT = baseResponseT;
+        BaseResponse = baseResponse;
+        ItemDataSource = itemDataSource;
 
-            Name = "ListDataSource";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "ListDataSource";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ISharedReference BaseListResponseT { get; }
-        public ISharedReference BaseResponseT { get; }
-        public ISharedReference BaseResponse { get; }
-        public ItemDataSourceGenerator ItemDataSource { get; }
+    public ISharedReference BaseListResponseT { get; }
+    public ISharedReference BaseResponseT { get; }
+    public ISharedReference BaseResponse { get; }
+    public ItemDataSourceGenerator ItemDataSource { get; }
 
-        public void GenerateCode()
-        {
-            Reg(BaseListResponseT);
-            Reg(BaseResponseT);
-            Reg(BaseResponse);
-            Reg(ItemDataSource);
-            Reg("Microsoft.AspNetCore.Components");
-            Reg("Microsoft.AspNetCore.Components.Forms");
-            Reg("Microsoft.AspNetCore.Http");
-            Reg("Microsoft.JSInterop");
+    public void GenerateCode()
+    {
+        Reg(BaseListResponseT);
+        Reg(BaseResponseT);
+        Reg(BaseResponse);
+        Reg(ItemDataSource);
+        Reg("Microsoft.AspNetCore.Components");
+        Reg("Microsoft.AspNetCore.Components.Forms");
+        Reg("Microsoft.AspNetCore.Http");
+        Reg("Microsoft.JSInterop");
 
-            Code = $@"{GetNamespacesCode()}
+        Code = $@"{GetNamespacesCode()}
 #nullable enable
 namespace {Namespace}
 {{
@@ -270,6 +270,5 @@ namespace {Namespace}
     }}
 }}
 ";
-        }
     }
 }

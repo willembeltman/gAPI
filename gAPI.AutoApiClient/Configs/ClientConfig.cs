@@ -1,9 +1,8 @@
-﻿namespace gAPI.AutoApiClient.Configs
+﻿namespace gAPI.AutoApiClient.Configs;
+
+internal class ClientConfig
 {
-    internal class ClientConfig
-    {
-        public string[] BaseNamespaces { get; set; }
-        public NamespaceConfig Clients_Destination { get; set; }
-        public NamespaceConfig Helpers_Destination { get; set; }
-    }
+    public string[] BaseNamespaces { get; set; }
+    public NamespaceConfig Clients_Destination { get; set; }
+    public NamespaceConfig Helpers_Destination { get; set; }
 }

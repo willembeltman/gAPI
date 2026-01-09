@@ -1,10 +1,9 @@
-﻿namespace gAPI.AutoHubClient
+﻿namespace gAPI.AutoHubClient;
+
+internal static class Environment
 {
-    internal static class Environment
+    public static string NewLine { get; } = "\r\n";
+    public static void ShowWarning(string message)
     {
-        public static string NewLine { get; } = "\r\n";
-        public static void ShowWarning(string message)
-        {
-        }
     }
 }

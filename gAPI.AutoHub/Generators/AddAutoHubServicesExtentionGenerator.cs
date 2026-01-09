@@ -1,41 +1,41 @@
-﻿namespace gAPI.AutoHub.Generators
+﻿namespace gAPI.AutoHub.Generators;
+
+
+internal class AddAutoHubServicesExtentionGenerator : BaseGenerator
 {
-
-    internal class AddAutoHubServicesExtentionGenerator : BaseGenerator
+    internal AddAutoHubServicesExtentionGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
     {
-        internal AddAutoHubServicesExtentionGenerator(ServiceContext dataModel, SignalRHubGenerator signalRHub, ClientHandlerGenerator[] clientHandlers, ClientHandlerContextGenerator[] clientHandlerContexts, ISignalRContextGenerator signalRContext1, SignalRContextGenerator signalRContext)
+        ServiceContext = dataModel;
+        SignalRHub = signalRHub;
+        ClientHandlers = clientHandlers;
+        ClientHandlerContexts = clientHandlerContexts;
+        SignalRContext = signalRContext;
+
+        Directory = dataModel.Config.AddAutoHubServices_Destination.Directory;
+        Namespace = dataModel.Config.AddAutoHubServices_Destination.Namespace;
+
+        Name = "AddAutoHubServicesExtention";
+        FileName = $"{Name}.g.cs";
+    }
+
+    public ServiceContext ServiceContext { get; }
+    public SignalRHubGenerator SignalRHub { get; }
+    public ClientHandlerGenerator[] ClientHandlers { get; }
+    public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
+    public SignalRContextGenerator SignalRContext { get; }
+
+    internal void GenerateCode()
+    {
+        Reg("Microsoft.Extensions.DependencyInjection");
+        var propertiesCode = $"        services.AddScoped<ISignalRContext, SignalRContext>();\r\n";
+        foreach (var clientHandlerContext in ClientHandlerContexts)
         {
-            ServiceContext = dataModel;
-            SignalRHub = signalRHub;
-            ClientHandlers = clientHandlers;
-            ClientHandlerContexts = clientHandlerContexts;
-            SignalRContext = signalRContext;
-
-            Directory = dataModel.Config.AddAutoHubServices_Destination.Directory;
-            Namespace = dataModel.Config.AddAutoHubServices_Destination.Namespace;
-
-            Name = "AddAutoHubServicesExtention";
-            FileName = $"{Name}.g.cs";
+            Reg(clientHandlerContext);
+            Reg(clientHandlerContext.IClientHandlerContext);
+            propertiesCode += $"        services.AddScoped<{clientHandlerContext.IClientHandlerContext.Name}, {clientHandlerContext.Name}>();\r\n";
         }
 
-        public ServiceContext ServiceContext { get; }
-        public SignalRHubGenerator SignalRHub { get; }
-        public ClientHandlerGenerator[] ClientHandlers { get; }
-        public ClientHandlerContextGenerator[] ClientHandlerContexts { get; }
-        public SignalRContextGenerator SignalRContext { get; }
-
-        internal void GenerateCode()
-        {
-            Reg("Microsoft.Extensions.DependencyInjection");
-            var propertiesCode = $"        services.AddScoped<ISignalRContext, SignalRContext>();\r\n";
-            foreach (var clientHandlerContext in ClientHandlerContexts)
-            {
-                Reg(clientHandlerContext);
-                Reg(clientHandlerContext.IClientHandlerContext);
-                propertiesCode += $"        services.AddScoped<{clientHandlerContext.IClientHandlerContext.Name}, {clientHandlerContext.Name}>();\r\n";
-            }
-
-            Code = $@"{GetNamespacesCode()}namespace {Namespace};
+        Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
 public static class {Name}
 {{
@@ -44,6 +44,5 @@ public static class {Name}
 {propertiesCode}    }}
 }}";
 
-        }
     }
 }

@@ -1,55 +1,55 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoSse.Generators
+namespace gAPI.AutoSse.Generators;
+
+internal class AddAutoSseExtentionGenerator : BaseGenerator
 {
-    internal class AddAutoSseExtentionGenerator : BaseGenerator
+    internal AddAutoSseExtentionGenerator(
+        ServiceContext serviceContext,
+        IEnumerable<SseServiceGenerator> sseServices,
+        ISseContextGenerator iSseContext, 
+        SseContextGenerator sseContext)
     {
-        internal AddAutoSseExtentionGenerator(
-            ServiceContext serviceContext,
-            IEnumerable<SseServiceGenerator> sseServices,
-            ISseContextGenerator iSseContext, 
-            SseContextGenerator sseContext)
+        ServiceContext = serviceContext;
+        SseServices = sseServices;
+        ISseContext = iSseContext;
+        SseContext = sseContext;
+
+        Directory = serviceContext.Config.AddAutoSseServices_Destination.Directory;
+        Namespace = serviceContext.Config.AddAutoSseServices_Destination.Namespace;
+
+        Name = "AddAutoSseExtention";
+        FileName = $"{Name}.g.cs";
+    }
+
+    public ServiceContext ServiceContext { get; }
+    public IEnumerable<SseServiceGenerator> SseServices { get; }
+    public ISseContextGenerator ISseContext { get; }
+    public SseContextGenerator SseContext { get; }
+
+    internal void GenerateCode()
+    {
+        //Reg("gAPI.Fabric");
+        //Reg("gAPI.Sse");
+        //Reg("BSD.Core.SseContexts");
+        //Reg("BSD.Core.SseServices");
+        Reg(ISseContext);
+        Reg(SseContext);
+        Reg(ServiceContext.SseHostCollection);
+        Reg(ServiceContext.FabricClient);
+        Reg("Microsoft.Extensions.DependencyInjection");
+
+        var services = string.Join(Environment.NewLine, SseServices.Select(s =>
         {
-            ServiceContext = serviceContext;
-            SseServices = sseServices;
-            ISseContext = iSseContext;
-            SseContext = sseContext;
-
-            Directory = serviceContext.Config.AddAutoSseServices_Destination.Directory;
-            Namespace = serviceContext.Config.AddAutoSseServices_Destination.Namespace;
-
-            Name = "AddAutoSseExtention";
-            FileName = $"{Name}.g.cs";
-        }
-
-        public ServiceContext ServiceContext { get; }
-        public IEnumerable<SseServiceGenerator> SseServices { get; }
-        public ISseContextGenerator ISseContext { get; }
-        public SseContextGenerator SseContext { get; }
-
-        internal void GenerateCode()
-        {
-            //Reg("gAPI.Fabric");
-            //Reg("gAPI.Sse");
-            //Reg("BSD.Core.SseContexts");
-            //Reg("BSD.Core.SseServices");
-            Reg(ISseContext);
-            Reg(SseContext);
-            Reg(ServiceContext.SseHostCollection);
-            Reg(ServiceContext.FabricClient);
-            Reg("Microsoft.Extensions.DependencyInjection");
-
-            var services = string.Join(Environment.NewLine, SseServices.Select(s =>
-            {
-                var i = s.Interface;
-                Reg(i);
-                Reg(s);
-                return $@"
+            var i = s.Interface;
+            Reg(i);
+            Reg(s);
+            return $@"
         services.AddScoped<{i.Name}, {s.Name}>();";
-            }));
+        }));
 
-            Code = $@"{GetNamespacesCode()}namespace {Namespace};
+        Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
 public static class {Name}
 {{
@@ -68,6 +68,5 @@ public static class {Name}
 }}
 ";
 
-        }
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Requests
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Requests;
 
-    public class ExistsRequest : Request
-    {
-    }
+
+public class ExistsRequest : Request
+{
 }

@@ -1,16 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoComponent.Models.ServiceModels
-{
-    public class EnumChoice
-    {
-        public EnumChoice(EnumDto @enum, IFieldSymbol fieldSymbol)
-        {
-            Enum = @enum;
-            FieldSymbol = fieldSymbol;
-        }
+namespace gAPI.AutoComponent.Models.ServiceModels;
 
-        public EnumDto Enum { get; }
-        public IFieldSymbol FieldSymbol { get; }
+public class EnumChoice
+{
+    public EnumChoice(EnumDto @enum, IFieldSymbol fieldSymbol)
+    {
+        Enum = @enum;
+        FieldSymbol = fieldSymbol;
     }
+
+    public EnumDto Enum { get; }
+    public IFieldSymbol FieldSymbol { get; }
 }

@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 
-namespace gAPI.Storage.Server.Data.Entities
+namespace gAPI.Storage.Server.Data.Entities;
+
+public class StorageFolder
 {
-    public class StorageFolder
-    {
-        [Key]
-        public long Id { set; get; }
-        public string? Name { set; get; }
-    }
+    [Key]
+    public long Id { set; get; }
+    public string? Name { set; get; }
 }

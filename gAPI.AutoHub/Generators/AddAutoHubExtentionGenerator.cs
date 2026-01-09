@@ -1,31 +1,31 @@
-﻿namespace gAPI.AutoHub.Generators
+﻿namespace gAPI.AutoHub.Generators;
+
+internal class AddAutoHubExtentionGenerator : BaseGenerator
 {
-    internal class AddAutoHubExtentionGenerator : BaseGenerator
+    internal AddAutoHubExtentionGenerator(ServiceContext serviceContext, SignalRHubGenerator signalRHub)
     {
-        internal AddAutoHubExtentionGenerator(ServiceContext serviceContext, SignalRHubGenerator signalRHub)
-        {
-            ServiceContext = serviceContext;
-            SignalRHub = signalRHub;
+        ServiceContext = serviceContext;
+        SignalRHub = signalRHub;
 
-            Directory = serviceContext.Config.AddAutoHubServices_Destination.Directory;
-            Namespace = serviceContext.Config.AddAutoHubServices_Destination.Namespace;
+        Directory = serviceContext.Config.AddAutoHubServices_Destination.Directory;
+        Namespace = serviceContext.Config.AddAutoHubServices_Destination.Namespace;
 
-            Name = "AddAutoHubExtention";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "AddAutoHubExtention";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext ServiceContext { get; }
-        public SignalRHubGenerator SignalRHub { get; }
+    public ServiceContext ServiceContext { get; }
+    public SignalRHubGenerator SignalRHub { get; }
 
-        internal void GenerateCode()
-        {
-            Reg(SignalRHub);
-            Reg("Microsoft.Extensions.DependencyInjection");
-            Reg("Microsoft.AspNetCore.Routing");
-            Reg("Microsoft.AspNetCore.Builder");
-            Reg("System.Reflection");
+    internal void GenerateCode()
+    {
+        Reg(SignalRHub);
+        Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.AspNetCore.Routing");
+        Reg("Microsoft.AspNetCore.Builder");
+        Reg("System.Reflection");
 
-            Code = $@"{GetNamespacesCode()}namespace {Namespace};
+        Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
 public static class {Name}
 {{
@@ -42,6 +42,5 @@ public static class {Name}
 }}
 ";
 
-        }
     }
 }

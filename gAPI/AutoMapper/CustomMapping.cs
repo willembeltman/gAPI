@@ -4,50 +4,49 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace gAPI.AutoMapper
+namespace gAPI.AutoMapper;
+
+public abstract class CustomMapping<TEntity, TDto>
+    where TEntity : class
+    where TDto : class
 {
-    public abstract class CustomMapping<TEntity, TDto>
-        where TEntity : class
-        where TDto : class
+    public abstract Task<TDto> ToDtoAsync(
+        TEntity source,
+        TDto destination,
+        ISecurityHandler<TDto>? serviceHandler);
+    public abstract Task<TEntity> ToEntityAsync(
+        TDto source,
+        TEntity destination);
+
+    public abstract IAsyncEnumerable<TDto> ProjectToDtosAsync(
+        IQueryable<TEntity> source,
+        string[]? orderby,
+        int? skip,
+        int? take,
+        ISecurityHandler<TDto>? serviceHandler);
+
+    protected virtual async IAsyncEnumerable<TDto> EnumerateDtosAsync(
+        IEnumerable<TDto> items,
+        ISecurityHandler<TDto>? serviceHandler)
     {
-        public abstract Task<TDto> ToDtoAsync(
-            TEntity source,
-            TDto destination,
-            ISecurityHandler<TDto>? serviceHandler);
-        public abstract Task<TEntity> ToEntityAsync(
-            TDto source,
-            TEntity destination);
-
-        public abstract IAsyncEnumerable<TDto> ProjectToDtosAsync(
-            IQueryable<TEntity> source,
-            string[]? orderby,
-            int? skip,
-            int? take,
-            ISecurityHandler<TDto>? serviceHandler);
-
-        protected virtual async IAsyncEnumerable<TDto> EnumerateDtosAsync(
-            IEnumerable<TDto> items,
-            ISecurityHandler<TDto>? serviceHandler)
+        foreach (var item in items)
         {
-            foreach (var item in items)
+            if (item != null)
             {
-                if (item != null)
-                {
-                    await ExtendDto(item, serviceHandler);
-                    yield return item;
-                }
+                await ExtendDto(item, serviceHandler);
+                yield return item;
             }
         }
+    }
 
-        protected virtual async Task ExtendDto(
-            TDto item,
-            ISecurityHandler<TDto>? serviceHandler)
+    protected virtual async Task ExtendDto(
+        TDto item,
+        ISecurityHandler<TDto>? serviceHandler)
+    {
+        if (item is ICrudEntity crudl)
         {
-            if (item is ICrudEntity crudl)
-            {
-                crudl.CanUpdate = serviceHandler == null ? false : await serviceHandler.CanUpdateAsync(item);
-                crudl.CanDelete = serviceHandler == null ? false : await serviceHandler.CanDeleteAsync(item);
-            }
+            crudl.CanUpdate = serviceHandler == null ? false : await serviceHandler.CanUpdateAsync(item);
+            crudl.CanDelete = serviceHandler == null ? false : await serviceHandler.CanDeleteAsync(item);
         }
     }
 }

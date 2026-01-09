@@ -1,26 +1,26 @@
 ﻿using gAPI.AutoHub.Models;
 
-namespace gAPI.AutoHub.Generators
+namespace gAPI.AutoHub.Generators;
+
+internal class SignalRHubGenerator : BaseGenerator
 {
-    internal class SignalRHubGenerator : BaseGenerator
+    internal SignalRHubGenerator(ServiceContext dataModel)
     {
-        internal SignalRHubGenerator(ServiceContext dataModel)
-        {
-            DataModel = dataModel;
+        DataModel = dataModel;
 
-            Directory = dataModel.Config.Hubs_Destination.Directory;
-            Namespace = dataModel.Config.Hubs_Destination.Namespace;
+        Directory = dataModel.Config.Hubs_Destination.Directory;
+        Namespace = dataModel.Config.Hubs_Destination.Namespace;
 
-            Name = "SignalRHub";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "SignalRHub";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
+    public ServiceContext DataModel { get; }
 
-        public void GenerateCode()
-        {
-            Reg("Microsoft.AspNetCore.SignalR");
-            Code = @$"{GetNamespacesCode()}#nullable enable
+    public void GenerateCode()
+    {
+        Reg("Microsoft.AspNetCore.SignalR");
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -56,6 +56,5 @@ public class {Name}(gAPI.Interfaces.IServerAuthenticationService authenticationS
         await base.OnDisconnectedAsync(exception);
     }}
 }}";
-        }
     }
 }

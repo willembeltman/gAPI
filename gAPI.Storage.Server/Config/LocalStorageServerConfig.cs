@@ -1,22 +1,21 @@
 ﻿using gAPI.Storage.StorageServer.Dtos;
 using System.Text;
 
-namespace gAPI.Storage.Server.Config
-{
-    public class LocalStorageServerConfig
-    {
-        public string SuperSecretKey { get; set; } = string.Empty;
-        public Credential Credentials { get; set; } = new Credential();
+namespace gAPI.Storage.Server.Config;
 
-        private byte[]? _SuperSecretKeyArray { get; set; }
-        public byte[] SuperSecretKeyArray
+public class LocalStorageServerConfig
+{
+    public string SuperSecretKey { get; set; } = string.Empty;
+    public Credential Credentials { get; set; } = new Credential();
+
+    private byte[]? _SuperSecretKeyArray { get; set; }
+    public byte[] SuperSecretKeyArray
+    {
+        get
         {
-            get
-            {
-                if (_SuperSecretKeyArray == null)
-                    _SuperSecretKeyArray = Encoding.ASCII.GetBytes(SuperSecretKey);
-                return _SuperSecretKeyArray;
-            }
+            if (_SuperSecretKeyArray == null)
+                _SuperSecretKeyArray = Encoding.ASCII.GetBytes(SuperSecretKey);
+            return _SuperSecretKeyArray;
         }
     }
 }

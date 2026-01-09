@@ -2,10 +2,9 @@
 using System;
 using System.Threading.Tasks;
 
-namespace gAPI.Interfaces
+namespace gAPI.Interfaces;
+
+public interface ISseManagerBase : IAsyncDisposable
 {
-    public interface ISseManagerBase : IAsyncDisposable
-    {
-        Task MessageReceived(SseMessage message);
-    }
+    Task MessageReceived(SseMessage message);
 }

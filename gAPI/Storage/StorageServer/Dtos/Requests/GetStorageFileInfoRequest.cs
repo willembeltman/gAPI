@@ -1,7 +1,6 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Requests
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Requests;
 
-    public class GetStorageFileInfoRequest : Request
-    {
-    }
+
+public class GetStorageFileInfoRequest : Request
+{
 }

@@ -2,34 +2,34 @@
 using System;
 using gAPI.AutoSse.Models;
 
-namespace gAPI.AutoSse.Generators
+namespace gAPI.AutoSse.Generators;
+
+internal class ISseServiceContextGenerator : BaseGenerator
 {
-    internal class ISseServiceContextGenerator : BaseGenerator
+    internal ISseServiceContextGenerator(
+        ServiceContext dataModel,
+        SseServiceGenerator sseService)
     {
-        internal ISseServiceContextGenerator(
-            ServiceContext dataModel,
-            SseServiceGenerator sseService)
-        {
-            DataModel = dataModel;
-            SseService = sseService;
-            ISseService = sseService.Interface;
+        DataModel = dataModel;
+        SseService = sseService;
+        ISseService = sseService.Interface;
 
-            Directory = dataModel.Config.SseServiceInterfaces_Destination.Directory;
-            Namespace = dataModel.Config.SseServiceInterfaces_Destination.Namespace;
+        Directory = dataModel.Config.SseServiceInterfaces_Destination.Directory;
+        Namespace = dataModel.Config.SseServiceInterfaces_Destination.Namespace;
 
-            Name = SseService.Interface.Name + "Context";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = SseService.Interface.Name + "Context";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public SseServiceGenerator SseService { get; }
-        public Interface ISseService { get; }
+    public ServiceContext DataModel { get; }
+    public SseServiceGenerator SseService { get; }
+    public Interface ISseService { get; }
 
-        public void GenerateCode()
-        {
-            Reg(ISseService);
-            Reg(SseService);
-            Code = @$"{GetNamespacesCode()}#nullable enable
+    public void GenerateCode()
+    {
+        Reg(ISseService);
+        Reg(SseService);
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -40,6 +40,5 @@ public interface {Name}
     {ISseService.Name} ToSession(string sessionId);
 }}
 ";
-        }
     }
 }

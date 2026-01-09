@@ -1,8 +1,7 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Responses
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Responses;
 
-    public class DeleteResponse : Response
-    {
-        public bool Deleted { get; set; }
-    }
+
+public class DeleteResponse : Response
+{
+    public bool Deleted { get; set; }
 }

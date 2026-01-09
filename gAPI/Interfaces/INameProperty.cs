@@ -1,7 +1,6 @@
-﻿namespace gAPI.Interfaces
+﻿namespace gAPI.Interfaces;
+
+public interface INameProperty
 {
-    public interface INameProperty
-    {
-        string Name { get; }
-    }
+    string Name { get; }
 }

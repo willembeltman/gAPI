@@ -7,34 +7,34 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoSse
+namespace gAPI.AutoSse;
+
+[Generator]
+public class Generator : IIncrementalGenerator
 {
-    [Generator]
-    public class Generator : IIncrementalGenerator
+    public SourceProductionContext CurrentSpc { get; private set; }
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        public SourceProductionContext CurrentSpc { get; private set; }
+        var configFile = context.AdditionalTextsProvider
+            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autosse.json", StringComparison.OrdinalIgnoreCase))
+            .Select((file, ct) => file.GetText(ct)?.ToString())
+            .Collect()
+            .Select((configs, _) => configs.FirstOrDefault()); // string?
 
-        public void Initialize(IncrementalGeneratorInitializationContext context)
+        var combined = context.CompilationProvider.Combine(configFile);
+
+        context.RegisterSourceOutput(combined, (spc, tuple) =>
         {
-            var configFile = context.AdditionalTextsProvider
-                .Where(file => Path.GetFileName(file.Path).Equals("gapi.autosse.json", StringComparison.OrdinalIgnoreCase))
-                .Select((file, ct) => file.GetText(ct)?.ToString())
-                .Collect()
-                .Select((configs, _) => configs.FirstOrDefault()); // string?
+            var (compilation, configText) = tuple;
 
-            var combined = context.CompilationProvider.Combine(configFile);
+            CurrentSpc = spc;
 
-            context.RegisterSourceOutput(combined, (spc, tuple) =>
+            if (string.IsNullOrWhiteSpace(configText))
             {
-                var (compilation, configText) = tuple;
-
-                CurrentSpc = spc;
-
-                if (string.IsNullOrWhiteSpace(configText))
-                {
-                    ShowError($"Config parse error: Config file is empty", spc);
-                    return;
-                }
+                ShowError($"Config parse error: Config file is empty", spc);
+                return;
+            }
 
 //#if DEBUG
 //                if (!Debugger.IsAttached)
@@ -43,99 +43,98 @@ namespace gAPI.AutoSse
 //                }
 //#endif
 
-                try
-                {
-                    var config = ServerConfigParser.Parse(configText);
-                    var dataModel = new ServiceContext(compilation, config);
-                    SsesGenerator.Generate(dataModel, spc);
-                }
-                catch (Exception ex)
-                {
-                    ShowError(ex.ToString(), spc);
-                    throw;
-                }
+            try
+            {
+                var config = ServerConfigParser.Parse(configText);
+                var dataModel = new ServiceContext(compilation, config);
+                SsesGenerator.Generate(dataModel, spc);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.ToString(), spc);
+                throw;
+            }
 
-            });
-        }
-
-        public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
-        {
-            ShowError(exception.Message, CurrentSpc);
-        }
-
-        public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
-        {
-            //throw new Exception(errorMessage); // Helps while debugging
-            var sourceCode = $"#error gAPI.AutoSse: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-            CurrentSpc.AddSource("Gapi_Error.AutoSse.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        }
-
-        //public void ShowError(Exception exception)
-        //{
-        //    ShowError(exception.Message);
-        //}
-
-        //public void ShowError(string errorMessage)
-        //{
-        //    //throw new Exception(errorMessage); // Helps while debugging
-        //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-        //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        //}
-
-        //public void ShowWarning(string warningMessage)
-        //{
-        //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-        //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-        //}
-
-        //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
-        //        {
-        //            var sbEnums = new StringBuilder();
-        //            var sbDtos = new StringBuilder();
-
-        //            foreach (var @enum in dataModel.Enums)
-        //            {
-        //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-        //            }
-
-        //            foreach (var dto in dataModel.Dtos)
-        //            {
-        //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-        //            }
-        //            var sbInterfaces = new StringBuilder();
-        //            var sbServices = new StringBuilder();
-
-        //            foreach (var @enum in dataModel.Interfaces)
-        //            {
-        //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-        //            }
-
-        //            foreach (var dto in dataModel.ClientHandlers)
-        //            {
-        //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-        //            }
-
-        //            var sb = $@"
-        //namespace GeneratorTypes
-        //{{
-        //    internal static class AllControllers
-        //    {{
-        //        internal static void ListAll()
-        //        {{
-        //            System.Console.WriteLine(""Enums:"");
-        //{sbEnums}
-        //            System.Console.WriteLine(""Dtos:"");
-        //{sbDtos}
-        //            System.Console.WriteLine(""Interfaces:"");
-        //{sbInterfaces}
-        //            System.Console.WriteLine(""Services:"");
-        //{sbServices}
-        //        }}
-        //    }}
-        //}}";
-
-
-        //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-        //        }
+        });
     }
+
+    public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
+    {
+        ShowError(exception.Message, CurrentSpc);
+    }
+
+    public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
+    {
+        //throw new Exception(errorMessage); // Helps while debugging
+        var sourceCode = $"#error gAPI.AutoSse: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoSse.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    }
+
+    //public void ShowError(Exception exception)
+    //{
+    //    ShowError(exception.Message);
+    //}
+
+    //public void ShowError(string errorMessage)
+    //{
+    //    //throw new Exception(errorMessage); // Helps while debugging
+    //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //public void ShowWarning(string warningMessage)
+    //{
+    //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
+    //        {
+    //            var sbEnums = new StringBuilder();
+    //            var sbDtos = new StringBuilder();
+
+    //            foreach (var @enum in dataModel.Enums)
+    //            {
+    //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
+    //            }
+
+    //            foreach (var dto in dataModel.Dtos)
+    //            {
+    //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+    //            }
+    //            var sbInterfaces = new StringBuilder();
+    //            var sbServices = new StringBuilder();
+
+    //            foreach (var @enum in dataModel.Interfaces)
+    //            {
+    //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
+    //            }
+
+    //            foreach (var dto in dataModel.ClientHandlers)
+    //            {
+    //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+    //            }
+
+    //            var sb = $@"
+    //namespace GeneratorTypes
+    //{{
+    //    internal static class AllControllers
+    //    {{
+    //        internal static void ListAll()
+    //        {{
+    //            System.Console.WriteLine(""Enums:"");
+    //{sbEnums}
+    //            System.Console.WriteLine(""Dtos:"");
+    //{sbDtos}
+    //            System.Console.WriteLine(""Interfaces:"");
+    //{sbInterfaces}
+    //            System.Console.WriteLine(""Services:"");
+    //{sbServices}
+    //        }}
+    //    }}
+    //}}";
+
+
+    //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    //        }
 }

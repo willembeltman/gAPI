@@ -1,29 +1,29 @@
 ﻿
-namespace gAPI.AutoApi.Generators
+namespace gAPI.AutoApi.Generators;
+
+internal class AddAutoApiExtentionGenerator : BaseGenerator
 {
-    internal class AddAutoApiExtentionGenerator : BaseGenerator
+    internal AddAutoApiExtentionGenerator(ServiceContext serviceContext)
     {
-        internal AddAutoApiExtentionGenerator(ServiceContext serviceContext)
-        {
-            ServiceContext = serviceContext;
+        ServiceContext = serviceContext;
 
-            Directory = serviceContext.Config.AddAutoApiServices_Destination.Directory;
-            Namespace = serviceContext.Config.AddAutoApiServices_Destination.Namespace;
+        Directory = serviceContext.Config.AddAutoApiServices_Destination.Directory;
+        Namespace = serviceContext.Config.AddAutoApiServices_Destination.Namespace;
 
-            Name = "AutoApiExtention";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = "AutoApiExtention";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext ServiceContext { get; }
+    public ServiceContext ServiceContext { get; }
 
-        internal void GenerateCode()
-        {
-            Reg("gAPI.AutoMapper");
-            Reg("Microsoft.AspNetCore.HttpOverrides");
-            Reg("System.Reflection");
-            Reg("Microsoft.AspNetCore.Builder");
+    internal void GenerateCode()
+    {
+        Reg("gAPI.AutoMapper");
+        Reg("Microsoft.AspNetCore.HttpOverrides");
+        Reg("System.Reflection");
+        Reg("Microsoft.AspNetCore.Builder");
 
-            Code = $@"{GetNamespacesCode()}namespace {Namespace};
+        Code = $@"{GetNamespacesCode()}namespace {Namespace};
 
 public static class {Name}
 {{
@@ -77,6 +77,5 @@ public static class {Name}
 }}
 ";
 
-        }
     }
 }

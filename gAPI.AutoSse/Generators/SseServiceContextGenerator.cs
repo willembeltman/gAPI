@@ -2,40 +2,40 @@
 using System;
 using gAPI.AutoSse.Models;
 
-namespace gAPI.AutoSse.Generators
+namespace gAPI.AutoSse.Generators;
+
+internal class SseServiceContextGenerator : BaseGenerator
 {
-    internal class SseServiceContextGenerator : BaseGenerator
+    internal SseServiceContextGenerator(
+        ServiceContext dataModel,
+        ISseServiceContextGenerator iSseServiceContext)
     {
-        internal SseServiceContextGenerator(
-            ServiceContext dataModel,
-            ISseServiceContextGenerator iSseServiceContext)
-        {
-            DataModel = dataModel;
-            ISseServiceContext = iSseServiceContext;
-            SseService = iSseServiceContext.SseService;
-            ISseService = SseService.Interface; 
+        DataModel = dataModel;
+        ISseServiceContext = iSseServiceContext;
+        SseService = iSseServiceContext.SseService;
+        ISseService = SseService.Interface; 
 
-            Directory = dataModel.Config.SseServices_Destination.Directory;
-            Namespace = dataModel.Config.SseServices_Destination.Namespace;
+        Directory = dataModel.Config.SseServices_Destination.Directory;
+        Namespace = dataModel.Config.SseServices_Destination.Namespace;
 
-            Name = SseService.Interface.ApiName + "Context";
-            FileName = $"{Name}.g.cs";
-        }
+        Name = SseService.Interface.ApiName + "Context";
+        FileName = $"{Name}.g.cs";
+    }
 
-        public ServiceContext DataModel { get; }
-        public ISseServiceContextGenerator ISseServiceContext { get; }
-        public SseServiceGenerator SseService { get; }
-        public Interface ISseService { get; }
+    public ServiceContext DataModel { get; }
+    public ISseServiceContextGenerator ISseServiceContext { get; }
+    public SseServiceGenerator SseService { get; }
+    public Interface ISseService { get; }
 
-        public void GenerateCode()
-        {
-            Reg(ISseServiceContext);
-            Reg(ISseService);
-            Reg(SseService);
-            Reg(DataModel.FabricClient);
-            Reg(DataModel.UserId);
-            Reg(DataModel.SessionId);
-            Code = @$"{GetNamespacesCode()}#nullable enable
+    public void GenerateCode()
+    {
+        Reg(ISseServiceContext);
+        Reg(ISseService);
+        Reg(SseService);
+        Reg(DataModel.FabricClient);
+        Reg(DataModel.UserId);
+        Reg(DataModel.SessionId);
+        Code = @$"{GetNamespacesCode()}#nullable enable
 
 namespace {Namespace};
 
@@ -51,6 +51,5 @@ public class {Name}(
         => new {SseService.Name}(fabricClient, null, new {DataModel.SessionId}(sessionId));
 }}
 ";
-        }
     }
 }

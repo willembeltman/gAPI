@@ -1,10 +1,9 @@
-﻿namespace gAPI.AutoSseClient.Configs
-{
-    internal class ClientConfig
-    {
-        public string[] BaseNamespaces { get; set; }
+﻿namespace gAPI.AutoSseClient.Configs;
 
-        public NamespaceConfig HubClients_Destination { get; set; }
-        public NamespaceConfig AddAutoSseClientServices_Destination { get; set; }
-    }
+internal class ClientConfig
+{
+    public string[] BaseNamespaces { get; set; }
+
+    public NamespaceConfig HubClients_Destination { get; set; }
+    public NamespaceConfig AddAutoSseClientServices_Destination { get; set; }
 }

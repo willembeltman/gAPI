@@ -1,7 +1,6 @@
-﻿namespace gAPI.Storage
+﻿namespace gAPI.Storage;
+
+public interface IStorageFile
 {
-    public interface IStorageFile
-    {
-        string Id { get; }
-    }
+    string Id { get; }
 }

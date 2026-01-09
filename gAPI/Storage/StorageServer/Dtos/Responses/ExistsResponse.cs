@@ -1,8 +1,7 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Responses
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Responses;
 
-    public class ExistsResponse : Response
-    {
-        public bool Exists { get; set; }
-    }
+
+public class ExistsResponse : Response
+{
+    public bool Exists { get; set; }
 }

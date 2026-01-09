@@ -1,17 +1,16 @@
-﻿namespace gAPI.Ids
+﻿namespace gAPI.Ids;
+
+public readonly struct UserId
 {
-    public readonly struct UserId
+    public UserId(string? value)
     {
-        public UserId(string? value)
-        {
-            Value = value;
-        }
+        Value = value;
+    }
 
-        public string? Value { get; }
+    public string? Value { get; }
 
-        public override string ToString()
-        {
-            return Value ?? "<null>";
-        }
+    public override string ToString()
+    {
+        return Value ?? "<null>";
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace gAPI.Storage
+﻿namespace gAPI.Storage;
+
+public interface IStorageFileDto
 {
-    public interface IStorageFileDto
-    {
-        string? StorageFileUrl { get; set; }
-    }
+    string? StorageFileUrl { get; set; }
 }

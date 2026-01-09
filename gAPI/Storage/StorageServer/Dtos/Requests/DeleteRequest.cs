@@ -1,7 +1,6 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Requests
-{
+﻿namespace gAPI.Storage.StorageServer.Dtos.Requests;
 
-    public class DeleteRequest : Request
-    {
-    }
+
+public class DeleteRequest : Request
+{
 }

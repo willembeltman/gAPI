@@ -1,12 +1,11 @@
-﻿namespace gAPI.Ids
-{
-    public readonly struct SseManagerId
-    {
-        public SseManagerId(long value)
-        {
-            Value = value;
-        }
+﻿namespace gAPI.Ids;
 
-        public long Value { get; }
+public readonly struct SseManagerId
+{
+    public SseManagerId(long value)
+    {
+        Value = value;
     }
+
+    public long Value { get; }
 }

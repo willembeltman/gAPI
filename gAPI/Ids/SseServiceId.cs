@@ -1,17 +1,16 @@
-﻿namespace gAPI.Ids
+﻿namespace gAPI.Ids;
+
+public readonly struct SseServiceId
 {
-    public readonly struct SseServiceId
+    public SseServiceId(string value)
     {
-        public SseServiceId(string value)
-        {
-            Value = value;
-        }
+        Value = value;
+    }
 
-        public string Value { get; }
+    public string Value { get; }
 
-        public override string ToString()
-        {
-            return Value;
-        }
+    public override string ToString()
+    {
+        return Value;
     }
 }

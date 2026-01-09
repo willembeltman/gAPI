@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace gAPI.Attributes
+namespace gAPI.Attributes;
+
+public class IsWriteOnlyAttribute : Attribute
 {
-    public class IsWriteOnlyAttribute : Attribute
-    {
-    }
 }
