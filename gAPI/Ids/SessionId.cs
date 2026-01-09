@@ -6,6 +6,10 @@
         {
             Value = value;
         }
+        public SessionId(Guid value)
+        {
+            Value = value.ToString();
+        }
 
         public string Value { get; }
 

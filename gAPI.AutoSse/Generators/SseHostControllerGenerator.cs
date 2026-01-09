@@ -19,6 +19,7 @@
         {
             Reg("Microsoft.AspNetCore.Mvc");
             Reg("Microsoft.AspNetCore.Http");
+            Reg(DataModel.IServerAuthenticationService);
             Reg(DataModel.SseHostCollection);
             Reg(DataModel.FabricClient);
             Reg(DataModel.SseHost);
@@ -31,7 +32,7 @@
 [ApiController]
 [Route(""ssehost"")]
 public class SseHostController(
-    gAPI.Interfaces.IServerAuthenticationService authenticationService,
+    {DataModel.IServerAuthenticationService} authenticationService,
     {DataModel.SseHostCollection} sseHostCollection,
     {DataModel.FabricClient} fabricClient)
     : ControllerBase
@@ -39,19 +40,19 @@ public class SseHostController(
     [HttpGet(""connect/{{serviceId}}"")]
     public async Task<IResult> Connect(
         [FromRoute] string serviceId,
-        [FromHeader] Guid sessionId)
+        [FromHeader] string sessionId)
     {{
         await authenticationService.InitializeAsync(sessionId);
-        var userIdString = await authenticationService.GetUserId();
+        if (authenticationService.IsForbidden) return Results.Forbid();
 
         var sseHost = new {DataModel.SseHost}(
             sseHostCollection,
             fabricClient,
             new {DataModel.SseServiceId}(serviceId),
-            new {DataModel.UserId}(userIdString),
-            new {DataModel.SessionId}(sessionId.ToString()));
+            new {DataModel.UserId}(authenticationService.UserId),
+            new {DataModel.SessionId}(authenticationService.SessionId!));
 
-        return Results.ServerSentEvents(sseHost.GetStrings());
+        return Results.ServerSentEvents(sseHost.ReadAllAsync());
     }}
 }}";
             return;

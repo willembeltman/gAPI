@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-
 namespace gAPI.Interfaces
 {
     public interface IServerAuthenticationService
@@ -8,18 +5,26 @@ namespace gAPI.Interfaces
         /// <summary>
         /// Is called to see if the request is authenticated. Return true if client is authenticated, otherwise return false.
         /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        Task<bool> InitializeAsync(Guid sessionId);
+        /// <param name="sessionId">The current sessionid, REQUIRED</param>
+        /// <returns>If the user is logged in</returns>
+        Task<bool> InitializeAsync(string sessionId);
         /// <summary>
-        /// Asynchronously retrieves the unique identifier of the current user, if available.
+        /// Gets a value indicating whether access to the resource is forbidden.
+        /// WARNING: Throws when not initialized.
         /// </summary>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the user identifier as a string,
-        /// or <see langword="null"/> if no user is authenticated.</returns>
-        Task<string?> GetUserId();
+        bool IsForbidden { get; }
         /// <summary>
-        /// Gets the unique identifier that defines the scope for the current context, if available.
+        /// Gets the unique identifier that defines the scope for the current context.
+        /// If authentication service is not initialized, this value will be null.
+        /// WARNING: Throws when not initialized.
         /// </summary>
-        Guid? SessionId { get; }
+        string SessionId { get; }
+        /// <summary>
+        /// Gets the unique identifier of the current user.
+        /// If authentication service is not initialized, this value will be null.
+        /// Or, if the user is not authenticated, this value will be null.
+        /// WARNING: Throws when not initialized.
+        /// </summary>
+        string? UserId { get; }
     }
 }

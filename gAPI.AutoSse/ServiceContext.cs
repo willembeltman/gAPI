@@ -57,6 +57,7 @@ namespace gAPI.AutoSse
             SseServiceMethodId = Find("gAPI.Ids.SseServiceMethodId", allSymbols);
             UserId = Find("gAPI.Ids.UserId", allSymbols);
             SessionId = Find("gAPI.Ids.SessionId", allSymbols);
+            IServerAuthenticationService = Find("gAPI.Interfaces.IServerAuthenticationService", allSymbols);
         }
 
         private SharedReference Find(string typeFullName, IEnumerable<INamedTypeSymbol> allSymbols)
@@ -86,11 +87,12 @@ namespace gAPI.AutoSse
         public EnumDto[] Enums { get; }
         public Dto[] Dtos { get; }
         public SharedReference FabricClient { get; }
-        public SharedReference SseHostCollection { get; internal set; }
-        public SharedReference SseHost { get; internal set; }
-        public SharedReference SseServiceId { get; internal set; }
-        public SharedReference SseServiceMethodId { get; internal set; }
-        public SharedReference UserId { get; internal set; }
-        public SharedReference SessionId { get; internal set; }
+        public SharedReference SseHostCollection { get; }
+        public SharedReference SseHost { get; }
+        public SharedReference SseServiceId { get; }
+        public SharedReference SseServiceMethodId { get; }
+        public SharedReference UserId { get; }
+        public SharedReference SessionId { get; }
+        public SharedReference IServerAuthenticationService { get; }
     }
 }

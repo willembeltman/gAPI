@@ -160,7 +160,7 @@ namespace gAPI.AutoApi.Generators
                         })
                         .ToList();
 
-                methodArguments.Add("[FromHeader] Guid sessionId");
+                methodArguments.Add("[FromHeader] string? sessionId");
 
                 var methodSignature = string.Join(", ", methodArguments);
                 var methodCall = string.Join(", ", method.Arguments
@@ -199,6 +199,8 @@ namespace gAPI.AutoApi.Generators
                     code += $"        if (!await serverAuthenticationService.InitializeAsync(sessionId)) return Unauthorized();" + Environment.NewLine;
                 else
                     code += $"        await serverAuthenticationService.InitializeAsync(sessionId);" + Environment.NewLine;
+
+                code += $"        if (serverAuthenticationService.IsForbidden) return Forbid();" + Environment.NewLine;
 
                 if (method.IsAsync)
                 {

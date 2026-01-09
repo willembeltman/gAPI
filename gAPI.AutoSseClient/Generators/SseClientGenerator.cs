@@ -66,7 +66,20 @@ namespace {Namespace}
 
                         while (TryExtractFrame(buffer, out var frame))
                         {{
-                            ParseFrame(frame);
+                            if (!ParseFrame(frame, out string eventName, out string eventData)) 
+                                continue;
+
+                            if (eventName == ""SseHostId"")
+                            {{
+                                if (long.TryParse(eventData, out var id))
+                                    SseHostId = new SseHostId(id);
+                            }}
+                            else if (eventName == ""SseMessage"")
+                            {{
+                                var sseMessage = JsonConvert.DeserializeObject<{DataModel.SseMessage}>(eventData);
+                                if (sseMessage != null)
+                                    _ = sseManager.MessageReceived(sseMessage);
+                            }}
                         }}
                     }}
                 }}
@@ -91,9 +104,10 @@ namespace {Namespace}
             frame = null!;
             return false;
         }}
-        private void ParseFrame(string frame)
+        private bool ParseFrame(string frame, out string eventName, out string eventData)
         {{
-            string? eventName = null;
+            eventName = null!;
+            eventData = null!;
             var dataBuilder = new StringBuilder();
 
             var lines = frame.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -112,23 +126,11 @@ namespace {Namespace}
                 }}
             }}
 
-            if (eventName == null) return;
-            var data = dataBuilder.ToString();
-            HandleSseMessage(eventName, data);
-        }}
-        private void HandleSseMessage(string eventName, string data)
-        {{
-            if (eventName == ""SseHostId"")
-            {{
-                if (long.TryParse(data, out var id))
-                    SseHostId = new SseHostId(id);
-            }}
-            else if (eventName == ""SseMessage"")
-            {{
-                var message = JsonConvert.DeserializeObject<{DataModel.SseMessage}>(data);
-                if (message != null)
-                    _ = sseManager.MessageReceived(message);
-            }}
+            if (eventName == null) 
+                return false;
+
+            eventData = dataBuilder.ToString();
+            return true;
         }}
 
         public async ValueTask DisposeAsync()

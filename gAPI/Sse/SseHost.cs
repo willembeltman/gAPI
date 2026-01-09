@@ -22,7 +22,7 @@ namespace gAPI.Sse
         public SessionId SessionId { get; } = sessionId;
         public UserId UserId { get; } = userId;
 
-        public async IAsyncEnumerable<SseItem<string>> GetStrings([EnumeratorCancellation] CancellationToken ct = default)
+        public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct = default)
         {
             Id = sseHostCollection.Add(this);
             Console.WriteLine($"SseHost {Id} started");
