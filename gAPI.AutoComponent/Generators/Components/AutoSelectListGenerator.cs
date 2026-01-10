@@ -4,9 +4,9 @@ using gAPI.AutoComponent.SimpleRazorCompiler;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
-public class AutoListGenerator : BaseGenerator
+public class AutoSelectListGenerator : BaseGenerator
 {
-    public AutoListGenerator(
+    public AutoSelectListGenerator(
         ICrudlType crudlType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
@@ -14,7 +14,7 @@ public class AutoListGenerator : BaseGenerator
         string @namespace) : base(directory, @namespace)
     {
         var iClientAuthenticationService = new SharedReference("gAPI.Interfaces", "IClientAuthenticationService");
-        ListGenerator = new ListGenerator(
+        SelectListGenerator = new SelectListGenerator(
             crudlType,
             itemDataSource,
             listDataSource,
@@ -23,19 +23,19 @@ public class AutoListGenerator : BaseGenerator
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}List";
+        Name = $"Auto{crudlType.Name}SelectList";
         FileName = $"{Name}.g.cs";
 
-        ListGenerator.Name = Name;
-        ListGenerator.FileName = FileName;
+        SelectListGenerator.Name = Name;
+        SelectListGenerator.FileName = FileName;
     }
 
-    public ListGenerator ListGenerator { get; }
+    public SelectListGenerator SelectListGenerator { get; }
 
     public void GenerateCode()
     {
-        ListGenerator.GenerateCode();
-        var razorCode = GetRazorNamespacesCode() + ListGenerator.Code;
+        SelectListGenerator.GenerateCode();
+        var razorCode = GetRazorNamespacesCode() + SelectListGenerator.Code;
         Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace, Name);
     }
 }

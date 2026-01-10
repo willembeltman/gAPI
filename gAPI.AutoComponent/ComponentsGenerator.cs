@@ -110,11 +110,42 @@ public class ComponentsGenerator
                 crudl,
                 ItemDataSource,
                 ListDataSource,
-                ServiceContext.BaseListResponseT,
                 Config.Components_Destination.Directory,
                 Config.Components_Destination.Namespace))
             .ToArray();
         foreach (var list in Lists)
+        {
+            list.GenerateCode();
+            var formFieldsViewFullName = Path.Combine(list.Directory, list.FileName);
+            Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
+        }
+
+        var SelectLists = CrudlContext.Crudls
+            .Where(a => a.Dto != null)
+            .Select(crudl => new AutoSelectListGenerator(
+                crudl,
+                ItemDataSource,
+                ListDataSource,
+                Config.Components_Destination.Directory,
+                Config.Components_Destination.Namespace))
+            .ToArray();
+        foreach (var list in SelectLists)
+        {
+            list.GenerateCode();
+            var formFieldsViewFullName = Path.Combine(list.Directory, list.FileName);
+            Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
+        }
+
+        var Tables = CrudlContext.Crudls
+            .Where(a => a.Dto != null)
+            .Select(crudl => new AutoTableGenerator(
+                crudl,
+                ItemDataSource,
+                ListDataSource,
+                Config.Components_Destination.Directory,
+                Config.Components_Destination.Namespace))
+            .ToArray();
+        foreach (var list in Tables)
         {
             list.GenerateCode();
             var formFieldsViewFullName = Path.Combine(list.Directory, list.FileName);

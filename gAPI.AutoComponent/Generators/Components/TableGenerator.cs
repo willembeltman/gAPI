@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
-public class ListGenerator : BaseGenerator
+public class TableGenerator : BaseGenerator
 {
-    public ListGenerator(
+    public TableGenerator(
         ICrudlType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
@@ -21,7 +21,7 @@ public class ListGenerator : BaseGenerator
         BaseListResponse = baseListResponse;
         Imports = imports;
 
-        Name = $"{dto.Name}List";
+        Name = $"{dto.Name}TableList";
         FileName = $"{Name}.razor";
     }
 
@@ -56,8 +56,9 @@ public class ListGenerator : BaseGenerator
             .ToArray();
 
         var orderableProps = CrudlType.Properties
-            .Where(p => p.IsName || p.IsForeignName)
-            .OrderByDescending(a => a.IsName)
+            .Where(p => !p.IsStorageFile) //p.IsName || p.IsForeignName)
+            .OrderByDescending(a => a.IsKey)
+            .ThenByDescending(a => a.IsName)
             .ThenByDescending(a => a.IsForeignName)
             .ToArray();
 

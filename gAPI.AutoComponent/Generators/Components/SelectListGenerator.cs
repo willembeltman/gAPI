@@ -1,0 +1,259 @@
+﻿using gAPI.AutoComponent.Helpers;
+using gAPI.AutoComponent.Interfaces;
+using System.Linq;
+
+namespace gAPI.AutoComponent.Generators.Components;
+
+public class SelectListGenerator : BaseGenerator
+{
+    public SelectListGenerator(
+        ICrudlType dto,
+        ISharedReference itemDataSource,
+        ISharedReference listDataSource,
+        ISharedReference baseListResponse,
+        IBaseGenerator imports,
+        string directory,
+        string @namespace) : base(directory, @namespace)
+    {
+        CrudlType = dto;
+        ItemDataSource = itemDataSource;
+        ListDataSource = listDataSource;
+        BaseListResponse = baseListResponse;
+        Imports = imports;
+
+        Name = $"{dto.Name}SelectList";
+        FileName = $"{Name}.razor";
+    }
+
+    public ICrudlType CrudlType { get; }
+    public IBaseGenerator Imports { get; }
+    public ISharedReference ItemDataSource { get; }
+    public ISharedReference ListDataSource { get; }
+    public ISharedReference BaseListResponse { get; }
+
+    public void GenerateCode()
+    {
+        if (CrudlType.ListMethod == null) return;
+
+        // Imports
+        Imports.RegRange(
+        [
+            "Microsoft.AspNetCore.Components",
+            "System",
+            "System.Linq",
+            "System.Threading.Tasks",
+            "System.Collections.Generic"
+        ]);
+
+        Imports.Reg(CrudlType);
+        Imports.Reg(ItemDataSource);
+        Imports.Reg(ListDataSource);
+        Imports.Reg(BaseListResponse);
+
+        // Alleen name / foreign-name / storage
+        var orderableProps = CrudlType.Properties
+            .Where(p => p.IsName || p.IsForeignName)
+            .OrderByDescending(a => a.IsName)
+            .ThenByDescending(a => a.IsForeignName)
+            .ToArray();
+
+        var storageFileProps = CrudlType.Properties
+            .Where(p => p.IsStorageFile)
+            .ToArray();
+
+        var displayProps = storageFileProps.Concat(orderableProps).ToArray();
+
+        var orderLinks = string.Join("", displayProps.Select(p =>
+        {
+            if (p.IsStorageFile)
+            {
+                return $@"
+                    @if (!HideColumnNames.Contains(""{p.Name}""))
+                    {{
+                        <th></th>
+                    }}";
+            }
+
+            return $@"
+                @if (!HideColumnNames.Contains(""{p.Name}""))
+                {{
+                    <th>
+                        <a @onclick=""OrderBy{p.Name}Clicked"" style=""cursor:pointer;"">
+                            {p.Name}
+                            @if (DataSource.OrderByColumn == ""{p.Name} asc"") {{ <span>▲</span> }}
+                            else if (DataSource.OrderByColumn == ""{p.Name} desc"") {{ <span>▼</span> }}
+                        </a>
+                    </th>
+                }}";
+        }));
+
+        var dataCells = string.Join("", displayProps.Select(p =>
+        {
+            if (p.IsStorageFile)
+            {
+                return $@"
+                    @if (!HideColumnNames.Contains(""{p.Name}""))
+                    {{
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}))
+                            {{
+                                <img src=""@item.Model!.{p.Name}"" style=""max-height:32px;"" />
+                            }}
+                        </td>
+                    }}";
+            }
+
+            return $@"
+                @if (!HideColumnNames.Contains(""{p.Name}""))
+                {{
+                    <td>@item.Model!.{p.Name}</td>
+                }}";
+        }));
+
+        var orderOptionsMobile = string.Join("", orderableProps.Select(p => $@"
+            @if (!HideColumnNames.Contains(""{p.Name}""))
+            {{
+                <option value=""{p.Name}"" selected=""@(DataSource.OrderByColumn == ""{p.Name}"")"">
+                    {p.Name}
+                </option>
+            }}"));
+
+        var mobileCards = string.Join("", displayProps.Select(p =>
+        {
+            if (p.IsStorageFile)
+            {
+                return $@"
+                    @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}) &&
+                        !HideColumnNames.Contains(""{p.Name}""))
+                    {{
+                        <img src=""@item.Model!.{p.Name}"" style=""max-height:32px; margin-right:8px;"" />
+                    }}";
+            }
+
+            return $@"
+                @if (!HideColumnNames.Contains(""{p.Name}""))
+                {{
+                    <div class=""text-muted"">@item.Model!.{p.Name}</div>
+                }}";
+        }));
+
+        Code = $@"@if (DataSource == null || DataSource.Items.Count == 0)
+{{
+    <p><em>@NoItemsText</em></p>
+}}
+else
+{{
+    <!-- Desktop -->
+    <div class=""d-none d-md-block"">
+        <table class=""table table-bordered"">
+            <thead>
+                <tr>
+                    <th></th>
+                    {orderLinks}
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in DataSource.Items)
+                {{
+                    <tr>
+                        <td>
+                            <button class=""btn btn-sm btn-outline-primary""
+                                    @onclick=""() => SelectItem(item)"">
+                                @SelectText
+                            </button>
+                        </td>
+                        {dataCells}
+                    </tr>
+                }}
+
+                @if (DataSource.HasMore)
+                {{
+                    <tr id=""@DataSource.SentinelId"">
+                        <td colspan=""@({displayProps.Length + 1} - HideColumnNames.Length)""
+                            class=""text-center text-muted"">
+                            @LoadingModeText
+                        </td>
+                    </tr>
+                }}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile -->
+    <div class=""d-md-none"">
+        <div class=""mb-2 d-flex gap-2 align-items-center"">
+            <select @onchange=""DataSource.OrderByChanged"" class=""form-select form-select-sm w-auto"">
+                <option value="""">@EmptyText</option>
+                {orderOptionsMobile}
+            </select>
+
+            @if (!string.IsNullOrEmpty(DataSource.OrderByColumn))
+            {{
+                <select @onchange=""DataSource.OrderByDirectionChanged""
+                        class=""form-select form-select-sm w-auto"">
+                    <option value=""false"" selected=""@(!DataSource.OrderByDirectionDesc)"">@AscText</option>
+                    <option value=""true"" selected=""@DataSource.OrderByDirectionDesc"">@DescText</option>
+                </select>
+            }}
+        </div>
+
+        <div class=""row row-cols-1 g-2"">
+            @foreach (var item in DataSource.Items)
+            {{
+                <div class=""col"">
+                    <div class=""card shadow-sm"">
+                        <div class=""card-body"">
+                            <div class=""d-flex align-items-center"">
+                                {mobileCards}
+                            </div>
+                            <div class=""mt-2"">
+                                <button class=""btn btn-sm btn-outline-primary w-100""
+                                        @onclick=""() => SelectItem(item)"">
+                                    @SelectText
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }}
+
+            @if (DataSource.HasMore)
+            {{
+                <div id=""@DataSource.SentinelId"" class=""sentinel"">
+                    @LoadingModeText
+                </div>
+            }}
+        </div>
+    </div>
+}}
+
+@code {{
+    [Parameter, EditorRequired]
+    public ListDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}> DataSource {{ get; set; }}
+
+    [Parameter, EditorRequired]
+    public EventCallback<ItemDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>> OnSelect {{ get; set; }}
+
+    [Parameter] public string SelectText {{ get; set; }} = ""Select"";
+    [Parameter] public string HideColumns {{ get; set; }} = string.Empty;
+    [Parameter] public string EmptyText {{ get; set; }} = ""Order by..."";
+    [Parameter] public string AscText {{ get; set; }} = ""▲ asc"";
+    [Parameter] public string DescText {{ get; set; }} = ""▼ desc"";
+    [Parameter] public string LoadingModeText {{ get; set; }} = ""Loading more..."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudlType.Name.ToMultiple()} to select."";
+
+    private string[] HideColumnNames =>
+        HideColumns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private async Task SelectItem(ItemDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}> item)
+    {{
+        if (OnSelect.HasDelegate)
+            await OnSelect.InvokeAsync(item);
+    }}
+
+{string.Join("", orderableProps.Select(p =>
+$@"    private async Task OrderBy{p.Name}Clicked()
+        => await DataSource.OrderByColumnClicked(""{p.Name}"");"))}
+}}";
+    }
+}
