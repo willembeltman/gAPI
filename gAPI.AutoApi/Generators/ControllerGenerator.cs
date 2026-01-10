@@ -38,8 +38,8 @@ internal class ControllerGenerator : BaseGenerator
         Code += $"[ApiController]" + Environment.NewLine;
         Code += $"[Route(\"{Service.Interface.ApiName.ToLower()}\")]" + Environment.NewLine;
         Code += $"public class {Name}(" + Environment.NewLine;
-        Code += $"    {Service.Interface.Name} {Service.Name.ToLower()}," + Environment.NewLine;
-        Code += $"    gAPI.Interfaces.IServerAuthenticationService serverAuthenticationService)" + Environment.NewLine;
+        Code += $"    {Service.Interface.Name} {Service.Name.ToCamelCase()}," + Environment.NewLine;
+        Code += $"    gAPI.Interfaces.IServerAuthenticationService auth)" + Environment.NewLine;
         Code += $"    : ControllerBase" + Environment.NewLine;
         Code += $"{{" + Environment.NewLine;
         Code += methodCode;
@@ -196,34 +196,34 @@ internal class ControllerGenerator : BaseGenerator
             code += $"        if (!ModelState.IsValid) return BadRequest(ModelState);" + Environment.NewLine;
 
             if (Service.Interface.IsAuthorized || method.IsAuthorize)
-                code += $"        if (!await serverAuthenticationService.InitializeAsync(sessionId)) return Unauthorized();" + Environment.NewLine;
+                code += $"        if (!await auth.InitializeAsync(sessionId)) return Unauthorized();" + Environment.NewLine;
             else
-                code += $"        await serverAuthenticationService.InitializeAsync(sessionId);" + Environment.NewLine;
+                code += $"        await auth.InitializeAsync(sessionId);" + Environment.NewLine;
 
-            code += $"        if (serverAuthenticationService.IsForbidden) return Forbid();" + Environment.NewLine;
+            code += $"        if (auth.IsForbidden) return Forbid();" + Environment.NewLine;
 
             if (method.IsAsync)
             {
                 if (method.ResponseType.UnderlayingTypes.Length == 0)
                 {
-                    code += $"        await {Service.Name.ToLower()}.{method.Name}({methodCall});" + Environment.NewLine;
+                    code += $"        await {Service.Name.ToCamelCase()}.{method.Name}({methodCall});" + Environment.NewLine;
                     code += $"        return Ok();" + Environment.NewLine;
                 }
                 else
                 {
-                    code += $"        return Ok(await {Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
+                    code += $"        return Ok(await {Service.Name.ToCamelCase()}.{method.Name}({methodCall}));" + Environment.NewLine;
                 }
             }
             else
             {
                 if (method.ResponseType.Name == "void")
                 {
-                    code += $"        {Service.Name.ToLower()}.{method.Name}({methodCall});" + Environment.NewLine;
+                    code += $"        {Service.Name.ToCamelCase()}.{method.Name}({methodCall});" + Environment.NewLine;
                     code += $"        return Ok();" + Environment.NewLine;
                 }
                 else
                 {
-                    code += $"        return Ok({Service.Name.ToLower()}.{method.Name}({methodCall}));" + Environment.NewLine;
+                    code += $"        return Ok({Service.Name.ToCamelCase()}.{method.Name}({methodCall}));" + Environment.NewLine;
                 }
             }
 

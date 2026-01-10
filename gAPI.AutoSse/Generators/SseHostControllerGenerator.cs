@@ -50,7 +50,7 @@ public class SseHostController(
             fabricClient,
             new {DataModel.SseServiceId}(serviceId),
             new {DataModel.UserId}(authenticationService.UserId),
-            new {DataModel.SessionId}(authenticationService.SessionId!));
+            new {DataModel.SessionId}(authenticationService.SessionId));
 
         return Results.ServerSentEvents(sseHost.ReadAllAsync());
     }}
