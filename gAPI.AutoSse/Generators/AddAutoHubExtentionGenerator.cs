@@ -49,14 +49,16 @@ internal class AddAutoSseExtentionGenerator : BaseGenerator
         services.AddScoped<{i.Name}, {s.Name}>();";
         }));
 
-        Code = $@"{GetNamespacesCode()}namespace {Namespace};
+        Code = $@"{GetNamespacesCode()}#nullable enable
+
+namespace {Namespace};
 
 public static class {Name}
 {{
     public static void AddAutoSse(this IServiceCollection services, string? server, int? port = 9494)
     {{
         var fabricClient =
-            server == null
+            server == null || port == null
             ? new {ServiceContext.FabricClient}()                     // Don't use a fabricNode
             : new {ServiceContext.FabricClient}(server, port.Value);  // Use the settings
         _ = Task.Run(fabricClient.ConnectAsync);
