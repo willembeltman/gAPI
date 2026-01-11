@@ -12,17 +12,4 @@ public class BaseResponse
     public bool ErrorUpdatingState { get; set; }
     public bool ErrorGettingData { get; set; }
     public string? RedirectPath { get; set; }
-    public void SetResponse(BaseResponse response)
-    {
-        Success = response.Success;
-        ErrorGettingState = response.ErrorGettingState;
-        ErrorItemNotSupplied = response.ErrorItemNotSupplied;
-        ErrorNotAuthorized = response.ErrorNotAuthorized;
-        ErrorItemNotFound = response.ErrorItemNotFound;
-        ErrorAlreadyUsed = response.ErrorAlreadyUsed;
-        ErrorAttachingState = response.ErrorAttachingState;
-        ErrorUpdatingState = response.ErrorUpdatingState;
-        ErrorGettingData = response.ErrorGettingData;
-        RedirectPath = response.RedirectPath;
-    }
 }

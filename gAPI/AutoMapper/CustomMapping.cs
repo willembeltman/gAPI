@@ -13,7 +13,7 @@ public abstract class CustomMapping<TEntity, TDto>
     public abstract Task<TDto> ToDtoAsync(
         TEntity source,
         TDto destination,
-        ISecurityHandler<TDto>? serviceHandler);
+        ISecurityHandler<TDto>? serviceHandler = null);
     public abstract Task<TEntity> ToEntityAsync(
         TDto source,
         TEntity destination);
@@ -23,11 +23,11 @@ public abstract class CustomMapping<TEntity, TDto>
         string[]? orderby,
         int? skip,
         int? take,
-        ISecurityHandler<TDto>? serviceHandler);
+        ISecurityHandler<TDto>? serviceHandler = null);
 
     protected virtual async IAsyncEnumerable<TDto> EnumerateDtosAsync(
         IEnumerable<TDto> items,
-        ISecurityHandler<TDto>? serviceHandler)
+        ISecurityHandler<TDto>? serviceHandler = null)
     {
         foreach (var item in items)
         {
@@ -41,7 +41,7 @@ public abstract class CustomMapping<TEntity, TDto>
 
     protected virtual async Task ExtendDto(
         TDto item,
-        ISecurityHandler<TDto>? serviceHandler)
+        ISecurityHandler<TDto>? serviceHandler = null)
     {
         if (item is ICrudEntity crudl)
         {
