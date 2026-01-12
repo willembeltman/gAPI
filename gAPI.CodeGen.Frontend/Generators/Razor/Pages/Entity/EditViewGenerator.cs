@@ -143,7 +143,7 @@ public class EditViewGenerator : BaseGenerator
 
     protected override async Task OnInitializedAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticated() == false || id == null)
+        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false || id == null)
         {{
             return;
         }}

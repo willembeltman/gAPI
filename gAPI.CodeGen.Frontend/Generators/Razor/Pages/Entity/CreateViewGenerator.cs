@@ -137,7 +137,7 @@ public class CreateViewGenerator : BaseGenerator
 
     protected override async Task OnInitializedAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticated() == false)
+        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false)
             return;
 
         {name} = new {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty.TypeSimpleName}>(

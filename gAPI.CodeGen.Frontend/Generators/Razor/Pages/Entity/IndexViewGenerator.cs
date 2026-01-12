@@ -96,7 +96,7 @@ public class IndexViewGenerator : BaseGenerator
 
     protected override async Task OnInitializedAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticated() == false)
+        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false)
         {{
             return;
         }}

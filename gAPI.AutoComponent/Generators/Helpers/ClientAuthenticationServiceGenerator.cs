@@ -106,7 +106,7 @@ public class ClientAuthenticationService : AuthenticationStateProvider, {IClient
         await TryRefreshState(token);
         return State;
     }}
-    public virtual async Task<bool> IsAuthenticated(CancellationToken? token = null)
+    public virtual async Task<bool> IsAuthenticatedAsync(CancellationToken? token = null)
     {{
         var state = await GetState(token);
         return state?.User != null;
