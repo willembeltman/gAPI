@@ -20,7 +20,7 @@ public class ForeignEntityNameProperty : INameProperty
     public DtoNameProperty DtoNameProperty { get; }
     public PropertyInfo PropertyInfo { get; }
     public TypeMapperInfo Type { get; }
-    public IsNameAttribute IsName { get; }
+    public IsNameAttribute? IsName { get; }
 
     public string Name => PropertyInfo.Name;
     public string ExternalName => $"{DtoNameProperty.EntityForeignNavigationProperty!.Name}.{PropertyInfo.Name}";

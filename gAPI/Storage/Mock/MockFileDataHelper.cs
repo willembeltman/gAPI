@@ -1,13 +1,9 @@
-﻿using gAPI.Storage.Mock;
-using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace gAPI.Helpers;
+namespace gAPI.Storage.Mock;
 
-public static class StreamHelper
+public static class MockFileDataHelper
 {
     public static async Task<MockFileData> ProcessStreamAsync(Stream stream, string fileName, string mimeType)
     {

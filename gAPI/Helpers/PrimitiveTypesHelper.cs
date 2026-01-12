@@ -1,6 +1,6 @@
 ﻿namespace gAPI.Helpers;
 
-public static class CSharpHelper
+public static class PrimitiveTypesHelper
 {
     public static string? GetSimpleCsTypeByFullName(string propertytype)
     {

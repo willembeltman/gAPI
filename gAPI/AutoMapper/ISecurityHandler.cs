@@ -1,14 +1,14 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿//using System;
+//using System.Threading.Tasks;
 
-namespace gAPI.AutoMapper;
+//namespace gAPI.AutoMapper;
 
-public interface ISecurityHandler<TDto>
-{
-    Task<bool> CanCreateAsync();
-    Task<bool> CanCreateAsync(TDto dto);
-    Task<bool> CanReadAsync(TDto dto);
-    Task<bool> CanDeleteAsync(TDto dto);
-    Task<bool> CanUpdateAsync(TDto dto);
-    Task<bool> CanListAsync();
-}
+//public interface ISecurityHandler<TDto>
+//{
+//    Task<bool> CanCreateAsync();
+//    Task<bool> CanCreateAsync(TDto dto);
+//    Task<bool> CanReadAsync(TDto dto);
+//    Task<bool> CanDeleteAsync(TDto dto);
+//    Task<bool> CanUpdateAsync(TDto dto);
+//    Task<bool> CanListAsync();
+//}

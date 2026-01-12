@@ -10,7 +10,7 @@ public class DbContextModel
         Type = type;
         FullName = type.FullName ?? type.Name;
         Name = type.Name;
-        Namespace = type.Namespace;
+        Namespace = type.Namespace!;
         DbSets = type.GetProperties()
             .Where(p =>
                 p.PropertyType.IsGenericType &&
@@ -25,7 +25,7 @@ public class DbContextModel
     public string Namespace { get; }
     public DbSetModel[] DbSets { get; }
 
-    public DbSetModel GetDbSet(Type type)
+    public DbSetModel? GetDbSet(Type type)
     {
         return DbSets.FirstOrDefault(a => a.Type == type);
     }

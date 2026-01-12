@@ -2,9 +2,9 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace gAPI.Helpers;
+namespace gAPI.Storage.Mock;
 
-public static class HashHelper
+public static class FileKeyHashHelper
 {
     public static string GetFileKeyHash(string fileKey)
     {

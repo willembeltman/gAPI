@@ -1,9 +1,6 @@
 ﻿using gAPI.EntityFrameworkDisk.Models;
 using gAPI.EntityFrameworkDisk.Navigators.Extenders;
 using gAPI.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace gAPI.EntityFrameworkDisk.Navigator;
 
@@ -16,7 +13,7 @@ internal static class NavigatorFactory<T>
 
         var dbSetModel = dbContextModel.GetDbSet(typeof(T));
 
-        var className = $"{dbSetModel.Name}EntityExtender";
+        var className = $"{dbSetModel!.Name}EntityExtender";
         var extendMethodName = "Extend";
         var findForeignKeyUsageMethodName = "EntityFindForeignKeyUsage";
 
@@ -34,14 +31,14 @@ internal static class NavigatorFactory<T>
         var asm = CodeCompiler.Compile(Code);
         var serializerType = asm.GetType(className);
 
-        var extendEntityMethod = serializerType.GetMethod(extendMethodName);
+        var extendEntityMethod = serializerType!.GetMethod(extendMethodName);
         var findForeignKeyUsageMethod = serializerType.GetMethod(findForeignKeyUsageMethodName);
 
         var ExtendDelegate = (Action<T, DbContext>)Delegate.CreateDelegate(
-            typeof(Action<T, DbContext>), extendEntityMethod);
+            typeof(Action<T, DbContext>), extendEntityMethod!);
 
         var FindForeignKeyUsageDelegate = (Func<T, DbContext, bool, bool>)Delegate.CreateDelegate(
-            typeof(Func<T, DbContext, bool, bool>), findForeignKeyUsageMethod);
+            typeof(Func<T, DbContext, bool, bool>), findForeignKeyUsageMethod!);
 
         return new Navigator<T>(ExtendDelegate, FindForeignKeyUsageDelegate, Code);
     }
@@ -198,24 +195,24 @@ internal static class NavigatorFactory<T>
     private static string GenerateExtendCode(DbContextModel dbContextModel, DbSetModel dbSetModel, string methodName, DbContext dbContext)
     {
         var className = dbSetModel.Type.Name;
-        var fullClassName = dbSetModel.Type.FullName;
+        var fullClassName = dbSetModel.Type.FullName!;
 
         var lazyCode = string.Empty;
 
         var foreignEntityCollectionNotNullType = typeof(LazyEntityCollectionNotNull<,>);
-        var foreignEntityCollectionNotNullFullName = foreignEntityCollectionNotNullType.FullName.Split('`').First();
+        var foreignEntityCollectionNotNullFullName = foreignEntityCollectionNotNullType.FullName!.Split('`').First();
 
         var foreignEntityCollectionNullType = typeof(LazyEntityCollectionNull<,>);
-        var foreignEntityCollectionNullFullName = foreignEntityCollectionNullType.FullName.Split('`').First();
+        var foreignEntityCollectionNullFullName = foreignEntityCollectionNullType.FullName!.Split('`').First();
 
         var foreignEntityLazyNotNullType = typeof(LazyEntityNotNull<,>);
-        var foreignEntityLazyNotNullFullName = foreignEntityLazyNotNullType.FullName.Split('`').First();
+        var foreignEntityLazyNotNullFullName = foreignEntityLazyNotNullType.FullName!.Split('`').First();
 
         var foreignEntityLazyNullType = typeof(LazyEntityNull<,>);
-        var foreignEntityLazyNullFullName = foreignEntityLazyNullType.FullName.Split('`').First();
+        var foreignEntityLazyNullFullName = foreignEntityLazyNullType.FullName!.Split('`').First();
 
         var entityFactoryType = typeof(NavigatorFactory<>);
-        var entityFactoryFullName = entityFactoryType.FullName.Split('`').First();
+        var entityFactoryFullName = entityFactoryType.FullName!.Split('`').First();
 
         var dbContextType = typeof(DbContext);
         var dbContextTypeFullName = dbContextType.FullName;

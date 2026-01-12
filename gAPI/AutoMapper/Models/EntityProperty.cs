@@ -1,6 +1,5 @@
 ﻿using gAPI.Attributes;
 using gAPI.Interfaces;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
@@ -13,9 +12,9 @@ public class EntityProperty : INameProperty
     {
         PropertyInfo = propertyInfo;
 
-        IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>();
-        IsName = propertyInfo.GetCustomAttribute<IsNameAttribute>();
-        ForeignKey = propertyInfo.GetCustomAttribute<ForeignKeyAttribute>();
+        IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>()!;
+        IsName = propertyInfo.GetCustomAttribute<IsNameAttribute>()!;
+        ForeignKey = propertyInfo.GetCustomAttribute<ForeignKeyAttribute>()!;
     }
 
     public PropertyInfo PropertyInfo { get; }

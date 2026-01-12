@@ -23,8 +23,8 @@ internal static class ComparerFactory<TIn, TOut>
         var code = GenerateClass(typeIn, typeOut, className, @namespace, isDirtyMethodName);
 
         var asm = CodeCompiler.Compile(code);
-        var serializerType = asm.GetType(fullClassName);
-        var isDirtyMethod = serializerType.GetMethod(isDirtyMethodName);
+        var serializerType = asm.GetType(fullClassName)!;
+        var isDirtyMethod = serializerType.GetMethod(isDirtyMethodName)!;
 
         var isDirtyDelegate = (Func<TIn, TOut, bool>)Delegate.CreateDelegate(
             typeof(Func<TIn, TOut, bool>), isDirtyMethod);

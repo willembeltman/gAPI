@@ -11,7 +11,7 @@ public class EntityDefinition
     {
         KeyProperty = entityType
             .GetProperties()
-            .FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Any());
+            .First(p => p.GetCustomAttributes(typeof(KeyAttribute), true).Any());
     }
     public PropertyInfo KeyProperty { get; }
 

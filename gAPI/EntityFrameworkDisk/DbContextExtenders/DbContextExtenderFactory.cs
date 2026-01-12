@@ -31,11 +31,11 @@ internal static class DbContextExtenderFactory
         var serializerType = asm.GetType(extenderName);
 
         // Haal de methodes op die de DbContext extensies uitvoeren
-        var LoadDbSetsFromDirectoryMethod = serializerType.GetMethod(extenderMethodNameDirectory);
+        var LoadDbSetsFromDirectoryMethod = serializerType!.GetMethod(extenderMethodNameDirectory);
 
         // Maak delegates aan voor de methodes zodat ze snel aangeroepen kunnen worden
         var LoadDbSetsFromDirectoryDelegate = (Action<DbContext, DirectoryInfo>)Delegate.CreateDelegate(
-             typeof(Action<DbContext, DirectoryInfo>), LoadDbSetsFromDirectoryMethod);
+             typeof(Action<DbContext, DirectoryInfo>), LoadDbSetsFromDirectoryMethod!);
 
         return new DbContextExtender(LoadDbSetsFromDirectoryDelegate, Code);
     }
@@ -62,7 +62,7 @@ internal static class DbContextExtenderFactory
         var dbContextTypeFullName = dbContextType.FullName;
 
         var dbSetType = typeof(DbSet<>);
-        var dbSetFullName = dbSetType.FullName.Split('`').First();
+        var dbSetFullName = dbSetType.FullName!.Split('`').First();
 
         var propertiesDirecoryCode = string.Empty;
         var props = applicationDbContextType.GetProperties();

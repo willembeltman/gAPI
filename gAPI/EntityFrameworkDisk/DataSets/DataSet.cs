@@ -28,7 +28,7 @@ public class DataSet<T> : IDiskSet<T>
         directory = directory ?? new DirectoryInfo(Environment.CurrentDirectory);
         DataFullName = Path.Combine(directory.FullName, typeof(T).Name + ".data");
         var info = new FileInfo(DataFullName);
-        if (!info.Directory.Exists)
+        if (!info.Directory!.Exists)
             info.Directory.Create();
         Lock = LockCollection.GetOrCreate<DataSet<T>>();
         SerializerInstance = SerializerCollection.GetOrCreate<T>();
@@ -353,7 +353,7 @@ public class DataSet<T> : IDiskSet<T>
         if (items != null) return items.Single();
         return GetEnumerable().AsQueryable().Single(expression);
     }
-    public T SingleOrDefault(Expression<Func<T, bool>> expression)
+    public T? SingleOrDefault(Expression<Func<T, bool>> expression)
     {
         var items = GetFindKeyFromExpression(expression);
         if (items != null) return items.SingleOrDefault();
@@ -365,7 +365,7 @@ public class DataSet<T> : IDiskSet<T>
         if (items != null) return items.First();
         return GetEnumerable().AsQueryable().First(expression);
     }
-    public T FirstOrDefault(Expression<Func<T, bool>> expression)
+    public T? FirstOrDefault(Expression<Func<T, bool>> expression)
     {
         var items = GetFindKeyFromExpression(expression);
         if (items != null) return items.FirstOrDefault();
@@ -377,7 +377,7 @@ public class DataSet<T> : IDiskSet<T>
         if (items != null) return items.Last();
         return GetEnumerable().AsQueryable().Last(expression);
     }
-    public T LastOrDefault(Expression<Func<T, bool>> expression)
+    public T? LastOrDefault(Expression<Func<T, bool>> expression)
     {
         var items = GetFindKeyFromExpression(expression);
         if (items != null) return items.LastOrDefault();

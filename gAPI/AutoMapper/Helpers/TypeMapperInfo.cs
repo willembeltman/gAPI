@@ -10,7 +10,7 @@ public class TypeMapperInfo
     {
         TopType = topType;
 
-        IsTopTypeNullable = topType.FullName.StartsWith("System.Nullable`");
+        IsTopTypeNullable = topType.FullName!.StartsWith("System.Nullable`");
         if (IsTopTypeNullable)
         {
             topType = topType.GenericTypeArguments.Single();
@@ -19,7 +19,7 @@ public class TypeMapperInfo
         if (topType.IsArray)
         {
             IsArray = true;
-            topType = topType.GetElementType();
+            topType = topType.GetElementType()!;
         }
         else if (topType.IsGenericType)
         {
@@ -37,7 +37,7 @@ public class TypeMapperInfo
             topType = topType.GenericTypeArguments.Single();
         }
 
-        IsNullable = topType.FullName.StartsWith("System.Nullable`");
+        IsNullable = topType.FullName!.StartsWith("System.Nullable`");
         if (IsNullable)
         {
             topType = topType.GenericTypeArguments.Single();
@@ -55,7 +55,7 @@ public class TypeMapperInfo
     public Type TopType { get; }
     public bool IsTopTypeNullable { get; }
 
-    public string FullName => ElementType.FullName;
+    public string FullName => ElementType.FullName!;
     public bool IsEnum => ElementType.IsEnum;
     public bool IsNullable { get; }
     public bool IsArray { get; }
@@ -83,7 +83,7 @@ public class TypeMapperInfo
         return $"{(IsICollection ? "ICollection<" : "")}{(IsIEnumerable ? "IEnumerable<" : "")}{(IsList ? "List<" : "")}{FullName}{(IsNullable ? "?" : "")}{(IsICollection || IsIEnumerable || IsList ? ">" : "")}{(IsArray ? "[]" : "")}{(IsTopTypeNullable ? "?" : "")}";
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (ReferenceEquals(this, obj))
             return true;

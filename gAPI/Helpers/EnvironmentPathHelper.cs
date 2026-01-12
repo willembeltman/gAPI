@@ -17,7 +17,7 @@ public class EnvironmentPathHelper
     {
         var dir = new DirectoryInfo(EnvironmentProcessPath);
         var up = 0;
-        while (dir.Name != generatorProjectName)
+        while (dir!.Name != generatorProjectName)
         {
             up++;
             dir = dir.Parent;

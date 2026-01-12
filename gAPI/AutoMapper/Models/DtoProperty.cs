@@ -1,9 +1,7 @@
 ﻿using gAPI.Attributes;
 using gAPI.AutoMapper.Helpers;
 using Microsoft.CodeAnalysis;
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
 
 namespace gAPI.AutoMapper.Models;
@@ -17,14 +15,14 @@ public class DtoProperty
         PropertyInfo = propertyInfo;
         Type = new TypeMapperInfo(PropertyType);
 
-        IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>();
-        IsName = propertyInfo.GetCustomAttribute<IsNameAttribute>();
-        IsForeignName = propertyInfo.GetCustomAttribute<IsForeignNameAttribute>();
-        IsForeignKey = propertyInfo.GetCustomAttribute<IsForeignKeyAttribute>();
-        IsReadOnly = propertyInfo.GetCustomAttribute<IsReadOnlyAttribute>();
-        IsWriteOnly = propertyInfo.GetCustomAttribute<IsWriteOnlyAttribute>();
+        IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>()!;
+        IsName = propertyInfo.GetCustomAttribute<IsNameAttribute>()!;
+        IsForeignName = propertyInfo.GetCustomAttribute<IsForeignNameAttribute>()!;
+        IsForeignKey = propertyInfo.GetCustomAttribute<IsForeignKeyAttribute>()!;
+        IsReadOnly = propertyInfo.GetCustomAttribute<IsReadOnlyAttribute>()!;
+        IsWriteOnly = propertyInfo.GetCustomAttribute<IsWriteOnlyAttribute>()!;
 
-        MatchedEntityProperty = entityProperties.FirstOrDefault(p => p.Name == Name);
+        MatchedEntityProperty = entityProperties.First(p => p.Name == Name);
     }
 
     public PropertyInfo PropertyInfo { get; }

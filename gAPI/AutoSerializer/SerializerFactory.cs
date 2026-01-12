@@ -1,7 +1,4 @@
 ﻿using gAPI.Helpers;
-using System;
-using System.IO;
-using System.Linq;
 
 namespace gAPI.AutoSerialiser;
 
@@ -13,8 +10,6 @@ internal static class SerializerFactory<T>
         var className = $"{type.Name}EntityFactory";
         var readMethodName = "EntityRead";
         var writeMethodName = "EntityWrite";
-        var extendEntityMethodName = "EntityExtend";
-        var findForeignKeyUsageMethodName = "EntityFindForeignKeyUsage";
 
         var Code = $@"
             using System;
@@ -29,10 +24,8 @@ internal static class SerializerFactory<T>
         var asm = CodeCompiler.Compile(Code);
         var serializerType = asm.GetType(className);
 
-        var readMethod = serializerType.GetMethod(readMethodName);
-        var writeMethod = serializerType.GetMethod(writeMethodName);
-        var extendEntityMethod = serializerType.GetMethod(extendEntityMethodName);
-        var findForeignKeyUsageMethod = serializerType.GetMethod(findForeignKeyUsageMethodName);
+        var readMethod = serializerType!.GetMethod(readMethodName)!;
+        var writeMethod = serializerType.GetMethod(writeMethodName)!;
 
         var ReadDelegate = (Func<BinaryReader, T>)Delegate.CreateDelegate(
             typeof(Func<BinaryReader, T>), readMethod);
@@ -51,7 +44,7 @@ internal static class SerializerFactory<T>
         var newCode = string.Empty;
 
         var entityFactoryCollectionType = typeof(SerializerCollection);
-        var entityFactoryCollectionTypeFullName = entityFactoryCollectionType.FullName;
+        var entityFactoryCollectionTypeFullName = entityFactoryCollectionType.FullName!;
         var entityFactoryCollectionTypeMethod = entityFactoryCollectionType.GetMethods().First().Name;
 
         var props = type.GetProperties();

@@ -33,7 +33,7 @@ public class PropertyInfoRapport : IPropertyInfoRapport
 
         if (IsArrayType)
         {
-            Type = Type.GetElementType();
+            Type = Type.GetElementType() ?? Type;
         }
         else if (IsLijst || IsNullable && Type.GenericTypeArguments.Length > 0)
         {
@@ -52,7 +52,7 @@ public class PropertyInfoRapport : IPropertyInfoRapport
         IsValueType = Type.IsValueType;
         IsPrimitiveTypeOrEnumOrValueType = ReflectionHelper.IsPrimitiveType(Type) || Type.IsEnum || Type.IsValueType;
 
-        TypeSimpleName = CSharpHelper.GetSimpleCsTypeByFullName(Type.FullName ?? Type.Name) ?? Type.FullName ?? Type.Name;
+        TypeSimpleName = PrimitiveTypesHelper.GetSimpleCsTypeByFullName(Type.FullName ?? Type.Name) ?? Type.FullName ?? Type.Name;
         if (IsEnum)
         {
             TypeSimpleName = Type.Name;

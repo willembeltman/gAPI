@@ -509,8 +509,7 @@ public class IndexSet<T> : IIndexSet<T>
         }
         else if (KeyType == typeof(Guid))
         {
-            indexStream.Read(idGuidBuffer, 0, 16);
-            tempId = new Guid(idGuidBuffer);
+            tempId = new Guid(indexReader.ReadBytes(16));
         }
         else
         {

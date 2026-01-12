@@ -13,7 +13,7 @@ internal static class MapperFactory<TEntity, TDto>
     {
         var typeIn = typeof(TEntity);
         var typeOut = typeof(TDto);
-        var className = $"{typeIn.FullName.Replace(".", "")}{typeOut.FullName.Replace(".", "")}Mapper";
+        var className = $"{typeIn.FullName!.Replace(".", "")}{typeOut.FullName!.Replace(".", "")}Mapper";
         var @namespace = "gAPI.AutoMapper.GeneratedMappers";
         var toDtoMethodName = "ToDto";
         var toEntityMethodName = "ToEntity";
@@ -24,9 +24,9 @@ internal static class MapperFactory<TEntity, TDto>
 
         var asm = CodeCompiler.Compile(code);
         var serializerType = asm.GetType(fullClassName);
-        var toDtoMethod = serializerType.GetMethod(toDtoMethodName);
-        var toEntityMethod = serializerType.GetMethod(toEntityMethodName);
-        var projectToDtosMethod = serializerType.GetMethod(projectToDtosMethodName);
+        var toDtoMethod = serializerType!.GetMethod(toDtoMethodName)!;
+        var toEntityMethod = serializerType.GetMethod(toEntityMethodName)!;
+        var projectToDtosMethod = serializerType.GetMethod(projectToDtosMethodName)!;
 
         var toDtoDelegate = (Func<TEntity, TDto, TDto>)Delegate.CreateDelegate(
             typeof(Func<TEntity, TDto, TDto>), toDtoMethod);
@@ -97,8 +97,8 @@ context.DtoNameProperties
     .Select(a => $@"
                     {a.Name} = 
                         {string.Join(" + \" \" + \r\n                        ",
-    a.ForeignEntityNameProperties
-        .Select(b => b.IsName.Format($"entity.{a.EntityForeignNavigationProperty!.Name}.{b.Name}"))
+    a.ForeignEntityNameProperties!
+        .Select(b => b.IsName!.Format($"entity.{a.EntityForeignNavigationProperty!.Name}.{b.Name}"))
 )},"))}
                 }});
         }}

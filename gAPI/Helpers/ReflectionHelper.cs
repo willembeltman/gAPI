@@ -1,9 +1,6 @@
 ﻿using gAPI.EntityFrameworkDisk;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace gAPI.Helpers;
 
@@ -110,7 +107,7 @@ public static class ReflectionHelper
     public static string GetForeignKeyAttributeName(PropertyInfo prop)
     {
         var attr2 = prop.GetCustomAttribute<ForeignKeyAttribute>();
-        return attr2.Name;
+        return attr2!.Name;
     }
     public static Type GetDbSetType(PropertyInfo prop)
     {

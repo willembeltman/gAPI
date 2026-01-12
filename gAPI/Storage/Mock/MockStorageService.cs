@@ -1,5 +1,4 @@
-﻿using gAPI.Helpers;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -31,7 +30,7 @@ public class MockStorageService : IStorageService
     {
         // Genereer een mock URL die er realistisch uitziet
         var baseUrl = Config.BaseUrl ?? "https://mock-storage.local";
-        var hash = HashHelper.GetFileKeyHash(fileKey);
+        var hash = FileKeyHashHelper.GetFileKeyHash(fileKey);
         return $"{baseUrl}/files/{hash}/{Uri.EscapeDataString(fileKey)}";
     }
 
@@ -88,7 +87,7 @@ public class MockStorageService : IStorageService
         if (!allowOverwrite && MockStorage.ContainsKey(fileKey))
             throw new Exception($"File already exists and overwrite is not allowed: {fileKey}");
 
-        var mockFileData = await StreamHelper.ProcessStreamAsync(stream, fileName, mimeType);
+        var mockFileData = await MockFileDataHelper.ProcessStreamAsync(stream, fileName, mimeType);
         MockStorage[fileKey] = mockFileData;
 
         return GenerateMockUrl(fileKey);

@@ -14,7 +14,7 @@ internal class TypeComparerInfo
         {
             IsIEnumerable = true;
             IsArray = true;
-            topType = topType.GetElementType();
+            topType = topType.GetElementType()!;
         }
         else if (topType.IsGenericType)
         {
@@ -32,7 +32,7 @@ internal class TypeComparerInfo
             topType = topType.GenericTypeArguments.Single();
         }
 
-        IsNullable = topType.FullName.StartsWith("System.Nullable`");
+        IsNullable = topType.FullName!.StartsWith("System.Nullable`");
         if (IsNullable)
         {
             topType = topType.GenericTypeArguments.Single();
@@ -48,7 +48,7 @@ internal class TypeComparerInfo
 
     public Type ElementType { get; }
     public Type TopType { get; }
-    public string FullName => ElementType.FullName;
+    public string FullName => ElementType.FullName!;
     public bool IsEnum => ElementType.IsEnum;
     public bool IsNullable { get; }
     public bool IsArray { get; }
@@ -76,7 +76,7 @@ internal class TypeComparerInfo
         return FullName;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (ReferenceEquals(this, obj))
             return true;

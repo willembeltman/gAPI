@@ -44,11 +44,11 @@ public class EntityToDtoModel
             .ToArray();
 
         ForeignEntityNameProperties = DtoNameProperties
-            .SelectMany(a => a.ForeignEntityNameProperties)
+            .SelectMany(a => a.ForeignEntityNameProperties!)
             .ToArray();
 
         MatchedDtoProperties = DtoProperties.Where(a => a.MatchedEntityProperty != null).ToArray();
-        TempName = $"{EntityType.FullName.Replace(".", "")}{DtoType.FullName.Replace(".", "")}";
+        TempName = $"{EntityType.FullName!.Replace(".", "")}{DtoType.FullName!.Replace(".", "")}";
     }
 
     public Type EntityType { get; }

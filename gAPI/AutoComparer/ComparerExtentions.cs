@@ -25,7 +25,7 @@ public static class ComparerExtentions
 
         foreach (var mapping in customCompares)
         {
-            serviceCollection.AddScoped(mapping.BaseType, mapping);
+            serviceCollection.AddScoped(mapping.BaseType!, mapping);
         }
     }
     public static void AttachComparer(this IApplicationBuilder appliationBuilder)

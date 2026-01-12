@@ -5,13 +5,9 @@ using System.Globalization;
 
 namespace gAPI.Helpers;
 
-public static class ToStringHelper
+public static class GuidToStringHelper
 {
     public static string ToString(this Guid guid, CultureInfo cultureInfo)
-    {
-        return guid.ToString();
-    }
-    public static string ToString(this Enum guid, CultureInfo cultureInfo)
     {
         return guid.ToString();
     }
