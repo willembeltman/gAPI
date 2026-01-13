@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Primitives;
+
 namespace gAPI.Interfaces;
 
 public interface IServerAuthenticationService
@@ -5,9 +7,10 @@ public interface IServerAuthenticationService
     /// <summary>
     /// Is called to see if the request is authenticated. Return true if client is authenticated, otherwise return false.
     /// </summary>
-    /// <param name="sessionId">The current sessionid, REQUIRED</param>
+    /// <param name="sessionData">The current sessionData, REQUIRED</param>
     /// <returns>If the user is logged in</returns>
-    Task<bool> InitializeAsync(string sessionId);
+    Task<bool> InitializeAsync(string sessionData);
+    //Task<StringValues> CreateSessionData();
     /// <summary>
     /// Gets a value indicating whether access to the resource is forbidden.
     /// WARNING: Throws when not initialized.
