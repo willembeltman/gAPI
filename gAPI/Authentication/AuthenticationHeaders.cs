@@ -81,5 +81,12 @@ public class AuthenticationHeaders
         UpdateCookie = true;
         return StringHelper.HashString(CookieData);
     }
+
+    public void RemoveCookie()
+    {
+        CookieData = null;
+        CookieExpires = null;
+        UpdateCookie = true;
+    }
 }
 
