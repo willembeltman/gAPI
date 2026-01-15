@@ -18,7 +18,7 @@ internal class AddAutoApiExtentionGenerator : BaseGenerator
 
     internal void GenerateCode()
     {
-        Reg("gAPI.AutoMapper");
+        Reg("Microsoft.AspNetCore.Authentication");
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("System.Reflection");
         Reg("Microsoft.AspNetCore.Builder");
@@ -27,7 +27,9 @@ internal class AddAutoApiExtentionGenerator : BaseGenerator
 
 public static class {Name}
 {{
-    public static void AddAutoApi(this IServiceCollection services, string frontendUrl, params Assembly[] assembliesToScan)
+    public static void AddAutoApi<TInterface, TImplementation>(this IServiceCollection services, string frontendUrl, params Assembly[] assembliesToScan)
+        where TInterface : class, gAPI.Interfaces.IServerAuthenticationService
+        where TImplementation : class, gAPI.Interfaces.IServerAuthenticationService, TInterface
     {{
         // JSON standaard op invariant zetten
         services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
@@ -46,20 +48,25 @@ public static class {Name}
         // Remaining services
         services.AddAutoApiServices();
 
-        // Add custom mappings from Business project
-        //services.AddCustomMappings(assembliesToScan);
-
         // Add Cors
         services.AddCors(options =>
         {{
             options.AddPolicy(""AllowSpecificOrigin"", policy =>
             {{
-                policy.WithOrigins(frontendUrl) // <-- jouw frontend
+                policy.WithOrigins(frontendUrl)
                       .AllowAnyMethod()
                       .AllowAnyHeader()
                       .AllowCredentials();
             }});
         }});
+
+        // Add gAPI server authentication 
+        services.AddScoped<TImplementation>() ;
+        services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>())   ;
+        services.AddScoped<gAPI.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
+        services.AddAuthentication(""gAPI"")
+                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Internal.Services.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
+        services.AddAuthorization();
     }}
 
     public static void MapAutoApi(this WebApplication app)
@@ -69,10 +76,13 @@ public static class {Name}
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
         }});
 
-        //app.AttachMapper();
         app.UseCors(""AllowSpecificOrigin"");
 
         app.MapControllers();
+
+        app.UseMiddleware<BSD.Core.Internal.Services.ServerAuthenticationMiddleware>();
+        app.UseAuthentication();
+        app.UseAuthorization();
     }}
 }}
 ";

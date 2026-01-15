@@ -1,32 +1,16 @@
+﻿using gAPI.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using System.Security.Claims;
 
 namespace gAPI.Interfaces;
 
 public interface IServerAuthenticationService
 {
-    /// <summary>
-    /// Is called to see if the request is authenticated. Return true if client is authenticated, otherwise return false.
-    /// </summary>
-    /// <param name="sessionData">The current sessionData, REQUIRED</param>
-    /// <returns>If the user is logged in</returns>
-    Task<bool> InitializeAsync(string sessionData);
-    //Task<StringValues> CreateSessionData();
-    /// <summary>
-    /// Gets a value indicating whether access to the resource is forbidden.
-    /// WARNING: Throws when not initialized.
-    /// </summary>
-    bool IsForbidden { get; }
-    /// <summary>
-    /// Gets the unique identifier that defines the scope for the current context.
-    /// If authentication service is not initialized, this value will be null.
-    /// WARNING: Throws when not initialized.
-    /// </summary>
+    AuthenticationHeaders Headers { get; }
     string SessionId { get; }
-    /// <summary>
-    /// Gets the unique identifier of the current user.
-    /// If authentication service is not initialized, this value will be null.
-    /// Or, if the user is not authenticated, this value will be null.
-    /// WARNING: Throws when not initialized.
-    /// </summary>
     string? UserId { get; }
+    Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, string? cookieData, StringValues sessionData, StringValues stateData);
+    Task<AuthenticationInitializeResult> ReInitializeAsync();
+    Task<ClaimsPrincipal> GetClaimsPrincipalAsync();
 }

@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -68,60 +67,4 @@ public class Generator : IIncrementalGenerator
         var sourceCode = $"#error gAPI.AutoApi: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
         CurrentSpc.AddSource("Gapi_Error.AutoApi.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
-
-    //        public void ShowWarning(string warningMessage)
-    //        {
-    //            var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-    //            CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-    //        }
-
-    //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
-    //        {
-    //            var sbEnums = new StringBuilder();
-    //            var sbDtos = new StringBuilder();
-
-    //            foreach (var @enum in dataModel.Enums)
-    //            {
-    //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            foreach (var dto in dataModel.Dtos)
-    //            {
-    //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-    //            }
-    //            var sbInterfaces = new StringBuilder();
-    //            var sbServices = new StringBuilder();
-
-    //            foreach (var @enum in dataModel.Interfaces)
-    //            {
-    //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            foreach (var dto in dataModel.Services)
-    //            {
-    //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-    //            }
-
-    //            var sb = $@"
-    //namespace GeneratorTypes
-    //{{
-    //    internal static class AllControllers
-    //    {{
-    //        internal static void ListAll()
-    //        {{
-    //            System.Console.WriteLine(""Enums:"");
-    //{sbEnums}
-    //            System.Console.WriteLine(""Dtos:"");
-    //{sbDtos}
-    //            System.Console.WriteLine(""Interfaces:"");
-    //{sbInterfaces}
-    //            System.Console.WriteLine(""Services:"");
-    //{sbServices}
-    //        }}
-    //    }}
-    //}}";
-
-
-    //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    //        }
 }

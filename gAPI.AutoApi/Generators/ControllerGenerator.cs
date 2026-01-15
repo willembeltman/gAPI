@@ -38,8 +38,7 @@ internal class ControllerGenerator : BaseGenerator
         Code += $"[ApiController]" + Environment.NewLine;
         Code += $"[Route(\"{Service.Interface.ApiName.ToLower()}\")]" + Environment.NewLine;
         Code += $"public class {Name}(" + Environment.NewLine;
-        Code += $"    {Service.Interface.Name} {Service.Name.ToCamelCase()}," + Environment.NewLine;
-        Code += $"    gAPI.Interfaces.IServerAuthenticationService auth)" + Environment.NewLine;
+        Code += $"    {Service.Interface.Name} {Service.Name.ToCamelCase()})" + Environment.NewLine;
         Code += $"    : ControllerBase" + Environment.NewLine;
         Code += $"{{" + Environment.NewLine;
         Code += methodCode;
@@ -195,12 +194,12 @@ internal class ControllerGenerator : BaseGenerator
             code += $"    {{" + Environment.NewLine;
             code += $"        if (!ModelState.IsValid) return BadRequest(ModelState);" + Environment.NewLine;
 
-            if (Service.Interface.IsAuthorized || method.IsAuthorize)
-                code += $"        if (!await auth.InitializeAsync(sessionId)) return Unauthorized();" + Environment.NewLine;
-            else
-                code += $"        await auth.InitializeAsync(sessionId);" + Environment.NewLine;
+            //if (Service.Interface.IsAuthorized || method.IsAuthorize)
+            //    code += $"        if (!await auth.InitializeAsync(sessionId)) return Unauthorized();" + Environment.NewLine;
+            //else
+            //    code += $"        await auth.InitializeAsync(sessionId);" + Environment.NewLine;
 
-            code += $"        if (auth.IsForbidden) return Forbid();" + Environment.NewLine;
+            //code += $"        if (auth.IsForbidden) return Forbid();" + Environment.NewLine;
 
             if (method.IsAsync)
             {

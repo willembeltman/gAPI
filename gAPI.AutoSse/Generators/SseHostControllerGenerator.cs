@@ -42,9 +42,6 @@ public class SseHostController(
         [FromRoute] string serviceId,
         [FromHeader] string sessionId)
     {{
-        await authenticationService.InitializeAsync(sessionId);
-        if (authenticationService.IsForbidden) return Results.Forbid();
-
         var sseHost = new {DataModel.SseHost}(
             sseHostCollection,
             fabricClient,
