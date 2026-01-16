@@ -11,6 +11,6 @@ public readonly struct UserId
 
     public override string ToString()
     {
-        return Value ?? "<null>";
+        return Value ?? "NULL";
     }
 }

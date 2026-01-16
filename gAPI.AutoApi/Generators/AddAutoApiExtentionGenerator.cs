@@ -18,6 +18,9 @@ internal class AddAutoApiExtentionGenerator : BaseGenerator
 
     internal void GenerateCode()
     {
+        Code = "";
+        return;
+
         Reg("Microsoft.AspNetCore.Authentication");
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("System.Reflection");

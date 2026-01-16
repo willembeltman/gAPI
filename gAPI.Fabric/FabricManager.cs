@@ -25,8 +25,8 @@ public class FabricManager
             $"Subscribe " +
             $"connectionId {connection.Id}: " +
             $"{serviceId} " +
-            $"(userId {userId}, " +
-            $"sessionId {sessionId})");
+            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
         Services[serviceId]
             .Subscribe(connection, userId, sessionId);
     }
@@ -36,8 +36,8 @@ public class FabricManager
             $"Unsubscribe " +
             $"connectionId {connection.Id}: " +
             $"{serviceId} " +
-            $"(userId {userId}, " +
-            $"sessionId {sessionId})");
+            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
         Services[serviceId]
             .Unsubscribe(connection, userId, sessionId);
     }
@@ -47,8 +47,8 @@ public class FabricManager
             $"Publish " +
             $"connectionId {connection.Id}: " +
             $"{serviceId} " +
-            $"(userId {userId}, " +
-            $"sessionId {sessionId})");
+            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString()!.Length))})");
         Services[serviceId]
             .Publish(sseServiceMethodId, userId,  sessionId, messageData);
     }
