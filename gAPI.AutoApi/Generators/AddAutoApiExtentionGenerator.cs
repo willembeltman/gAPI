@@ -65,8 +65,12 @@ public static class {Name}
         services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>())   ;
         services.AddScoped<gAPI.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
         services.AddAuthentication(""gAPI"")
-                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Internal.Services.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
+                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Authentication.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
         services.AddAuthorization();
+        services.AddScoped<BSD.Core.Authentication.IServerAuthenticationSecurity, BSD.Core.Authentication.ServerAuthenticationSecurity>();
+        services.AddScoped<BSD.Core.Authentication.ServerAuthenticationStateFactory>();
+        services.AddScoped<BSD.Core.Authentication.ServerAuthenticationStateMapping>();
+
     }}
 
     public static void MapAutoApi(this WebApplication app)
@@ -80,7 +84,7 @@ public static class {Name}
 
         app.MapControllers();
 
-        app.UseMiddleware<BSD.Core.Internal.Services.ServerAuthenticationMiddleware>();
+        app.UseMiddleware<BSD.Core.Authentication.ServerAuthenticationMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
     }}
