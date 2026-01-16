@@ -2,7 +2,7 @@
 using gAPI.CodeGen.Backend.Generators.Business.Interfaces;
 using gAPI.CodeGen.Backend.Generators.Business.Models;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
-using gAPI.CodeGen.Backend.Generators.Shared.ResponseDtos;
+using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
 namespace gAPI.CodeGen.Backend;
@@ -15,24 +15,14 @@ public class BackendGenerator
 
         DbContext = new DbContext(config.DbContextType);
 
+        BaseResponse = new SharedReference("gAPI.Dtos", "BaseResponse");
+        BaseResponseT = new SharedReference("gAPI.Dtos", "BaseResponseT");
+        BaseListResponseT = new SharedReference("gAPI.Dtos", "BaseListResponseT");
+
         // Dtos/State
         StateDto = new StateDtoGenerator(
             this,
             config.DtoDirectory, config.DtoNamespace);
-
-        // ResponseDtos/BaseResponse
-        BaseResponse = new BaseResponseGenerator(
-            this,
-            config.ResponseDtoDirectory, config.ResponseDtoNamespace);
-
-        // ResponseDtos/BaseResponse
-        BaseResponseT = new BaseResponseTGenerator(
-            this,
-            config.ResponseDtoDirectory, config.ResponseDtoNamespace);
-
-        BaseListResponseT = new BaseListResponseTGenerator(
-            this,
-            config.ResponseDtoDirectory, config.ResponseDtoNamespace);
 
         // Models/AuthenticationState
         AuthenticationState = new AuthenticationStateGenerator(
@@ -57,9 +47,9 @@ public class BackendGenerator
 
     public BackendConfig Config { get; }
     public DbContext DbContext { get; }
-    public BaseResponseGenerator BaseResponse { get; }
-    public BaseResponseTGenerator BaseResponseT { get; }
-    public BaseListResponseTGenerator BaseListResponseT { get; }
+    public SharedReference BaseResponse { get; }
+    public SharedReference BaseResponseT { get; }
+    public SharedReference BaseListResponseT { get; }
     public StateDtoGenerator StateDto { get; }
     public IServerAuthenticationServiceGenerator IServerAuthenticationService { get; }
     public AuthenticationStateGenerator AuthenticationState { get; }
@@ -70,15 +60,6 @@ public class BackendGenerator
     {
         // Dtos/State
         StateDto.GenerateCode();
-
-        // ResponseDtos/BaseResponse
-        BaseResponse.GenerateCode();
-
-        // ResponseDtos/BaseResponseT
-        BaseResponseT.GenerateCode();
-
-        // ResponseDtos/BaseListResponseT
-        BaseListResponseT.GenerateCode();
 
         // Interfaces/IServerAuthenticationService
         IServerAuthenticationService.GenerateCode();

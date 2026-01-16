@@ -2,8 +2,8 @@
 using gAPI.CodeGen.Backend.Generators.Business.Interfaces;
 using gAPI.CodeGen.Backend.Generators.Business.Models;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
-using gAPI.CodeGen.Backend.Generators.Shared.ResponseDtos;
 using gAPI.CodeGen.Backend.Helpers;
+using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
 namespace gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
@@ -42,8 +42,8 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
     public Entity Entity { get; }
     public IServerAuthenticationServiceGenerator IServerAuthenticationService { get; }
     public AuthenticationStateGenerator AuthenticationState { get; private set; }
-    public BaseListResponseTGenerator BaseListResponseT { get; }
-    public BaseResponseTGenerator BaseResponseT { get; }
+    public SharedReference BaseListResponseT { get; }
+    public SharedReference BaseResponseT { get; }
     public StateDtoGenerator StateDto { get; }
     public DbContext DbContext { get; }
 

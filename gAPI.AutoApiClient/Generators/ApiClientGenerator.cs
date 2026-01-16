@@ -243,7 +243,6 @@ internal class ApiClientGenerator : BaseGenerator
                     {
                         code += $"        var responseData = await response.Content.ReadFromJsonAsync<{method.ResponseType.UnderlayingTypes[0].Name}>();" + Environment.NewLine;
                     }
-                    code += $"        await clientAuthenticationService.AfterReceivedResponseIsParsedAsync(responseData!);" + Environment.NewLine;
                     code += $"        return responseData;" + Environment.NewLine;
                 }
             }

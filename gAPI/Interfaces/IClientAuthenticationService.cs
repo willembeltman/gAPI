@@ -9,5 +9,4 @@ public interface IClientAuthenticationService
     Task<HttpResponseMessage> PostAsync(string path, MultipartFormDataContent content, CancellationToken ct = default);
     Task<HttpResponseMessage> PutAsync(string path, MultipartFormDataContent content, CancellationToken ct = default);
     Task<HttpResponseMessage> DeleteAsync(string path, CancellationToken ct = default);
-    Task AfterReceivedResponseIsParsedAsync(object response, CancellationToken ct = default);
 }

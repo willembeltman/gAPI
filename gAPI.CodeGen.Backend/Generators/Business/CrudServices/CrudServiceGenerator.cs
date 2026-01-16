@@ -3,8 +3,8 @@ using gAPI.CodeGen.Backend.Generators.Business.CrudMappings;
 using gAPI.CodeGen.Backend.Generators.Business.Interfaces;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
-using gAPI.CodeGen.Backend.Generators.Shared.ResponseDtos;
 using gAPI.CodeGen.Backend.Helpers;
+using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
 namespace gAPI.CodeGen.Backend.Generators.Business.CrudServices;
@@ -48,8 +48,8 @@ public class CrudServiceGenerator : BaseGenerator
     public DbContext DbContext { get; }
     public Entity Entity { get; }
     public IServerAuthenticationServiceGenerator IServerAuthenticationService { get; }
-    public BaseListResponseTGenerator BaseListResponseT { get; }
-    public BaseResponseTGenerator BaseResponseT { get; }
+    public SharedReference BaseListResponseT { get; }
+    public SharedReference BaseResponseT { get; }
 
     public void GenerateCode()
     {

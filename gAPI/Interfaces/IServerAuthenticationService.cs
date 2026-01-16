@@ -10,7 +10,7 @@ public interface IServerAuthenticationService
 {
     string SessionId { get; }
     string? UserId { get; }
-    string CookieData { get; }
+    string? CookieData { get; }
     bool UpdateCookie { get; }
     AuthenticationInitializeResult Result { get; }
 

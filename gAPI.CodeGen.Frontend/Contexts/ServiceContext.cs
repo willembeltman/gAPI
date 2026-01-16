@@ -97,33 +97,9 @@ public class ServiceContext
             .Select(a => new SharedReference(a))
             .First();
 
-        var list = allTypes
-             .Where(t =>
-                 t.IsClass &&
-                 t.GetCustomAttribute<IsBaseResponseAttribute>() != null &&
-                 t.GetCustomAttribute<IsBaseResponseTAttribute>() == null &&
-                 t.GetCustomAttribute<IsBaseListResponseTAttribute>() == null
-             )
-             .Select(a => new SharedReference(a))
-             .ToArray();
-
-        BaseResponse = list.First();
-
-        BaseResponseT = allTypes
-            .Where(t =>
-                t.IsClass &&
-                t.GetCustomAttribute<IsBaseResponseTAttribute>() != null
-            )
-            .Select(a => new SharedReference(a))
-            .First();
-
-        BaseListResponseT = allTypes
-            .Where(t =>
-                t.IsClass &&
-                t.GetCustomAttribute<IsBaseListResponseTAttribute>() != null
-            )
-            .Select(a => new SharedReference(a))
-            .First();
+        BaseResponse = new SharedReference("gAPI.Dtos", "BaseResponse");
+        BaseResponseT = new SharedReference("gAPI.Dtos", "BaseResponseT");
+        BaseListResponseT = new SharedReference("gAPI.Dtos", "BaseListResponseT");
 
         LoaderView = allTypes
             .Where(a => a.Name == "LoaderView")

@@ -82,38 +82,9 @@ public class ServiceContext
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "Please add gAPI.AutoClient. FormFile is missing.");
 
-        BaseResponse = allSymbols
-            .Where(t =>
-                t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsBaseResponseAttribute"))
-            .Select(a => new SharedReference(a))
-            .FirstOrDefault() ?? throw new InvalidOperationException(
-                "The `BaseResponse` dto is missing or does not have the required " +
-                "`gAPI.Attributes.IsBaseResponseAttribute`. " +
-                "Ensure your shared project defines `IBaseResponse` and that it is annotated with " +
-                "`[IsBaseResponse]`, then add a reference to that shared project from the project using `gAPI.AutoComponents`.");
-
-        BaseResponseT = allSymbols
-            .Where(t =>
-                t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsBaseResponseTAttribute"))
-            .Select(a => new SharedReference(a))
-            .FirstOrDefault() ?? throw new InvalidOperationException(
-                "The `BaseResponse<T>` dto is missing or does not have the required " +
-                "`gAPI.Attributes.IsBaseResponseTAttribute`. " +
-                "Ensure your shared project defines `IBaseResponseT<T>` and that it is annotated with " +
-                "`[IsBaseResponseT]`, then add a reference to that shared project from the project using `gAPI.AutoComponents`.");
-
-        BaseListResponseT = allSymbols
-            .Where(t =>
-                t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsBaseListResponseTAttribute"))
-            .Select(a => new SharedReference(a))
-            .FirstOrDefault() ?? throw new InvalidOperationException(
-                "The `BaseListResponse<T>` dto is missing or does not have the required " +
-                "`gAPI.Attributes.IsBaseListResponseTAttribute`. " +
-                "Ensure your shared project defines `IBaseListResponseT<T>` and that it is annotated with " +
-                "`[IsBaseListResponseT]`, then add a reference to that shared project from the project using `gAPI.AutoComponents`.");
+        BaseResponse = new SharedReference("gAPI.Dtos", "BaseResponse");
+        BaseResponseT = new SharedReference("gAPI.Dtos", "BaseResponseT");
+        BaseListResponseT = new SharedReference("gAPI.Dtos", "BaseListResponseT");
 
         State = allSymbols
             .Where(t =>

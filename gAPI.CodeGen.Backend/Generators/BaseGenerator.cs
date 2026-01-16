@@ -1,14 +1,15 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
 namespace gAPI.CodeGen.Backend.Generators;
 
-public class BaseGenerator
+public class BaseGenerator : SharedReference
 {
     public DirectoryInfo? Directory { get; protected set; }
-    public string? Namespace { get; protected set; }
+    //public string? Namespace { get; protected set; }
     public string? FileName { get; protected set; }
-    public string? Name { get; protected set; }
+    //public string? Name { get; protected set; }
     public string? Code { get; protected set; }
     private List<string> Namespaces { get; set; } = [];
 
@@ -45,7 +46,7 @@ public class BaseGenerator
         if (type?.Namespace != null)
             Namespaces.Add(type.Namespace);
     }
-    public void Reg(BaseGenerator? generator)
+    public void Reg(SharedReference? generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
@@ -71,7 +72,7 @@ public class BaseGenerator
         Namespaces.RemoveAll(a => a == @namespace);
     }
 
-    public string FullName => $"{Namespace}.{Name}";
+    //public string FullName => $"{Namespace}.{Name}";
 
     public string GetNamespacesCode()
     {
