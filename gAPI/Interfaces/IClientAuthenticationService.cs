@@ -2,7 +2,7 @@
 
 public interface IClientAuthenticationService
 {
-    Guid SessionId { get; }
+    string SessionId { get; }
     Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
     Task<Stream> GetStreamAsync(string url, CancellationToken ct = default);
     Task<HttpResponseMessage> GetAsync(string path, CancellationToken ct = default);
