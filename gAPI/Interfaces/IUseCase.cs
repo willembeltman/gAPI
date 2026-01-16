@@ -16,8 +16,4 @@ public interface IUseCase<TEntity, TDto, TKey>
     Task<bool> AddAsync(TEntity entity);
     Task<bool> RemoveAsync(TEntity entity);
     Task<bool> UpdateAsync(TEntity entity, TDto dto);
-
-    //Task<TDto> ToDtoAsync(TEntity entity, TDto dto);
-    //Task<TEntity> ToEntityAsync(TDto dto, TEntity entity);
-    //IAsyncEnumerable<TDto> ProjectToDtosAsync(IQueryable<TEntity> entities, string[]? orderby, int? skip, int? take);
 }

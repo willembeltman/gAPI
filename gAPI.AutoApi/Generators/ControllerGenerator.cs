@@ -159,7 +159,8 @@ internal class ControllerGenerator : BaseGenerator
                     })
                     .ToList();
 
-            //methodArguments.Add("[FromHeader] string sessionId");
+            methodArguments.Add("[FromHeader] string sessionId");
+            //methodArguments.Add("[FromHeader] string stateData");
 
             var methodSignature = string.Join(", ", methodArguments);
             var methodCall = string.Join(", ", method.Arguments
