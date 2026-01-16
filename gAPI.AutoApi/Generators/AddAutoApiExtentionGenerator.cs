@@ -67,9 +67,6 @@ public static class {Name}
         services.AddAuthentication(""gAPI"")
                         .AddScheme<AuthenticationSchemeOptions, BSD.Core.Authentication.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
         services.AddAuthorization();
-        services.AddScoped<BSD.Core.Authentication.IServerAuthenticationSecurity, BSD.Core.Authentication.ServerAuthenticationSecurity>();
-        services.AddScoped<BSD.Core.Authentication.ServerAuthenticationStateFactory>();
-        services.AddScoped<BSD.Core.Authentication.ServerAuthenticationStateMapping>();
 
     }}
 
