@@ -5,52 +5,52 @@ using System.Linq;
 namespace gAPI.AutoApiClient.Generators;
 
 
-internal class BaseGenerator
+public class BaseGenerator : SharedReference
 {
-    public string Directory { get; protected set; }
-    public string FileName { get; protected set; }
-    public string Code { get; protected set; }
-    public string Name { get; protected set; }
-    public string Namespace { get; protected set; }
-    public string FullName => $"{Namespace}.{Name}";
+    public string Directory { get; protected set; } = string.Empty;
+    public string FileName { get; protected set; } = string.Empty;
+    public string Code { get; protected set; } = string.Empty;
+    //public string Name { get; protected set; }
+    //public string Namespace { get; protected set; }
+    //public string FullName => $"{Namespace}.{Name}";
     private List<string> Namespaces { get; set; } = new List<string>();
 
 
-    internal void Reg(string @namespace)
+    public void Reg(string @namespace)
     {
         if (@namespace != null)
             Namespaces.Add(@namespace);
     }
-    internal void RegRange(IEnumerable<string> namespaces)
+    public void RegRange(IEnumerable<string> namespaces)
     {
         if (namespaces != null)
             foreach (var @namespace in namespaces)
                 if (@namespace != null)
                     Namespaces.Add(@namespace);
     }
-    internal void Reg(Interface type)
+    public void Reg(Interface type)
     {
         if (type?.Namespace != null)
             Namespaces.Add(type.Namespace);
     }
-    internal void Reg(BaseGenerator generator)
+    public void Reg(BaseGenerator generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
     }
-    internal void Reg(SharedReference generator)
+    public void Reg(SharedReference generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
     }
 
-    internal void UnReg(string @namespace)
+    public void UnReg(string @namespace)
     {
         Namespaces.RemoveAll(a => a == @namespace);
     }
 
 
-    internal string GetNamespacesCode()
+    public string GetNamespacesCode()
     {
         if (Namespaces.Count == 0) return "";
 
@@ -66,9 +66,9 @@ internal class BaseGenerator
         {
             code += $"using {name};" + Environment.NewLine;
         }
-        return code + Environment.NewLine;
+        return code;
     }
-    internal string GetRazorNamespacesCode()
+    public string GetRazorNamespacesCode()
     {
         if (Namespaces.Count == 0) return "";
 
@@ -88,7 +88,7 @@ internal class BaseGenerator
         return code;
     }
 
-    internal static string GetFolderPath(string huidige, string target)
+    public static string GetFolderPath(string huidige, string target)
     {
         var folder = string.Empty;
         if (target.StartsWith(huidige))

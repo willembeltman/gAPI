@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36202.13
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI", "gAPI\gAPI.csproj", "{3B6F10CB-1BD9-4CCE-BB9A-2BF3DBA19881}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.Storage.Server", "gAPI.Storage.Server\gAPI.Storage.Server.csproj", "{E9A13AB9-7C0A-D46F-79DC-83C9005FD6C1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gAPI.AutoApi", "gAPI.AutoApi\gAPI.AutoApi.csproj", "{5D0BFF3D-6F84-1CDD-C056-94C31CF405EF}"
@@ -35,10 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3B6F10CB-1BD9-4CCE-BB9A-2BF3DBA19881}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B6F10CB-1BD9-4CCE-BB9A-2BF3DBA19881}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B6F10CB-1BD9-4CCE-BB9A-2BF3DBA19881}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B6F10CB-1BD9-4CCE-BB9A-2BF3DBA19881}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9A13AB9-7C0A-D46F-79DC-83C9005FD6C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E9A13AB9-7C0A-D46F-79DC-83C9005FD6C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9A13AB9-7C0A-D46F-79DC-83C9005FD6C1}.Release|Any CPU.ActiveCfg = Release|Any CPU

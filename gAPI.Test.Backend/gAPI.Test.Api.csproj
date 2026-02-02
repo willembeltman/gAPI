@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
@@ -10,11 +10,11 @@
 		<ProjectReference Include="..\gAPI.AutoApi\gAPI.AutoApi.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\gAPI.AutoHub\gAPI.AutoHub.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\gAPI.Test.Shared\gAPI.Test.Shared.csproj" />
-		<ProjectReference Include="..\gAPI\gAPI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.1" />
+		<PackageReference Include="gAPI.Core" Version="0.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

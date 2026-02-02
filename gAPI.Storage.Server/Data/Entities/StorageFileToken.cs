@@ -9,7 +9,6 @@ public class StorageFileToken
     public long StorageFileId { set; get; }
 
     public DateTime DateTime { set; get; } = DateTime.Now;
-    public string Token { get; set; } = Guid.NewGuid().ToString().Replace("-", "");
-
-    //public virtual ILazy<StorageFile> StorageFile { set; get; }
+    [StringLength(256)]
+    public string Token { get; set; } = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
 }

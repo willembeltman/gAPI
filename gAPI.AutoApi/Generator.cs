@@ -1,70 +1,34 @@
-﻿using gAPI.AutoApi.Configs;
+﻿using gAPI.AutoApi.Generators;
+using gAPI.AutoApi.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace gAPI.AutoApi;
 
-[Generator]
-public class Generator : IIncrementalGenerator
+internal static class Generator
 {
-    public SourceProductionContext CurrentSpc { get; private set; }
-
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public static void Generate(ServiceContext dataModel, SourceProductionContext spc)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autoapi.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
+        var Config = dataModel.Config;
+        var Apis = dataModel.Services
+            .Select(service => new ControllerGenerator(dataModel, service))
+            .ToArray();
 
-        var combined = context.CompilationProvider.Combine(configFile);
-
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+        foreach (var api in Apis)
         {
-            var (compilation, configText) = tuple;
+            api.GenerateCode();
+            spc.AddSource(Path.Combine(Config.Controllers_Destination.Directory, api.FileName), SourceText.From(api.Code, Encoding.UTF8));
+        }
 
-            CurrentSpc = spc;
+        var AddAutoApiServices = new AddAutoApiServicesExtentionGenerator(dataModel);
+        AddAutoApiServices.GenerateCode();
+        spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApiServices.FileName), SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
 
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
-            //#if DEBUG
-            //                    if (!Debugger.IsAttached)
-            //                    {
-            //                        Debugger.Launch(); // Triggert dialoog om te attachen
-            //                    }
-            //#endif
-
-            try
-            {
-                var config = ServerConfigParser.Parse(configText);
-                var dataModel = new ServiceContext(compilation, config);
-                ApisGenerator.Generate(dataModel, spc);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex, spc);
-                //throw;
-            }
-        });
-    }
-
-    public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
-    {
-        ShowError(exception.Message, CurrentSpc);
-    }
-
-    public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
-    {
-        //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoApi: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoApi.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var AddAutoApi = new AddAutoApiExtentionGenerator(dataModel, AddAutoApiServices);
+        AddAutoApi.GenerateCode();
+        spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApi.FileName), SourceText.From(AddAutoApi.Code, Encoding.UTF8));
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using gAPI.CodeGen.Frontend.Models.Configs;
+using System.Reflection;
 
 namespace gAPI.CodeGen.Frontend.Helpers;
 
@@ -7,14 +8,14 @@ public class TypeCollector
     private readonly HashSet<Type> Seen = new HashSet<Type>();
     private readonly HashSet<Type> Added = new HashSet<Type>();
 
-    public TypeCollector(Configs.FrontendConfig config)
+    public TypeCollector(FrontendConfig config)
     {
         Config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     public List<Type> Dtos { get; } = new List<Type>();
     public List<Type> Enums { get; } = new List<Type>();
-    public Configs.FrontendConfig Config { get; }
+    public FrontendConfig Config { get; }
 
     public void Add(Type type)
     {

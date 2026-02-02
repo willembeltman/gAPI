@@ -17,5 +17,4 @@ public class Page
     public Interface Interface { get; }
     public InterfaceMethod InterfaceMethod { get; }
     public TypeHelper ResponseType { get; }
-    public InterfaceMethodArgument[] Arguments => InterfaceMethod.Arguments;
 }

@@ -1,12 +1,11 @@
-﻿using gAPI.AutoApiClient.Contexts;
-using gAPI.AutoApiClient.Helpers;
+﻿using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class Dto
+public class Dto
 {
     public Dto(ServiceContext dataModel, INamedTypeSymbol namedTypeSymbol)
     {
@@ -62,7 +61,7 @@ internal class Dto
     public bool IsUser { get; }
     public bool IsEntryPoint { get; }
     public bool IsJunction { get; }
-    public TypeHelper JunctionLeftRealType { get; }
-    public TypeHelper JunctionRightRealType { get; }
+    public TypeHelper? JunctionLeftRealType { get; }
+    public TypeHelper? JunctionRightRealType { get; }
     public DtoProperty[] Properties { get; }
 }

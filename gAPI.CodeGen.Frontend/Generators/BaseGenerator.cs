@@ -52,7 +52,7 @@ public class BaseGenerator : IBaseGenerator
         {
             code += $"using {name};" + Environment.NewLine;
         }
-        return code + Environment.NewLine;
+        return code;
     }
     public string GetRazorNamespacesCode()
     {

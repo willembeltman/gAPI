@@ -1,10 +1,9 @@
-﻿using gAPI.Attributes;
-using gAPI.CodeGen.Backend.Generators.Business.CrudHandlers;
-using gAPI.CodeGen.Backend.Generators.Business.CrudMappings;
-using gAPI.CodeGen.Backend.Generators.Business.CrudServices;
-using gAPI.CodeGen.Backend.Generators.Business.Interfaces;
+﻿using gAPI.CodeGen.Backend.Generators.Core.CrudHandlers;
+using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
+using gAPI.CodeGen.Backend.Generators.Core.CrudServices;
 using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Models.Entities;
+using gAPI.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
@@ -14,41 +13,32 @@ public class DtoGenerator : BaseGenerator
 {
     public DtoGenerator(
         BackendGenerator context,
-        DbSet dbSet,
-        DirectoryInfo dtoDirectory, string dtoNamespace,
-        DirectoryInfo CrudHandlersDirectory, string CrudHandlersNamespace,
-        DirectoryInfo CrudMappingsDirectory, string CrudMappingsNamespace,
-        DirectoryInfo CrudServiceInterfacesDirectory, string CrudServiceInterfacesNamespace,
-        DirectoryInfo CrudServicesDirectory, string CrudServicesNamespace)
+        DbSet dbSet)
     {
+        Directory = context.Config.Shared_DtosDirectory;
+        Namespace = context.Config.Shared_DtosNamespace;
+
         Context = context;
         DbSet = dbSet;
 
-        Directory = dtoDirectory;
-        Namespace = dtoNamespace;
-
         // Generate Service Handlers
-        Handler = new CrudHandlerGenerator(
-            this,
-            CrudHandlersDirectory,
-            CrudHandlersNamespace);
+        CrudUseCase = new CrudUseCasesGenerator(
+            context,
+            this);
 
-        CustomMapping = new CrudMappingGenerator(
-            Handler,
-            CrudMappingsDirectory,
-            CrudMappingsNamespace);
+        CrudMapping = new CrudMappingGenerator(
+            context,
+            this);
 
         // Generate Service Interfaces
         ServiceInterface = new CrudServiceInterfaceGenerator(
-            CustomMapping,
-            CrudServiceInterfacesDirectory,
-            CrudServiceInterfacesNamespace);
+            context,
+            this);
 
         // Generate Services
         Service = new CrudServiceGenerator(
-            ServiceInterface,
-            CrudServicesDirectory,
-            CrudServicesNamespace);
+            context,
+            this);
 
         Name = Entity.Name;
         FileName = $"{Name}.cs";
@@ -57,34 +47,36 @@ public class DtoGenerator : BaseGenerator
     public BackendGenerator Context { get; }
     public DbSet DbSet { get; }
 
-    public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
     public Entity Entity => DbSet.Entity;
 
-    public CrudHandlerGenerator Handler { get; }
-    public CrudMappingGenerator CustomMapping { get; }
+    public CrudUseCasesGenerator CrudUseCase { get; }
+    public CrudMappingGenerator CrudMapping { get; }
     public CrudServiceInterfaceGenerator ServiceInterface { get; }
     public CrudServiceGenerator Service { get; }
 
     public void GenerateCode()
     {
         var propertiesCode = string.Empty;
+        var properties = Entity.Properties
+            .ToArray();
 
         Reg("gAPI.Attributes");
         Reg("gAPI.Interfaces");
-        if (Entity.IsStorageFile)
+        Reg("gAPI.Enums");
+        if (Entity.IsStorageFileUrlProperty)
         {
             Reg("gAPI.Storage");
         }
 
-        propertiesCode += $"namespace {Namespace};\r\n";
+        propertiesCode += $"\r\nnamespace {Namespace};\r\n";
         propertiesCode += $"\r\n";
         if (Entity.IsJunctionTable)
         {
-            var props = Entity.Properties
+            var props = properties
                 .Where(a => a.IsForeignKey)
                 .ToArray();
-            var left = props[0].ForeignKey!.NavigationDbSet!.Entity.Name;
-            var right = props[1].ForeignKey!.NavigationDbSet!.Entity.Name;
+            var left = props[0].ForeignKeyProperty!.NavigationDbSet!.Entity.Name;
+            var right = props[1].ForeignKeyProperty!.NavigationDbSet!.Entity.Name;
             propertiesCode += $"[IsJunctionTable(typeof({left}), typeof({right}))]\r\n";
         }
         if (Entity.IsAuthorize)
@@ -99,10 +91,10 @@ public class DtoGenerator : BaseGenerator
         {
             propertiesCode += $"[IsEntryPoint]\r\n";
         }
-        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.IsStorageFile ? ", IStorageFileDto" : "")}\r\n";
+        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.IsStorageFileUrlProperty ? ", IStorageFileDto" : "")}\r\n";
         propertiesCode += $"{{\r\n";
 
-        foreach (var property in Entity.Properties)
+        foreach (var property in properties)
         {
             if (property.IsHidden) continue;
             if (property.IsLijst) continue;
@@ -120,9 +112,9 @@ public class DtoGenerator : BaseGenerator
                 continue;
             }
 
-            if (property.ForeignKey != null && property.ForeignKey.NavigationDbSet != null)
+            if (property.ForeignKeyProperty != null && property.ForeignKeyProperty.NavigationDbSet != null)
             {
-                propertiesCode += $"    [IsForeignKey(typeof({property.ForeignKey.NavigationDbSet.Entity.Name}))]\r\n";
+                propertiesCode += $"    [IsForeignKey(typeof({property.ForeignKeyProperty.NavigationDbSet.Entity.Name}))]\r\n";
             }
 
             if (property.IsKey)
@@ -131,9 +123,16 @@ public class DtoGenerator : BaseGenerator
                 propertiesCode += "    [Key]\r\n";
             }
 
-            if (!Entity.IsUser && property.IsStateManaged && property.StateUserProperty != null)
+            if (property.IsStateManaged != null)
             {
-                propertiesCode += $"    [IsStateManaged(nameof({property.StateUserProperty.Entity.Name}.{property.StateUserProperty.Name}))]\r\n";
+                if (property.IsStateManaged.IsString)
+                    propertiesCode += $"    [IsStateManaged(\"{property.IsStateManaged.Name}\", {property.IsStateManaged.CheckForNull.ToString().ToLower()}, {property.IsStateManaged.UseValue.ToString().ToLower()}, {property.IsStateManaged.IsString.ToString().ToLower()})]\r\n";
+                else if (property.IsStateManaged.UseValue)
+                    propertiesCode += $"    [IsStateManaged(\"{property.IsStateManaged.Name}\", {property.IsStateManaged.CheckForNull.ToString().ToLower()}, {property.IsStateManaged.UseValue.ToString().ToLower()})]\r\n";
+                else if (property.IsStateManaged.CheckForNull)
+                    propertiesCode += $"    [IsStateManaged(\"{property.IsStateManaged.Name}\", {property.IsStateManaged.CheckForNull.ToString().ToLower()})]\r\n";
+                else
+                    propertiesCode += $"    [IsStateManaged(\"{property.IsStateManaged.Name}\")]\r\n";
             }
 
             if (!property.IsReadOnly && !property.IsNullable && property.TypeSimpleName == "string" && !property.ValidationAttributes.Any(a => a.GetType() == typeof(RequiredAttribute)))
@@ -142,14 +141,13 @@ public class DtoGenerator : BaseGenerator
                 propertiesCode += "    [Required]\r\n";
             }
 
-            if (property.IsUnique)
-            {
-                propertiesCode += "    [IsUnique]\r\n";
-            }
-
             if (property.IsReadOnly)
             {
                 propertiesCode += "    [IsReadOnly]\r\n";
+            }
+            if (property.IsImmutable)
+            {
+                propertiesCode += "    [IsImmutable]\r\n";
             }
 
             if (property.IsName != null)
@@ -217,10 +215,10 @@ public class DtoGenerator : BaseGenerator
             }
         }
 
-        if (Entity.IsStorageFile)
+        if (Entity.IsStorageFileUrlProperty)
         {
             propertiesCode += $"    [IsReadOnly]\r\n";
-            propertiesCode += $"    [IsStorageFile]\r\n";
+            propertiesCode += $"    [IsStorageFileUrlProperty]\r\n";
             propertiesCode += $"    public string? StorageFileUrl {{ get; set; }}\r\n";
         }
 
@@ -251,11 +249,8 @@ public class DtoGenerator : BaseGenerator
 
     private void DoMappings()
     {
-
-        //if (!Entity.IsUser)
-
-        Handler.GenerateCode();
-        CustomMapping.GenerateCode();
+        CrudUseCase.GenerateCode();
+        CrudMapping.GenerateCode();
         ServiceInterface.GenerateCode();
         Service.GenerateCode();
     }

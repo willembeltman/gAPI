@@ -6,10 +6,10 @@ namespace gAPI.AutoApi.Generators;
 
 internal class BaseGenerator : SharedReference
 {
-    public string Directory { get; protected set; }
-    public string FileName { get; protected set; }
-    public string Code { get; protected set; }
-    private List<string> Namespaces { get; set; } = new List<string>();
+    public string Directory { get; protected set; } = string.Empty;
+    public string FileName { get; protected set; } = string.Empty;
+    public string Code { get; protected set; } = string.Empty;
+    private List<string> Namespaces { get; set; } = [];
 
 
     internal void Reg(string @namespace)
@@ -62,7 +62,7 @@ internal class BaseGenerator : SharedReference
         {
             code += $"using {name};" + Environment.NewLine;
         }
-        return code + Environment.NewLine;
+        return code;
     }
     internal string GetRazorNamespacesCode()
     {

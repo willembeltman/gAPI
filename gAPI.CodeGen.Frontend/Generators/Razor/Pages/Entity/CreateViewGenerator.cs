@@ -79,7 +79,7 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg(CrudlType.CreateMethod.Client?.Interface);
 
         var clients = CrudlType.ForeignItemProperties
-            .Where(p => !p.IsStateManaged || CrudlType.IsUser)
+            .Where(p => !p.IsStateManaged && !p.IsReadOnly)
             .ToArray();
 
         foreach (var client in clients)
@@ -93,18 +93,9 @@ public class CreateViewGenerator : BaseGenerator
         var namePlural = name.ToMultiple();
         var nameLowerPlural = name.ToLower().ToMultiple();
 
-        var disposebleHeader = clients.Length == 0 ? "" : $@"
-@implements IAsyncDisposable
-{string.Join("\r\n", clients.Select(p => $@"@inject {p.ListMethod!.Client!.Interface.Name} {p.ListMethod!.Client!.Name}"))}";
-
-        var disposebleFooter = clients.Length == 0 ? "" : $@"
-
-    public async ValueTask DisposeAsync()
-    {{
-        {string.Join("\r\n        ", clients.Select(p => $@"if ({p.ForeignKeyType!.Name.ToMultiple()} != null) await {p.ForeignKeyType!.Name.ToMultiple()}.DisposeAsync();"))}
-    }}";
-
-        Code = $@"@page ""/{nameLowerPlural}/create""{disposebleHeader}
+        Code = $@"@page ""/{nameLowerPlural}/create""
+@implements IAsyncDisposable{string.Join("", clients.Select(p => $@"
+@inject {p.ListMethod!.Client!.Interface.Name} {p.ListMethod!.Client!.Name}"))}
 @inject {CrudlType.CreateMethod.Client!.Interface.Name} {CrudlType.CreateMethod.Client.Name}
 @inject {IClientAuthenticationService.Name} ClientAuthenticationService
 @inject IJSRuntime JS
@@ -132,12 +123,21 @@ public class CreateViewGenerator : BaseGenerator
 </AuthorizeView>
 
 @code {{
+    private CancellationTokenSource? Cts;
     private {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty!.TypeSimpleName}>? {name};{string.Join("", clients.Select(p => $@"
     private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.ForeignKeyType!.Name.ToMultiple()};"))}
 
     protected override async Task OnInitializedAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false)
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+
+        Cts = new CancellationTokenSource();
+
+        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false)
             return;
 
         {name} = new {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty.TypeSimpleName}>(
@@ -147,7 +147,7 @@ public class CreateViewGenerator : BaseGenerator
             Create: {CrudlType.CreateMethod.Client.Name}.Create,
             Read: null,
             Update: null,
-            Delete: null,{(CrudlType.IsStorageFile ? $@"
+            Delete: null,{(CrudlType.IsStorageFileUrlProperty ? $@"
             FileUpdate: {CrudlType.CreateMethod.Client.Name}.FileUpdate,
             FileDelete: null" : $@"
             FileUpdate: null,
@@ -169,7 +169,20 @@ public class CreateViewGenerator : BaseGenerator
             Delete: null
         );
         await {p.ForeignKeyType!.Name.ToMultiple()}.InitialiseAsync();"))}
-    }}{disposebleFooter}
+    }}
+
+    public async ValueTask DisposeAsync()
+    {{
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+        if ({name} != null) 
+            await {name}.DisposeAsync();{string.Join("", clients.Select(p => $@"
+        if ({p.ForeignKeyType!.Name.ToMultiple()} != null) 
+            await {p.ForeignKeyType!.Name.ToMultiple()}.DisposeAsync();"))}
+    }}
 }}";
 
         Save();

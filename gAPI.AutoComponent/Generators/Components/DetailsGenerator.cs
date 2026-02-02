@@ -10,11 +10,14 @@ public class DetailsGenerator : BaseGenerator
         ISharedReference itemDataSource,
         IBaseGenerator imports,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace) 
     {
         Dto = dto;
         ItemDataSource = itemDataSource;
         Imports = imports;
+
+        Directory = directory;
+        Namespace = @namespace;
 
         Name = $"{dto.Name}Details";
         FileName = $"{Name}.razor";
@@ -31,7 +34,7 @@ public class DetailsGenerator : BaseGenerator
         Imports.Reg(ItemDataSource);
         Imports.Reg("Microsoft.AspNetCore.Components");
 
-        if (Dto.IsStorageFile)
+        if (Dto.IsStorageFileUrlProperty)
             Imports.Reg("Microsoft.AspNetCore.Components.Forms");
 
         if (Dto.Name == null)
@@ -44,7 +47,7 @@ public class DetailsGenerator : BaseGenerator
         }
 
         var propertyMarkup = string.Join("\n", properties.Select(a => GetPropertyMarkup(a)));
-        var storageMarkup = Dto.IsStorageFile ? GetStorageFileView() : "";
+        var storageMarkup = Dto.IsStorageFileUrlProperty ? GetStorageFileView() : "";
 
         // Volledige Razor view
         Code = GetRazorNamespacesCode() + $@"@if (DataSource?.Model == null)

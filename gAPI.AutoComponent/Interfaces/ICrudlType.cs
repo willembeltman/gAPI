@@ -6,7 +6,7 @@ public interface ICrudlType : ISharedReference
 {
     bool IsUser { get; }
     bool IsAuthorized { get; }
-    bool IsStorageFile { get; }
+    bool IsStorageFileUrlProperty { get; }
     bool IsICrudEntity { get; }
     ICrudlProperty KeyProperty { get; }
     IEnumerable<ICrudlProperty> Properties { get; }

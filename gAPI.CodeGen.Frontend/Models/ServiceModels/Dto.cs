@@ -1,5 +1,4 @@
 ﻿using gAPI.Attributes;
-using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.Interfaces;
 using Microsoft.CodeAnalysis;

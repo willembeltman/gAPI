@@ -15,7 +15,7 @@ public class FormGenerator : BaseGenerator
         ISharedReference toFormFileAsyncExtention,
         IBaseGenerator imports,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace)
     {
         CrudlType = dto;
         ItemDataSource = itemDataSource;
@@ -23,7 +23,10 @@ public class FormGenerator : BaseGenerator
         Imports = imports;
         IClientAuthenticationService = iClientAuthenticationService;
         FormFile = formFile;
-        ToFormFileAsyncExtention = toFormFileAsyncExtention;
+        IsFormFileExtention = toFormFileAsyncExtention;
+
+        Directory = directory;
+        Namespace = @namespace;
 
         Name = $"{dto.Name}Form";
         FileName = $"{Name}.razor";
@@ -32,7 +35,7 @@ public class FormGenerator : BaseGenerator
     public IBaseGenerator Imports { get; }
     public ISharedReference IClientAuthenticationService { get; }
     public ISharedReference FormFile { get; }
-    public ISharedReference ToFormFileAsyncExtention { get; }
+    public ISharedReference IsFormFileExtention { get; }
     public ICrudlType CrudlType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
@@ -53,15 +56,15 @@ public class FormGenerator : BaseGenerator
         Imports.Reg(ListDataSource);
         Imports.Reg(IClientAuthenticationService);
 
-        if (CrudlType.IsStorageFile)
+        if (CrudlType.IsStorageFileUrlProperty)
         {
             Imports.Reg("Microsoft.AspNetCore.Http");
             Imports.Reg(FormFile);
-            Imports.Reg(ToFormFileAsyncExtention);
+            Imports.Reg(IsFormFileExtention);
         }
 
         var clients = CrudlType.ForeignItemProperties
-            .Where(p => !p.IsStateManaged || CrudlType.IsUser)
+            .Where(p => !p.IsStateManaged)
             .ToArray();
         foreach (var client in clients)
         {
@@ -75,11 +78,9 @@ public class FormGenerator : BaseGenerator
             Imports.Reg(p.ForeignKeyType);
         }
 
-        var storageFileMarkup = CrudlType.IsStorageFile ? GetStorageFileView() : "";
-
         var properties = CrudlType.Properties
             .Where(p =>
-                (!p.IsStateManaged || CrudlType.IsUser) &&
+                !p.IsStateManaged &&
                 !p.IsReadOnly &&
                 !p.IsForeignName &&
                 !p.IsKey)
@@ -87,110 +88,13 @@ public class FormGenerator : BaseGenerator
 
         var propertySections = string.Join("\n", properties.Select(a => GetPropertyMarkup(a)));
 
-        // Foreign dropdown parameters
-        var foreignParameters = string.Join("\n", clients.Select(p =>
-$@"    [Parameter, EditorRequired]
-    public {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType!.KeyProperty.TypeSimpleName}>? {p.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }}"));
-
         // Razor file output
         Code = $@"@if (DataSource?.Model == null)
 {{
     <text><!-- niets te renderen --></text>
 }}
 else
-{{
-    {storageFileMarkup}
-    {propertySections}
-}}
-
-@code {{
-    [Parameter, EditorRequired]
-    public {ItemDataSource.Name}<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
-
-{foreignParameters}
-}}";
-    }
-
-    private string GetPropertyMarkup(ICrudlProperty p)
-    {
-        string model = "DataSource.Model";
-        string id = p.Name.ToCamelCase();
-
-        // Foreign key dropdown
-        if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
-        {
-            var dsName = p.ForeignKeyType.Name.ToMultiple();
-            //string nullablePrefix = p.PropertyType.IsNullable ? "Nullable" : "";
-            string bindAttr = p.PropertyType.IsNullable ? "bind-NullableValue" : "bind-Value";
-            string bindTypeAttr = p.PropertyType.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
-            string valueType = p.TypeSimpleName;
-
-            return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.ForeignKeyType.Name}</label>
-        <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{model}.{p.Name}"" {bindTypeAttr}=""{valueType}""
-            @bind-ForeignName=""{model}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string""
-            DataSource=""{dsName}"" id=""{id}"" />
-    </div>";
-        }
-
-        if (p.IsNumber)
-        {
-            return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        <InputNumber @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-            id=""{id}"" class=""form-control"" />
-    </div>";
-        }
-
-        if (p.IsDateTime)
-        {
-            return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        <InputDate @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-            id=""{id}"" class=""form-control"" />
-    </div>";
-        }
-
-        if (p.IsCheckbox)
-        {
-            return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        <InputCheckbox @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-            id=""{id}"" class=""form-check-input"" />
-    </div>";
-        }
-
-        if (p.IsEnum)
-        {
-            return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        <InputSelect @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-            id=""{id}"" class=""form-select"">
-            @foreach (var value in Enum.GetValues(typeof({p.TypeDigger.FullName})).Cast<{p.TypeDigger.FullName}>())
-            {{
-                <option value=""@(value)"">@(value.ToString())</option>
-            }}
-        </InputSelect>
-    </div>";
-        }
-
-        // Default: InputText
-        return $@"
-    <div class=""mb-3"">
-        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        <InputText @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-            id=""{id}"" class=""form-control"" />
-    </div>";
-    }
-
-    private string GetStorageFileView()
-    {
-        return $@"
+{{{(CrudlType.IsStorageFileUrlProperty ? $@"
     @if (!string.IsNullOrWhiteSpace(DataSource.Model.StorageFileUrl))
     {{
         <div class=""mb-3 storageFilePreview"">
@@ -210,6 +114,127 @@ else
                 <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""DataSource.CancelFileSelected"">❌ Remove file</button>
             </div>
         }}
-    </div>";
+    </div>" : "")}
+{propertySections}
+}}
+
+@code {{
+    [Parameter, EditorRequired]
+    public {ItemDataSource.Name}<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+{string.Join("", clients.Select(p => $@"
+    [Parameter, EditorRequired]
+    public {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType!.KeyProperty.TypeSimpleName}> {p.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }} = null!;"))}
+
+    private string[] HideColumnNames = [];
+
+    [Parameter]
+    public string? HideColumns {{ get; set; }}
+
+    protected override void OnParametersSet()
+    {{
+        HideColumnNames = string.IsNullOrWhiteSpace(HideColumns)
+            ? []
+            : HideColumns.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+              );
+    }}
+}}";
     }
+
+    private string GetPropertyMarkup(ICrudlProperty p)
+    {
+        string model = "DataSource.Model";
+        string id = p.Name.ToCamelCase();
+
+        // Foreign key dropdown
+        if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
+        {
+            var dsName = p.ForeignKeyType.Name.ToMultiple();
+            //string nullablePrefix = p.PropertyType.IsNullable ? "Nullable" : "";
+            string bindAttr = p.PropertyType.IsNullable ? "bind-NullableValue" : "bind-Value";
+            string bindTypeAttr = p.PropertyType.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
+            string valueType = p.TypeSimpleName;
+
+            return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.ForeignKeyType.Name}</label>
+            <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{model}.{p.Name}"" {bindTypeAttr}=""{valueType}""
+                @bind-ForeignName=""{model}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?""
+                DataSource=""{dsName}"" id=""{id}"" />
+        </div>
+    }}";
+        }
+
+        if (p.IsNumber)
+        {
+            return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <InputNumber @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+                id=""{id}"" class=""form-control"" />
+        </div>
+    }}";
+        }
+
+        if (p.IsDateTime)
+        {
+            return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <InputDate @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+                id=""{id}"" class=""form-control"" />
+        </div>
+    }}";
+        }
+
+        if (p.IsCheckbox)
+        {
+            return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <InputCheckbox @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+                id=""{id}"" class=""form-check-input"" />
+        </div>
+    }}";
+        }
+
+        if (p.IsEnum)
+        {
+            return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <InputSelect @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+                id=""{id}"" class=""form-select"">
+                @foreach (var value in Enum.GetValues(typeof({p.TypeDigger.FullName})).Cast<{p.TypeDigger.FullName}>())
+                {{
+                    <option value=""@(value)"">@(value.ToString())</option>
+                }}
+            </InputSelect>
+        </div>
+    }}";
+        }
+
+        // Default: InputText
+        return $@"
+    @if (HideColumnNames.Contains(""{p.Name}"") == false)
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <InputText @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+                id=""{id}"" class=""form-control"" />
+        </div>
+    }}";
+    }
+
 }

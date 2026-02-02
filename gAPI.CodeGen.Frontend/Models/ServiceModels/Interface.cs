@@ -1,6 +1,5 @@
 ﻿using gAPI.Attributes;
 using gAPI.AutoComponent.Interfaces;
-using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
@@ -17,20 +16,28 @@ public class Interface : ISharedReference
         FullName = Type.FullName;
         Namespace = Type.Namespace;
 
-        ApiName = Name;
-        ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-
-
-        var apiNameAttr = type
-            .GetCustomAttribute<ApiNameAttribute>();
-        if (apiNameAttr != null)
+        Title = Name;
+        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);        
+        var generateApiAttr = type
+            .GetCustomAttribute<GenerateApiAttribute>();
+        if (generateApiAttr != null)
         {
-            ApiName = apiNameAttr.Name ?? ApiName;
+            Title = generateApiAttr.Name ?? Title;
         }
-        ApiName = ServiceNameHelper.RemoveServiceName(ApiName);
+        Title = ServiceNameHelper.RemoveServiceName(Title);
+
+        var nameAttr = type
+            .GetCustomAttribute<TitleAttribute>();
+        if (nameAttr != null)
+        {
+            Name = nameAttr.Name ?? Name;
+        }
 
         IsAuthorized = type
             .GetCustomAttribute<IsAuthorizedAttribute>() != null;
+
+        IsNotAuthorized = type
+            .GetCustomAttribute<IsNotAuthorizedAttribute>() != null;
 
         IsHidden = type
             .GetCustomAttribute<IsHiddenAttribute>() != null;
@@ -61,8 +68,9 @@ public class Interface : ISharedReference
     public string Name { get; }
     public string? FullName { get; }
     public string? Namespace { get; }
-    public string ApiName { get; }
+    public string Title { get; }
     public bool IsAuthorized { get; }
+    public bool IsNotAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
     public Client[] Clients { get; }

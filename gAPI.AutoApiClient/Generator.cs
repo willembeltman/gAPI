@@ -1,111 +1,75 @@
-﻿using gAPI.AutoApiClient.Configs;
-using gAPI.AutoApiClient.Contexts;
-using Microsoft.CodeAnalysis;
+﻿using gAPI.AutoApiClient.Generators;
+using gAPI.AutoApiClient.Models;
+using gAPI.AutoApiClient.Models.Configs;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace gAPI.AutoApiClient;
 
-[Generator]
-public class Generator : IIncrementalGenerator
+public class Generator
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public Generator(
+        ClientConfig config,
+        SharedReferences sharedReferences,
+        ServiceContext serviceContext, 
+        Microsoft.CodeAnalysis.SourceProductionContext spc)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autoapiclient.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
+        Config = config;
+        SharedReferences = sharedReferences;
+        ServiceContext = serviceContext;
+        this.spc = spc;
 
-        var combined = context.CompilationProvider.Combine(configFile);
+        FormFile = new FormFileGenerator(Config);
+        IsFormFileExtention = new IsFormFileExtentionGenerator(Config);
+        //ItemDataSource = new ItemDataSourceGenerator(Config);
+        //ListDataSource = new ListDataSourceGenerator(Config);
+        Clients = ServiceContext.Interfaces
+            .Select(service => new ApiClientGenerator(service, this, Config))
+            .ToArray();
+        AddAutoClientServices = new AddAutoClientServicesGenerator(Clients, Config);
+    }
 
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+    public ServiceContext ServiceContext { get; }
+
+    private Microsoft.CodeAnalysis.SourceProductionContext spc;
+
+    public ClientConfig Config { get; }
+    public ApiClientGenerator[] Clients { get; }
+    public AddAutoClientServicesGenerator AddAutoClientServices { get; }
+    public FormFileGenerator FormFile { get; }
+    public IsFormFileExtentionGenerator IsFormFileExtention { get; }
+    public SharedReferences SharedReferences { get;  }
+
+    internal void Generate()
+    {
+        FormFile.GenerateCode();
+        var formFileFullName = Path.Combine(Config.Helpers_Destination.Directory, FormFile.FileName);
+        spc.AddSource(formFileFullName, SourceText.From(FormFile.Code, Encoding.UTF8));
+
+        IsFormFileExtention.GenerateCode();
+        var toFormFileExtentionFullName = Path.Combine(Config.Helpers_Destination.Directory, IsFormFileExtention.FileName);
+        spc.AddSource(toFormFileExtentionFullName, SourceText.From(IsFormFileExtention.Code, Encoding.UTF8));
+
+        //ItemDataSource.GenerateCode();
+        //var itemDataSourceFullName = Path.Combine(Config.Helpers_Destination.Directory, ItemDataSource.FileName);
+        //spc.AddSource(itemDataSourceFullName, SourceText.From(ItemDataSource.Code, Encoding.UTF8));
+
+        //ListDataSource.GenerateCode();
+        //var listDataSourceFullName = Path.Combine(Config.Helpers_Destination.Directory, ListDataSource.FileName);
+        //spc.AddSource(listDataSourceFullName, SourceText.From(ListDataSource.Code, Encoding.UTF8));
+
+        foreach (var client in Clients)
         {
-            var (compilation, configText) = tuple;
+            client.GenerateCode();
+            var clientFullName = Path.Combine(Config.Clients_Destination.Directory, client.FileName);
+            spc.AddSource(clientFullName, SourceText.From(client.Code, Encoding.UTF8));
+        }
 
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
-            //#if DEBUG
-            //                if (!Debugger.IsAttached)
-            //                {
-            //                    Debugger.Launch(); // Triggert dialoog om te attachen
-            //                }
-            //#endif
-
-            try
-            {
-                var config = ClientConfigParser.Parse(configText);
-                var dataModel = new ServiceContext(compilation, config);
-                var generatedDataModel = new ApiClientsGenerator(dataModel, spc);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.ToString(), spc);
-                //throw;
-            }
-        });
+        AddAutoClientServices.GenerateCode();
+        var addAutoClientServicesFullName = Path.Combine(Config.Clients_Destination.Directory, AddAutoClientServices.FileName);
+        spc.AddSource(addAutoClientServicesFullName, SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
     }
-
-    public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
-    {
-        ShowError(exception.Message, CurrentSpc);
-    }
-
-    public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
-    {
-        //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoApiClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoApiClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-    }
-
-
-    //        private static void CreateAccessFile(SourceProductionContext spc, DataModel dataModel)
-    //        {
-    //            var sbEnums = new StringBuilder();
-    //            var sbDtos = new StringBuilder();
-
-    //            foreach (var @enum in dataModel.Enums)
-    //            {
-    //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            foreach (var dto in dataModel.Dtos)
-    //            {
-    //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-    //            }
-
-    //            var sbInterfaces = new StringBuilder();
-    //            foreach (var @enum in dataModel.Interfaces)
-    //            {
-    //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            var sb = $@"
-    //namespace gAPI.AutoApiClient
-    //{{
-    //    internal static class AccessedTypes
-    //    {{
-    //        internal static void ConsoleListAll()
-    //        {{
-    //            System.Console.WriteLine(""Enums:"");
-    //{sbEnums}
-    //            System.Console.WriteLine(""Dtos:"");
-    //{sbDtos}
-    //            System.Console.WriteLine(""Interfaces:"");
-    //{sbInterfaces}
-    //        }}
-    //    }}
-    //}}";
-
-
-    //            spc.AddSource("AccessedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    //        }
 }

@@ -21,7 +21,7 @@ internal class DtoProperty
         IsStateManaged = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStateManagedAttribute");
         IsUnique = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsUniqueAttribute");
         IsKey = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "KeyAttribute");
-        IsStorageFile = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStorageFileAttribute");
+        IsStorageFileUrlProperty = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStorageFileUrlPropertyAttribute");
     }
 
     public ServiceContext DataModel { get; }
@@ -36,10 +36,10 @@ internal class DtoProperty
     public bool IsStateManaged { get; }
     public bool IsUnique { get; }
     public bool IsKey { get; }
-    public bool IsStorageFile { get; }
-    TypeHelper _PropertyType { get; set; }
-    public TypeHelper PropertyType => _PropertyType = _PropertyType ?? new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
+    public bool IsStorageFileUrlProperty { get; }
+    TypeHelper? PropertyTypeInner { get; set; }
+    public TypeHelper PropertyType => PropertyTypeInner ??= new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
 
-    TypeDigger _TypeRapport { get; set; }
-    public TypeDigger TypeRapport => _TypeRapport = _TypeRapport ?? new TypeDigger(DataModel, ResponseTypeSymbol);
+    TypeDigger? TypeRapportInner { get; set; }
+    public TypeDigger TypeRapport => TypeRapportInner ??= new TypeDigger(DataModel, ResponseTypeSymbol);
 }

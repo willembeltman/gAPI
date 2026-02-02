@@ -13,9 +13,9 @@ public class AuthController(IOptions<LocalStorageServerConfig> config) : Control
 {
 
     [HttpPost]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public IActionResult Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        Console.WriteLine($"gAPI.Storage.Server.Controllers.AuthController / Login UserName={config.Value.Credentials.UserName} token={config.Value.SuperSecretKeyArray}");
+        //Console.WriteLine($"gAPI.Storage.Server.Controllers.AuthController / Login UserName={config.Value.Credentials.UserName} token={config.Value.SuperSecretKeyArray}");
 
         var cred = config.Value.Credentials.UserName == request.Username && config.Value.Credentials.Password == request.Password;
 

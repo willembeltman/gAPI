@@ -1,19 +1,19 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.SimpleRazorCompiler;
+using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
 public class AutoGridEditGenerator : BaseGenerator
 {
     public AutoGridEditGenerator(
+        Generator context,
         ICrudlType crudlType,
-        ISharedReference itemDataSource,
         ISharedReference listDataSource,
-        ISharedReference formFile,
-        ISharedReference toFormFileAsyncExtention,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace)
     {
+        Context = context;
         GridEditGenerator = new GridEditGenerator(
             crudlType,
             listDataSource,
@@ -24,16 +24,20 @@ public class AutoGridEditGenerator : BaseGenerator
         Name = $"Auto{crudlType.Name}GridEdit";
         FileName = $"{Name}.g.cs";
 
+        Directory = directory;
+        Namespace = @namespace;
+
         GridEditGenerator.Name = Name;
         GridEditGenerator.FileName = FileName;
     }
 
+    public Generator Context { get; }
     public GridEditGenerator GridEditGenerator { get; }
 
     public void GenerateCode()
     {
         GridEditGenerator.GenerateCode();
         var razorCode = GetRazorNamespacesCode() + "\r\n" + GridEditGenerator.Code;
-        Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace, Name);
+        Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace!, Name, Context.SharedReferences.AllComponents);
     }
 }

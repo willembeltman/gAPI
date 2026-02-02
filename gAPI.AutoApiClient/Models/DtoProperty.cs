@@ -1,13 +1,12 @@
-﻿using gAPI.AutoApiClient.Contexts;
-using gAPI.AutoApiClient.Helpers;
+﻿using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class DtoProperty
+public class DtoProperty
 {
-    internal DtoProperty(ServiceContext dataModel, Dto dto, IPropertySymbol propertySymbol)
+    public DtoProperty(ServiceContext dataModel, Dto dto, IPropertySymbol propertySymbol)
     {
         DataModel = dataModel;
         Dto = dto;
@@ -22,7 +21,7 @@ internal class DtoProperty
         IsStateManaged = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStateManagedAttribute");
         IsUnique = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsUniqueAttribute");
         IsKey = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "KeyAttribute");
-        IsStorageFile = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStorageFileAttribute");
+        IsStorageFileUrlProperty = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStorageFileUrlPropertyAttribute");
     }
 
     public ServiceContext DataModel { get; }
@@ -37,12 +36,12 @@ internal class DtoProperty
     public bool IsStateManaged { get; }
     public bool IsUnique { get; }
     public bool IsKey { get; }
-    public bool IsStorageFile { get; }
+    public bool IsStorageFileUrlProperty { get; }
 
-    TypeHelper _PropertyType { get; set; }
-    public TypeHelper Type => _PropertyType = _PropertyType ?? new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
+    TypeHelper? TypeInner { get; set; }
+    public TypeHelper Type => TypeInner = TypeInner ?? new TypeHelper(DataModel, ResponseTypeSymbol, IsNullable);
 
-    TypeDigger _TypeRapport { get; set; }
-    public TypeDigger TypeRapport => _TypeRapport = _TypeRapport ?? new TypeDigger(DataModel, ResponseTypeSymbol);
+    TypeDigger? TypeRapportInner { get; set; }
+    public TypeDigger TypeRapport => TypeRapportInner = TypeRapportInner ?? new TypeDigger(DataModel, ResponseTypeSymbol);
 
 }

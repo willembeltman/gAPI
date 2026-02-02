@@ -2,7 +2,7 @@
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class Client
+public class Client
 {
     public Client(Interface @interface, INamedTypeSymbol namedTypeSymbol)
     {

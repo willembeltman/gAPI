@@ -2,7 +2,7 @@
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class EnumChoice
+public class EnumChoice
 {
     public EnumChoice(EnumDto @enum, IFieldSymbol fieldSymbol)
     {

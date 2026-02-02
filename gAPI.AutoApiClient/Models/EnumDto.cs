@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class EnumDto
+public class EnumDto
 {
     public EnumDto(INamedTypeSymbol namedTypeSymbol)
     {

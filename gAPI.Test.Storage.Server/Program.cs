@@ -2,7 +2,7 @@ using gAPI.Storage.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.RegistrateServices();
+//builder.RegistrateServices();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

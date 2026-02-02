@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoSse.Helpers;
 using Microsoft.CodeAnalysis;
+using System.Linq;
 
 namespace gAPI.AutoSse.Models;
 
@@ -13,6 +14,8 @@ internal class InterfaceMethodArgument
 
         Name = parameterSymbol.Name;
 
+        IsPassword = parameterSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "IsPasswordAttribute");
         IsNullable =
             parameterSymbol.NullableAnnotation == NullableAnnotation.Annotated;
 
@@ -24,27 +27,14 @@ internal class InterfaceMethodArgument
     public InterfaceMethod ServiceMethod { get; }
     public IParameterSymbol ParameterSymbol { get; }
     public string Name { get; }
+    public bool IsPassword { get; }
     public bool IsNullable { get; }
     public bool IsIFormFile { get; }
     public bool IsValueType { get; }
 
-    TypeHelper _ParameterType { get; set; }
-    public TypeHelper ParameterType
-    {
-        get
-        {
-            _ParameterType = _ParameterType ?? new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
-            return _ParameterType;
-        }
-    }
+    TypeHelper? ParameterTypeInner { get; set; }
+    public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
 
-    TypeDigger _ParameterTypeRapport { get; set; }
-    public TypeDigger ParameterTypeRapport
-    {
-        get
-        {
-            _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.Type);
-            return _ParameterTypeRapport;
-        }
-    }
+    TypeDigger? ParameterTypeRapportInner { get; set; }
+    public TypeDigger ParameterTypeRapport => ParameterTypeRapportInner ??= new TypeDigger(DataModel, ParameterType.Type);
 }

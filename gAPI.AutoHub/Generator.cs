@@ -1,140 +1,80 @@
-﻿using gAPI.AutoHub.Configs;
+﻿using gAPI.AutoHub.Generators;
+using gAPI.AutoHub.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace gAPI.AutoHub;
 
-[Generator]
-public class Generator : IIncrementalGenerator
+internal class Generator
 {
-    public SourceProductionContext CurrentSpc { get; private set; }
-
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohub.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
+        var SignalRHub = new SignalRHubGenerator(dataModel);
+        SignalRHub.GenerateCode();
+        spc.AddSource(
+            Path.Combine(SignalRHub.Directory, SignalRHub.FileName), 
+            SourceText.From(SignalRHub.Code, Encoding.UTF8));
 
-        var combined = context.CompilationProvider.Combine(configFile);
+        var ClientHandlers = dataModel.Interfaces
+            .Select(@interface => new ClientHandlerGenerator(dataModel, @interface))
+            .ToArray();
 
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+        foreach (var clientHandler in ClientHandlers)
         {
-            var (compilation, configText) = tuple;
+            clientHandler.GenerateCode();
+            spc.AddSource(
+                Path.Combine(clientHandler.Directory, clientHandler.FileName),
+                SourceText.From(clientHandler.Code, Encoding.UTF8));
+        }
 
-            CurrentSpc = spc;
+        var IClientHandlerContexts = ClientHandlers
+            .Select(clientHandler => new IClientHandlerContextGenerator(dataModel, SignalRHub, clientHandler))
+            .ToArray();
+        foreach (var iClientHandlerContext in IClientHandlerContexts)
+        {
+            iClientHandlerContext.GenerateCode();
+            spc.AddSource(
+                Path.Combine(iClientHandlerContext.Directory, iClientHandlerContext.FileName), 
+                SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
+        }
 
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
+        var ClientHandlerContexts = IClientHandlerContexts
+            .Select(clientHandler => new ClientHandlerContextGenerator(dataModel, SignalRHub, clientHandler))
+            .ToArray();
 
-            //#if DEBUG
-            //                    if (!Debugger.IsAttached)
-            //                    {
-            //                        Debugger.Launch(); // Triggert dialoog om te attachen
-            //                    }
-            //#endif
+        foreach (var clientHandlerContext in ClientHandlerContexts)
+        {
+            clientHandlerContext.GenerateCode();
+            spc.AddSource(
+                Path.Combine(clientHandlerContext.Directory, clientHandlerContext.FileName), 
+                SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
+        }
 
-            try
-            {
-                var config = ServerConfigParser.Parse(configText);
-                var dataModel = new ServiceContext(compilation, config);
-                HubsGenerator.Generate(dataModel, spc);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.ToString(), spc);
-                //throw;
-            }
+        var ISignalRContext = new ISignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts);
+        ISignalRContext.GenerateCode();
+        spc.AddSource(
+            Path.Combine(ISignalRContext.Directory, ISignalRContext.FileName),
+            SourceText.From(ISignalRContext.Code, Encoding.UTF8));
 
-        });
+        var SignalRContext = new SignalRContextGenerator(dataModel, SignalRHub, ClientHandlerContexts, ISignalRContext);
+        SignalRContext.GenerateCode();
+        spc.AddSource(
+            Path.Combine(SignalRContext.Directory, SignalRContext.FileName),
+            SourceText.From(SignalRContext.Code, Encoding.UTF8));
+
+        var AddAutoHub = new AddAutoHubExtentionGenerator(dataModel, SignalRHub);
+        AddAutoHub.GenerateCode();
+        spc.AddSource(
+            Path.Combine(AddAutoHub.Directory, AddAutoHub.FileName),
+            SourceText.From(AddAutoHub.Code, Encoding.UTF8));
+
+        var AddAutoHubServices = new AddAutoHubServicesExtentionGenerator(dataModel, SignalRHub, ClientHandlers, ClientHandlerContexts, ISignalRContext, SignalRContext);
+        AddAutoHubServices.GenerateCode();
+        spc.AddSource(
+            Path.Combine(AddAutoHubServices.Directory, AddAutoHubServices.FileName),
+            SourceText.From(AddAutoHubServices.Code, Encoding.UTF8));
     }
-
-    public void ShowError(Exception exception, SourceProductionContext CurrentSpc)
-    {
-        ShowError(exception.Message, CurrentSpc);
-    }
-
-    public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
-    {
-        //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoHub: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoHub.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-    }
-
-    //public void ShowError(Exception exception)
-    //{
-    //    ShowError(exception.Message);
-    //}
-
-    //public void ShowError(string errorMessage)
-    //{
-    //    //throw new Exception(errorMessage); // Helps while debugging
-    //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-    //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-    //}
-
-    //public void ShowWarning(string warningMessage)
-    //{
-    //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
-    //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
-    //}
-
-    //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
-    //        {
-    //            var sbEnums = new StringBuilder();
-    //            var sbDtos = new StringBuilder();
-
-    //            foreach (var @enum in dataModel.Enums)
-    //            {
-    //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            foreach (var dto in dataModel.Dtos)
-    //            {
-    //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-    //            }
-    //            var sbInterfaces = new StringBuilder();
-    //            var sbServices = new StringBuilder();
-
-    //            foreach (var @enum in dataModel.Interfaces)
-    //            {
-    //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
-    //            }
-
-    //            foreach (var dto in dataModel.ClientHandlers)
-    //            {
-    //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
-    //            }
-
-    //            var sb = $@"
-    //namespace GeneratorTypes
-    //{{
-    //    internal static class AllControllers
-    //    {{
-    //        internal static void ListAll()
-    //        {{
-    //            System.Console.WriteLine(""Enums:"");
-    //{sbEnums}
-    //            System.Console.WriteLine(""Dtos:"");
-    //{sbDtos}
-    //            System.Console.WriteLine(""Interfaces:"");
-    //{sbInterfaces}
-    //            System.Console.WriteLine(""Services:"");
-    //{sbServices}
-    //        }}
-    //    }}
-    //}}";
-
-
-    //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    //        }
 }

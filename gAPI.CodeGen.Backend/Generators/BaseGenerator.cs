@@ -1,6 +1,7 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
+using System.Text;
 
 namespace gAPI.CodeGen.Backend.Generators;
 
@@ -89,7 +90,7 @@ public class BaseGenerator : SharedReference
         {
             code += $"using {name};" + Environment.NewLine;
         }
-        return code + Environment.NewLine;
+        return code;
     }
     public string GetRazorNamespacesCode()
     {
@@ -112,6 +113,7 @@ public class BaseGenerator : SharedReference
 
     public void Save(bool overwrite = true)
     {
+        //overwrite = true;
         //Console.WriteLine(Code);
 
         if (Directory == null || string.IsNullOrWhiteSpace(FileName) || Code == null)
@@ -129,7 +131,7 @@ public class BaseGenerator : SharedReference
             {
                 fileInfo.Directory.Create();
             }
-            File.WriteAllText(filePath, Code);
+            File.WriteAllText(filePath, Code, Encoding.UTF8);
         }
     }
     public static string GetFolderPath(string huidige, string target)

@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 
 		<Version>0.0.1-alpha</Version>
 		<Authors>Willem Beltman</Authors>
@@ -20,7 +21,6 @@
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Nullable>enable</Nullable>
 
 		<!-- Critical for analyzers -->
 		<DevelopmentDependency>true</DevelopmentDependency>

@@ -7,10 +7,10 @@ namespace gAPI.AutoSseClient.Generators;
 
 internal class BaseGenerator : SharedReference
 {
-    public string Directory { get; protected set; }
-    public string FileName { get; protected set; }
-    public string Code { get; protected set; }
-    private List<string> Namespaces { get; set; } = new List<string>();
+    public string Directory { get; protected set; } = string.Empty;
+    public string FileName { get; protected set; } = string.Empty;
+    public string Code { get; protected set; } = string.Empty;
+    private List<string> Namespaces { get; set; } = [];
 
 
     internal void Reg(string @namespace)
@@ -51,12 +51,11 @@ internal class BaseGenerator : SharedReference
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
             .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System" && a != Namespace)
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)
@@ -69,12 +68,11 @@ internal class BaseGenerator : SharedReference
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
         .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System")
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)

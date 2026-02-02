@@ -1,11 +1,10 @@
-﻿using gAPI.AutoApiClient.Contexts;
-using gAPI.AutoApiClient.Models;
+﻿using gAPI.AutoApiClient.Models;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Helpers;
 
-internal class TypeDigger
+public class TypeDigger
 {
     public TypeDigger(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
     {
@@ -25,10 +24,10 @@ internal class TypeDigger
         (Dto, Enum) = FindDtoOrEnum(dataModel, FullName);
     }
 
-    private (Dto Dto, EnumDto Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
+    private (Dto? Dto, EnumDto? Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
     {
-        Dto foundDto = null;
-        EnumDto foundEnum = null;
+        Dto? foundDto = null;
+        EnumDto? foundEnum = null;
         foreach (var dto in dataModel.Dtos)
         {
             if (dto.FullName == fullName)
@@ -73,7 +72,7 @@ internal class TypeDigger
     }
     private bool IsArrayType(ITypeSymbol resolved, out IArrayTypeSymbol arrayTypeSymbol)
     {
-        arrayTypeSymbol = null;
+        arrayTypeSymbol = null!;
         if (resolved is IArrayTypeSymbol arr)
         {
             arrayTypeSymbol = arr;
@@ -127,8 +126,8 @@ internal class TypeDigger
     }
 
 
-    public Dto Dto { get; }
-    public EnumDto Enum { get; }
+    public Dto? Dto { get; }
+    public EnumDto? Enum { get; }
     public ITypeSymbol StartTypeSymbol { get; }
     public TypeHelper StartType { get; }
     public ServiceContext DataModel { get; }

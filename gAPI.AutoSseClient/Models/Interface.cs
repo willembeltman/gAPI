@@ -15,9 +15,22 @@ internal class Interface
         FullName = NamedTypeSymbol.ToDisplayString();
         Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
 
-        ApiName = Name;
-        ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-        //ApiName = ServiceNameHelper.RemoveClientHandlerName(ApiName);
+        Title = Name;
+        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);
+        var GenerateHubAttribute = NamedTypeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "GenerateHubAttribute");
+        if (GenerateHubAttribute != null)
+        {
+            Title = GenerateHubAttribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? Title;
+        }
+        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);
+
+        var nameAttr = NamedTypeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "TitleAttribute");
+        if (nameAttr != null)
+        {
+            Title = nameAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? Title;
+        }
 
         IsAuthorized = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
@@ -45,7 +58,7 @@ internal class Interface
     public string Name { get; }
     public string FullName { get; }
     public string Namespace { get; }
-    public string ApiName { get; }
+    public string Title { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }

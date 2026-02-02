@@ -1,12 +1,12 @@
-﻿using gAPI.AutoApiClient.Contexts;
-using gAPI.AutoApiClient.Helpers;
+﻿using gAPI.AutoApiClient.Helpers;
 using Microsoft.CodeAnalysis;
+using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
 
-internal class InterfaceMethodArgument
+public class InterfaceMethodArgument
 {
-    internal InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
+    public InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
     {
         DataModel = dataModel;
         ServiceMethod = serviceMethod;
@@ -14,13 +14,12 @@ internal class InterfaceMethodArgument
 
         Name = parameterSymbol.Name;
 
+        IsPassword = parameterSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "IsPasswordAttribute");
         IsNullable =
             parameterSymbol.NullableAnnotation == NullableAnnotation.Annotated;
 
         IsIFormFile = ParameterSymbol.Type.Name == "IFormFile";
-        if (IsIFormFile)
-        {
-        }
         IsValueType = parameterSymbol.Type.IsValueType;
     }
 
@@ -28,27 +27,14 @@ internal class InterfaceMethodArgument
     public InterfaceMethod ServiceMethod { get; }
     public IParameterSymbol ParameterSymbol { get; }
     public string Name { get; }
+    public bool IsPassword { get; }
     public bool IsNullable { get; }
     public bool IsIFormFile { get; }
     public bool IsValueType { get; }
 
-    TypeHelper _ParameterType { get; set; }
-    public TypeHelper ParameterType
-    {
-        get
-        {
-            _ParameterType = _ParameterType ?? new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
-            return _ParameterType;
-        }
-    }
+    TypeHelper? ParameterTypeInner { get; set; }
+    public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
 
-    TypeDigger _ParameterTypeRapport { get; set; }
-    public TypeDigger ParameterTypeRapport
-    {
-        get
-        {
-            _ParameterTypeRapport = _ParameterTypeRapport ?? new TypeDigger(DataModel, ParameterType.TypeSymbol, IsNullable);
-            return _ParameterTypeRapport;
-        }
-    }
+    TypeDigger? ParameterTypeRapportInner { get; set; }
+    public TypeDigger ParameterTypeRapport => ParameterTypeRapportInner ??= new TypeDigger(DataModel, ParameterType.TypeSymbol, IsNullable);
 }

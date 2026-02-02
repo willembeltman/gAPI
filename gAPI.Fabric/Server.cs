@@ -12,6 +12,19 @@ public sealed class Server(int port) : IAsyncDisposable
     public async Task StartAsync()
     {
         Listener.Start();
+
+        Console.WriteLine("###############################################");
+        Console.WriteLine("##                                           ##");
+        Console.WriteLine("## #####   ###   ######  ######   ##   ####  ##");
+        Console.WriteLine("## ##     ## ##  ##   ## ##   ##  ##  ##  ## ##");
+        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
+        Console.WriteLine("## ####  ####### ######  #####    ##  ##     ##");
+        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
+        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##  ## ##");
+        Console.WriteLine("## ##    ##   ## ######  ##   ##  ##   ####  ##");
+        Console.WriteLine("##                                           ##");
+        Console.WriteLine("###############################################");
+
         while (!ListenerCts.IsCancellationRequested)
         {
             var tcpClient = await Listener.AcceptTcpClientAsync(ListenerCts.Token);

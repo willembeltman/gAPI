@@ -23,8 +23,8 @@ public class CrudlProperty : ICrudlProperty
     public bool IsReadOnly => DtoProperty.IsReadOnly;
     public bool IsForeignName => DtoProperty.IsForeignName;
     public bool IsStateManaged => DtoProperty.IsStateManaged;
-    public bool IsUnique => DtoProperty.IsUnique;
-    public bool IsStorageFile => DtoProperty.IsStorageFile;
+    public bool IsImmutable => DtoProperty.IsImmutable;
+    public bool IsStorageFileUrlProperty => DtoProperty.IsStorageFileUrlProperty;
     public bool IsKey => DtoProperty.IsKey;
     public bool IsName => DtoProperty.IsName;
 

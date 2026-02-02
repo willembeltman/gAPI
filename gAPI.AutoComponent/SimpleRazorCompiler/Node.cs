@@ -53,6 +53,7 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
                     }
                     else
                     {
+                        var startDebug = position;
                         var spaceIndex = markup.IndexOf(" ", position);
                         (int endIndex, EndTypeEnum endType) = FindEnd(markup, position);
                         var name = string.Empty;
@@ -76,6 +77,10 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
                                 break;
                             }
                             else throw new Exception("");
+                        }
+                        else if (spaceIndex == -1)
+                        {
+                            spaceIndex = endIndex;
                         }
 
                         name = markup.Substring(position, spaceIndex - position);

@@ -1,4 +1,4 @@
-﻿using gAPI.AutoHub.Configs;
+﻿using gAPI.AutoHub.Models.Configs;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;

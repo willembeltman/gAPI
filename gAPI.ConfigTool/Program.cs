@@ -1,13 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
 if (args.Length != 2)
 {
-    Console.Error.WriteLine("Usage: dotnet gapi-config <template.json> <appsettings.json>");
+    Console.WriteLine("Usage: dotnet gapi-config <template.json> <appsettings.json>");
     return;
 }
 
@@ -16,7 +15,7 @@ var targetPath = args[1];
 
 if (!File.Exists(templatePath) || !File.Exists(targetPath))
 {
-    Console.Error.WriteLine("Template or target file not found.");
+    Console.WriteLine("Template or target file not found.");
     return;
 }
 

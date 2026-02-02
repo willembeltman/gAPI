@@ -1,5 +1,4 @@
 ﻿using gAPI.Attributes;
-using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
@@ -24,10 +23,10 @@ public class DtoProperty
         IsForeignNameAttribute = propertyInfo.GetCustomAttribute<IsForeignNameAttribute>();
         IsStateManagedAttribute = propertyInfo.GetCustomAttribute<IsStateManagedAttribute>();
         IsNameAttribute = propertyInfo.GetCustomAttribute<IsNameAttribute>();
+        IsImmutable = propertyInfo.GetCustomAttribute<IsImmutableAttribute>() != null;
         IsReadOnly = propertyInfo.GetCustomAttribute<IsReadOnlyAttribute>() != null;
-        IsUnique = propertyInfo.GetCustomAttribute<IsUniqueAttribute>() != null;
         IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>() != null;
-        IsStorageFile = propertyInfo.GetCustomAttribute<IsStorageFileAttribute>() != null;
+        IsStorageFileUrlProperty = propertyInfo.GetCustomAttribute<IsStorageFileUrlPropertyAttribute>() != null;
     }
 
     public ServiceContext DataModel { get; }
@@ -44,11 +43,11 @@ public class DtoProperty
 
     public bool IsForeignName => IsForeignNameAttribute != null;
     public bool IsStateManaged => IsStateManagedAttribute != null;
+    public bool IsImmutable { get; }
     public bool IsName => IsNameAttribute != null;
     public bool IsReadOnly { get; }
-    public bool IsUnique { get; }
     public bool IsKey { get; }
-    public bool IsStorageFile { get; }
+    public bool IsStorageFileUrlProperty { get; }
 
     TypeHelper? _PropertyType { get; set; }
     public TypeHelper PropertyType => _PropertyType = _PropertyType ?? new TypeHelper(RealResponseType, IsNullable);

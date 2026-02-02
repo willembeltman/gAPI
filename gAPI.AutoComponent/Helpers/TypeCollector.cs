@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using gAPI.AutoComponent.Models.Configs;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,7 +44,7 @@ public class TypeCollector
     private readonly HashSet<ITypeSymbol> Seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
     private readonly HashSet<ITypeSymbol> Added = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
 
-    public TypeCollector(Configs.ClientConfig config)
+    public TypeCollector(ComponentConfig config)
     {
         Config = config;
     }
@@ -51,7 +52,7 @@ public class TypeCollector
     public List<INamedTypeSymbol> Dtos { get; } = new List<INamedTypeSymbol>();
     public List<INamedTypeSymbol> Enums { get; } = new List<INamedTypeSymbol>();
     //public List<INamedTypeSymbol> Services { get; } = new List<INamedTypeSymbol>();
-    public Configs.ClientConfig Config { get; }
+    public ComponentConfig Config { get; }
 
     public void Add(ITypeSymbol type)
     {

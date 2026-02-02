@@ -16,18 +16,27 @@ public class Interface : ISharedReference
         FullName = NamedTypeSymbol.ToDisplayString();
         Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
 
-        ApiName = Name;
-        ApiName = ServiceNameHelper.RemoveInterfacePrefix(ApiName);
-        var apiNameAttr = NamedTypeSymbol.GetAttributes()
-            .FirstOrDefault(a => a.AttributeClass?.Name == "ApiNameAttribute");
-        if (apiNameAttr != null)
+        Title = Name;
+        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);
+        var generateApiAttr = NamedTypeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "GenerateApiAttribute");
+        if (generateApiAttr != null)
         {
-            ApiName = apiNameAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? ApiName;
+            Title = generateApiAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? Title;
         }
-        ApiName = ServiceNameHelper.RemoveServiceName(ApiName);
+        Title = ServiceNameHelper.RemoveServiceName(Title);
+
+        var nameAttr = NamedTypeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "TitleAttribute");
+        if (nameAttr != null)
+        {
+            Title = nameAttr.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? Title;
+        }
 
         IsAuthorized = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
+        IsNotAuthorized = NamedTypeSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "IsNotAuthorizedAttribute");
 
         IsHidden = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
@@ -52,8 +61,9 @@ public class Interface : ISharedReference
     public string Name { get; }
     public string FullName { get; }
     public string Namespace { get; }
-    public string ApiName { get; }
+    public string Title { get; }
     public bool IsAuthorized { get; }
+    public bool IsNotAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
     public Client Client { get; }

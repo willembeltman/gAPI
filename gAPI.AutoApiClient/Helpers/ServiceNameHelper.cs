@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoApiClient.Helpers;
 
-internal static class ServiceNameHelper
+public static class ServiceNameHelper
 {
     static string ServiceNameEnd = "Service";
     public static string RemoveInterfacePrefix(string apiName)

@@ -10,11 +10,14 @@ public class DropDownGenerator : BaseGenerator
         ISharedReference listDataSource,
         IBaseGenerator imports,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace) 
     {
         CrudlType = crudlType;
         ListDataSource = listDataSource;
         Imports = imports;
+
+        Directory = directory;
+        Namespace = @namespace;
 
         Name = $"{crudlType.Name}DropDown";
         FileName = $"{Name}.razor";
@@ -90,14 +93,17 @@ else
     [Parameter] public {CrudlType.KeyProperty.TypeSimpleName} Value {{ get; set; }}
     [Parameter] public EventCallback<{CrudlType.KeyProperty.TypeSimpleName}> ValueChanged {{ get; set; }}
     [Parameter] public string? bindtype_Value {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudlType.KeyProperty.TypeSimpleName}>>? ValueExpression {{ get; set; }}
 
     [Parameter] public {CrudlType.KeyProperty.TypeSimpleName}? NullableValue {{ get; set; }}
     [Parameter] public EventCallback<{CrudlType.KeyProperty.TypeSimpleName}?> NullableValueChanged {{ get; set; }}
     [Parameter] public string? bindtype_NullableValue {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudlType.KeyProperty.TypeSimpleName}>>? NullableValueExpression {{ get; set; }}
 
     [Parameter] public string? ForeignName {{ get; set; }}
     [Parameter] public EventCallback<string?> ForeignNameChanged {{ get; set; }}
     [Parameter] public string? bindtype_ForeignName {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<string?>>? ForeignNameExpression {{ get; set; }}
 
     [Parameter] public string? Id {{ get; set; }} = $""{CrudlType.Name.ToLower()}Dropdown_{{Guid.NewGuid()}}""; 
 

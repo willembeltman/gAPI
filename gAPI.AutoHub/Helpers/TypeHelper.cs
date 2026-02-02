@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using gAPI.AutoHub.Models;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
@@ -6,17 +7,17 @@ namespace gAPI.AutoHub.Helpers;
 
 internal class TypeHelper
 {
-    public TypeHelper(ServiceContext dataModel, Type type) { }
-    public TypeHelper(ServiceContext dataModel, ITypeSymbol type, bool isNullable = false) // Hier komt hij dus binnen met long?, wat eigenlijk Nullable<T> is, met daarin een long.
+    public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false) 
     {
-        Type = type;
+        Type = typeSymbol;
         DataModel = dataModel;
         IsNullable = isNullable;
 
         var nullable = "";
         var nulleblePrimitive = false;
+
         // Check of het een Nullable<T> is
-        while (type.OriginalDefinition is INamedTypeSymbol named &&
+        while (typeSymbol.OriginalDefinition is INamedTypeSymbol named &&
                named.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
         {
             if (named.TypeArguments[0].Name == "T")
@@ -27,45 +28,57 @@ internal class TypeHelper
             else
             {
                 nullable += "?";
-                type = named.TypeArguments[0];
+                typeSymbol = named.TypeArguments[0];
             }
         }
 
         if (nulleblePrimitive)
         {
-            _Name = type.ToDisplayString();
-            UnderlayingTypes = new TypeHelper[0];
+            NameInner = typeSymbol.ToDisplayString();
+            UnderlayingTypes = [];
         }
         else
         {
             if (isNullable && nullable.Length == 0)
                 nullable += "?";
 
-            if (type.TypeKind == TypeKind.Array && type is IArrayTypeSymbol array)
+            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol array)
             {
                 IsArray = true;
-                _Name = "";
-                _NameEnd = "[]" + nullable;
-                UnderlayingTypes = new TypeHelper[] { new TypeHelper(dataModel, array.ElementType) };
+                NameInner = "";
+                NameEnd = "[]" + nullable;
+                UnderlayingTypes = [new TypeHelper(dataModel, array.ElementType)];
             }
             else
             {
-                _Name = type.Name.Split('`').First();
-                _Name = GetSimpleCsTypeByName(_Name);
-                _NameEnd = nullable;
-                _Namespace = type.ContainingNamespace?.ToDisplayString();
+                NameInner = typeSymbol.Name.Split('`').First();
+                NameInner = GetSimpleCsTypeByName(NameInner);
+                NameEnd = nullable;
+                Namespace = typeSymbol.ContainingNamespace?.ToDisplayString();
 
-                if (type is INamedTypeSymbol namedType)
+                if (typeSymbol is INamedTypeSymbol namedType)
                 {
                     IsGenericType = namedType.IsGenericType;
-                    UnderlayingTypes = namedType.TypeArguments
-                        .Select(t => new TypeHelper(dataModel, t))
-                        .ToArray();
+                    UnderlayingTypes = [.. namedType.TypeArguments.Select(t => new TypeHelper(dataModel, t))];
                 }
                 else
                 {
-                    IsGenericType = false;
-                    UnderlayingTypes = new TypeHelper[0];
+                    UnderlayingTypes = [];
+                }
+
+                IsReferenceType = typeSymbol.IsReferenceType;
+                IsValueType = typeSymbol.IsValueType;
+
+                if (IsGenericType)
+                {
+                    IsTaskT = NameInner.StartsWith("Task");
+                    IsBaseResponseT = NameInner.StartsWith("BaseResponse");
+                    IsBaseListResponseT = NameInner.StartsWith("BaseListResponse");
+                }
+                else
+                {
+                    IsTask = NameInner.StartsWith("Task");
+                    IsBaseResponse = NameInner.StartsWith("BaseResponse");
                 }
             }
         }
@@ -74,82 +87,75 @@ internal class TypeHelper
     internal ITypeSymbol Type { get; }
     public ServiceContext DataModel { get; }
     public bool IsNullable { get; }
+    internal bool IsGenericType { get; }
+    public bool IsReferenceType { get; }
+    public bool IsValueType { get; }
+    public bool IsTask { get; }
+    public bool IsTaskT { get; }
+    public bool IsBaseResponse { get; }
+    public bool IsBaseResponseT { get; }
+    public bool IsBaseListResponseT { get; }
 
     internal string Name
     {
         get
         {
             if (IsArray)
-                return $"{UnderlayingTypes[0].Name}{_NameEnd}";
+                return $"{UnderlayingTypes[0].Name}{NameEnd}";
             if (IsGenericType)
-                return $"{_Name}<{string.Join(",", UnderlayingTypes.Select(a => a.Name))}>{_NameEnd}";
-            return $"{_Name}{_NameEnd}";
+                return $"{NameInner}<{string.Join(",", UnderlayingTypes.Select(a => a.Name))}>{NameEnd}";
+            return $"{NameInner}{NameEnd}";
         }
     }
-
     internal string FullName
     {
         get
         {
             if (!IsGenericType)
-                return _FullName;
+                return FullNameInner;
             else
-                return $"{_FullName}<{string.Join(",", UnderlayingTypes.Select(a => a.FullName))}>";
+                return $"{FullNameInner}<{string.Join(",", UnderlayingTypes.Select(a => a.FullName))}>";
         }
     }
-
     internal string[] Namespaces
     {
         get
         {
-            if (_Namespace == null)
+            if (Namespace == null)
             {
-                return UnderlayingTypes.SelectMany(a => a.Namespaces).ToArray();
+                return [.. UnderlayingTypes.SelectMany(a => a.Namespaces)];
             }
 
             if (!IsGenericType)
-                return new[] { _Namespace };
+                return [Namespace];
 
             var list = UnderlayingTypes.SelectMany(a => a.Namespaces).ToList();
-            list.Insert(0, _Namespace);
-            return list.ToArray();
+            list.Insert(0, Namespace);
+            return [.. list];
         }
     }
-
-    internal string _Name { get; }
+    internal string NameInner { get; }
     internal bool IsArray { get; }
-
-    private readonly string _NameEnd;
-
-    internal string _Namespace { get; }
-    internal string _FullName => $"{_Namespace}.{_Name}";
-    internal bool IsGenericType { get; }
+    private string? NameEnd { get; }
+    internal string? Namespace { get; }
+    internal string FullNameInner => $"{Namespace}.{NameInner}";
 
     internal TypeHelper[] UnderlayingTypes { get; }
 
     internal static string GetSimpleCsTypeByName(string name)
     {
-        switch (name)
+        return name switch
         {
-            case "Int64":
-                return "long";
-            case "Int32":
-                return "int";
-            case "String":
-                return "string";
-            case "Double":
-                return "double";
-            case "Boolean":
-                return "bool";
-            case "Guid":
-                return "Guid";
-            case "DateTime":
-                return "DateTime";
-            case "Byte":
-                return "byte";
-            default:
-                return name;
-        }
+            "Int64" => "long",
+            "Int32" => "int",
+            "String" => "string",
+            "Double" => "double",
+            "Boolean" => "bool",
+            "Guid" => "Guid",
+            "DateTime" => "DateTime",
+            "Byte" => "byte",
+            _ => name,
+        };
     }
 }
 

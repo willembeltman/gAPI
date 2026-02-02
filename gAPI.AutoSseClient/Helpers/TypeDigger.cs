@@ -21,10 +21,10 @@ internal class TypeDigger
         (Dto, Enum) = FindDtoOrEnum(dataModel, FullName);
     }
 
-    private (Dto Dto, EnumDto Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
+    private (Dto? Dto, EnumDto? Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
     {
-        Dto foundDto = null;
-        EnumDto foundEnum = null;
+        Dto? foundDto = null;
+        EnumDto? foundEnum = null;
         foreach (var dto in dataModel.Dtos)
         {
             if (dto.FullName == fullName)
@@ -69,7 +69,7 @@ internal class TypeDigger
     }
     private bool IsArrayType(ITypeSymbol resolved, out IArrayTypeSymbol arrayTypeSymbol)
     {
-        arrayTypeSymbol = null;
+        arrayTypeSymbol = null!;
         if (resolved is IArrayTypeSymbol arr)
         {
             arrayTypeSymbol = arr;
@@ -123,8 +123,8 @@ internal class TypeDigger
     }
 
 
-    public Dto Dto { get; }
-    public EnumDto Enum { get; }
+    public Dto? Dto { get; }
+    public EnumDto? Enum { get; }
     public ITypeSymbol StartType { get; }
     public ServiceContext DataModel { get; }
     public ITypeSymbol Type { get; }

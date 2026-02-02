@@ -1,0 +1,152 @@
+﻿using gAPI.AutoPage.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace gAPI.AutoPage.SimpleRazorCompiler;
+
+public static class RazorCompiler
+{
+    public static string CompileRazorToComponent(string fullRazorCode, string namespaceName, string className, ISharedReference[] specialControls)
+    {
+        if (string.IsNullOrWhiteSpace(fullRazorCode))
+            return $"namespace {namespaceName} {{ public partial class {className} : Microsoft.AspNetCore.Components.ComponentBase {{ }} }}";
+
+        // 1. Extract @code block (brace matching) and set markup to content before @code
+        string markup = fullRazorCode;
+        string codeBlockInner = "";
+        int indexOfCodeBlock = fullRazorCode.IndexOf("@code", StringComparison.Ordinal);
+        if (indexOfCodeBlock >= 0)
+        {
+            // find first '{' after @code
+            int braceStart = fullRazorCode.IndexOf('{', indexOfCodeBlock);
+            if (braceStart >= 0)
+            {
+                int pos = braceStart + 1;
+                int depth = 1;
+                while (pos < fullRazorCode.Length && depth > 0)
+                {
+                    if (fullRazorCode[pos] == '{') depth++;
+                    else if (fullRazorCode[pos] == '}') depth--;
+                    pos++;
+                }
+
+                if (depth == 0)
+                {
+                    var codeWithBraces = fullRazorCode.Substring(braceStart, pos - braceStart); // includes outer braces
+                    if (codeWithBraces.Length > 2)
+                        codeBlockInner = codeWithBraces.Substring(1, codeWithBraces.Length - 2).TrimEnd();
+                    markup = fullRazorCode.Substring(0, indexOfCodeBlock);
+                }
+                else
+                {
+                    // unmatched braces -> fallback: keep markup before @code
+                    markup = fullRazorCode.Substring(0, indexOfCodeBlock);
+                }
+            }
+            else
+            {
+                // no brace after @code -> fallback
+                markup = fullRazorCode.Substring(0, indexOfCodeBlock);
+            }
+        }
+
+        // 2. @page directives - capture namespaces (stop at '@' to avoid grabbing @implements)
+        var routes = new List<string>();
+        foreach (Match m in Regex.Matches(markup, @"^\s*@page\s+([^@\s;]+)", RegexOptions.Multiline))
+        {
+            routes.Add(m.Groups[1].Value);
+        }
+        // remove entire @page lines
+        markup = Regex.Replace(markup, @"^\s*@page\s+[^\r\n]*", "", RegexOptions.Multiline).Trim();
+
+        // 2. @using directives - capture namespaces (stop at '@' to avoid grabbing @implements)
+        var usings = new List<string>();
+        foreach (Match m in Regex.Matches(markup, @"^\s*@using\s+([^@\s;]+)", RegexOptions.Multiline))
+        {
+            usings.Add($"using {m.Groups[1].Value};");
+        }
+        // remove entire @using lines
+        markup = Regex.Replace(markup, @"^\s*@using\s+[^\r\n]*", "", RegexOptions.Multiline).Trim();
+
+        // 3. @inject directives (per regel)
+        var injects = new List<(string Type, string Name)>();
+        foreach (Match m in Regex.Matches(markup, @"^\s*@inject\s+([^\s@]+)\s+([^\s@]+)", RegexOptions.Multiline))
+        {
+            injects.Add((m.Groups[1].Value, m.Groups[2].Value));
+        }
+        markup = Regex.Replace(markup, @"^\s*@inject\s+[^\r\n]*", "", RegexOptions.Multiline).Trim();
+
+        // 4. @implements directive - zoek overal (ook als het aan een vorige token vastzit)
+        string implements = "";
+        var implMatch = Regex.Match(markup, @"@implements\s*([^\s\r\n]+)", RegexOptions.Multiline);
+        if (implMatch.Success)
+        {
+            implements = implMatch.Groups[1].Value;
+        }
+        // verwijder alle @implements occurrences (volle regel of vastgeplakt)
+        markup = Regex.Replace(markup, @"@implements\s*[^\r\n]*", "", RegexOptions.Multiline).Trim();
+
+        // 5. Maak XML-compatibele markup en genereer builder code
+        var builderStructure = new CodeNode(markup);
+        string builderCode = builderStructure.Compile(specialControls, usings);
+
+        // 6. Combineer alles tot class
+        var final = new StringBuilder();
+
+        var rows = fullRazorCode.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var row in rows)
+        {
+            final.AppendLine($"// {row}");
+        }
+        final.AppendLine();
+        final.AppendLine();
+
+
+        // deduplicate usings and append
+        var extraUsings = usings.Distinct().Where(u => !string.IsNullOrWhiteSpace(u)).ToArray();
+        if (extraUsings.Length > 0)
+            final.AppendLine(string.Join(Environment.NewLine, extraUsings));
+
+        final.AppendLine();
+        final.AppendLine("// <auto-generated />");
+        final.AppendLine("#nullable enable");
+        final.AppendLine($"namespace {namespaceName}");
+        final.AppendLine("{");
+        foreach (var route in routes)
+        {
+            final.AppendLine($"    [Route({route})]");
+        }
+        final.AppendLine($"    public partial class {className} : ComponentBase{(string.IsNullOrWhiteSpace(implements) ? "" : ", " + implements)}");
+        final.AppendLine("    {");
+
+        // Inject properties
+        final.AppendLine("#pragma warning disable CS8618");
+        foreach (var inject in injects)
+        {
+            final.AppendLine($"        [Inject] public {inject.Type} {inject.Name} {{ get; set; }}");
+        }
+        final.AppendLine("#pragma warning restore CS8618");
+
+        // Voeg @code block toe (inner content, correct ingesprongen)
+        if (!string.IsNullOrWhiteSpace(codeBlockInner))
+        {
+            var codeLines = codeBlockInner.Replace("\r\n", "\n").Split('\n');
+            foreach (var line in codeLines)
+            {
+                final.AppendLine("    " + line);
+            }
+        }
+
+        // BuildRenderTree code (builderCode wordt rechtstreeks toegevoegd)
+        final.AppendLine();
+        final.AppendLine(builderCode);
+
+        final.AppendLine("    }");
+        final.AppendLine("}");
+
+        return final.ToString();
+    }
+}

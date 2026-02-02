@@ -88,9 +88,11 @@ public class DeleteViewGenerator : BaseGenerator
 
 
         Code = $@"@page ""/{pluralName}/delete/{{id{paramRouteType}}}""
-{GetRazorNamespacesCode()}{GetRazorNamespacesCode()}{(readName == deleteName
-            ? $@"@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}"
-            : $@"@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}
+@implements IAsyncDisposable{GetRazorNamespacesCode()}{(readName == deleteName
+    ? $@"
+@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}"
+    : $@"
+@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}
 @inject {CrudlType.DeleteMethod.Client.Interface.Name} {deleteName}")}
 @inject {IClientAuthenticationService.Name} ClientAuthenticationService
 @inject IJSRuntime JS
@@ -122,11 +124,20 @@ public class DeleteViewGenerator : BaseGenerator
     [Parameter]
     public {paramType} id {{ get; set; }}
 
+    private CancellationTokenSource? Cts;
     private {ItemDataSource.Name}<{entityName}, {keyType}>? {entityName};
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false || id == null)
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+
+        Cts = new CancellationTokenSource();
+
+        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false || id == null)
         {{
             return;
         }}
@@ -140,10 +151,21 @@ public class DeleteViewGenerator : BaseGenerator
             Update: null,
             Delete: {deleteName}.Delete,
             FileUpdate: null,
-            FileDelete: {(CrudlType.IsStorageFile ? $"{deleteName}.FileDelete" : "null")}
+            FileDelete: {(CrudlType.IsStorageFileUrlProperty ? $"{deleteName}.FileDelete" : "null")}
         );
 
         await {entityName}.LoadModelAsync({idGetter});
+    }}
+
+    public async ValueTask DisposeAsync()
+    {{
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+        if ({entityName} != null) 
+            await {entityName}.DisposeAsync();
     }}
 }}";
 

@@ -102,7 +102,7 @@ public static class ReflectionHelper
     {
         return prop.PropertyType.GenericTypeArguments[0];
     }
-    public static bool IsStorageFile(Type type)
+    public static bool IsStorageFileUrlProperty(Type type)
     {
         // Checks if the type or any of its interfaces is named "IStorageFile"
         return type.GetInterfaces().Any(i => i.Name == nameof(IStorageFile));

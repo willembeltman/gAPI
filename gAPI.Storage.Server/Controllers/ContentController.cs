@@ -11,7 +11,7 @@ public class ContentController(ApplicationDbContext db) : ControllerBase
 
     // GET /Content/{*path}?token=...
     [HttpGet("{*path}")]
-    public IActionResult GetFile(string path, [FromQuery] string token)
+    public IActionResult GetFile(string path, [FromQuery] string token, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized();

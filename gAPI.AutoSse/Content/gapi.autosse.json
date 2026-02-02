@@ -18,10 +18,6 @@
     "Directory": "SseServices",
     "Namespace": "YourApp.Core.SseServices"
   },
-  "SseHostController_Destination": {
-    "Directory": "",
-    "Namespace": "YourApp.Core"
-  },
   "AddAutoSseServices_Destination": {
     "Directory": "",
     "Namespace": "YourApp.Core"

@@ -1,4 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
+using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace gAPI.CodeGen.Frontend.Helpers;
 
@@ -15,8 +17,8 @@ public class TypeHelper : ITypeHelper
         // Check of het een Nullable<T> is
         while (Nullable.GetUnderlyingType(type) != null)
         {
-            var inner = Nullable.GetUnderlyingType(type)!;
-            if (inner.IsGenericParameter)
+            var innerType = Nullable.GetUnderlyingType(type)!;
+            if (innerType.IsGenericParameter)
             {
                 nullablePrimitive = true;
                 break;
@@ -24,7 +26,7 @@ public class TypeHelper : ITypeHelper
             else
             {
                 nullableSuffix += "?";
-                type = inner;
+                type = innerType;
             }
         }
 
@@ -59,13 +61,21 @@ public class TypeHelper : ITypeHelper
                 if (type.IsGenericType)
                 {
                     IsGenericType = true;
+                    IsTaskT = type.Name.StartsWith("Task");
+                    IsBaseResponseT = type.Name.StartsWith("BaseResponseT");
+                    IsBaseListResponseT = type.Name.StartsWith("BaseListResponseT");
                     UnderlayingTypes = type.GetGenericArguments()
                         .Select(t => new TypeHelper(t))
                         .ToArray();
                 }
                 else
                 {
+                    IsString = type == typeof(string);
+                    IsValueType = type.IsValueType;
+                    IsBaseResponse = type.Name.StartsWith("BaseResponse");
                     IsEnum = type.IsEnum;
+                    IsTask = type.Name.StartsWith("Task");
+                    IsVoid = type.Name == "void";
                     IsDateTime = _Name == "DateTime";
                     IsCheckbox = _Name == "bool" || _Name == "bool?";
                     IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
@@ -126,15 +136,23 @@ public class TypeHelper : ITypeHelper
     public bool IsGuid { get; }
     public bool IsCheckbox { get; }
     public bool IsArray { get; }
+    public bool IsGenericType { get; }
+    public bool IsValueType { get; }
+    public bool IsNumber { get; }
+    public bool IsVoid { get; }
+    public bool IsTask { get; }
+    public bool IsTaskT { get; }
+    public bool IsBaseResponse { get; }
+    public bool IsBaseResponseT { get; }
+    public bool IsBaseListResponseT { get; }
+    public bool IsString { get; }
 
     private readonly string? _NameEnd;
 
     public string? Namespace { get; }
     public string _FullName => $"{Namespace}.{_Name}";
-    public bool IsGenericType { get; }
 
     public TypeHelper[] UnderlayingTypes { get; }
-    public bool IsNumber { get; set; }
 
     public static string GetSimpleCsTypeByName(string name)
     {

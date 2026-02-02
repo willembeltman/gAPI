@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace gAPI.AutoComponent.Generators;
 
-public class BaseGenerator(string directory, string @namespace) : IBaseGenerator
+public class BaseGenerator : IBaseGenerator
 {
-    public string Directory { get; set; } = directory;
-    public string Namespace { get; set; } = @namespace;
+    public string Directory { get; set; } = string.Empty;
+    public string? Namespace { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -41,30 +41,28 @@ public class BaseGenerator(string directory, string @namespace) : IBaseGenerator
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
             .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System" && a != Namespace)
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)
         {
             code += $"using {name};" + Environment.NewLine;
         }
-        return code + Environment.NewLine;
+        return code;
     }
     public string GetRazorNamespacesCode()
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
             .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System")
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)

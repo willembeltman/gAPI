@@ -14,24 +14,24 @@ namespace gAPI.Storage.Server.Controllers;
 public class StorageController(LocalStorageService storageService) : ControllerBase
 {
     [HttpPost]
-    public GetStorageFileInfoResponse GetStorageFileInfo(GetStorageFileInfoRequest model)
+    public GetStorageFileInfoResponse GetStorageFileInfo(GetStorageFileInfoRequest model, CancellationToken ct)
     {
-        return storageService.GetStorageFileUrl(model);
+        return storageService.GetStorageFileUrl(model, ct);
     }
 
     [HttpPost]
-    public SaveResponse SaveStorageFile([FromForm] SaveRequest model, IFormFile file)
+    public SaveResponse SaveStorageFile([FromForm] SaveRequest model, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
             return new SaveResponse { Success = false, Message = "No file uploaded" };
 
         var stream = file.OpenReadStream();
-        return storageService.SaveStorageFile(model, stream);
+        return storageService.SaveStorageFile(model, stream, ct);
     }
 
     [HttpPost]
-    public DeleteResponse DeleteStorageFile(DeleteRequest model)
+    public DeleteResponse DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
-        return storageService.DeleteStorageFile(model);
+        return storageService.DeleteStorageFile(model, ct);
     }
 }

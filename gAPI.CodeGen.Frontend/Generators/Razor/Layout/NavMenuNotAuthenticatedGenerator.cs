@@ -19,15 +19,28 @@ public class NavMenuNotAuthenticatedGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        Code = string.Join("\r\n\r\n", Generator.CrudlGenerators
+        Code = string.Join("\r\n\r\n", Generator.Crudls
             .Select(a => a.IndexViewGenerator)
             .Where(a => a.CrudlType.IsAuthorized == false && a.CrudlType.IsEntryPoint && a.CrudlType.ListMethod != null && a.CrudlType.IsJunction == false)
-            .Select(a => $@"
-<div class=""nav-item px-3"">
+            .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.CrudlType.Name!.ToMultiple().ToLower()}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.CrudlType.Name!.ToMultiple()}
     </NavLink>
-</div>"));
+</div>")
+            .Concat(Generator.PageIndexes
+            .Where(a => a.Pages.Any(b => b.IsAuthorized == false))
+            .Select(a => $@"<div class=""nav-item px-3"">
+    <NavLink class=""nav-link"" href=""{a.Route}"">
+        <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Title}
+    </NavLink>
+</div>"))
+            .Concat(Generator.RootPages
+            .Where(a => a.IsAuthorized == false)
+            .Select(a => $@"<div class=""nav-item px-3"">
+    <NavLink class=""nav-link"" href=""{a.Route}"">
+        <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Name}
+    </NavLink>
+</div>")));
 
         Save();
     }

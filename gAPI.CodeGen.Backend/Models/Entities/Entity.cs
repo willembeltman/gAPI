@@ -4,16 +4,16 @@ using System.Reflection;
 
 namespace gAPI.CodeGen.Backend.Models.Entities;
 
-public class Entity
+public class Entity : SharedReference
 {
     public Entity(DbSet dbSet, Type type)
     {
         DbSet = dbSet;
         Type = type;
-        FullName = type.FullName ?? type.Name;
         Name = type.Name;
+        Namespace = type.Namespace;
 
-        IsStorageFile = ReflectionHelper.IsStorageFile(Type);
+        IsStorageFileUrlProperty = ReflectionHelper.IsStorageFileUrlProperty(Type);
 
         IsHidden = type
             .GetCustomAttribute<IsHiddenAttribute>() != null;
@@ -36,9 +36,7 @@ public class Entity
 
     public DbSet DbSet { get; }
     public Type Type { get; }
-    public string FullName { get; }
-    public string Name { get; }
-    public bool IsStorageFile { get; }
+    public bool IsStorageFileUrlProperty { get; }
     public bool IsHidden { get; }
     public bool IsUser { get; }
     public bool IsEntryPoint { get; }
@@ -51,11 +49,11 @@ public class Entity
             (Properties.All(a => a.IsForeignKey || a.IsNavigationItem || a.IsKey) &&
             Properties.Count(a => a.IsForeignKey) == 2);
 
-    EntityProperty[]? _StateProperties;
-    public EntityProperty[] StateProperties
-        => _StateProperties ??= Properties
-            .Where(a => a.ForeignKey != null)
-            .ToArray();
+    //EntityProperty[]? _StateProperties;
+    //public EntityProperty[] StateProperties
+    //    => _StateProperties ??= Properties
+    //        .Where(a => a.ForeignKey != null)
+    //        .ToArray();
 
     EntityProperty? _PrimaryKeyProperty;
     public EntityProperty KeyProperty
@@ -73,4 +71,6 @@ public class Entity
         => _ForeignListProperties ??= Properties
             .Where(a => a.IsHidden == false && a.IsNavigationList)
             .ToArray();
+
+    public override string ToString() => Name;
 }

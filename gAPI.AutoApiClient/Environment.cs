@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoApiClient;
 
-internal static class Environment
+public static class Environment
 {
-    internal static string NewLine { get; } = "\r\n";
+    public static string NewLine { get; } = "\r\n";
 }

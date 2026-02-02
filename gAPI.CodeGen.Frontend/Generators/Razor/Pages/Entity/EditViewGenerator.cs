@@ -90,25 +90,17 @@ public class EditViewGenerator : BaseGenerator
         }
 
         var clients = CrudlType.ForeignItemProperties
-            .Where(p => !p.IsStateManaged || CrudlType.IsUser)
+            .Where(p => !p.IsStateManaged && !p.IsReadOnly)
             .ToArray();
-
         foreach (var p in clients)
             Imports.Reg(p.ListMethod!.Client!.Interface.Namespace);
 
-        var asyncHeader = clients.Length == 0 ? @"
-" : $@" 
-@implements IAsyncDisposable
-{string.Join("", clients.Select(p => $@"@inject {p.ListMethod!.Client.Interface.Name} {p.ListMethod.Client.Name}
-"))}";
-        var asyncFoorter = clients.Length == 0 ? "" : $@"
 
-    public async ValueTask DisposeAsync()
-    {{{string.Join("", clients.Select(p => $@"
-        if ({p.ForeignKeyType!.Name.ToMultiple()} != null) await {p.ForeignKeyType.Name.ToMultiple()}.DisposeAsync();"))}
-    }}";
 
-        Code = $@"@page ""/{entityName.ToLower().ToMultiple()}/edit/{{id{paramRouteType}}}""{asyncHeader}@inject {CrudlType.UpdateMethod.Client!.Interface.Name} {CrudlType.UpdateMethod.Client.Name}
+        Code = $@"@page ""/{entityName.ToLower().ToMultiple()}/edit/{{id{paramRouteType}}}""
+@implements IAsyncDisposable{GetRazorNamespacesCode()}{string.Join("", clients.Select(p => $@"
+@inject {p.ListMethod!.Client.Interface.Name} {p.ListMethod.Client.Name}"))}
+@inject {CrudlType.UpdateMethod.Client!.Interface.Name} {CrudlType.UpdateMethod.Client.Name}
 @inject {IClientAuthenticationService.Name} ClientAuthenticationService
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -122,7 +114,9 @@ public class EditViewGenerator : BaseGenerator
             <EditForm Model=""{entityName}!.Model"" OnValidSubmit=""{entityName}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))} />
+                <{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudlType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudlType.ForeignItemProperties
+                .Where(p => p.IsImmutable)
+                .Select(p => p.Name))}""" : "")} />
                 <{ErrorView.Name} Response=""{entityName}.StatusResponse"" />
                 <button id=""save"" class=""btn btn-primary"" type=""submit"">💾 Save</button>
                 <button id=""cancel"" class=""btn btn-secondary ms-2"" @onclick=""{entityName}.Cancel"">Cancel</button>
@@ -138,12 +132,21 @@ public class EditViewGenerator : BaseGenerator
     [Parameter]
     public {paramType} id {{ get; set; }}
 
+    private CancellationTokenSource? Cts;
     private {ItemDataSource.Name}<{entityName}, {keyType}>? {entityName};{string.Join("", clients.Select(p => @$"
     private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.ForeignKeyType.Name.ToMultiple()};"))}
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false || id == null)
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+
+        Cts = new CancellationTokenSource();
+
+        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false || id == null)
         {{
             return;
         }}
@@ -156,8 +159,8 @@ public class EditViewGenerator : BaseGenerator
             Read: {CrudlType.UpdateMethod.Client.Name}.Read,
             Update: {CrudlType.UpdateMethod.Client.Name}.Update,
             Delete: {CrudlType.UpdateMethod.Client.Name}.Delete,
-            FileUpdate: {(CrudlType.IsStorageFile ? $"{CrudlType.UpdateMethod.Client.Name}.FileUpdate" : "null")},
-            FileDelete: {(CrudlType.IsStorageFile ? $"{CrudlType.UpdateMethod.Client.Name}.FileDelete" : "null")}
+            FileUpdate: {(CrudlType.IsStorageFileUrlProperty ? $"{CrudlType.UpdateMethod.Client.Name}.FileUpdate" : "null")},
+            FileDelete: {(CrudlType.IsStorageFileUrlProperty ? $"{CrudlType.UpdateMethod.Client.Name}.FileDelete" : "null")}
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 
@@ -165,7 +168,7 @@ public class EditViewGenerator : BaseGenerator
             JS,
             StateHasChanged,
             GetPrimaryKey: x => x.{p.ForeignKeyType.KeyProperty.Name},
-            List: (int? skip, int? take, string[]? orderBy) => {p.ListMethod!.Client!.Name}.List(skip, take, orderBy),
+            List: (int? skip, int? take, string[]? orderBy, CancellationToken ct) => {p.ListMethod!.Client!.Name}.List(skip, take, orderBy, ct),
             SetForeignKey: null,
             AfterSaveAction: null,
             AfterCancelAction: null,
@@ -175,7 +178,20 @@ public class EditViewGenerator : BaseGenerator
             Delete: {p.ListMethod.Client.Name}.Delete
         );
         await {p.ForeignKeyType.Name.ToMultiple()}.InitialiseAsync();"))}
-    }}{asyncFoorter}
+    }}
+
+    public async ValueTask DisposeAsync()
+    {{
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+        if ({entityName} != null) 
+            await {entityName}.DisposeAsync();{string.Join("", clients.Select(p => $@"
+        if ({p.ForeignKeyType!.Name.ToMultiple()} != null) 
+            await {p.ForeignKeyType.Name.ToMultiple()}.DisposeAsync();"))}
+    }}
 }}";
 
         Save();

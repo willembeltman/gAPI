@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.CodeGen.Frontend.Contexts;
 using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
@@ -23,13 +22,13 @@ public class CrudlType : ICrudlType
             .Select((p, index) => new CrudlProperty(this, p, index))
             .ToArray() ?? Array.Empty<CrudlProperty>();
 
-        IsStorageFile = Properties.Any(a => a.IsStorageFile);
+        IsStorageFileUrlProperty = Properties.Any(a => a.IsStorageFileUrlProperty);
     }
 
     public CrudlContext CrudlContext { get; }
     public Type ResponseType { get; }
     public CrudlMethod[] Methods { get; }
-    public bool IsStorageFile { get; }
+    public bool IsStorageFileUrlProperty { get; }
     public CrudlProperty[] Properties { get; }
 
 

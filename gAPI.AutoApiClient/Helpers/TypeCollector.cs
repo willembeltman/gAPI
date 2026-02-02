@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using gAPI.AutoApiClient.Models.Configs;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,17 +9,17 @@ public class TypeCollector
 {
     private readonly HashSet<ITypeSymbol> Seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
     private readonly HashSet<ITypeSymbol> Added = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-    internal TypeCollector(Configs.ClientConfig config)
+    public TypeCollector(ClientConfig config)
     {
         Config = config;
     }
 
-    internal List<INamedTypeSymbol> Dtos { get; } = new List<INamedTypeSymbol>();
-    internal List<INamedTypeSymbol> Enums { get; } = new List<INamedTypeSymbol>();
+    public List<INamedTypeSymbol> Dtos { get; } = new List<INamedTypeSymbol>();
+    public List<INamedTypeSymbol> Enums { get; } = new List<INamedTypeSymbol>();
     //public List<INamedTypeSymbol> Services { get; } = new List<INamedTypeSymbol>();
-    internal Configs.ClientConfig Config { get; }
+    public ClientConfig Config { get; }
 
-    internal void Add(ITypeSymbol type)
+    public void Add(ITypeSymbol type)
     {
         if (!Seen.Add(type))
             return;

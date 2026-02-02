@@ -45,7 +45,7 @@ public class CrudlType : ICrudlType
     }
     public Dto? Dto => ResponseTypeDigger.Dto;
 
-    public bool IsStorageFile => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
+    public bool IsStorageFileUrlProperty => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
     public bool IsEntryPoint => Dto?.IsEntryPoint == true;
     public bool IsJunction => Dto?.IsJunction == true;
     public bool IsUser => Dto?.IsUser == true;

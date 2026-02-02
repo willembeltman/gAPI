@@ -1,8 +1,11 @@
-﻿using gAPI.CodeGen.Frontend.Configs;
-using gAPI.CodeGen.Frontend.Contexts;
+﻿using gAPI.AutoComponent.Generators.Helpers;
+using gAPI.CodeGen.Frontend.Generators;
 using gAPI.CodeGen.Frontend.Generators.Razor;
+using gAPI.CodeGen.Frontend.Generators.Razor.Components;
 using gAPI.CodeGen.Frontend.Generators.Razor.Layout;
-using gAPI.CodeGen.Frontend.Generators.Razor.Pages;
+using gAPI.CodeGen.Frontend.Generators.Razor.Pages.Page;
+using gAPI.CodeGen.Frontend.Models;
+using gAPI.CodeGen.Frontend.Models.Configs;
 
 namespace gAPI.CodeGen.Frontend;
 
@@ -12,76 +15,84 @@ public class FrontendGenerator
         FrontendConfig clientConfig)
     {
         Config = clientConfig;
+        SharedReferences = new SharedReferences(clientConfig);
         ServiceContext = new ServiceContext(clientConfig);
-        CrudlContext = new CrudlContext(ServiceContext);
+        CrudlContext = new CrudlContext(ServiceContext, SharedReferences);
         Imports = new ImportsGenerator(clientConfig);
 
         ErrorView = new ErrorViewGenerator(this);
         LoaderView = new LoaderViewGenerator(this);
         RedirectToHome = new RedirectToHomeGenerator(this);
         RedirectToLogin = new RedirectToLoginGenerator(this);
-        NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
-        NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
 
-        PageGenerators = CrudlContext.AllPageMethods
+        var directory = Config.HelpersDirectory!.FullName;
+        var @namespace = Config.HelpersNamespace!;
+        ItemDataSource = new ItemDataSourceGenerator(
+            SharedReferences.BaseResponseT,
+            SharedReferences.BaseResponse,
+            SharedReferences.IsFormFileExtention,
+            directory, @namespace)
+        {
+            FileName = "ItemDataSource.cs"
+        };
+        ListDataSource = new ListDataSourceGenerator(
+            SharedReferences.BaseListResponseT,
+            SharedReferences.BaseResponseT,
+            SharedReferences.BaseResponse,
+            ItemDataSource,
+            directory, @namespace)
+        {
+            FileName = "ListDataSource.cs"
+        };
+
+        directory = Config.AuthenticationDirectory!.FullName;
+        @namespace = Config.AuthenticationNamespace!;
+        IClientAuthenticationService = new IClientAuthenticationServiceGenerator(
+            SharedReferences.State,
+            SharedReferences.StateChangedHandler,
+            directory, @namespace)
+        {
+            FileName = "IClientAuthenticationService.cs"
+        };
+        ClientAuthenticationService = new ClientAuthenticationServiceGenerator(
+            SharedReferences.State,
+            IClientAuthenticationService,
+            SharedReferences.StateChangedHandler,
+            directory, @namespace)
+        {
+            FileName = "ClientAuthenticationService.cs"
+        };
+
+        var pages = CrudlContext.AllPageMethods
             .Select(pageMethod => new PageGenerator(pageMethod, clientConfig, Imports))
             .ToArray();
 
-        CrudlGenerators = CrudlContext.Types
-            .Select(crudl => new CrudlGenerator(crudl, Config, ServiceContext, Imports))
-            .ToArray();
+        Pages = [.. pages.Where(a => a.RoutePath != "/")];
 
-        //var directory = Config!.ComponentsDirectory!.FullName;
-        //var @namespace = Config.ComponentsNamespace!;
-        //CreateViewGenerators = CrudlContext.Types
-        //    .Select(crudl => new CreateViewGenerator(crudl, clientConfig, Imports))
-        //    .ToArray();
-        //EditViewGenerators = CrudlContext.Types
-        //    .Select(crudl => new EditViewGenerator(crudl, clientConfig, Imports))
-        //    .ToArray();
-        //DeleteViewGenerators = CrudlContext.Types
-        //    .Select(crudl => new DeleteViewGenerator(crudl, clientConfig, Imports))
-        //    .ToArray();
-        //IndexViewGenerators = CrudlContext.Types
-        //    .Select(crudl => new IndexViewGenerator(crudl, clientConfig, Imports))
-        //    .ToArray();
-        //FormGenerators = CrudlContext.Types
-        //    .Select(crudl => new FormGenerator(
-        //        crudl,
-        //        ServiceContext.IClientAuthenticationService,
-        //        ServiceContext.FormFile,
-        //        ServiceContext.ToFormFileAsyncExtention,
-        //        Imports,
-        //        directory,
-        //        @namespace))
-        //    .ToArray();
-        //DetailsGenerators = CrudlContext.Types
-        //    .Select(crudl => new DetailsGenerator(
-        //        crudl,
-        //        Imports,
-        //        directory,
-        //        @namespace))
-        //    .ToArray();
-        //ListGenerators = CrudlContext.Types
-        //    .Select(crudl => new ListGenerator(
-        //        crudl,
-        //        ServiceContext.BaseListResponseT,
-        //        Imports,
-        //        directory,
-        //        @namespace))
-        //    .ToArray();
-        //DropDownGenerators = CrudlContext.Types
-        //    .Select(crudl => new DropDownGenerator(
-        //        crudl,
-        //        ServiceContext.IClientAuthenticationService, 
-        //        Imports,
-        //        directory,
-        //        @namespace))
-        //    .ToArray();
+        RootPages = [.. pages.Where(a => a.RoutePath == "/")];
 
+        PageIndexes = [.. Pages
+            .GroupBy(a => a.RoutePath)
+            .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];            
+
+        Crudls = [.. CrudlContext.Types
+            .Select(crudl => new CrudlGenerator(
+                crudl,
+                Config, 
+                SharedReferences,
+                ServiceContext, 
+                Imports,
+                ItemDataSource, 
+                ListDataSource,
+                IClientAuthenticationService, 
+                ClientAuthenticationService))];
+
+        NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
+        NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
     }
 
     public FrontendConfig Config { get; }
+    public SharedReferences SharedReferences { get; }
     public ServiceContext ServiceContext { get; }
     public CrudlContext CrudlContext { get; }
 
@@ -92,19 +103,16 @@ public class FrontendGenerator
     public NavMenuAuthenticatedGenerator NavMenuAuthenticated { get; }
     public NavMenuNotAuthenticatedGenerator NavMenuNotAuthenticated { get; }
 
-    public CrudlGenerator[] CrudlGenerators { get; }
-    public PageGenerator[] PageGenerators { get; }
+    public ItemDataSourceGenerator ItemDataSource { get; }
+    public ListDataSourceGenerator ListDataSource { get; }
+    public IClientAuthenticationServiceGenerator IClientAuthenticationService { get; }
+    public ClientAuthenticationServiceGenerator ClientAuthenticationService { get; }
+
+    public CrudlGenerator[] Crudls { get; }
+    public PageGenerator[] Pages { get; }
+    public PageGenerator[] RootPages { get; }
+    public IndexGenerator[] PageIndexes { get; }
     public ImportsGenerator Imports { get; }
-
-    //public CreateViewGenerator[] CreateViewGenerators { get; }
-    //public DeleteViewGenerator[] DeleteViewGenerators { get; }
-    //public EditViewGenerator[] EditViewGenerators { get; }
-    //public IndexViewGenerator[] IndexViewGenerators { get; }
-
-    //public FormGenerator[] FormGenerators { get; }
-    //public DetailsGenerator[] DetailsGenerators { get; }
-    //public ListGenerator[] ListGenerators { get; }
-    //public DropDownGenerator[] DropDownGenerators { get; }
 
     public void Run()
     {
@@ -115,33 +123,22 @@ public class FrontendGenerator
         NavMenuAuthenticated.GenerateCode();
         NavMenuNotAuthenticated.GenerateCode();
 
-        foreach (var dto in PageGenerators) dto.GenerateCode();
-        foreach (var dto in CrudlGenerators) dto.GenerateCode();
+        foreach (var page in Pages) page.GenerateCode();
+        foreach (var page in RootPages) page.GenerateCode();
+        foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
+        foreach (var crudl in Crudls) crudl.GenerateCode();
 
-        //foreach (var dto in CreateViewGenerators) dto.GenerateCode();
-        //foreach (var dto in EditViewGenerators) dto.GenerateCode();
-        //foreach (var dto in DeleteViewGenerators) dto.GenerateCode();
-        //foreach (var dto in IndexViewGenerators) dto.GenerateCode();
-        //foreach (var dto in FormGenerators)
-        //{
-        //    dto.GenerateCode();
-        //    dto.Save();
-        //}
-        //foreach (var dto in DetailsGenerators)
-        //{
-        //    dto.GenerateCode();
-        //    dto.Save();
-        //}
-        //foreach (var dto in ListGenerators)
-        //{
-        //    dto.GenerateCode();
-        //    dto.Save();
-        //}
-        //foreach (var dto in DropDownGenerators)
-        //{
-        //    dto.GenerateCode();
-        //    dto.Save();
-        //}
+        ItemDataSource.GenerateCode();
+        ItemDataSource.Save();
+
+        ListDataSource.GenerateCode();
+        ListDataSource.Save();
+
+        IClientAuthenticationService.GenerateCode();
+        IClientAuthenticationService.Save();
+
+        ClientAuthenticationService.GenerateCode();
+        ClientAuthenticationService.Save();
 
         Imports.GenerateCode();
     }

@@ -12,11 +12,18 @@ public class Dto
         NamedTypeSymbol = namedTypeSymbol;
 
         Name = NamedTypeSymbol.Name;
+        Title = Name;
+        var TitleAttribute = namedTypeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "TitleAttribute");
+        if (TitleAttribute != null)
+        {
+            Title = TitleAttribute.ConstructorArguments[0].Value?.ToString() ?? Title;
+        }
         FullName = NamedTypeSymbol.ToDisplayString();
         Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
 
         IsUser = NamedTypeSymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsUserAttribute");
-        IsAuthorized = NamedTypeSymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsAuthorized");
+        IsAuthorized = NamedTypeSymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
         IsEntryPoint = NamedTypeSymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsEntryPointAttribute");
         IsICrudEntity = NamedTypeSymbol.AllInterfaces.Any(i => i.Name == "ICrudEntity");
 
@@ -46,18 +53,18 @@ public class Dto
             }
         }
 
-        Properties = NamedTypeSymbol
+        Properties = [.. NamedTypeSymbol
             .GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p =>
                 !string.IsNullOrWhiteSpace(p.Name) &&
                 !string.IsNullOrWhiteSpace(p.Type?.ToDisplayString()))
-            .Select(propertySymbol => new DtoProperty(dataModel, this, propertySymbol))
-            .ToArray();
+            .Select(propertySymbol => new DtoProperty(dataModel, this, propertySymbol))];
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }
     public string Name { get; }
+    public string Title { get; }
     public string FullName { get; }
     public string Namespace { get; }
     public bool IsAuthorized { get; }

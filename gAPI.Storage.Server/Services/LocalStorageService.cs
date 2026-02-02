@@ -11,7 +11,7 @@ public class LocalStorageService(ApplicationDbContext db)
     const string BaseFolder = "Content";
     static readonly DirectoryInfo Directory = new DirectoryInfo("Files");
 
-    public GetStorageFileInfoResponse GetStorageFileUrl(GetStorageFileInfoRequest model)
+    public GetStorageFileInfoResponse GetStorageFileUrl(GetStorageFileInfoRequest model, CancellationToken ct)
     {
         var storageFolder = db.StorageFolders
             .FirstOrDefault(a => a.Name == model.TypeName);
@@ -73,7 +73,7 @@ public class LocalStorageService(ApplicationDbContext db)
         };
     }
 
-    public SaveResponse SaveStorageFile(SaveRequest model, Stream inputStream)
+    public SaveResponse SaveStorageFile(SaveRequest model, Stream inputStream, CancellationToken ct)
     {
         if (!Directory.Exists) Directory.Create();
 
@@ -143,7 +143,7 @@ public class LocalStorageService(ApplicationDbContext db)
             TypeName = model.TypeName,
             BaseUrl = model.BaseUrl
         };
-        var externalUrlResponse = GetStorageFileUrl(externalUrlRequest);
+        var externalUrlResponse = GetStorageFileUrl(externalUrlRequest, ct);
 
         return new SaveResponse()
         {
@@ -159,7 +159,7 @@ public class LocalStorageService(ApplicationDbContext db)
         };
     }
 
-    public DeleteResponse DeleteStorageFile(DeleteRequest model)
+    public DeleteResponse DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
         var storageFolder = db.StorageFolders
             .FirstOrDefault(a => a.Name == model.TypeName);
@@ -253,4 +253,67 @@ public class LocalStorageService(ApplicationDbContext db)
         return false;
     }
 
+    DirectoryInfo FilesDirectory => new("Files");
+    internal bool TryGetFile(string path, string token, string directoryName, string fileName, out string fullName, out StorageFile file, out string denyReason)
+    {
+        denyReason = null!;
+        fullName = null!;
+        file = null!;
+        var folder = db.StorageFolders.FirstOrDefault(a => a.Name == directoryName);
+        if (folder == null)
+        {
+            denyReason = $"Folder for file '{path}' not found.";
+            return false;
+        }
+
+        var dbFile = db.StorageFiles.FirstOrDefault(a =>
+            a.FileName == fileName &&
+            a.StorageFolderId == folder.Id);
+
+        if (dbFile == null)
+        {
+            denyReason = $"File '{path}' not found.";
+            return false;
+        }
+
+        var fileToken = db.StorageFileTokens.FirstOrDefault(a =>
+            a.Token == token &&
+            a.StorageFileId == dbFile.Id);
+
+        if (fileToken == null)
+        {
+            denyReason = $"Invalid token '{token}' for file '{path}'.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(folder.Name))
+        {
+            denyReason = $"Folder for file '{path}' not found.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(dbFile.FileName))
+        {
+            denyReason = $"Filename for file '{path}' not found.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(dbFile.MimeType))
+        {
+            denyReason = $"Mimetype for file '{path}' not found.";
+            return false;
+        }
+
+        var directoryFullName = Path.Combine(FilesDirectory.FullName, folder.Name);
+        fullName = Path.Combine(directoryFullName, dbFile.FileName);
+
+        if (!System.IO.File.Exists(fullName))
+        {
+            denyReason = $"File '{path}' not found.";
+            return false;
+        }
+
+        file = dbFile;
+        return true;
+    }
 }

@@ -59,6 +59,7 @@ public class IndexViewGenerator : BaseGenerator
         Imports.Reg(CrudlType.ListMethod.Client!.Interface);
         Imports.Reg(IClientAuthenticationService);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
+        Imports.Reg("Microsoft.JSInterop");
 
         var pluralName = CrudlType.Name!.ToMultiple().ToLower();
         var pluralTitle = CrudlType.Name.ToMultiple();
@@ -92,11 +93,20 @@ public class IndexViewGenerator : BaseGenerator
 </AuthorizeView>
 
 @code {{
+    private CancellationTokenSource? Cts;
     private {ListDataSource.Name}<{entityName}, {keyType}>? {entityName.ToMultiple()};
 
     protected override async Task OnInitializedAsync()
     {{
-        if (await ClientAuthenticationService.IsAuthenticatedAsync() == false)
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
+
+        Cts = new CancellationTokenSource();
+
+        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false)
         {{
             return;
         }}
@@ -120,6 +130,11 @@ public class IndexViewGenerator : BaseGenerator
 
     public async ValueTask DisposeAsync()
     {{
+        if (Cts != null)
+        {{
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }}
         if ({entityName.ToMultiple()} != null)
             await {entityName.ToMultiple()}.DisposeAsync();
     }}

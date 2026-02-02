@@ -1,4 +1,4 @@
-﻿using gAPI.CodeGen.Frontend.Configs;
+﻿using gAPI.CodeGen.Frontend.Models.Configs;
 
 namespace gAPI.CodeGen.Frontend.Generators.Maui.wwwroot;
 

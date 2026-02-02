@@ -1,20 +1,24 @@
 ﻿using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models;
 using gAPI.AutoComponent.Models.ServiceModels;
 using gAPI.AutoComponent.SimpleRazorCompiler;
+using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
 public class AutoTableGenerator : BaseGenerator
 {
     public AutoTableGenerator(
+        Generator context,
         ICrudlType crudlType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace) 
     {
+        Context = context;
         var iClientAuthenticationService = new SharedReference("gAPI.Interfaces", "IClientAuthenticationService");
-        TableGenerator = new TableGenerator(
+        TableGenerator = new TableListGenerator(
             crudlType,
             itemDataSource,
             listDataSource,
@@ -26,16 +30,20 @@ public class AutoTableGenerator : BaseGenerator
         Name = $"Auto{crudlType.Name}TableList";
         FileName = $"{Name}.g.cs";
 
+        Directory = directory;
+        Namespace = @namespace;
+
         TableGenerator.Name = Name;
         TableGenerator.FileName = FileName;
     }
 
-    public TableGenerator TableGenerator { get; }
+    public TableListGenerator TableGenerator { get; }
+    public Generator Context { get; }
 
     public void GenerateCode()
     {
         TableGenerator.GenerateCode();
-        var razorCode = GetRazorNamespacesCode() + TableGenerator.Code;
-        Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace, Name);
+        var razorCode = GetRazorNamespacesCode() + "\r\n" + TableGenerator.Code;
+        Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace!, Name, Context.SharedReferences.AllComponents);
     }
 }

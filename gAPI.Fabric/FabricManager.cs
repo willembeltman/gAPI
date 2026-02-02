@@ -14,43 +14,43 @@ public class FabricManager
         // FabricHost abonneert zichzelf op connections
         var fabricHost = new FabricHost(
             this,
-            tcpClient, 
+            tcpClient,
             Connections);
         fabricHost.Start();
     }
 
-    public void Subscribe(FabricHost connection,SseServiceId serviceId, UserId userId, SessionId sessionId)
+    public void Subscribe(FabricHost connection, SseServiceId serviceId, UserId userId, SessionId sessionId)
     {
-        Console.WriteLine(
-            $"Subscribe " +
-            $"connectionId {connection.Id}: " +
-            $"{serviceId} " +
-            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
-            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
+        //Console.WriteLine(
+        //    $"Subscribe " +
+        //    $"connectionId {connection.Id}: " +
+        //    $"{serviceId} " +
+        //    $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+        //    $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
         Services[serviceId]
             .Subscribe(connection, userId, sessionId);
     }
     public void Unsubscribe(FabricHost connection, SseServiceId serviceId, UserId userId, SessionId sessionId)
     {
-        Console.WriteLine(
-            $"Unsubscribe " +
-            $"connectionId {connection.Id}: " +
-            $"{serviceId} " +
-            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
-            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
+        //Console.WriteLine(
+        //    $"Unsubscribe " +
+        //    $"connectionId {connection.Id}: " +
+        //    $"{serviceId} " +
+        //    $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+        //    $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString().Length))})");
         Services[serviceId]
             .Unsubscribe(connection, userId, sessionId);
     }
     public void Publish(FabricHost connection, SseServiceId serviceId, SseServiceMethodId sseServiceMethodId, UserId? userId, SessionId? sessionId, string messageData)
     {
-        Console.WriteLine(
-            $"Publish " +
-            $"connectionId {connection.Id}: " +
-            $"{serviceId} " +
-            $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
-            $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString()!.Length))})");
+        //Console.WriteLine(
+        //    $"Publish " +
+        //    $"connectionId {connection.Id}: " +
+        //    $"{serviceId} " +
+        //    $"(userId {userId.ToString()?.Substring(0, Math.Min(4, userId.ToString()!.Length))}, " +
+        //    $"sessionId {sessionId.ToString()?.Substring(0, Math.Min(4, sessionId.ToString()!.Length))})");
         Services[serviceId]
-            .Publish(sseServiceMethodId, userId,  sessionId, messageData);
+            .Publish(sseServiceMethodId, userId, sessionId, messageData);
     }
 
     public async Task DisconnectAllAsync()

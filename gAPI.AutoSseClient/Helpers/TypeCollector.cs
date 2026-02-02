@@ -1,4 +1,4 @@
-﻿using gAPI.AutoSseClient.Configs;
+﻿using gAPI.AutoSseClient.Models.Configs;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;

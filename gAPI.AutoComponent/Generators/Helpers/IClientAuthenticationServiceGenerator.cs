@@ -6,39 +6,38 @@ public class IClientAuthenticationServiceGenerator : BaseGenerator
 {
     public IClientAuthenticationServiceGenerator(
         ISharedReference state,
-        StateChangedHandlerGenerator stateChangedHandler,
+        ISharedReference stateChangedHandler,
         string directory,
-        string @namespace) : base(directory, @namespace)
+        string @namespace) 
     {
         State = state;
         StateChangedHandler = stateChangedHandler;
+
+        Directory = directory;
+        Namespace = @namespace;
+
         Name = "IClientAuthenticationService";
         FileName = $"{Name}.g.cs";
     }
 
     public ISharedReference State { get; }
-    public StateChangedHandlerGenerator StateChangedHandler { get; }
+    public ISharedReference StateChangedHandler { get; }
 
     public void GenerateCode()
     {
-        Code = "";
-        return;
+        //Code = "";
+        //return;
 
         Reg(State);
         Reg(StateChangedHandler);
 
         Code = $@"{GetNamespacesCode()}
+namespace {Namespace};
 
-#nullable enable
-
-namespace {Namespace}
+public interface {Name} : gAPI.Interfaces.IClientAuthenticationService
 {{
-    public interface {Name} : gAPI.Interfaces.IClientAuthenticationService
-    {{
-        event {StateChangedHandler.Name}? OnStateHasChanged;
-        Task<{State.Name}?> GetState(CancellationToken? ct = null);
-    }}
-}}
-";
+    event {StateChangedHandler}? OnStateHasChanged;
+    Task<{State}> GetStateAsync(CancellationToken ct);
+}}";
     }
 }

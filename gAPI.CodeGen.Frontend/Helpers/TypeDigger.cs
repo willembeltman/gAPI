@@ -1,5 +1,5 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.CodeGen.Frontend.Contexts;
+using gAPI.CodeGen.Frontend.Models;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
 
@@ -7,10 +7,10 @@ namespace gAPI.CodeGen.Frontend.Helpers;
 
 public class TypeDigger : ITypeDigger
 {
-    public TypeDigger(ServiceContext dataModel, Type type, bool isNullable = false)
+    public TypeDigger(ServiceContext context, Type type, bool isNullable = false)
     {
         StartType = type ?? throw new ArgumentNullException(nameof(type));
-        DataModel = dataModel ?? throw new ArgumentNullException(nameof(dataModel));
+        Context = context ?? throw new ArgumentNullException(nameof(context));
 
         Type = DigTillBase(type);
 
@@ -20,14 +20,15 @@ public class TypeDigger : ITypeDigger
         IsValueType = Type.IsValueType;
         IsNullable = isNullable;
 
-        (Dto, Enum) = FindDtoOrEnum(dataModel, FullName);
+        (Dto, Enum) = FindDtoOrEnum(context, FullName);
+
     }
 
-    private (Dto Dto, EnumDto Enum) FindDtoOrEnum(ServiceContext dataModel, string fullName)
+    private (Dto Dto, EnumDto Enum) FindDtoOrEnum(ServiceContext context, string fullName)
     {
-        var foundDto = dataModel.Dtos.FirstOrDefault(dto => dto.FullName == fullName);
+        var foundDto = context.Dtos.FirstOrDefault(dto => dto.FullName == fullName);
         var foundEnum = foundDto == null
-            ? dataModel.Enums.FirstOrDefault(e => e.FullName == fullName)
+            ? context.Enums.FirstOrDefault(e => e.FullName == fullName)
             : null;
 
         return (foundDto, foundEnum)!;
@@ -103,7 +104,7 @@ public class TypeDigger : ITypeDigger
     public Dto Dto { get; }
     public EnumDto Enum { get; }
     public Type StartType { get; }
-    public ServiceContext DataModel { get; }
+    public ServiceContext Context { get; }
     public Type Type { get; }
     public string Name { get; }
     public string FullName { get; }
