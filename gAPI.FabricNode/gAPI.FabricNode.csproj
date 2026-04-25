@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\gAPI.AuthServer\gAPI.Core.Server.csproj" />
-    <ProjectReference Include="..\gAPI\gAPI.Core.csproj" />
+    <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
+    <ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
   </ItemGroup>
 
 </Project>

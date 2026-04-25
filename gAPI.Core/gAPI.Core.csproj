@@ -35,8 +35,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="11.0.0-preview.3.26207.106" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0-preview.3.26207.106" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 	</ItemGroup>
 
