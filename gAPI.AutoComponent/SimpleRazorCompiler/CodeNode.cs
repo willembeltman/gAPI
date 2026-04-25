@@ -1,6 +1,6 @@
-﻿using gAPI.AutoComponent.SimpleRazorCompiler.Enums;
+﻿using gAPI.SimpleRazorCompiler.Enums;
 
-namespace gAPI.AutoComponent.SimpleRazorCompiler;
+namespace gAPI.SimpleRazorCompiler;
 
 public class CodeNode : Node
 {

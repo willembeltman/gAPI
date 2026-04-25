@@ -1,39 +1,39 @@
-﻿using gAPI.AutoApi.Helpers;
-using gAPI.AutoApi.Models;
+﻿using gAPI.AutoApiServer.Helpers;
+using gAPI.AutoApiServer.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApi.Generators;
+namespace gAPI.AutoApiServer.Generators;
 
-internal class ControllerGenerator : BaseGenerator
+public class ControllerGenerator : BaseGenerator
 {
-    internal ControllerGenerator(ServiceContext dataModel, Service service)
+    public ControllerGenerator(Generator context, Interface @interface)
     {
-        DataModel = dataModel;
-        Service = service;
+        Context = context;
+        Interface = @interface;
 
-        Directory = dataModel.Config.Controllers_Destination.Directory;
-        Namespace = dataModel.Config.Controllers_Destination.Namespace;
+        Directory = "";
+        Namespace = Service.Namespace;
 
-        Name = service.Interface.Title + "Controller";
+        Name = $"{Interface.CleanName}Controller";
         FileName = $"{Name}.g.cs";
     }
 
-    public ServiceContext DataModel { get; }
-    public Service Service { get; }
+    public Generator Context { get; }
+    public Interface Interface { get; }
+    public Service Service => Interface.Service;
 
-    public void GenerateCode()
+    public override void GenerateCode()
     {
-        Reg(Service.Interface);
+        Reg(Interface);
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("gAPI.Dtos");
 
-        var synchroniousMethod = Service.Interface.Methods.FirstOrDefault(method => method.IsAsync == false);
+        var synchroniousMethod = Interface.Methods.FirstOrDefault(method => method.IsAsync == false);
         if (synchroniousMethod != null)
             throw new Exception($"We don't do synchonious code anymore, please change to async. {Name}.{synchroniousMethod.Name}");
 
-        foreach (var method in Service.Interface.Methods)
+        foreach (var method in Interface.Methods)
         {
             RegRange(method.Arguments.SelectMany(b => b.ParameterType.Namespaces));
             RegRange(method.ResponseType.Namespaces);
@@ -48,11 +48,11 @@ internal class ControllerGenerator : BaseGenerator
 namespace {Namespace};
 
 [ApiController]
-[Route(""{Service.Interface.Title.ToLower()}"")]
+[Route(""{Interface.Title.ToLower()}"")]
 public class {Name}(
-    {Service.Interface.Name} {Service.Name.ToCamelCase()})
+    {Interface.Name} {Service.Name.ToCamelCase()})
     : ControllerBase
-{{{string.Join("", Service.Interface.Methods.Select(method =>
+{{{string.Join("", Interface.Methods.Select(method =>
         {
             var isBaseModel = method.ResponseType.IsBaseResponse;
             var hasParameters = method.Arguments.Any(a => a.ParameterType.Name != "CancellationToken");

@@ -2,14 +2,15 @@
 
 namespace gAPI.AutoComponent.Models.ServiceModels;
 
-public class EnumChoice
+public class EnumChoice : IEnumChoice
 {
-    public EnumChoice(EnumDto @enum, IFieldSymbol fieldSymbol)
+    public EnumChoice(IEnumHelper @enum, IFieldSymbol fieldSymbol)
     {
         Enum = @enum;
         FieldSymbol = fieldSymbol;
     }
 
-    public EnumDto Enum { get; }
-    public IFieldSymbol FieldSymbol { get; }
+    public IEnumHelper Enum { get; }
+    private IFieldSymbol FieldSymbol { get; }
+    public string Name => FieldSymbol.Name;
 }

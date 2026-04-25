@@ -9,7 +9,7 @@ public class ItemDataSourceGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference toFormFileAsync,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         BaseResponseT = baseResponseT;
         BaseResponse = baseResponse;

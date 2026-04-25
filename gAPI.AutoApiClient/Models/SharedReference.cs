@@ -5,7 +5,7 @@ namespace gAPI.AutoApiClient.Models;
 
 public class SharedReference
 {
-    public SharedReference() { }    
+    public SharedReference() { }
     public SharedReference(string fullName)
     {
         Name = fullName.Split('.').Last();
@@ -16,14 +16,12 @@ public class SharedReference
         Namespace = @namespace;
         Name = name;
     }
-    public SharedReference(ISymbol clientAuthenticationService)
+    public SharedReference(INamedTypeSymbol a)
     {
-        Symbol = clientAuthenticationService;
-        Name = clientAuthenticationService.Name;
-        Namespace = clientAuthenticationService.ContainingNamespace.ToDisplayString();
+        Name = a.Name;
+        Namespace = a.ContainingNamespace.ToDisplayString();
     }
 
-    public ISymbol? Symbol { get; }
     public virtual string Name { get; protected set; } = string.Empty;
     public virtual string? Namespace { get; protected set; }
     public virtual string FullName => $"{Namespace}.{Name}";

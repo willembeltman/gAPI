@@ -24,7 +24,7 @@ public class ManageServiceGenerator : BaseGenerator
     public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
     public SharedReference ChangePasswordRequest => Context.ChangePasswordRequest;
     public SharedReference ChangePasswordResponse => Context.ChangePasswordResponse;
-    public SharedReference StringExtentions => Context.SharedReferences.StringExtentions;
+    public SharedReference StringExtensions => Context.SharedReferences.StringExtensions;
 
     public void GenerateCode()
     {
@@ -34,7 +34,7 @@ public class ManageServiceGenerator : BaseGenerator
         Reg(BaseResponseT);
         Reg(ChangePasswordRequest);
         Reg(ChangePasswordResponse);
-        Reg(StringExtentions);
+        Reg(StringExtensions);
 
         Code = $@"{GetNamespacesCode()}
 namespace {Namespace};
@@ -83,7 +83,7 @@ public class {Name}(
                 ErrorLockedOut = true
             }};
 
-        var passwordHash = StringExtentions.HashString(password);
+        var passwordHash = StringExtensions.HashString(password);
         if (serverAuthenticationService.State.DbUser.PasswordHash != passwordHash)
             return new {ChangePasswordResponse}()
             {{
@@ -97,7 +97,7 @@ public class {Name}(
                 ErrorLockedOut = true
             }};
 
-        var newPasswordHash = {StringExtentions}.HashString(newPassword);
+        var newPasswordHash = {StringExtensions}.HashString(newPassword);
         serverAuthenticationService.State.DbUser.PasswordHash = newPasswordHash;
         await serverAuthenticationService.SaveChangesAsync(ct);
 

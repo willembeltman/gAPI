@@ -39,19 +39,4 @@
 		</None>
 	</ItemGroup>
 
-	<!-- Package the analyzer -->
-	<ItemGroup>
-		<None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers\dotnet\cs\$(AssemblyName).dll" Visible="false" />
-	</ItemGroup>
-
-	<!-- Package additional files -->
-	<ItemGroup>
-
-		<!-- MSBuild target om gapisettings.json toe te voegen -->
-		<None Include="Build\$(PackageId).targets" Pack="true" PackagePath="build\$(PackageId).targets" Condition="Exists('build\$(PackageId).targets')" />
-
-		<!-- Template gapisettings.json -->
-		<AdditionalFiles Include="Content\gapisettings.json" Condition="Exists('Content\gapisettings.json')" />
-	</ItemGroup>
-
 </Project>

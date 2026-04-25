@@ -57,10 +57,10 @@ public class BackendGenerator
         StateMapping = new StateMappingGenerator(this);
 
         // Api
-        AddCommenServicesExtention = new AddCommenServicesExtentionGenerator(this);
-        AddCrudExtention = new AddCrudExtentionsGenerator(this);
-        AddDatabaseExtention = new AddDatabaseExtentionGenerator(this);
-        AddRemainingAuthenticationServicesExtention = new AddRemainingAuthenticationServicesExtentionGenerator(this);
+        AddCommenServicesExtension = new AddCommenServicesExtensionGenerator(this);
+        AddCrudExtension = new AddCrudExtensionsGenerator(this);
+        AddDatabaseExtension = new AddDatabaseExtensionGenerator(this);
+        AddRemainingAuthenticationServicesExtension = new AddRemainingAuthenticationServicesExtensionGenerator(this);
         Program = new ProgramGenerator(this);
         ServerAuthenticationMiddleware = new ServerAuthenticationMiddlewareGenerator(this);
 
@@ -102,10 +102,10 @@ public class BackendGenerator
     public UserIpSessionTokenGenerator UserIpSessionToken { get; }
     public UserIpSessionTokenRouteGenerator UserIpSessionTokenRoute { get; }
     public UserIpSessionTokenRouteRequestGenerator UserIpSessionTokenRouteRequest { get; }
-    public AddCommenServicesExtentionGenerator AddCommenServicesExtention { get; }
-    public AddCrudExtentionsGenerator AddCrudExtention { get; }
-    public AddDatabaseExtentionGenerator AddDatabaseExtention { get; }
-    public AddRemainingAuthenticationServicesExtentionGenerator AddRemainingAuthenticationServicesExtention { get; }
+    public AddCommenServicesExtensionGenerator AddCommenServicesExtension { get; }
+    public AddCrudExtensionsGenerator AddCrudExtension { get; }
+    public AddDatabaseExtensionGenerator AddDatabaseExtension { get; }
+    public AddRemainingAuthenticationServicesExtensionGenerator AddRemainingAuthenticationServicesExtension { get; }
     public ProgramGenerator Program { get; }
     public ServerAuthenticationServiceGenerator ServerAuthenticationService { get; }
     public StateMappingGenerator StateMapping { get; }
@@ -113,7 +113,7 @@ public class BackendGenerator
     public ServerAuthenticationHandlerGenerator ServerAuthenticationHandler { get; }
     public IServerAuthenticationSecurityGenerator IServerAuthenticationSecurity { get; }
     public RequestIdsGenerator RequestIds { get; }
-    public ServerAuthenticationMiddlewareGenerator ServerAuthenticationMiddleware { get; internal set; }
+    public ServerAuthenticationMiddlewareGenerator ServerAuthenticationMiddleware { get; set; }
     public StateDtoGenerator StateUser { get; }
     public StateDtoGenerator[] StateObjects { get; }
     public LoginResponseGenerator LoginResponse { get; }
@@ -149,10 +149,10 @@ public class BackendGenerator
         UserIpSessionToken.GenerateCode();
         UserIpSessionTokenRoute.GenerateCode();
         UserIpSessionTokenRouteRequest.GenerateCode();
-        AddCommenServicesExtention.GenerateCode();
-        AddCrudExtention.GenerateCode();
-        AddDatabaseExtention.GenerateCode();
-        AddRemainingAuthenticationServicesExtention.GenerateCode();
+        AddCommenServicesExtension.GenerateCode();
+        AddCrudExtension.GenerateCode();
+        AddDatabaseExtension.GenerateCode();
+        AddRemainingAuthenticationServicesExtension.GenerateCode();
         Program.GenerateCode();
         ServerAuthenticationService.GenerateCode();
         StateMapping.GenerateCode();

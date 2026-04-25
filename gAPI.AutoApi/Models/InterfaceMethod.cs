@@ -1,11 +1,10 @@
-﻿using gAPI.AutoApi.Helpers;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.Models;
+namespace gAPI.AutoApiServer.Models;
 
-internal class InterfaceMethod
+public class InterfaceMethod
 {
     public InterfaceMethod(ServiceContext dataModel, Interface @interface, IMethodSymbol methodSymbol)
     {
@@ -173,4 +172,9 @@ internal class InterfaceMethod
     public bool IsAsync { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

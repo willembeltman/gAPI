@@ -30,7 +30,7 @@ public class AuthenticationServiceGenerator : BaseGenerator
     public SharedReference ForgotPasswordRequest => Context.ForgotPasswordRequest;
     public SharedReference IAuthenticationService => Context.IAuthenticationService;
     public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
-    public SharedReference StringExtentions => Context.SharedReferences.StringExtentions;
+    public SharedReference StringExtensions => Context.SharedReferences.StringExtensions;
     public SharedReference IsAuthorized => Context.SharedReferences.IsAuthorized;
     public SharedReference User => Context.DbContext.UserEntity;
 
@@ -48,7 +48,7 @@ public class AuthenticationServiceGenerator : BaseGenerator
         Reg(ForgotPasswordRequest);
         Reg(IAuthenticationService);
         Reg(BaseResponseT);
-        Reg(StringExtentions);
+        Reg(StringExtensions);
         Reg(IsAuthorized);
         Reg(User);
 
@@ -86,7 +86,7 @@ public class {Name}(
         if (dbUser == null)
             return new {LoginResponse}();
 
-        var passwordHash = {StringExtentions}.HashString(password);
+        var passwordHash = {StringExtensions}.HashString(password);
         if (dbUser.PasswordHash != passwordHash)
             return new {LoginResponse}()
             {{
@@ -175,7 +175,7 @@ public class {Name}(
                 LockedOut = true
             }};
 
-        var passwordHash = {StringExtentions}.HashString(password);
+        var passwordHash = {StringExtensions}.HashString(password);
         var dbUser = new {User}(userName, email, passwordHash);
         await db.Users.AddAsync(dbUser, ct);
         await db.SaveChangesAsync(ct);

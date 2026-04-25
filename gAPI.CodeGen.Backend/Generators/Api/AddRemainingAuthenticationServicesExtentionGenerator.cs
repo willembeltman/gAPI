@@ -2,9 +2,9 @@
 
 namespace gAPI.CodeGen.Backend.Generators.Api;
 
-public class AddRemainingAuthenticationServicesExtentionGenerator : BaseGenerator
+public class AddRemainingAuthenticationServicesExtensionGenerator : BaseGenerator
 {
-    public AddRemainingAuthenticationServicesExtentionGenerator(
+    public AddRemainingAuthenticationServicesExtensionGenerator(
         BackendGenerator context)
     {
         Directory = context.Config.Api_Directory;
@@ -12,7 +12,7 @@ public class AddRemainingAuthenticationServicesExtentionGenerator : BaseGenerato
 
         Context = context;
 
-        Name = "AddRemainingAuthenticationServicesExtention";
+        Name = "AddRemainingAuthenticationServicesExtension";
         FileName = $"{Name}.cs";
     }
 
@@ -33,9 +33,9 @@ public class AddRemainingAuthenticationServicesExtentionGenerator : BaseGenerato
         Reg(StateMapping);
 
         Code = $@"{GetNamespacesCode()}
-namespace BSD.Api;
+namespace {Namespace};
 
-public static class AddRemainingAuthenticationServicesExtention
+public static class AddRemainingAuthenticationServicesExtension
 {{
     public static IServiceCollection AddRemainingAuthenticationServices(this IServiceCollection services)
     {{

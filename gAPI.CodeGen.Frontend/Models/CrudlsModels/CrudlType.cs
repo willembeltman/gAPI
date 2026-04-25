@@ -132,7 +132,6 @@ public class CrudlType : ICrudlType
     IEnumerable<ICrudlProperty> ICrudlType.Properties => Properties;
     IEnumerable<ICrudlProperty> ICrudlType.ForeignItemProperties => ForeignItemProperties;
     ICrudlMethod[] ICrudlType.Methods => Methods;
-    ITypeHelper ICrudlType.ResponseTypeHelper => ResponseTypeHelper;
     ITypeDigger ICrudlType.ResponseTypeDigger => ResponseTypeDigger;
     ICrudlMethod? ICrudlType.ReadMethod => ReadMethod;
     ICrudlMethod? ICrudlType.CreateMethod => CreateMethod;
@@ -141,6 +140,18 @@ public class CrudlType : ICrudlType
     ICrudlMethod? ICrudlType.ListMethod => ListMethod;
     ICrudlType? ICrudlType.JunctionLeftApi => JunctionLeftApi;
     ICrudlType? ICrudlType.JunctionRightApi => JunctionRightApi;
+
+    ITypeHelper ICrudlType.ResponseType => throw new NotImplementedException();
+
+    public string? IsPageRoute => throw new NotImplementedException();
+
+    public string? IsPageTitle => throw new NotImplementedException();
+
+    public string? IsPageSubmitText => throw new NotImplementedException();
+
+    public string? IsPageResponseText => throw new NotImplementedException();
+
+    public bool IsNotAuthorized => throw new NotImplementedException();
 
     public override string ToString()
     {

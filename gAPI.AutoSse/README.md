@@ -27,12 +27,12 @@ CSharp
 
     public class YourBackendService(
         IServerAuthenticationService auth,
-        ISseContext SseContext)
+        IClientContext ClientContext)
         : IYourBackendService
     {
         public async Task ClientToServerMethod(string? message)
         {
-            await SseContext
+            await ClientContext
                 .TestSseService
                 .ToSession(auth.SessionId!.Value.ToString())
                 .ServerToClientMethod(message);

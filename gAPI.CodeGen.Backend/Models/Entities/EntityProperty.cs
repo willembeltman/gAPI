@@ -145,7 +145,7 @@ public class EntityProperty : IPropertyInfoRapport, INameProperty
         }
     }
 
-    public bool IsImmutable { get; internal set; }
+    public bool IsImmutable { get; set; }
 
     //public EntityProperty? StateManagedProperty
     //{

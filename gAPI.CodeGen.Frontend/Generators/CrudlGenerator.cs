@@ -18,8 +18,7 @@ public class CrudlGenerator
         ImportsGenerator imports,
         ISharedReference ItemDataSource,
         ISharedReference ListDataSource,
-        ISharedReference IClientAuthenticationService,
-        ISharedReference ClientAuthenticationService
+        ISharedReference IClientAuthenticatedHttpClient
         )
     {
         var directoryFullName = config!.ComponentsDirectory!.FullName;
@@ -29,9 +28,9 @@ public class CrudlGenerator
                 crudl,
                 ItemDataSource,
                 ListDataSource,
-                IClientAuthenticationService,
+                IClientAuthenticatedHttpClient,
                 sharedReferences.FormFile,
-                sharedReferences.IsFormFileExtention,
+                sharedReferences.IsFormFileExtension,
                 imports,
                 directoryFullName,
                 @namespace);
@@ -88,7 +87,7 @@ public class CrudlGenerator
             sharedReferences.BaseResponse,
             sharedReferences.BaseResponseT,
             sharedReferences.BaseListResponseT,
-            IClientAuthenticationService,
+            IClientAuthenticatedHttpClient,
             FormGenerator,
             sharedReferences.LoaderView,
             sharedReferences.ErrorView,
@@ -103,7 +102,7 @@ public class CrudlGenerator
             sharedReferences.BaseResponse,
             sharedReferences.BaseResponseT,
             sharedReferences.BaseListResponseT,
-            IClientAuthenticationService,
+            IClientAuthenticatedHttpClient,
             FormGenerator,
             sharedReferences.LoaderView,
             sharedReferences.ErrorView,
@@ -118,7 +117,7 @@ public class CrudlGenerator
             sharedReferences.BaseResponse,
             sharedReferences.BaseResponseT,
             sharedReferences.BaseListResponseT,
-            IClientAuthenticationService,
+            IClientAuthenticatedHttpClient,
             DetailsGenerator,
             sharedReferences.LoaderView,
             sharedReferences.ErrorView,
@@ -133,7 +132,7 @@ public class CrudlGenerator
             sharedReferences.BaseResponse,
             sharedReferences.BaseResponseT,
             sharedReferences.BaseListResponseT,
-            IClientAuthenticationService,
+            IClientAuthenticatedHttpClient,
             ListGenerator,
             sharedReferences.LoaderView,
             sharedReferences.ErrorView,

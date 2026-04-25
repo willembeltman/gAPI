@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoPage.Enums;
-using gAPI.AutoPage.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
@@ -19,8 +18,8 @@ public class InterfaceMethod
         IsNullable =
             methodSymbol.ReturnNullableAnnotation == NullableAnnotation.Annotated;
 
-        ResponseTypeSymbol = methodSymbol.ReturnType;
-        ResponseType = new TypeHelper(dataModel, ResponseTypeSymbol, IsNullable);
+        TypeSymbol = methodSymbol.ReturnType;
+        Type = new TypeHelper(dataModel, TypeSymbol, IsNullable);
 
         Title = Name;
         var TitleAttribute = methodSymbol.GetAttributes()
@@ -34,17 +33,17 @@ public class InterfaceMethod
         Arguments = [.. methodSymbol.Parameters.Select(parameterSymbol => new InterfaceMethodArgument(dataModel, this, parameterSymbol))];
         IsCreate = methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsCreateAttribute");
-        if (IsCreate && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 1)
+        if (IsCreate && Arguments.Count(a => a.Type.Name != "CancellationToken") != 1)
             throw new Exception("Kan niet create method hebben met anders dan 1 parameter");
 
         IsRead = methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsReadAttribute");
-        if (IsRead && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 1)
+        if (IsRead && Arguments.Count(a => a.Type.Name != "CancellationToken") != 1)
             throw new Exception("Kan niet read method hebben met anders dan 1 parameter");
 
         IsUpdate = methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsUpdateAttribute");
-        if (IsUpdate && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 1)
+        if (IsUpdate && Arguments.Count(a => a.Type.Name != "CancellationToken") != 1)
             throw new Exception("Kan niet update method hebben met anders dan 1 parameter");
 
         var isDeleteAttr = methodSymbol.GetAttributes()
@@ -59,12 +58,12 @@ public class InterfaceMethod
                 IsDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
             }
         }
-        if (IsDelete && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 1)
+        if (IsDelete && Arguments.Count(a => a.Type.Name != "CancellationToken") != 1)
             throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
 
         IsList = methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsListAttribute");
-        if (IsList && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 3)
+        if (IsList && Arguments.Count(a => a.Type.Name != "CancellationToken") != 3)
             throw new Exception("Kan niet List method hebben met anders dan 3 parameters");
 
         var isListByAttr = methodSymbol.GetAttributes()
@@ -79,7 +78,7 @@ public class InterfaceMethod
                 IsListByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
             }
         }
-        if (IsListBy && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 4)
+        if (IsListBy && Arguments.Count(a => a.Type.Name != "CancellationToken") != 4)
             throw new Exception("Kan niet ListBy method hebben met anders dan 4 parameter");
 
         var isListNotByAttr = methodSymbol.GetAttributes()
@@ -94,12 +93,12 @@ public class InterfaceMethod
                 IsListNotByForeignType = new TypeHelper(dataModel, targetTypeSymbol);
             }
         }
-        if (IsListNotBy && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 4)
+        if (IsListNotBy && Arguments.Count(a => a.Type.Name != "CancellationToken") != 4)
             throw new Exception("Kan niet delete method hebben met anders dan 4 parameter");
 
         IsFileUpdate = methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsFileUpdateAttribute");
-        if (IsFileUpdate && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 2)
+        if (IsFileUpdate && Arguments.Count(a => a.Type.Name != "CancellationToken") != 2)
             throw new Exception("Kan niet file update method hebben met anders dan 2 parameter");
 
         var isFileDeleteAttr = methodSymbol.GetAttributes()
@@ -115,7 +114,7 @@ public class InterfaceMethod
                 IsFileDeleteType = new TypeHelper(dataModel, targetTypeSymbol);
             }
         }
-        if (IsFileDelete && Arguments.Count(a => a.ParameterType.Name != "CancellationToken") != 1)
+        if (IsFileDelete && Arguments.Count(a => a.Type.Name != "CancellationToken") != 1)
             throw new Exception("Kan niet file delete method hebben met anders dan 1 parameter");
 
         var isPageAttr = methodSymbol.GetAttributes()
@@ -154,14 +153,14 @@ public class InterfaceMethod
             methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
 
-        IsAsync = ResponseType.NameInner == "Task";
+        IsAsync = Type.NameInner == "Task";
     }
 
     public ServiceContext DataModel { get; }
     public Interface Interface { get; }
     public IMethodSymbol MethodSymbol { get; }
-    public ITypeSymbol ResponseTypeSymbol { get; }
-    public TypeHelper ResponseType { get; }
+    public ITypeSymbol TypeSymbol { get; }
+    public TypeHelper Type { get; }
     public string Name { get; }
     public string Title { get; }
     public InterfaceMethodArgument[] Arguments { get; }
@@ -226,8 +225,7 @@ public class InterfaceMethod
         }
     }
 
-
-    TypeDigger? ResponseTypeDiggerInner { get; set; }
-    public TypeDigger ResponseTypeDigger => ResponseTypeDiggerInner ??= new TypeDigger(DataModel, ResponseTypeSymbol, IsNullable);
+    TypeDigger? TypeDiggerInner { get; set; }
+    public TypeDigger TypeDigger => TypeDiggerInner ??= new TypeDigger(DataModel, TypeSymbol, IsNullable);
 
 }

@@ -1,12 +1,11 @@
-﻿using gAPI.AutoSse.Helpers;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoSse.Models;
+namespace gAPI.AutoSseServer.Models;
 
-internal class InterfaceMethodArgument
+public class InterfaceMethodArgument
 {
-    internal InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
+    public InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
     {
         DataModel = dataModel;
         ServiceMethod = serviceMethod;
@@ -35,6 +34,8 @@ internal class InterfaceMethodArgument
     TypeHelper? ParameterTypeInner { get; set; }
     public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
 
-    TypeDigger? ParameterTypeRapportInner { get; set; }
-    public TypeDigger ParameterTypeRapport => ParameterTypeRapportInner ??= new TypeDigger(DataModel, ParameterType.Type);
+    public override string ToString()
+    {
+        return Name;
+    }
 }

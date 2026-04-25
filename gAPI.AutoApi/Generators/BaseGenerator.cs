@@ -1,79 +1,94 @@
-﻿using gAPI.AutoApi.Models;
+﻿using gAPI.AutoApiServer.Models;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApi.Generators;
+namespace gAPI.AutoApiServer.Generators;
 
-internal class BaseGenerator : SharedReference
+public abstract class BaseGenerator : SharedReference
 {
     public string Directory { get; protected set; } = string.Empty;
     public string FileName { get; protected set; } = string.Empty;
     public string Code { get; protected set; } = string.Empty;
     private List<string> Namespaces { get; set; } = [];
 
+    public abstract void GenerateCode();
 
-    internal void Reg(string @namespace)
+    public void RegRecursive(TypeHelper type)
+    {
+        Reg(type);
+        foreach (var item in type.UnderlayingTypes)
+        {
+            RegRecursive(item);
+        }
+    }
+    public void Reg(string @namespace)
     {
         if (@namespace != null)
             Namespaces.Add(@namespace);
     }
-    internal void RegRange(IEnumerable<string> namespaces)
+    public void Reg(ITypeSymbol underlyingType)
+    {
+        if (underlyingType.ContainingNamespace != null)
+        {
+            Namespaces.Add(underlyingType.ContainingNamespace.ToString());
+        }
+    }
+    public void RegRange(IEnumerable<string> namespaces)
     {
         if (namespaces != null)
             foreach (var @namespace in namespaces)
                 if (@namespace != null)
                     Namespaces.Add(@namespace);
     }
-    internal void Reg(Interface type)
+    public void Reg(Interface type)
     {
         if (type?.Namespace != null)
             Namespaces.Add(type.Namespace);
     }
-    internal void Reg(BaseGenerator generator)
+    public void Reg(BaseGenerator generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
     }
-    internal void Reg(SharedReference generator)
+    public void Reg(SharedReference generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
     }
 
-    internal void UnReg(string @namespace)
+    public void UnReg(string @namespace)
     {
         Namespaces.RemoveAll(a => a == @namespace);
     }
 
 
-    internal string GetNamespacesCode()
+    public string GetNamespacesCode()
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
             .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System" && a != Namespace)
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)
         {
-            code += $"using {name};" + Environment.NewLine;
+            code += $"using {name};\r\n";
         }
         return code;
     }
-    internal string GetRazorNamespacesCode()
+    public string GetRazorNamespacesCode()
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
         .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System")
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)
@@ -84,7 +99,7 @@ internal class BaseGenerator : SharedReference
         return code;
     }
 
-    internal static string GetFolderPath(string huidige, string target)
+    public static string GetFolderPath(string huidige, string target)
     {
         var folder = string.Empty;
         if (target.StartsWith(huidige))

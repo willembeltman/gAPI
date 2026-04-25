@@ -1,4 +1,5 @@
 ﻿using gAPI.Attributes;
+using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Models.Configs;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
@@ -19,10 +20,10 @@ public class SharedReferences
             )
             .Select(a => new SharedReference(a))
             .First();
-        IsFormFileExtention = allTypes
+        IsFormFileExtension = allTypes
             .Where(t =>
                 t.IsClass &&
-                t.GetCustomAttribute<IsFormFileExtentionAttribute>() != null
+                t.GetCustomAttribute<IsFormFileExtensionAttribute>() != null
             )
             .Select(a => new SharedReference(a))
             .First();
@@ -51,12 +52,36 @@ public class SharedReferences
         BaseResponseT = new SharedReference("gAPI.Dtos.BaseResponseT");
         BaseListResponseT = new SharedReference("gAPI.Dtos.BaseListResponseT");
         StateChangedHandler = new SharedReference("gAPI.Delegates.StateChangedHandler");
+        IClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces.IClientAuthenticatedHttpClient");
+        ItemDataSource = new SharedReference("gAPI.Core.Client.ItemDataSource");
+        ListDataSource = new SharedReference("gAPI.Core.Client.ListDataSource");
 
-        State = allTypes
+
+        int CountHierarchy(Type? t)
+        {
+            var count = 0;
+            while (t != null && t != typeof(object))
+            {
+                if (t.GetCustomAttributes(typeof(IsStateDtoAttribute), inherit: false).Any())
+                    return count;
+
+                count++;
+                t = t.BaseType;
+            }
+            return -1;
+        }
+
+        var state = allTypes
             .Where(t =>
                 t.IsClass &&
-                t.GetCustomAttributes(typeof(IsStateDtoAttribute), inherit: true).Length > 0
+                t.GetCustomAttributes(typeof(IsStateDtoAttribute), inherit: true).Any()
             )
+            .Select(t => new { Type = t, Count = CountHierarchy(t) })
+            .OrderByDescending(a => a.Count)
+            .Select(a => a.Type)
+            .ToArray();
+
+        State = state
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "The `State` dto is missing or does not have the required " +
@@ -67,7 +92,7 @@ public class SharedReferences
     }
 
     public SharedReference FormFile { get; }
-    public SharedReference IsFormFileExtention { get; }
+    public SharedReference IsFormFileExtension { get; }
     public SharedReference BaseResponse { get; }
     public SharedReference BaseResponseT { get; }
     public SharedReference BaseListResponseT { get; }
@@ -77,4 +102,7 @@ public class SharedReferences
     public SharedReference RedirectToLogin { get; }
     public SharedReference State { get; }
     public SharedReference StateChangedHandler { get; }
+    public SharedReference IClientAuthenticatedHttpClient { get; }
+    public SharedReference ItemDataSource { get; }
+    public SharedReference ListDataSource { get; }
 }

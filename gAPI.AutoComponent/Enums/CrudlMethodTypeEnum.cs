@@ -11,5 +11,6 @@ public enum CrudlMethodTypeEnum
     ListBy,
     IsPage,
     FileUpdate,
-    FileDelete
+    FileDelete,
+    IsComponent
 }

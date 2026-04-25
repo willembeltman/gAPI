@@ -46,7 +46,7 @@ public class DetailsGenerator : BaseGenerator
             properties = properties.Where(a => a.Name != "CanUpdate" && a.Name != "CanDelete");
         }
 
-        var propertyMarkup = string.Join("\n", properties.Select(a => GetPropertyMarkup(a)));
+        var propertyMarkup = string.Join("\r\n", properties.Select(a => GetPropertyMarkup(a)));
         var storageMarkup = Dto.IsStorageFileUrlProperty ? GetStorageFileView() : "";
 
         // Volledige Razor view

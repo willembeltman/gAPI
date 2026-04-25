@@ -1,21 +1,20 @@
 ﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models.Configs;
 using gAPI.AutoPage.Models.CrudlModels;
-using gAPI.AutoPage.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Pages
 {
     public class AutoPageGenerator : BaseGenerator, IPage
     {
-        public AutoPageGenerator(Generator generator, CrudlMethod method, PageConfig config)
+        public AutoPageGenerator(Generator generator, CrudlMethod method)
         {
             Context = generator;
             Generator = new PageGenerator(
                 generator,
                 method,
                 this,
-                config.Pages_Destination.Directory,
-                config.Pages_Destination.Namespace);
+                "Pages",
+                "gAPI.Generated.Pages");
 
             FileName = $"{Name}.g.cs";
         }
@@ -32,7 +31,7 @@ namespace gAPI.AutoPage.Generators.Pages
         public string Route => Generator.Route;
         public string Title => Generator.Title;
 
-        internal void GenerateCode()
+        public void GenerateCode()
         {
             Generator.GenerateCode();
 

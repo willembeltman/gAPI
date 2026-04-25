@@ -154,6 +154,24 @@ public class TypeHelper : ITypeHelper
 
     public TypeHelper[] UnderlayingTypes { get; }
 
+    ITypeHelper[] ITypeHelper.UnderlayingTypes => UnderlayingTypes;
+
+    public bool IsPrimitive => throw new NotImplementedException();
+
+    public bool IsEntryPoint => throw new NotImplementedException();
+
+    public bool IsJunction => throw new NotImplementedException();
+
+    public bool IsUser => throw new NotImplementedException();
+
+    public bool IsAuthorized => throw new NotImplementedException();
+
+    public bool IsICrudEntity => throw new NotImplementedException();
+
+    public ITypeHelper? JunctionLeftRealType => throw new NotImplementedException();
+
+    public ITypeHelper? JunctionRightRealType => throw new NotImplementedException();
+
     public static string GetSimpleCsTypeByName(string name)
     {
         switch (name)
@@ -198,5 +216,10 @@ public class TypeHelper : ITypeHelper
     public override string ToString()
     {
         return FullName;
+    }
+
+    public ITypeHelperProperty[] GetProperties()
+    {
+        throw new NotImplementedException();
     }
 }

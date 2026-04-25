@@ -6,7 +6,7 @@
 
 //namespace gAPI.CodeGen.Frontend.Generators.SingleFiles
 //{
-//    internal class WebAssemblyAppGenerator
+//    public class WebAssemblyAppGenerator
 //    {
 //    }
 //}

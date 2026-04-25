@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
@@ -20,8 +19,13 @@ public class CrudlType : ICrudlType
         ResponseType = responseType;
         Methods = methods;
 
-        Properties = Dto?.Properties
-            .Select((p, index) => new CrudlProperty(this, p, index))
+        foreach (var method in methods)
+        {
+            method.CrudlType = this;
+        }
+
+        Properties = ResponseTypeBase?.GetProperties()
+            .Select(p => new CrudlProperty(this, p))
             .ToArray() ?? [];
     }
 
@@ -30,29 +34,28 @@ public class CrudlType : ICrudlType
     public CrudlMethod[] Methods { get; }
     public CrudlProperty[] Properties { get; }
 
-    public string Name => Dto?.Name ?? string.Empty;
-    public string Namespace => Dto?.Namespace ?? string.Empty;
-    public string FullName => Dto?.FullName ?? string.Empty;
+    public string Name => ResponseTypeBase?.Name ?? string.Empty;
+    public string Namespace => ResponseTypeBase?.Namespace ?? string.Empty;
+    public string FullName => ResponseTypeBase?.FullName ?? string.Empty;
 
-    TypeDigger? _ResponseTypeDigger { get; set; }
-    public TypeDigger ResponseTypeDigger
-    {
-        get
-        {
-            _ResponseTypeDigger ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol);
-            return _ResponseTypeDigger;
-        }
-    }
-    public Dto? Dto => ResponseTypeDigger.Dto;
+    TypeDigger? ResponseTypeDiggerInner { get; set; }
+    public TypeDigger ResponseTypeDigger => ResponseTypeDiggerInner ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol);
+    public TypeHelper? ResponseTypeBase => ResponseTypeDigger.Type;
 
     public bool IsStorageFileUrlProperty => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
-    public bool IsEntryPoint => Dto?.IsEntryPoint == true;
-    public bool IsJunction => Dto?.IsJunction == true;
-    public bool IsUser => Dto?.IsUser == true;
-    public bool IsAuthorized => Dto?.IsAuthorized == true;
-    public bool IsICrudEntity => Dto?.IsICrudEntity == true;
-    public TypeHelper? JunctionLeftRealType => Dto?.JunctionLeftRealType;
-    public TypeHelper? JunctionRightRealType => Dto?.JunctionRightRealType;
+    public bool IsEntryPoint => ResponseTypeBase?.IsEntryPoint == true;
+    public bool IsJunction => ResponseTypeBase?.IsJunction == true;
+    public bool IsUser => ResponseTypeBase?.IsUser == true;
+    public bool IsAuthorized => ResponseTypeBase?.IsAuthorized == true;
+    public bool IsICrudEntity => ResponseTypeBase?.IsICrudEntity == true;
+    public string? IsPageRoute => Methods.FirstOrDefault(a => a.IsPageRoute != null)?.IsPageRoute;
+    public string? IsPageTitle => Methods.FirstOrDefault(a => a.IsPageTitle != null)?.IsPageTitle;
+    public string? IsPageSubmitText => Methods.FirstOrDefault(a => a.IsPageSubmitText != null)?.IsPageSubmitText;
+    public string? IsPageResponseText => Methods.FirstOrDefault(a => a.IsPageResponseText != null)?.IsPageResponseText;
+
+    public bool IsNotAuthorized => throw new System.NotImplementedException();
+    public ITypeHelper? JunctionLeftRealType => ResponseTypeBase?.JunctionLeftRealType;
+    public ITypeHelper? JunctionRightRealType => ResponseTypeBase?.JunctionRightRealType;
 
     CrudlMethod? _ReadMethod;
     public CrudlMethod ReadMethod => _ReadMethod ??= Methods.FirstOrDefault(a => a.CrudlMethodType == CrudlMethodTypeEnum.Read);
@@ -75,12 +78,8 @@ public class CrudlType : ICrudlType
     {
         get
         {
-#pragma warning disable CS8604 // Possible null reference argument.
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             if (_JunctionLeftApi == null && JunctionLeftRealType != null)
-                _JunctionLeftApi = Context.Crudls.FirstOrDefault(a => a.ResponseType == JunctionLeftRealType);
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-#pragma warning restore CS8604 // Possible null reference argument.
+                _JunctionLeftApi = Context.Crudls.FirstOrDefault(a => a.ResponseType.FullName == JunctionLeftRealType.FullName);
             return _JunctionLeftApi;
         }
     }
@@ -90,27 +89,19 @@ public class CrudlType : ICrudlType
     {
         get
         {
-#pragma warning disable CS8604 // Possible null reference argument.
             if (_JunctionRightApi == null && JunctionRightRealType != null!)
-                _JunctionRightApi = Context.Crudls.FirstOrDefault(a => a.ResponseType == JunctionRightRealType);
-#pragma warning restore CS8604 // Possible null reference argument.
+                _JunctionRightApi = Context.Crudls.FirstOrDefault(a => a.ResponseType.FullName == JunctionRightRealType.FullName);
             return _JunctionRightApi;
         }
     }
 
     CrudlProperty[]? _ForeignItemProperties;
     public CrudlProperty[] ForeignItemProperties
-        => _ForeignItemProperties ??= Properties
-        .Where(a => a.ForeignKey_ReadMethod != null)
-        .ToArray();
+        => _ForeignItemProperties ??= [.. Properties.Where(a => a.ForeignKey_ReadMethod != null)];
 
     CrudlMethod[]? _ForeignListMethods;
     public CrudlMethod[] ForeignListMethods
-#pragma warning disable CS8604 // Possible null reference argument.
-        => _ForeignListMethods ??= Context.AllCrudlMethods
-        .Where(a => a.CrudlMethodType == CrudlMethodTypeEnum.ListBy && a.ForeignRealType == ResponseType)
-        .ToArray();
-#pragma warning restore CS8604 // Possible null reference argument.
+        => _ForeignListMethods ??= [.. Context.AllCrudlMethods.Where(a => a.CrudlMethodType == CrudlMethodTypeEnum.ListBy && a.IsListByForeignType?.FullName == ResponseType.FullName)];
 
     CrudlProperty? _KeyProperty;
     public CrudlProperty KeyProperty
@@ -124,7 +115,7 @@ public class CrudlType : ICrudlType
     IEnumerable<ICrudlProperty> ICrudlType.ForeignItemProperties => ForeignItemProperties;
 
     ICrudlMethod[] ICrudlType.Methods => Methods;
-    ITypeHelper ICrudlType.ResponseTypeHelper => ResponseType;
+    ITypeHelper ICrudlType.ResponseType => ResponseType;
     ITypeDigger ICrudlType.ResponseTypeDigger => ResponseTypeDigger;
     ICrudlMethod? ICrudlType.ReadMethod => ReadMethod;
     ICrudlMethod? ICrudlType.CreateMethod => CreateMethod;

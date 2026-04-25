@@ -19,6 +19,13 @@ public interface ITypeHelper : ISharedReference
     bool IsDateTime { get; }
     bool IsPrimitive { get; }
     bool IsValueType { get; }
+    bool IsEntryPoint { get; }
+    bool IsJunction { get; }
+    bool IsUser { get; }
+    bool IsAuthorized { get; }
+    bool IsICrudEntity { get; }
+    ITypeHelper? JunctionLeftRealType { get; }
+    ITypeHelper? JunctionRightRealType { get; }
 
     ITypeHelperProperty[] GetProperties();
 }

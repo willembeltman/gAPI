@@ -1,21 +1,19 @@
-﻿using gAPI.AutoPage.Models.Configs;
-using gAPI.AutoPage.SimpleRazorCompiler;
+﻿using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Layout
 {
     public class AutoNavMenuNotAuthenticatedGenerator : BaseGenerator
     {
         public AutoNavMenuNotAuthenticatedGenerator(
-            Generator context,
-            PageConfig config)
+            Generator context)
         {
             Context = context;
 
             Generator = new NavMenuNotAuthenticatedGenerator(
                 context,
                 this,
-                config.Layout_Destination.Directory,
-                config.Layout_Destination.Namespace,
+                "Layout",
+                "gAPI.Generated.Layout",
                 true);
         }
 
@@ -27,7 +25,7 @@ namespace gAPI.AutoPage.Generators.Layout
         public override string Name => Generator.Name;
         public override string FileName => Generator.FileName;
 
-        internal void GenerateCode()
+        public void GenerateCode()
         {
             Generator.GenerateCode();
 

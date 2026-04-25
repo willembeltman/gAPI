@@ -3,7 +3,7 @@
 namespace gAPI.CodeGen.Frontend.Generators;
 
 
-public static class BaseGeneratorExtentions
+public static class BaseGeneratorExtensions
 {
     public static void Save(this IBaseGenerator baseGenerator, bool overwrite = true)
     {

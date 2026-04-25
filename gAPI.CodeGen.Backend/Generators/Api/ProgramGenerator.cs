@@ -19,14 +19,14 @@ public class ProgramGenerator : BaseGenerator
 
     public BackendGenerator Context { get; }
 
-    public AddCommenServicesExtentionGenerator AddCommenServicesExtention => Context.AddCommenServicesExtention;
-    public AddCrudExtentionsGenerator AddCrudExtention => Context.AddCrudExtention;
-    public AddDatabaseExtentionGenerator AddDatabaseExtention => Context.AddDatabaseExtention;
-    public AddRemainingAuthenticationServicesExtentionGenerator AddRemainingAuthenticationServicesExtention => Context.AddRemainingAuthenticationServicesExtention;
-    public SharedReference CreateServerConfigExtention => Context.SharedReferences.CreateServerConfigExtention;
-    public SharedReference AddAutoApiExtention => Context.SharedReferences.AddAutoApiExtention;
-    public SharedReference AddAutoSseExtention => Context.SharedReferences.AddAutoSseExtention;
-    public SharedReference AddStorageExtention => Context.SharedReferences.AddStorageExtention;
+    public AddCommenServicesExtensionGenerator AddCommenServicesExtension => Context.AddCommenServicesExtension;
+    public AddCrudExtensionsGenerator AddCrudExtension => Context.AddCrudExtension;
+    public AddDatabaseExtensionGenerator AddDatabaseExtension => Context.AddDatabaseExtension;
+    public AddRemainingAuthenticationServicesExtensionGenerator AddRemainingAuthenticationServicesExtension => Context.AddRemainingAuthenticationServicesExtension;
+    public SharedReference CreateServerConfigExtension => Context.SharedReferences.CreateServerConfigExtension;
+    public SharedReference AddAutoApiExtension => Context.SharedReferences.AddAutoApiExtension;
+    public SharedReference AddAutoSseExtension => Context.SharedReferences.AddAutoSseExtension;
+    public SharedReference AddStorageExtension => Context.SharedReferences.AddStorageExtension;
     public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
     public ServerAuthenticationServiceGenerator ServerAuthenticationService => Context.ServerAuthenticationService;
     public ServerAuthenticationHandlerGenerator ServerAuthenticationHandler => Context.ServerAuthenticationHandler;
@@ -36,15 +36,15 @@ public class ProgramGenerator : BaseGenerator
     {
         Reg("Microsoft.EntityFrameworkCore");
         Reg("Scalar.AspNetCore");
-        Reg(CreateServerConfigExtention);
+        Reg(CreateServerConfigExtension);
         Reg(IServerAuthenticationService);
-        Reg(AddCommenServicesExtention);
-        Reg(AddCrudExtention);
-        Reg(AddDatabaseExtention);
-        Reg(AddRemainingAuthenticationServicesExtention);
-        Reg(AddAutoApiExtention);
-        Reg(AddAutoSseExtention);
-        Reg(AddStorageExtention);
+        Reg(AddCommenServicesExtension);
+        Reg(AddCrudExtension);
+        Reg(AddDatabaseExtension);
+        Reg(AddRemainingAuthenticationServicesExtension);
+        Reg(AddAutoApiExtension);
+        Reg(AddAutoSseExtension);
+        Reg(AddStorageExtension);
         Reg(ServerAuthenticationService);
         Reg(ServerAuthenticationMiddleware);
 

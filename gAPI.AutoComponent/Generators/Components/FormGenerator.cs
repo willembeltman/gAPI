@@ -10,9 +10,9 @@ public class FormGenerator : BaseGenerator
         ICrudlType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
-        ISharedReference iClientAuthenticationService,
+        ISharedReference iClientAuthenticatedHttpClient,
         ISharedReference formFile,
-        ISharedReference toFormFileAsyncExtention,
+        ISharedReference toFormFileAsyncExtension,
         IBaseGenerator imports,
         string directory,
         string @namespace)
@@ -21,9 +21,9 @@ public class FormGenerator : BaseGenerator
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         Imports = imports;
-        IClientAuthenticationService = iClientAuthenticationService;
+        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
         FormFile = formFile;
-        IsFormFileExtention = toFormFileAsyncExtention;
+        IsFormFileExtension = toFormFileAsyncExtension;
 
         Directory = directory;
         Namespace = @namespace;
@@ -33,9 +33,9 @@ public class FormGenerator : BaseGenerator
     }
 
     public IBaseGenerator Imports { get; }
-    public ISharedReference IClientAuthenticationService { get; }
+    public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference FormFile { get; }
-    public ISharedReference IsFormFileExtention { get; }
+    public ISharedReference IsFormFileExtension { get; }
     public ICrudlType CrudlType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
@@ -54,13 +54,13 @@ public class FormGenerator : BaseGenerator
         Imports.Reg(CrudlType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
-        Imports.Reg(IClientAuthenticationService);
+        Imports.Reg(IClientAuthenticatedHttpClient);
 
         if (CrudlType.IsStorageFileUrlProperty)
         {
             Imports.Reg("Microsoft.AspNetCore.Http");
             Imports.Reg(FormFile);
-            Imports.Reg(IsFormFileExtention);
+            Imports.Reg(IsFormFileExtension);
         }
 
         var clients = CrudlType.ForeignItemProperties
@@ -86,7 +86,7 @@ public class FormGenerator : BaseGenerator
                 !p.IsKey)
             .ToArray();
 
-        var propertySections = string.Join("\n", properties.Select(a => GetPropertyMarkup(a)));
+        var propertySections = string.Join("\r\n", properties.Select(a => GetPropertyMarkup(a)));
 
         // Razor file output
         Code = $@"@if (DataSource?.Model == null)

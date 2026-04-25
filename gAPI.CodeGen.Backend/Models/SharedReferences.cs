@@ -9,12 +9,12 @@ public class SharedReferences
         BaseResponse = new SharedReference("gAPI.Dtos.BaseResponse");
         BaseResponseT = new SharedReference("gAPI.Dtos.BaseResponseT");
         BaseListResponseT = new SharedReference("gAPI.Dtos.BaseListResponseT");
-        CreateServerConfigExtention = new SharedReference("gAPI.Extentions.CreateServerConfigExtention");
-        AddStorageExtention = new SharedReference("gAPI.Storage.AddStorageExtention");
+        CreateServerConfigExtension = new SharedReference("gAPI.Extensions.CreateServerConfigExtension");
+        AddStorageExtension = new SharedReference("gAPI.Storage.AddStorageExtension");
         ServerConfig = new SharedReference("gAPI.Dtos.ServerConfig");
 
-        AddAutoApiExtention = new SharedReference(config.Api_Namespace, "AddAutoApiExtention"); // todo??
-        AddAutoSseExtention = new SharedReference(config.Api_Namespace, "AddAutoSseExtention"); // todo??
+        AddAutoApiExtension = new SharedReference(config.Api_Namespace, "AddAutoApiExtension"); // todo??
+        AddAutoSseExtension = new SharedReference(config.Api_Namespace, "AddAutoSseExtension"); // todo??
 
         IUseCase = new SharedReference("gAPI.Interfaces.IUseCase");
         Mapping = new SharedReference("gAPI.Interfaces.Mapping");
@@ -27,9 +27,9 @@ public class SharedReferences
         IsStateDto = new SharedReference("gAPI.Attributes.IsStateDto");
 
         IStorageService = new SharedReference("gAPI.Storage.IStorageService");
-        ApplyOrderByExtention = new SharedReference("gAPI.Extentions.ApplyOrderBy");
+        ApplyOrderByExtension = new SharedReference("gAPI.Extensions.ApplyOrderBy");
 
-        StringExtentions = new SharedReference("gAPI.Extentions.StringExtentions");
+        StringExtensions = new SharedReference("gAPI.Extensions.StringExtensions");
         IsAuthorized = new SharedReference("gAPI.Attributes.IsAuthorized");
         IsNotAuthorized = new SharedReference("gAPI.Attributes.IsNotAuthorized");
         GenerateApi = new SharedReference("gAPI.Attributes.GenerateApi");
@@ -44,10 +44,10 @@ public class SharedReferences
     public SharedReference BaseResponse { get; }
     public SharedReference BaseResponseT { get; }
     public SharedReference BaseListResponseT { get; }
-    public SharedReference CreateServerConfigExtention { get; }
-    public SharedReference AddAutoApiExtention { get; }
-    public SharedReference AddAutoSseExtention { get; }
-    public SharedReference AddStorageExtention { get; }
+    public SharedReference CreateServerConfigExtension { get; }
+    public SharedReference AddAutoApiExtension { get; }
+    public SharedReference AddAutoSseExtension { get; }
+    public SharedReference AddStorageExtension { get; }
     public SharedReference ServerConfig { get; }
     public SharedReference IUseCase { get; }
     public SharedReference Mapping { get; }
@@ -56,8 +56,8 @@ public class SharedReferences
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference IStorageService { get; }
     public SharedReference IsStateDto { get; }
-    public SharedReference ApplyOrderByExtention { get; }
-    public SharedReference StringExtentions { get; }
+    public SharedReference ApplyOrderByExtension { get; }
+    public SharedReference StringExtensions { get; }
     public SharedReference IsAuthorized { get; }
     public SharedReference IsNotAuthorized { get; }
 

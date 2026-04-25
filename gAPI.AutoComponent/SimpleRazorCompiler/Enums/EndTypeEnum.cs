@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoComponent.SimpleRazorCompiler.Enums;
+﻿namespace gAPI.SimpleRazorCompiler.Enums;
 
 public enum EndTypeEnum
 {

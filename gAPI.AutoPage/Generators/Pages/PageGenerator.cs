@@ -23,7 +23,7 @@ public class PageGenerator : BaseGenerator, IPage
         Imports = imports;
         Method = method;
         Interface = method.Interface;
-        ResponseType = method.ResponseType.UnderlayingTypes[0];
+        ResponseType = method.Type.UnderlayingTypes[0];
 
         InnerResponseType = ResponseType;
 
@@ -63,7 +63,6 @@ public class PageGenerator : BaseGenerator, IPage
         }
         Directory = fullDirectory;
 
-        ListDataSource = Context.SharedReferences.ListDataSource!;
     }
 
     public IContext Context { get; }
@@ -72,6 +71,7 @@ public class PageGenerator : BaseGenerator, IPage
     public ISharedReference Interface { get; }
     public ITypeHelper ResponseType { get; }
     public ITypeHelper InnerResponseType { get; }
+    public ISharedReference ListDataSource => Context.ListDataSource;
     public bool IsAuthorized { get; }
     public bool IsNotAuthorized { get; }
     public bool IsBaseResponse { get; }
@@ -82,7 +82,6 @@ public class PageGenerator : BaseGenerator, IPage
     public string SubmitText { get; }
     public string ResponseText { get; }
     public string RoutePath { get; }
-    public ISharedReference ListDataSource { get; }
 
     public List<string> Injects = [];
     public List<string> Properties = [];
@@ -98,11 +97,11 @@ public class PageGenerator : BaseGenerator, IPage
         Imports.Reg("Microsoft.AspNetCore.Components.Web");
         Imports.Reg("gAPI.Dtos");
         Imports.Reg("Microsoft.JSInterop");
+        Imports.Reg(Method.TypeDigger);
 
         foreach (var arg in args)
         {
             Imports.Reg(arg.Type);
-            Imports.Reg(Method.ResponseTypeDigger);
         }
 
         Imports.Reg(Interface);
@@ -114,21 +113,20 @@ public class PageGenerator : BaseGenerator, IPage
             args.Select(arg =>
                 GenerateInputForType($"{space}    ", arg.Name!.ToNameCase(), arg)));
 
-        Code = $@"@page ""{Route}""
+        Code = $@"
 @implements IAsyncDisposable
 @inject {Interface.Name} {Interface.Name.ToCamelCase()}{(IsBaseResponse || IsBaseResponseT || IsBaseListResponseT ? $@"
 @inject NavigationManager NavigationManager" : "")}{string.Join("", Injects)}
 @inject IJSRuntime JS
 
 <PageTitle>{Title}</PageTitle>
-<h2>{Title}</h3>{(Method.IsAuthorized && !Method.IsNotAuthorized ? $@"
+<h2>{Title}</h2>{(Method.IsAuthorized && !Method.IsNotAuthorized ? $@"
 
 <AuthorizeView>
     <Authorized Context=""_"">" : "")}{(!Method.IsAuthorized && Method.IsNotAuthorized ? $@"
 
 <AuthorizeView>
     <Authorized>
-        <RedirectToHome />
     </Authorized>
     <NotAuthorized Context=""_"">" : "")}
 {(args.Length == 0 ? $@"
@@ -197,9 +195,17 @@ public class PageGenerator : BaseGenerator, IPage
 
 @code {{{(DataSources.Any() ? $@"
     private CancellationTokenSource? Cts;" : $@"
-    private CancellationTokenSource Cts = new();")}{string.Join("", args.Select(arg => $@"
-    private {arg.Type.Name} {arg.Name!.ToNameCase()} {{ get; set; }}{(arg.Type.IsNullable || arg.Type.IsValueType ? "" : (arg.Type.IsString ? " = string.Empty;" : " = new();"))}"))}{(!ResponseType.IsTask && !ResponseType.IsVoid ? $@"
-    private {ResponseType.Name}{(ResponseType.IsNullable ? "" : "?")} Response {{ get; set; }}" : "")}{(args.Length == 0 ? $@"
+    private CancellationTokenSource Cts = new();")}{(!ResponseType.IsTask && !ResponseType.IsVoid ? $@"
+    private {ResponseType.Name}{(ResponseType.IsNullable ? "" : "?")} Response {{ get; set; }}" : "")}
+
+{string.Join("", args.Select(arg =>
+{
+    RegRange(arg.GetAttributes().Select(a => a.Namespace));
+    var attr = string.Join("", arg.GetAttributes().Select(a => $@"
+    [{a.ToNameString()}]"));
+    return $@"{attr}
+    public {arg.Type.Name} {arg.Name!.ToNameCase()} {{ get; set; }}{(arg.Type.IsNullable || arg.Type.IsValueType ? "" : (arg.Type.IsString ? " = string.Empty;" : " = new();"))}";
+}))}{(args.Length == 0 ? $@"
 
     protected override async Task OnInitializedAsync()
     {{
@@ -227,6 +233,7 @@ public class PageGenerator : BaseGenerator, IPage
             : args.Select(a => a.Name!.ToNameCase()))});{(IsBaseResponse || IsBaseResponseT ? $@"
         if (!string.IsNullOrWhiteSpace(Response.RedirectPath))
         {{
+            Console.WriteLine(""RedirectPath"");
             NavigationManager.NavigateTo(Response.RedirectPath);
         }}" : "")}
     }}
@@ -242,6 +249,7 @@ public class PageGenerator : BaseGenerator, IPage
         Cts.Dispose();{string.Join("", Disposes)}
     }}")}
 }}";
+        Code = $@"@page ""{Route}""{GetRazorNamespacesCode()}{Code}";
     }
     private string GenerateInputForType(string space, string propertyName, ITypeHelperProperty prop)
     {
@@ -253,10 +261,10 @@ public class PageGenerator : BaseGenerator, IPage
 
         if (prop.IsForeignKeyType != null)
         {
-            var crudl = Context.Crudls.FirstOrDefault(a => a.Dto?.Type.FullName == prop.IsForeignKeyType.FullName);
+            var crudl = Context.Crudls.FirstOrDefault(a => a.ResponseTypeDigger?.Type.FullName == prop.IsForeignKeyType.FullName);
             if (crudl != null)
             {
-                var dto = crudl.Dto;
+                var dto = crudl.ResponseTypeDigger;
                 var interfaceMethod = crudl.Methods.FirstOrDefault(a => a.CrudlMethodType == Enums.CrudlMethodTypeEnum.List);
                 if (interfaceMethod != null && dto != null)
                 {
@@ -397,7 +405,7 @@ public class PageGenerator : BaseGenerator, IPage
         }
 
         return $@"
-{space}<dl>{string.Join("", type.GetProperties().Select(prop =>
+{space}<dl>{string.Join("", type.GetProperties().Select((Func<ITypeHelperProperty, string>)(prop =>
         {
             if (prop.Type.GetProperties().Length > 0 &&
                 !prop.Type.IsPrimitive &&
@@ -405,14 +413,14 @@ public class PageGenerator : BaseGenerator, IPage
             {
                 return $@"
 {space}    <dt>{prop.Name}</dt>
-{space}    <dd>{GenerateDisplayForType($"{space}        ", $"{name}.{prop.Name}", prop.Title, prop.Type)}
+{space}    <dd>{GenerateDisplayForType($"{space}        ", $"{name}.{prop.Name}", prop.Title, (ITypeHelper)prop.Type)}
 {space}    </dd>";
             }
 
             return $@"
 {space}    <dt>{prop.Name}</dt>
 {space}    <dd>@{name}.{prop.Name}</dd>";
-        }))}
+        })))}
 {space}</dl>";
     }
 

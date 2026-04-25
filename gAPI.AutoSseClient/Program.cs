@@ -1,10 +1,8 @@
-﻿using gAPI.AutoSseClient.Models;
-using gAPI.AutoSseClient.Models.Configs;
+﻿using gAPI.AutoSseClient.Helpers;
+using gAPI.AutoSseClient.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -17,26 +15,8 @@ public class Program : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autohubclient.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
-
-        var combined = context.CompilationProvider.Combine(configFile);
-
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+        context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-            var (compilation, configText) = tuple;
-
-            CurrentSpc = spc;
-
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
             //#if DEBUG
             //                if (!Debugger.IsAttached)
             //                {
@@ -46,9 +26,17 @@ public class Program : IIncrementalGenerator
 
             try
             {
-                var config = ClientConfigParser.Parse(configText!);
-                var dataModel = new ServiceContext(compilation, config);
-                Generator.Generate(dataModel, spc);
+                var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
+                var sharedReferences = new SharedReferences(allSymbols);
+                var serviceContext = new ServiceContext(allSymbols);
+                var serviceModelErrors = serviceContext.CheckForErrors();
+                var generator = new Generator(serviceContext, sharedReferences);
+                generator.Generate(spc);
+
+                if (serviceModelErrors.Count > 0)
+                {
+                    ShowError(string.Join(", ", serviceModelErrors), spc);
+                }
             }
             catch (Exception ex)
             {
@@ -119,9 +107,9 @@ public class Program : IIncrementalGenerator
     //            var sb = $@"
     //namespace GeneratorTypes
     //{{
-    //    internal static class AllControllers
+    //    public static class AllControllers
     //    {{
-    //        internal static void ListAll()
+    //        public static void ListAll()
     //        {{
     //            System.Console.WriteLine(""Enums:"");
     //{sbEnums}

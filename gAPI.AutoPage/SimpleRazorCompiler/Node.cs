@@ -1,9 +1,9 @@
-﻿using gAPI.AutoPage.SimpleRazorCompiler.Enums;
+﻿using gAPI.SimpleRazorCompiler.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoPage.SimpleRazorCompiler;
+namespace gAPI.SimpleRazorCompiler;
 
 public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
 {
@@ -40,6 +40,7 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
                 case NodeTypeEnum.Xml:
                     position = startIndex + 1;
 
+                    // Afsluiter?
                     if (markup[position] == '/')
                     {
                         position = position + 1;
@@ -80,11 +81,14 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
                         }
                         else if (spaceIndex == -1)
                         {
-                            spaceIndex = endIndex;
+                            name = markup.Substring(position, endIndex - position);
+                            position = endIndex;
                         }
-
-                        name = markup.Substring(position, spaceIndex - position);
-                        position = spaceIndex + 1;
+                        else
+                        {
+                            name = markup.Substring(position, spaceIndex - position);
+                            position = spaceIndex + 1;
+                        }
 
                         if (name == "!--")
                         {
@@ -143,7 +147,7 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
             position = endIndex + 1;
             position = ReadBody(markup, position);
         }
-        return position;
+        return position; 
     }
     private int ReadXmlAttributes(string markup, int position)
     {

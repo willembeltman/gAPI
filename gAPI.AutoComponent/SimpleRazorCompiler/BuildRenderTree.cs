@@ -1,16 +1,16 @@
-﻿using gAPI.AutoComponent.Models;
-using gAPI.AutoComponent.SimpleRazorCompiler.Enums;
+﻿using gAPI.AutoComponent.Interfaces;
+using gAPI.SimpleRazorCompiler.Enums;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace gAPI.AutoComponent.SimpleRazorCompiler;
+namespace gAPI.SimpleRazorCompiler;
 
 public static class BuildRenderTree
 {
-    public static string Compile(this CodeNode structure, SharedReference[] specialControls, List<string> usings)
+    public static string Compile(this CodeNode structure, ISharedReference[] AllComponents, List<string> usings)
     {
         var builderIndex = 0;
         var sb = new StringBuilder();
@@ -19,13 +19,13 @@ public static class BuildRenderTree
         sb.AppendLine("            var seq0 = 0;");
         foreach (var node in structure.Nodes)
         {
-            ProcessNode(node, sb, "            ", builderIndex, specialControls, usings);
+            ProcessNode(node, sb, "            ", builderIndex, AllComponents, usings);
         }
         sb.Append("        }");
         return sb.ToString();
     }
 
-    private static void ProcessNode(Node node, StringBuilder sb, string indent, int builderIndex, SharedReference[] specialControls, List<string> usings)
+    private static void ProcessNode(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
     {
         switch (node.NodeType)
         {
@@ -44,7 +44,7 @@ public static class BuildRenderTree
         }
     }
 
-    private static void HandleXml(Node node, StringBuilder sb, string indent, int builderIndex, SharedReference[] assemblyControls, List<string> usings)
+    private static void HandleXml(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] assemblyControls, List<string> usings)
     {
         string seqVar = $"seq{builderIndex}";
 
@@ -55,6 +55,7 @@ public static class BuildRenderTree
         {
             case "InputSelect":
             case "NavLink":
+            case "InputNumber":
                 hasNormalChildContext = true;
                 break;
             case "EditForm":
@@ -94,8 +95,7 @@ public static class BuildRenderTree
         {
             usings.Add($"using {componentControl.Namespace};");
             var bindType = node.Attributes.FirstOrDefault(a => a.Name == "bindtype_Value");
-            if (bindType != null &&
-                node.Name == "InputSelect")
+            if (bindType != null && hasNormalChildContext)
             {
                 // Component met bind type
                 sb.AppendLine($"{indent}__builder{builderIndex}.OpenComponent<{node.Name}<{bindType.Value}>>({seqVar}++);");
@@ -246,7 +246,7 @@ public static class BuildRenderTree
         }
     }
 
-    private static void HandleText(Node node, StringBuilder sb, string indent, int builderIndex, SharedReference[] specialControls, List<string> usings)
+    private static void HandleText(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
     {
         var seqVar = $"seq{builderIndex}";
         string text = node.Text!;
@@ -288,7 +288,7 @@ public static class BuildRenderTree
             sb.AppendLine($"{indent}}}");
         }
     }
-    private static void HandleCode(Node node, StringBuilder sb, string indent, int builderIndex, SharedReference[] specialControls, List<string> usings)
+    private static void HandleCode(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
     {
         string code = node.Code!;
         if (!string.IsNullOrEmpty(code))

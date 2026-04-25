@@ -8,11 +8,13 @@ public interface ICrudlType : ISharedReference
     bool IsAuthorized { get; }
     bool IsStorageFileUrlProperty { get; }
     bool IsICrudEntity { get; }
+    bool IsEntryPoint { get; }
+    bool IsJunction { get; }
     ICrudlProperty KeyProperty { get; }
     IEnumerable<ICrudlProperty> Properties { get; }
     IEnumerable<ICrudlProperty> ForeignItemProperties { get; }
     ICrudlMethod[] Methods { get; }
-    ITypeHelper ResponseTypeHelper { get; }
+    ITypeHelper ResponseType { get; }
     ITypeDigger ResponseTypeDigger { get; }
     ICrudlMethod? ReadMethod { get; }
     ICrudlMethod? CreateMethod { get; }
@@ -21,4 +23,9 @@ public interface ICrudlType : ISharedReference
     ICrudlMethod? ListMethod { get; }
     ICrudlType? JunctionLeftApi { get; }
     ICrudlType? JunctionRightApi { get; }
+    string? IsPageRoute { get; }
+    string? IsPageTitle { get; }
+    string? IsPageSubmitText { get; }
+    string? IsPageResponseText { get; }
+    bool IsNotAuthorized { get; }
 }

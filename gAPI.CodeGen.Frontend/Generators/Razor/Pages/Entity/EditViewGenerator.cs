@@ -13,7 +13,7 @@ public class EditViewGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference baseResponseT,
         ISharedReference baseListResponseT,
-        ISharedReference iClientAuthenticationService,
+        ISharedReference iClientAuthenticatedHttpClient,
         ISharedReference formView,
         ISharedReference loaderView,
         ISharedReference errorView,
@@ -28,7 +28,7 @@ public class EditViewGenerator : BaseGenerator
         BaseResponse = baseResponse;
         BaseResponseT = baseResponseT;
         BaseListResponseT = baseListResponseT;
-        IClientAuthenticationService = iClientAuthenticationService;
+        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
         FormView = formView;
         LoaderView = loaderView;
         ErrorView = errorView;
@@ -49,7 +49,7 @@ public class EditViewGenerator : BaseGenerator
     public ISharedReference BaseResponse { get; }
     public ISharedReference BaseResponseT { get; }
     public ISharedReference BaseListResponseT { get; }
-    public ISharedReference IClientAuthenticationService { get; }
+    public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference ErrorView { get; }
     public ISharedReference RedirectToLoginView { get; }
     public ISharedReference LoaderView { get; }
@@ -69,7 +69,7 @@ public class EditViewGenerator : BaseGenerator
         Imports.Reg(FormView);
         Imports.Reg(ErrorView);
         Imports.Reg(RedirectToLoginView);
-        Imports.Reg(IClientAuthenticationService);
+        Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg("Microsoft.AspNetCore.Components");
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
@@ -101,7 +101,7 @@ public class EditViewGenerator : BaseGenerator
 @implements IAsyncDisposable{GetRazorNamespacesCode()}{string.Join("", clients.Select(p => $@"
 @inject {p.ListMethod!.Client.Interface.Name} {p.ListMethod.Client.Name}"))}
 @inject {CrudlType.UpdateMethod.Client!.Interface.Name} {CrudlType.UpdateMethod.Client.Name}
-@inject {IClientAuthenticationService.Name} ClientAuthenticationService
+@inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
@@ -146,7 +146,7 @@ public class EditViewGenerator : BaseGenerator
 
         Cts = new CancellationTokenSource();
 
-        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false || id == null)
+        if (await ClientAuthenticatedHttpClient.IsAuthenticatedAsync(Cts.Token) == false || id == null)
         {{
             return;
         }}

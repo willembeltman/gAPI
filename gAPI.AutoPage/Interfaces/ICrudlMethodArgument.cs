@@ -1,6 +1,5 @@
-﻿namespace gAPI.AutoPage.Interfaces
+﻿namespace gAPI.AutoPage.Interfaces;
+
+public interface ICrudlMethodArgument : ITypeHelperProperty
 {
-    public interface ICrudlMethodArgument : ITypeHelperProperty
-    {
-    }
 }

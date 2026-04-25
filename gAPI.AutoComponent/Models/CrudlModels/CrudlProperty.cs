@@ -1,8 +1,6 @@
 ﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models.ServiceModels;
-using Microsoft.CodeAnalysis;
 using System.Linq;
 
 namespace gAPI.AutoComponent.Models.CrudlModels;
@@ -10,17 +8,15 @@ namespace gAPI.AutoComponent.Models.CrudlModels;
 
 public class CrudlProperty : ICrudlProperty
 {
-    public CrudlProperty(CrudlType parentType, DtoProperty dtoProperty, int index)
+    public CrudlProperty(CrudlType parentType, TypeHelperProperty dtoProperty)
     {
         CrudlType = parentType;
         DtoProperty = dtoProperty;
-        Index = index;
     }
 
     public CrudlType CrudlType { get; }
-    public DtoProperty DtoProperty { get; }
+    public TypeHelperProperty DtoProperty { get; }
     public string Name => DtoProperty.Name;
-    public int Index { get; }
     public bool IsReadOnly => DtoProperty.IsReadOnly;
     public bool IsForeignName => DtoProperty.IsForeignName;
     public bool IsStateManaged => DtoProperty.IsStateManaged;
@@ -28,8 +24,8 @@ public class CrudlProperty : ICrudlProperty
     public bool IsStorageFileUrlProperty => DtoProperty.IsStorageFileUrlProperty;
     public bool IsKey => DtoProperty.IsKey;
     public bool IsName => DtoProperty.IsName;
-    public TypeHelper PropertyType => DtoProperty.PropertyType;
-    public TypeDigger TypeDigger => DtoProperty.TypeDigger;
+    public ITypeHelper PropertyType => DtoProperty.Type;
+    public ITypeDigger TypeDigger => DtoProperty.TypeDigger;
     public bool IsNumber => TypeDigger.Type.IsNumber;
     public bool IsDateTime => TypeDigger.Type.IsDateTime;
     public bool IsCheckbox => TypeDigger.Type.IsCheckbox;
@@ -50,10 +46,9 @@ public class CrudlProperty : ICrudlProperty
             if (_ListByMethodLoaded == false)
             {
                 _ListByMethodLoaded = true;
-                _ListByMethod = CrudlType.Context.AllCrudlMethods
+                _ListByMethod = CrudlType.Methods
                     .FirstOrDefault(a =>
                         a.CrudlMethodType == CrudlMethodTypeEnum.ListBy &&
-                        a.Type == CrudlType.ResponseType &&
                         a.ForeignKeyName == DtoProperty.Name);
             }
             return _ListByMethod;
@@ -76,7 +71,7 @@ public class CrudlProperty : ICrudlProperty
                 _ReadMethod = CrudlType.Context.AllCrudlMethods
                     .FirstOrDefault(a =>
                         a.CrudlMethodType == CrudlMethodTypeEnum.Read &&
-                        a.Type == ListByMethod.ForeignRealType!);
+                        a.CrudlType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
             }
             return _ReadMethod;
         }
@@ -99,13 +94,13 @@ public class CrudlProperty : ICrudlProperty
                 _ListMethod = CrudlType.Context.AllCrudlMethods
                     .FirstOrDefault(a =>
                         a.CrudlMethodType == CrudlMethodTypeEnum.List &&
-                        a.Type == ListByMethod.ForeignRealType!);
+                        a.CrudlType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
             }
             return _ListMethod;
         }
     }
 
-    public CrudlType? ForeignKeyType => ListMethod?.ResponseType;
+    public CrudlType? ForeignKeyType => ListMethod?.CrudlType;
 
     private bool _ForeignKeyNamePropertyLoaded { get; set; }
     private CrudlProperty? _ForeignKeyNameProperty { get; set; }
@@ -136,7 +131,7 @@ public class CrudlProperty : ICrudlProperty
 
     public override string ToString()
     {
-        return $"{(ForeignKey_ReadMethod != null ? $"[READ][{ForeignKey_ReadMethod.ResponseType.ResponseType.Name.ToUpper()}]" : "")}" +
+        return $"{(ForeignKey_ReadMethod != null ? $"[READ][{ForeignKey_ReadMethod.CrudlType!.ResponseType.Name.ToUpper()}]" : "")}" +
             $" {DtoProperty} " +
             $"{(IsReadOnly ? "(ReadOnly)" : "") + (IsKey ? "(Key)" : "")}";
     }

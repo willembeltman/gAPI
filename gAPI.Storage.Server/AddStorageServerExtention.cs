@@ -1,23 +1,18 @@
-﻿using gAPI.Storage.Server.Config;
+﻿using gAPI.Storage.Server.Helpers;
+using gAPI.Storage.Server.Config;
 using gAPI.Storage.Server.Data;
-using gAPI.Storage.Server.Data.Entities;
 using gAPI.Storage.Server.Services;
-using gAPI.Storage.StorageServer.Dtos.Requests;
-using gAPI.Storage.StorageServer.Dtos.Responses;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using gAPI.Helpers;
 
 namespace gAPI.Storage.Server;
 
-public static class AddStorageServerExtention
+public static class AddStorageServerExtension
 {
     public static WebApplicationBuilder AddStorageServer(this WebApplicationBuilder builder)
     {
@@ -58,18 +53,7 @@ public static class AddStorageServerExtention
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 
-        Console.WriteLine("#########################################################");
-        Console.WriteLine("##                                                     ##");
-        Console.WriteLine("##  ###  ######  ####   ####      ###     ####   ##### ##");
-        Console.WriteLine("## ## ##   ##   ##  ##  ##  ##   ## ##   ##  ##  ##    ##");
-        Console.WriteLine("## ##      ##   ##  ##  ##  ##  ##   ##  ##      ##    ##");
-        Console.WriteLine("##  ###    ##   ##  ##  #####   #######  ## #### ####  ##");
-        Console.WriteLine("##    ##   ##   ##  ##  ## ##   ##   ##  ##  ##  ##    ##");
-        Console.WriteLine("## ## ##   ##   ##  ##  ##  ##  ##   ##  ##  ##  ##    ##");
-        Console.WriteLine("##  ###    ##    ####   ##  ##  ##   ##   ####   ##### ##");
-        Console.WriteLine("##                                                     ##");
-        Console.WriteLine("#########################################################");
-        Console.WriteLine($"## gAPI.Storage.Server.WebApplicationBuilderExtention UserName = {appConfig.Credentials.UserName}");
+        StartupHelper.ShowStorageStarted(appConfig.Credentials.UserName);
 
         return builder;
     }

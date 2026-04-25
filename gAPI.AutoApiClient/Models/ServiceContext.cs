@@ -1,53 +1,92 @@
 ﻿using gAPI.AutoApiClient.Helpers;
-using gAPI.AutoApiClient.Models.Configs;
 using Microsoft.CodeAnalysis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
 
 public class ServiceContext
 {
-    public ServiceContext(Compilation compilation, ClientConfig config, INamedTypeSymbol[] allSymbols)
+    public ServiceContext(INamedTypeSymbol[] allSymbols)
     {
-        var interfaceSymbols = allSymbols
+        var hubInterfaceSymbols = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
-                t.HasAttribute("gAPI.Attributes.GenerateApiAttribute") &&
-                config.BaseNamespaces.Any(a => t.ContainingNamespace.ToDisplayString().StartsWith(a)))
+                t.HasAttribute("gAPI.Attributes.GenerateHubAttribute"))
             .ToArray();
 
-        Interfaces = interfaceSymbols
+        HubInterfaces = hubInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
             .ToArray();
 
-        var collector = new TypeCollector(config);
-        foreach (var swi in interfaceSymbols)
-        {
-            foreach (var method in swi.GetMembers().OfType<IMethodSymbol>())
-            {
-                if (method.DeclaredAccessibility != Accessibility.Public)
-                    continue;
-
-                foreach (var param in method.Parameters)
-                {
-                    collector.Add(param.Type);
-                }
-
-                collector.Add(method.ReturnType);
-            }
-        }
-
-        Enums = collector.Enums
-            .Select(namedTypeSymbol => new EnumDto(namedTypeSymbol))
+        var apiInterfaceSymbols = allSymbols
+            .Where(t =>
+                t.TypeKind == TypeKind.Interface &&
+                t.HasAttribute("gAPI.Attributes.GenerateApiAttribute"))
             .ToArray();
-        Dtos = collector.Dtos
-            .Select(namedTypeSymbol => new Dto(this, namedTypeSymbol))
+
+        ApiInterfaces = apiInterfaceSymbols
+            .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .ToArray();
+
+        var minimalApiInterfaceSymbols = allSymbols
+            .Where(t =>
+                t.TypeKind == TypeKind.Interface &&
+                t.HasAttribute("gAPI.Attributes.GenerateMinimalApiAttribute"))
+            .ToArray();
+
+        MinimalApiInterfaces = minimalApiInterfaceSymbols
+            .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
             .ToArray();
     }
 
-    public Interface[] Interfaces { get; }
-    public EnumDto[] Enums { get; }
-    public Dto[] Dtos { get; }
+    public Interface[] HubInterfaces { get; }
+    public Interface[] ApiInterfaces { get; }
+    public Interface[] MinimalApiInterfaces { get; }
 
+    public List<string> CheckForErrors()
+    {
+        var errors = new List<string>();
+
+        foreach (var hubInterface in HubInterfaces)
+            foreach (var method in hubInterface.Methods)
+                CheckHub(method.ResponseType, errors, method.Name, hubInterface.FullName);
+
+        foreach (var hubInterface in ApiInterfaces)
+            foreach (var method in hubInterface.Methods)
+                CheckApi(method.ResponseType, errors, method.Name, hubInterface.FullName);
+
+        foreach (var hubInterface in MinimalApiInterfaces)
+            foreach (var method in hubInterface.Methods)
+                CheckApi(method.ResponseType, errors, method.Name, hubInterface.FullName);
+
+        return errors;
+    }
+    private void CheckHub(TypeHelper responseType, List<string> errors, string method, string hubInterface)
+    {
+        if (responseType.IsTaskT)
+        {
+            errors.Add(
+                $"Method '{method}' on interface '{hubInterface}' returns Task<T>. " +
+                "Please use IAsyncEnumerable<T> instead. " +
+                "When communicating from server to client, the number of client responses is unknown, " +
+                "therefore response methods must use IAsyncEnumerable<T>.");
+        }
+        else if (!responseType.IsTask && !responseType.IsIAsyncEnumerable)
+        {
+            errors.Add(
+                $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
+                "Please use Task (no response) or IAsyncEnumerable<T> (with responses).");
+        }
+    }
+    private void CheckApi(TypeHelper responseType, List<string> errors, string method, string hubInterface)
+    {
+        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable)
+        {
+            errors.Add(
+                $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
+                "Please use Task (no response), Task<T> or IAsyncEnumerable<T> (with responses).");
+        }
+    }
 }

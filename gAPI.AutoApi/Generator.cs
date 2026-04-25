@@ -1,34 +1,58 @@
-﻿using gAPI.AutoApi.Generators;
-using gAPI.AutoApi.Models;
+﻿using gAPI.AutoApiServer.Generators;
+using gAPI.AutoApiServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
-namespace gAPI.AutoApi;
+namespace gAPI.AutoApiServer;
 
-internal static class Generator
+public class Generator
 {
-    public static void Generate(ServiceContext dataModel, SourceProductionContext spc)
+    public Generator(ServiceContext serviceContext, SharedReferences sharedReferences)
     {
-        var Config = dataModel.Config;
-        var Apis = dataModel.Services
-            .Select(service => new ControllerGenerator(dataModel, service))
+        ServiceContext = serviceContext;
+        SharedReferences = sharedReferences;
+
+        Apis = serviceContext.ApiInterfaces
+            .Select(service => new ControllerGenerator(this, service))
+            .ToArray();
+        MinimalApis = serviceContext.MinimalApiInterfaces
+            .Select(service => new MinimalApiGenerator(this, service))
             .ToArray();
 
+        AddAutoApiServices = new AddAutoApiServicesExtensionGenerator(this);
+        AddAutoApi = new AddAutoApiExtensionGenerator(this);
+     }
+
+    public ServiceContext ServiceContext { get; }
+    public SharedReferences SharedReferences { get; }
+    public ControllerGenerator[] Apis { get; }
+    public MinimalApiGenerator[] MinimalApis { get; }
+    public AddAutoApiServicesExtensionGenerator AddAutoApiServices { get; }
+    public AddAutoApiExtensionGenerator AddAutoApi { get; }
+
+    public void Generate(SourceProductionContext spc)
+    {
         foreach (var api in Apis)
         {
             api.GenerateCode();
-            spc.AddSource(Path.Combine(Config.Controllers_Destination.Directory, api.FileName), SourceText.From(api.Code, Encoding.UTF8));
+            spc.AddSource(Path.Combine(api.Directory, api.FileName), SourceText.From(api.Code, Encoding.UTF8));
+        }
+        foreach (var api in MinimalApis)
+        {
+            api.GenerateCode();
+            spc.AddSource(Path.Combine(api.Directory, api.FileName), SourceText.From(api.Code, Encoding.UTF8));
         }
 
-        var AddAutoApiServices = new AddAutoApiServicesExtentionGenerator(dataModel);
         AddAutoApiServices.GenerateCode();
-        spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApiServices.FileName), SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
-
-        var AddAutoApi = new AddAutoApiExtentionGenerator(dataModel, AddAutoApiServices);
+        spc.AddSource(Path.Combine(AddAutoApiServices.Directory, AddAutoApiServices.FileName), SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
+        
         AddAutoApi.GenerateCode();
-        spc.AddSource(Path.Combine(Config.AddAutoApiServices_Destination.Directory, AddAutoApi.FileName), SourceText.From(AddAutoApi.Code, Encoding.UTF8));
+        spc.AddSource(Path.Combine(AddAutoApi.Directory, AddAutoApi.FileName), SourceText.From(AddAutoApi.Code, Encoding.UTF8));
     }
 }

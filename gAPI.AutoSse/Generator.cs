@@ -1,16 +1,51 @@
-﻿using gAPI.AutoSse.Generators;
-using gAPI.AutoSse.Models;
+﻿using gAPI.AutoSseServer.Generators;
+using gAPI.AutoSseServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoSse;
+namespace gAPI.AutoSseServer;
 
-internal class SsesGenerator
+public class Generator
 {
-    internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
+    public Generator(ServiceContext serviceContext, SharedReferences sharedReferences)
+    {
+        ServiceContext = serviceContext;
+        SharedReferences = sharedReferences;
+
+        SseServices = serviceContext.HubInterfaces
+            .Select(@interface => new ClientService_Generator(this, @interface))
+            .ToArray();
+
+        IClientContexts = SseServices
+            .Select(clientHandler => new IClientServiceContext_Generator(this, clientHandler))
+            .ToArray();
+
+        ClientContexts = IClientContexts
+            .Select(clientHandler => new ClientServiceContext_Generator(this, clientHandler))
+            .ToArray();
+
+        IClientContext = new IClientContext_Generator(this);
+        
+        ClientContext = new ClientContext_Generator(this);
+       
+        AddAutoSseExtension = new AddAutoSseExtention_Generator(this);
+      
+    }
+
+    public ServiceContext ServiceContext { get; }
+    public SharedReferences SharedReferences { get; }
+
+    public ClientService_Generator[] SseServices { get; }
+    public IClientServiceContext_Generator[] IClientContexts { get; }
+    public ClientServiceContext_Generator[] ClientContexts { get; }
+    public IClientContext_Generator IClientContext { get; }
+    public ClientContext_Generator ClientContext { get; }
+    public AddAutoSseExtention_Generator AddAutoSseExtension { get; }
+
+    public void Generate(SourceProductionContext spc)
     {
         //var SseHostController = new SseHostControllerGenerator(dataModel);
         //SseHostController.GenerateCode();
@@ -18,9 +53,6 @@ internal class SsesGenerator
         //    Path.Combine(SseHostController.Directory, SseHostController.FileName),
         //    SourceText.From(SseHostController.Code, Encoding.UTF8));
 
-        var SseServices = dataModel.Interfaces
-            .Select(@interface => new SseServiceGenerator(dataModel, @interface))
-            .ToArray();
         foreach (var clientHandler in SseServices)
         {
             clientHandler.GenerateCode();
@@ -29,22 +61,14 @@ internal class SsesGenerator
                 SourceText.From(clientHandler.Code, Encoding.UTF8));
         }
 
-        var ISseServiceContexts = SseServices
-            .Select(clientHandler => new ISseServiceContextGenerator(dataModel, clientHandler))
-            .ToArray();
-        foreach (var iClientHandlerContext in ISseServiceContexts)
+        foreach (var iClientHandlerContext in IClientContexts)
         {
             iClientHandlerContext.GenerateCode();
             spc.AddSource(
                 Path.Combine(iClientHandlerContext.Directory, iClientHandlerContext.FileName), 
                 SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
         }
-
-        var SseServiceContexts = ISseServiceContexts
-            .Select(clientHandler => new SseServiceContextGenerator(dataModel, clientHandler))
-            .ToArray();
-
-        foreach (var clientHandlerContext in SseServiceContexts)
+        foreach (var clientHandlerContext in ClientContexts)
         {
             clientHandlerContext.GenerateCode();
             spc.AddSource(
@@ -52,22 +76,19 @@ internal class SsesGenerator
                 SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
         }
 
-        var ISseContext = new ISseContextGenerator(dataModel, SseServiceContexts);
-        ISseContext.GenerateCode();
+        IClientContext.GenerateCode();
         spc.AddSource(
-            Path.Combine(ISseContext.Directory, ISseContext.FileName),
-            SourceText.From(ISseContext.Code, Encoding.UTF8));
+            Path.Combine(IClientContext.Directory, IClientContext.FileName),
+            SourceText.From(IClientContext.Code, Encoding.UTF8));
 
-        var SseContext = new SseContextGenerator(dataModel, SseServiceContexts, ISseContext);
-        SseContext.GenerateCode();
+        ClientContext.GenerateCode();
         spc.AddSource(
-            Path.Combine(SseContext.Directory, SseContext.FileName),
-            SourceText.From(SseContext.Code, Encoding.UTF8));
+            Path.Combine(ClientContext.Directory, ClientContext.FileName),
+            SourceText.From(ClientContext.Code, Encoding.UTF8));
 
-        var AddAutoSseExtention = new AddAutoSseExtentionGenerator(dataModel, SseServices, ISseContext, SseContext);
-        AddAutoSseExtention.GenerateCode();
+        AddAutoSseExtension.GenerateCode();
         spc.AddSource(
-            Path.Combine(AddAutoSseExtention.Directory, AddAutoSseExtention.FileName),
-            SourceText.From(AddAutoSseExtention.Code, Encoding.UTF8));
+            Path.Combine(AddAutoSseExtension.Directory, AddAutoSseExtension.FileName),
+            SourceText.From(AddAutoSseExtension.Code, Encoding.UTF8));
     }
 }

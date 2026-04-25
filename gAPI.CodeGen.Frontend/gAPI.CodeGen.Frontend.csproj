@@ -52,9 +52,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.2" />
-		<PackageReference Include="gAPI.Core" Version="0.0.1" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" />
 		<ProjectReference Include="..\gAPI.AutoComponent\gAPI.AutoComponent.csproj" />
+		<ProjectReference Include="..\gAPI.CodeGen.Core\gAPI.CodeGen.Core.csproj" />
+		<ProjectReference Include="..\gAPI\gAPI.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

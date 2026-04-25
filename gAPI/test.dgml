@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph ZoomLevel="1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="Api" Category="Backend" Label="MyApp.Api" UseManualLocation="True" />
+    <Node Id="BlazorMaui" Category="Frontend" Label="MyApp.BlazorMaui" UseManualLocation="True" />
+    <Node Id="BlazorWasm" Category="Frontend" Label="MyApp.BlazorWebAssembly" UseManualLocation="True" />
+    <Node Id="Business" Category="Backend" Label="MyApp.Core" UseManualLocation="True" />
+    <Node Id="Data" Category="Backend" Label="MyApp.Infrastructure.Data" UseManualLocation="True" />
+    <Node Id="Database" Category="Storage" UseManualLocation="True" />
+    <Node Id="PaymentProvider" Category="Storage" Label="Provider" UseManualLocation="True" />
+    <Node Id="PaymentProxy" Category="Backend" Label="MyApp.Infrastructure.Provider" UseManualLocation="True" />
+    <Node Id="Razor" Category="Frontend" Label="MyApp.Razor" UseManualLocation="True" />
+    <Node Id="RazorClients" Category="Frontend" Label="MyApp.Razor.Clients" UseManualLocation="True" />
+    <Node Id="RazorComponents" Category="Frontend" Label="MyApp.Razor.Components" UseManualLocation="True" />
+    <Node Id="Shared" Category="Platform" Label="MyApp.Contracts" UseManualLocation="True" />
+    <Node Id="Storage" Category="Storage" Label="MyApp.StorageApi" UseManualLocation="True" />
+    <Node Id="Test" Category="Reference" UseManualLocation="True" />
+    <Node Id="Test1" Category="Reference" Label="Test" UseManualLocation="True" />
+    <Node Id="Test2" Category="Reference" Label="Test" UseManualLocation="True" />
+    <Node Id="Test3" Category="Analyzer" Label="Test" UseManualLocation="True" />
+    <Node Id="Test5" Label="Test" UseManualLocation="True" />
+    <Node Id="gAPIAutoApi" Category="Analyzer" Label="gAPI.AutoApi" UseManualLocation="True" />
+    <Node Id="gAPIAutoApiClient" Category="Analyzer" Label="gAPI.AutoApiClient" UseManualLocation="True" />
+    <Node Id="gAPIAutoComponent" Category="Analyzer" Label="gAPI.AutoComponent" UseManualLocation="True" />
+    <Node Id="gAPIAutoWss" Category="Analyzer" Label="gAPI.AutoWss" UseManualLocation="True" />
+    <Node Id="gAPIAutoWssClient" Category="Analyzer" Label="gAPI.AutoWssClient" UseManualLocation="True" />
+    <Node Id="gAPICodeGenBackend" Category="Generator" Label="gAPI.CodeGen.Backend" UseManualLocation="True" />
+    <Node Id="gAPICodeGenFrontend" Category="Generator" Label="gAPI.CodeGen.Frontend" UseManualLocation="True" />
+    <Node Id="gAPIStorage" Category="Reference" Label="gAPI.Storage" UseManualLocation="True" />
+    <Node Id="gAPIStorageServer" Category="Reference" Label="gAPI.Storage.Server" UseManualLocation="True" />
+  </Nodes>
+  <Links>
+    <Link Source="Api" Target="Business" />
+    <Link Source="Api" Target="Shared" />
+    <Link Source="Api" Target="gAPIAutoApi" Label="Analyzer" Label/>
+    <Link Source="BlazorMaui" Target="Razor" />
+    <Link Source="BlazorWasm" Target="Razor" />
+    <Link Source="Business" Target="Data" />
+    <Link Source="Business" Target="PaymentProxy" />
+    <Link Source="Business" Target="Shared" />
+    <Link Source="Business" Target="gAPIAutoWss" Label="Analyzer" Label/>
+    <Link Source="Business" Target="gAPICodeGenBackend" Label="Codegen" Label/>
+    <Link Source="Business" Target="gAPIStorage" />
+    <Link Source="Data" Target="Database" Label="Tcp" Label/>
+    <Link Source="Data" Target="Shared" />
+    <Link Source="Data" Target="Test2" />
+    <Link Source="PaymentProxy" Target="PaymentProvider" Label="Rest" Label/>
+    <Link Source="PaymentProxy" Target="Test" />
+    <Link Source="Razor" Target="RazorComponents" />
+    <Link Source="Razor" Target="Shared" />
+    <Link Source="Razor" Target="gAPICodeGenFrontend" Label="Codegen" Label/>
+    <Link Source="RazorClients" Target="Shared" />
+    <Link Source="RazorClients" Target="gAPIAutoApiClient" Label="Analyzer" Label/>
+    <Link Source="RazorClients" Target="gAPIAutoWssClient" Label="Analyzer" Label/>
+    <Link Source="RazorComponents" Target="RazorClients" />
+    <Link Source="RazorComponents" Target="Shared" />
+    <Link Source="RazorComponents" Target="gAPIAutoComponent" Label="Analyzer" Label/>
+    <Link Source="Shared" Target="gAPICodeGenBackend" Label="Codegen" Label/>
+    <Link Source="Storage" Target="gAPIStorageServer" />
+    <Link Source="Test5" Target="gAPIAutoApi" />
+    <Link Source="gAPIAutoApiClient" Target="gAPIAutoApi" Label="Rest" Label/>
+    <Link Source="gAPIAutoWss" Target="Test3" />
+    <Link Source="gAPIAutoWss" Target="gAPIAutoWssClient" Label="SignalR" Label/>
+    <Link Source="gAPIStorage" Target="Storage" Label="Rest" Label/>
+    <Link Source="gAPIStorage" Target="Test1" />
+  </Links>
+  <Categories>
+    <Category Id="Analyzer" />
+    <Category Id="Backend" Background="#FF90EE90" />
+    <Category Id="Frontend" Background="#FFADD8E6" />
+    <Category Id="Generator" />
+    <Category Id="Platform" Background="#FFFFF2A8" />
+    <Category Id="Reference" />
+    <Category Id="Storage" Background="#FFFFC1C1" />
+  </Categories>
+  <Properties>
+    <Property Id="Background" Label="Background" Description="The background color" DataType="System.Windows.Media.Brush" />
+    <Property Id="Bounds" DataType="System.Windows.Rect" />
+    <Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+    <Property Id="LabelBounds" DataType="System.Windows.Rect" />
+    <Property Id="UseManualLocation" DataType="System.Boolean" />
+    <Property Id="ZoomLevel" DataType="System.String" />
+  </Properties>
+</DirectedGraph>

@@ -1,0 +1,23 @@
+﻿FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+# copy csproj + restore
+COPY gAPI.FabricNode/gAPI.FabricNode.csproj gAPI.FabricNode/
+RUN dotnet restore gAPI.FabricNode/gAPI.FabricNode.csproj
+
+# copy rest + build
+COPY . .
+WORKDIR /src/gAPI.FabricNode
+RUN dotnet publish -c Release -o /app /p:UseAppHost=false
+
+# runtime
+FROM mcr.microsoft.com/dotnet/runtime:10.0-preview
+WORKDIR /app
+
+COPY --from=build /app .
+
+# TCP server luistert zelf op 9494
+EXPOSE 9494
+
+ENV LOCALHOST=NO
+ENTRYPOINT ["dotnet", "gAPI.FabricNode.dll"]

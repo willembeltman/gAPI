@@ -21,7 +21,6 @@ public interface ICrudlType : ISharedReference
     ICrudlMethod? UpdateMethod { get; }
     ICrudlMethod? DeleteMethod { get; }
     ICrudlMethod? ListMethod { get; }
-    IDto? Dto { get; }
     ICrudlType? JunctionLeftApi { get; }
     ICrudlType? JunctionRightApi { get; }
     string? IsPageRoute { get; }

@@ -1,5 +1,5 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
@@ -16,14 +16,14 @@ public class AutoDetailsGenerator : BaseGenerator
             crudlType,
             itemDataSource,
             this,
-            context.Config.Components_Destination.Directory,
-            context.Config.Components_Destination.Namespace);
+            "",
+            "gAPI.Generated.Components");
 
         Name = $"Auto{crudlType.Name}Details";
         FileName = $"{Name}.g.cs"; // ongecompileerde Razor view
 
-        Directory = context.Config.Components_Destination.Directory;
-        Namespace = context.Config.Components_Destination.Namespace;
+        Directory = "";
+        Namespace = "gAPI.Generated.Components";
 
         DetailsGenerator.Name = Name;
         DetailsGenerator.FileName = FileName;

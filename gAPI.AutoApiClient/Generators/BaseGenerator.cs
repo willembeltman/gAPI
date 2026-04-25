@@ -1,21 +1,35 @@
 ﻿using gAPI.AutoApiClient.Models;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Generators;
 
 
-public class BaseGenerator : SharedReference
+public abstract class BaseGenerator : SharedReference
 {
     public string Directory { get; protected set; } = string.Empty;
     public string FileName { get; protected set; } = string.Empty;
     public string Code { get; protected set; } = string.Empty;
-    //public string Name { get; protected set; }
-    //public string Namespace { get; protected set; }
-    //public string FullName => $"{Namespace}.{Name}";
-    private List<string> Namespaces { get; set; } = new List<string>();
+    private List<string> Namespaces { get; set; } = [];
 
+    public abstract void GenerateCode();
 
+    public void RegRecursive(TypeHelper type)
+    {
+        Reg(type);
+        foreach (var item in type.UnderlayingTypes)
+        {
+            RegRecursive(item);
+        }
+    }
+    public void Reg(ITypeSymbol underlyingType)
+    {
+        if (underlyingType.ContainingNamespace != null)
+        {
+            Namespaces.Add(underlyingType.ContainingNamespace.ToString());
+        }
+    }
     public void Reg(string @namespace)
     {
         if (@namespace != null)
@@ -54,17 +68,16 @@ public class BaseGenerator : SharedReference
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
             .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System" && a != Namespace)
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)
         {
-            code += $"using {name};" + Environment.NewLine;
+            code += $"using {name};\r\n";
         }
         return code;
     }
@@ -72,12 +85,11 @@ public class BaseGenerator : SharedReference
     {
         if (Namespaces.Count == 0) return "";
 
-        Namespaces = Namespaces
+        Namespaces = [.. Namespaces
         .GroupBy(a => a)
             .Select(a => a.Key)
             .Where(a => a != "System")
-            .OrderBy(a => a)
-            .ToList();
+            .OrderBy(a => a)];
 
         var code = string.Empty;
         foreach (var name in Namespaces)

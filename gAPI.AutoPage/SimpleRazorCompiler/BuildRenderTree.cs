@@ -1,13 +1,12 @@
 ﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models;
-using gAPI.AutoPage.SimpleRazorCompiler.Enums;
+using gAPI.SimpleRazorCompiler.Enums;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace gAPI.AutoPage.SimpleRazorCompiler;
+namespace gAPI.SimpleRazorCompiler;
 
 public static class BuildRenderTree
 {

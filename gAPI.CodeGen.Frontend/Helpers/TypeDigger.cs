@@ -111,4 +111,8 @@ public class TypeDigger : ITypeDigger
     public string Namespace { get; }
     public bool IsValueType { get; }
     public bool IsNullable { get; }
+
+    ITypeHelper ITypeDigger.Type => throw new NotImplementedException();
+
+    ITypeHelper ITypeDigger.StartType => throw new NotImplementedException();
 }

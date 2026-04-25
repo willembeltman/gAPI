@@ -2,9 +2,9 @@
 
 namespace gAPI.CodeGen.Backend.Generators.Api;
 
-public class AddCommenServicesExtentionGenerator : BaseGenerator
+public class AddCommenServicesExtensionGenerator : BaseGenerator
 {
-    public AddCommenServicesExtentionGenerator(
+    public AddCommenServicesExtensionGenerator(
         BackendGenerator context)
     {
         Directory = context.Config.Api_Directory;
@@ -12,7 +12,7 @@ public class AddCommenServicesExtentionGenerator : BaseGenerator
         
         Context = context;
 
-        Name = "AddCommenServicesExtention";
+        Name = "AddCommenServicesExtension";
         FileName = $"{Name}.cs";
     }
 

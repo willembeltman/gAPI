@@ -1,9 +1,7 @@
-﻿using gAPI.AutoComponent.Generators.Commen;
-using gAPI.AutoComponent.Generators.Components;
+﻿using gAPI.AutoComponent.Generators.Components;
 using gAPI.AutoComponent.Generators.Helpers;
 using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models;
-using gAPI.AutoComponent.Models.Configs;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
@@ -14,49 +12,47 @@ namespace gAPI.AutoComponent;
 public class Generator
 {
     public Generator(
-        ComponentConfig config,
         SharedReferences sharedReferences,
         ServiceContext serviceContext,
         CrudlContext crudlContext,
         Microsoft.CodeAnalysis.SourceProductionContext spc)
     {
-        Config = config;
         SharedReferences = sharedReferences;
         ServiceContext = serviceContext;
         CrudlContext = crudlContext;
         Spc = spc;
     }
 
-    public void GenerateViews()
+    public void Generate()
     {
-        ISharedReference? IClientAuthenticationService = SharedReferences.IClientAuthenticationService;
-        if (IClientAuthenticationService == null)
-        { 
-            var generator = new IClientAuthenticationServiceGenerator(
-                SharedReferences.State,
-                SharedReferences.StateChangedHandler,
-                Config.Authentication_Destination.Directory,
-                Config.Authentication_Destination.Namespace);
-            generator.GenerateCode();
-            var iClientAuthenticationServiceFullName = Path.Combine(generator.Directory, generator.FileName);
-            Spc.AddSource(iClientAuthenticationServiceFullName, SourceText.From(generator.Code, Encoding.UTF8));
-            IClientAuthenticationService = generator;
-        }
+        //ISharedReference? IClientAuthenticatedHttpClient = SharedReferences.IClientAuthenticatedHttpClient;
+        //if (IClientAuthenticatedHttpClient == null)
+        //{
+        //    var generator = new IClientAuthenticatedHttpClientGenerator(
+        //        SharedReferences.State,
+        //        SharedReferences.StateChangedHandler,
+        //        "",
+        //        "gAPI.Generated.Authentication");
+        //    generator.GenerateCode();
+        //    var iClientAuthenticatedHttpClientFullName = Path.Combine(generator.Directory, generator.FileName);
+        //    Spc.AddSource(iClientAuthenticatedHttpClientFullName, SourceText.From(generator.Code, Encoding.UTF8));
+        //    IClientAuthenticatedHttpClient = generator;
+        //}
 
-        ISharedReference? ClientAuthenticationService = SharedReferences.ClientAuthenticationService;
-        if (ClientAuthenticationService == null)
-        {
-            var generator = new ClientAuthenticationServiceGenerator(
-                SharedReferences.State,
-                IClientAuthenticationService!,
-                SharedReferences.StateChangedHandler,
-                Config.Authentication_Destination.Directory,
-                Config.Authentication_Destination.Namespace);
-            generator.GenerateCode();
-            var clientAuthenticationServiceFullName = Path.Combine(generator.Directory, generator.FileName);
-            Spc.AddSource(clientAuthenticationServiceFullName, SourceText.From(generator.Code, Encoding.UTF8));
-            ClientAuthenticationService = generator;
-        }
+        //ISharedReference? ClientAuthenticatedHttpClient = SharedReferences.ClientAuthenticatedHttpClient;
+        //if (ClientAuthenticatedHttpClient == null)
+        //{
+        //    var generator = new ClientAuthenticatedHttpClientGenerator(
+        //        SharedReferences.State,
+        //        IClientAuthenticatedHttpClient!,
+        //        SharedReferences.StateChangedHandler,
+        //        "",
+        //        "gAPI.Generated.Authentication");
+        //    generator.GenerateCode();
+        //    var clientAuthenticationServiceFullName = Path.Combine(generator.Directory, generator.FileName);
+        //    Spc.AddSource(clientAuthenticationServiceFullName, SourceText.From(generator.Code, Encoding.UTF8));
+        //    ClientAuthenticatedHttpClient = generator;
+        //}
 
         ISharedReference? ItemDataSource = SharedReferences.ItemDataSource;
         if (ItemDataSource == null)
@@ -64,9 +60,9 @@ public class Generator
             var _ItemDataSource = new ItemDataSourceGenerator(
                 SharedReferences.BaseResponseT,
                 SharedReferences.BaseResponse,
-                SharedReferences.IsFormFileExtention,
-                Config.Helpers_Destination.Directory,
-                Config.Helpers_Destination.Namespace);
+                SharedReferences.IsFormFileExtension,
+                "",
+                "gAPI.Generated.Helpers");
             _ItemDataSource.GenerateCode();
             var itemDataSourceFullName = Path.Combine(_ItemDataSource.Directory, _ItemDataSource.FileName);
             Spc.AddSource(itemDataSourceFullName, SourceText.From(_ItemDataSource.Code, Encoding.UTF8));
@@ -81,8 +77,8 @@ public class Generator
                 SharedReferences.BaseResponseT,
                 SharedReferences.BaseResponse,
                 ItemDataSource,
-                Config.Helpers_Destination.Directory,
-                Config.Helpers_Destination.Namespace);
+                "",
+                "gAPI.Generated.Helpers");
             _ListDataSource.GenerateCode();
             var listDataSourceFullName = Path.Combine(_ListDataSource.Directory, _ListDataSource.FileName);
             Spc.AddSource(listDataSourceFullName, SourceText.From(_ListDataSource.Code, Encoding.UTF8));
@@ -128,16 +124,16 @@ public class Generator
         //}
 
         var Forms = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoFormGenerator(
                 this,
                 crudl,
                 ItemDataSource,
                 ListDataSource,
                 SharedReferences.FormFile,
-                SharedReferences.IsFormFileExtention,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                SharedReferences.IsFormFileExtension,
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var form in Forms)
         {
@@ -147,7 +143,7 @@ public class Generator
         }
 
         var Details = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoDetailsGenerator(
                 this,
                 ItemDataSource,
@@ -161,14 +157,14 @@ public class Generator
         }
 
         var Lists = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoListGenerator(
                 this,
                 crudl,
                 ItemDataSource,
                 ListDataSource,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var list in Lists)
         {
@@ -178,14 +174,14 @@ public class Generator
         }
 
         var SelectLists = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoSelectListGenerator(
                 this,
                 crudl,
                 ItemDataSource,
                 ListDataSource,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var list in SelectLists)
         {
@@ -195,14 +191,14 @@ public class Generator
         }
 
         var Tables = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoTableGenerator(
                 this,
                 crudl,
                 ItemDataSource,
                 ListDataSource,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var list in Tables)
         {
@@ -212,13 +208,13 @@ public class Generator
         }
 
         var DropDowns = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoDropDownGenerator(
                 this,
                 crudl,
                 ListDataSource,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var dropDown in DropDowns)
         {
@@ -228,13 +224,13 @@ public class Generator
         }
 
         var GridEdits = CrudlContext.Crudls
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .Select(crudl => new AutoGridEditGenerator(
                 this,
                 crudl,
                 ListDataSource,
-                Config.Components_Destination.Directory,
-                Config.Components_Destination.Namespace))
+                "",
+                "gAPI.Generated.Components"))
             .ToArray();
         foreach (var gridEdit in GridEdits)
         {
@@ -245,7 +241,6 @@ public class Generator
     }
 
     public ServiceContext ServiceContext { get; }
-    public ComponentConfig Config { get; }
     public SharedReferences SharedReferences { get; }
     public CrudlContext CrudlContext { get; }
     public Microsoft.CodeAnalysis.SourceProductionContext Spc { get; }

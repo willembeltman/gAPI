@@ -1,5 +1,5 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 using System;
 
 namespace gAPI.AutoComponent.Generators.Components;

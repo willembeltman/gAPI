@@ -1,32 +1,35 @@
-﻿using gAPI.AutoApi.Models;
+﻿using gAPI.AutoApiServer.Models;
+using System.Linq;
 
-namespace gAPI.AutoApi.Generators;
+namespace gAPI.AutoApiServer.Generators;
 
 
-internal class AddAutoApiServicesExtentionGenerator : BaseGenerator
+public class AddAutoApiServicesExtensionGenerator : BaseGenerator
 {
-    internal AddAutoApiServicesExtentionGenerator(ServiceContext serviceContext)
+    public AddAutoApiServicesExtensionGenerator(Generator context)
     {
-        ServiceContext = serviceContext;
+        Context = context;
 
-        Directory = serviceContext.Config.AddAutoApiServices_Destination.Directory;
-        Namespace = serviceContext.Config.AddAutoApiServices_Destination.Namespace;
+        Directory = "";
+        Namespace = "gAPI.Generated";
 
-        Name = "AddAutoApiServicesExtention";
+        Name = "AddAutoApiServicesExtension";
         FileName = $"{Name}.g.cs";
     }
 
-    public ServiceContext ServiceContext { get; }
+    public Generator Context { get; }
 
-    internal void GenerateCode()
+    public override void GenerateCode()
     {
         Reg("Microsoft.Extensions.DependencyInjection");
         var propertiesCode = "";
-        foreach (var service in ServiceContext.Services)
+        foreach (var controller in Context.Apis.Where(a => a.Interface.FullName != "gAPI.Interfaces.IAccountService"))
         {
-            Reg(service.Namespace);
-            Reg(service.Interface);
-            propertiesCode += $"        services.AddScoped<{service.Interface.Name}, {service.Name}>();\r\n";
+            var service = controller.Service;
+            var @interface = controller.Interface;
+            Reg(service);
+            Reg(@interface);
+            propertiesCode += $"        services.AddScoped<{@interface.Name}, {service.Name}>();\r\n";
         }
 
         Code = $@"{GetNamespacesCode()}

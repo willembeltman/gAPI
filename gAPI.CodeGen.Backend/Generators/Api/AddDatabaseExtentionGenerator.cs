@@ -2,9 +2,9 @@
 
 namespace gAPI.CodeGen.Backend.Generators.Api;
 
-public class AddDatabaseExtentionGenerator : BaseGenerator
+public class AddDatabaseExtensionGenerator : BaseGenerator
 {
-    public AddDatabaseExtentionGenerator(
+    public AddDatabaseExtensionGenerator(
         BackendGenerator context)
     {
         Directory = context.Config.Api_Directory;
@@ -12,7 +12,7 @@ public class AddDatabaseExtentionGenerator : BaseGenerator
 
         Context = context;
 
-        Name = "AddDatabaseExtention";
+        Name = "AddDatabaseExtension";
         FileName = $"{Name}.cs";
     }
 

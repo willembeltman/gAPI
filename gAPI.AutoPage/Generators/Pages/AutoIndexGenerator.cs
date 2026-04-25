@@ -1,8 +1,5 @@
 ﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models;
-using gAPI.AutoPage.Models.Configs;
-using gAPI.AutoPage.SimpleRazorCompiler;
-using System;
+using gAPI.SimpleRazorCompiler;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,8 +10,7 @@ namespace gAPI.AutoPage.Generators.Pages
         public AutoIndexGenerator(
             Generator generator,
             string key, 
-            AutoPageGenerator[] autoPageGenerators,
-            PageConfig config)
+            AutoPageGenerator[] autoPageGenerators)
         {
             Context = generator;
 
@@ -22,8 +18,8 @@ namespace gAPI.AutoPage.Generators.Pages
                 key, 
                 autoPageGenerators.Select(a => a.Generator), 
                 this,
-                config.Pages_Destination.Directory,
-                config.Pages_Destination.Namespace);
+                "Pages",
+                "gAPI.Generated.Pages");
 
             FileName = $"{Name}.g.cs";
         }
@@ -38,7 +34,7 @@ namespace gAPI.AutoPage.Generators.Pages
         public string? Title => Generator.Title;
         public IEnumerable<IPage> Pages => Generator.Pages;
 
-        internal void GenerateCode()
+        public void GenerateCode()
         {
             Generator.GenerateCode();
 

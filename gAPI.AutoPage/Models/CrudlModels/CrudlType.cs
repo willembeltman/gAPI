@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoPage.Enums;
-using gAPI.AutoPage.Helpers;
 using gAPI.AutoPage.Interfaces;
 using gAPI.AutoPage.Models.ServiceModels;
 using Microsoft.CodeAnalysis;
@@ -25,9 +24,8 @@ public class CrudlType : ICrudlType
             method.CrudlType = this;
         }
 
-
-        Properties = Dto?.Properties
-            .Select((p, index) => new CrudlProperty(this, p, index))
+        Properties = ResponseTypeBase?.GetProperties()
+            .Select(p => new CrudlProperty(this, p))
             .ToArray() ?? [];
     }
 
@@ -36,35 +34,28 @@ public class CrudlType : ICrudlType
     public CrudlMethod[] Methods { get; }
     public CrudlProperty[] Properties { get; }
 
-    public string Name => Dto?.Name ?? string.Empty;
-    public string Namespace => Dto?.Namespace ?? string.Empty;
-    public string FullName => Dto?.FullName ?? string.Empty;
+    public string Name => ResponseTypeBase?.Name ?? string.Empty;
+    public string Namespace => ResponseTypeBase?.Namespace ?? string.Empty;
+    public string FullName => ResponseTypeBase?.FullName ?? string.Empty;
 
     TypeDigger? ResponseTypeDiggerInner { get; set; }
-    public TypeDigger ResponseTypeDigger
-    {
-        get
-        {
-            ResponseTypeDiggerInner ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol);
-            return ResponseTypeDiggerInner;
-        }
-    }
-    public Dto? Dto => ResponseTypeDigger.Dto;
+    public TypeDigger ResponseTypeDigger => ResponseTypeDiggerInner ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol);
+    public TypeHelper? ResponseTypeBase => ResponseTypeDigger.Type;
 
     public bool IsStorageFileUrlProperty => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
-    public bool IsEntryPoint => Dto?.IsEntryPoint == true;
-    public bool IsJunction => Dto?.IsJunction == true;
-    public bool IsUser => Dto?.IsUser == true;
-    public bool IsAuthorized => Dto?.IsAuthorized == true;
-    public bool IsICrudEntity => Dto?.IsICrudEntity == true;
+    public bool IsEntryPoint => ResponseTypeBase?.IsEntryPoint == true;
+    public bool IsJunction => ResponseTypeBase?.IsJunction == true;
+    public bool IsUser => ResponseTypeBase?.IsUser == true;
+    public bool IsAuthorized => ResponseTypeBase?.IsAuthorized == true;
+    public bool IsICrudEntity => ResponseTypeBase?.IsICrudEntity == true;
     public string? IsPageRoute => Methods.FirstOrDefault(a => a.IsPageRoute != null)?.IsPageRoute;
     public string? IsPageTitle => Methods.FirstOrDefault(a => a.IsPageTitle != null)?.IsPageTitle;
     public string? IsPageSubmitText => Methods.FirstOrDefault(a => a.IsPageSubmitText != null)?.IsPageSubmitText;
     public string? IsPageResponseText => Methods.FirstOrDefault(a => a.IsPageResponseText != null)?.IsPageResponseText;
 
     public bool IsNotAuthorized => throw new System.NotImplementedException();
-    public TypeHelper? JunctionLeftRealType => Dto?.JunctionLeftRealType;
-    public TypeHelper? JunctionRightRealType => Dto?.JunctionRightRealType;
+    public ITypeHelper? JunctionLeftRealType => ResponseTypeBase?.JunctionLeftRealType;
+    public ITypeHelper? JunctionRightRealType => ResponseTypeBase?.JunctionRightRealType;
 
     CrudlMethod? _ReadMethod;
     public CrudlMethod ReadMethod => _ReadMethod ??= Methods.FirstOrDefault(a => a.CrudlMethodType == CrudlMethodTypeEnum.Read);
@@ -133,8 +124,6 @@ public class CrudlType : ICrudlType
     ICrudlMethod? ICrudlType.ListMethod => ListMethod;
     ICrudlType? ICrudlType.JunctionLeftApi => JunctionLeftApi;
     ICrudlType? ICrudlType.JunctionRightApi => JunctionRightApi;
-
-    IDto? ICrudlType.Dto => Dto;
 
     public override string ToString()
     {

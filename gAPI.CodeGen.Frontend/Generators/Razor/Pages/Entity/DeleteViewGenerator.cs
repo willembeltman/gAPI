@@ -13,7 +13,7 @@ public class DeleteViewGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference baseResponseT,
         ISharedReference baseListResponseT,
-        ISharedReference iClientAuthenticationService,
+        ISharedReference iClientAuthenticatedHttpClient,
         ISharedReference detailsView,
         ISharedReference loaderView,
         ISharedReference errorView,
@@ -27,7 +27,7 @@ public class DeleteViewGenerator : BaseGenerator
         ListDataSource = listDataSource;
         BaseResponseT = baseResponseT;
         BaseListResponseT = baseListResponseT;
-        IClientAuthenticationService = iClientAuthenticationService;
+        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
         DetailsView = detailsView;
         LoaderView = loaderView;
         ErrorView = errorView;
@@ -47,7 +47,7 @@ public class DeleteViewGenerator : BaseGenerator
     public ISharedReference DetailsView { get; }
     public ISharedReference BaseResponseT { get; }
     public ISharedReference BaseListResponseT { get; }
-    public ISharedReference IClientAuthenticationService { get; }
+    public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference ErrorView { get; }
     public ISharedReference RedirectToLoginView { get; }
     public ISharedReference LoaderView { get; }
@@ -62,7 +62,7 @@ public class DeleteViewGenerator : BaseGenerator
         Imports.Reg(CrudlType);
         Imports.Reg(DetailsView);
         Imports.Reg(BaseResponseT);
-        Imports.Reg(IClientAuthenticationService);
+        Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
 
@@ -94,7 +94,7 @@ public class DeleteViewGenerator : BaseGenerator
     : $@"
 @inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}
 @inject {CrudlType.DeleteMethod.Client.Interface.Name} {deleteName}")}
-@inject {IClientAuthenticationService.Name} ClientAuthenticationService
+@inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
@@ -137,7 +137,7 @@ public class DeleteViewGenerator : BaseGenerator
 
         Cts = new CancellationTokenSource();
 
-        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false || id == null)
+        if (await ClientAuthenticatedHttpClient.IsAuthenticatedAsync(Cts.Token) == false || id == null)
         {{
             return;
         }}

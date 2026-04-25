@@ -13,7 +13,7 @@ public class IndexViewGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference baseResponseT,
         ISharedReference baseListResponseT,
-        ISharedReference iClientAuthenticationService,
+        ISharedReference iClientAuthenticatedHttpClient,
         ISharedReference listView,
         ISharedReference loaderView,
         ISharedReference errorView,
@@ -25,7 +25,7 @@ public class IndexViewGenerator : BaseGenerator
         CrudlType = crudlType;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
-        IClientAuthenticationService = iClientAuthenticationService;
+        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
         ListView = listView;
         LoaderView = loaderView;
         RedirectToLoginView = redirectToLoginView;
@@ -40,7 +40,7 @@ public class IndexViewGenerator : BaseGenerator
     public CrudlType CrudlType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
-    public ISharedReference IClientAuthenticationService { get; }
+    public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference ListView { get; }
     public ISharedReference LoaderView { get; }
     public ISharedReference RedirectToLoginView { get; }
@@ -57,7 +57,7 @@ public class IndexViewGenerator : BaseGenerator
         Imports.Reg(ListDataSource);
         Imports.Reg(CrudlType);
         Imports.Reg(CrudlType.ListMethod.Client!.Interface);
-        Imports.Reg(IClientAuthenticationService);
+        Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
         Imports.Reg("Microsoft.JSInterop");
 
@@ -71,7 +71,7 @@ public class IndexViewGenerator : BaseGenerator
         Code = $@"@page ""/{pluralName}""
 @implements IAsyncDisposable
 {GetRazorNamespacesCode()}@inject {interfaceName} {serviceName}
-@inject {IClientAuthenticationService.Name} ClientAuthenticationService
+@inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 
 <PageTitle>{pluralTitle}</PageTitle>
@@ -106,7 +106,7 @@ public class IndexViewGenerator : BaseGenerator
 
         Cts = new CancellationTokenSource();
 
-        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false)
+        if (await ClientAuthenticatedHttpClient.IsAuthenticatedAsync(Cts.Token) == false)
         {{
             return;
         }}

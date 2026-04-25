@@ -53,7 +53,7 @@ public class Interface : ISharedReference
                 a.TypeKind == TypeKind.Class &&
                 a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
             .Select(a => new Client(this, a))
-            .SingleOrDefault();
+            .FirstOrDefault();
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }

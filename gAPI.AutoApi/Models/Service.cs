@@ -1,22 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoApi.Models;
+namespace gAPI.AutoApiServer.Models;
 
-internal class Service
+public class Service : SharedReference
 {
-    public Service(Interface @interface, INamedTypeSymbol namedTypeSymbol)
+    public Service(Interface @interface, INamedTypeSymbol a) : base(a)
     {
-        Interface = @interface;
-        NamedTypeSymbol = namedTypeSymbol;
-
-        Name = NamedTypeSymbol.Name;
-        FullName = NamedTypeSymbol.ToDisplayString();
-        Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
     }
-
-    public Interface Interface { get; }
-    public INamedTypeSymbol NamedTypeSymbol { get; }
-    public string Name { get; }
-    public string FullName { get; }
-    public string Namespace { get; }
 }

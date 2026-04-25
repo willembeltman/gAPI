@@ -1,6 +1,6 @@
 ﻿using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 using System;
 using System.Linq;
 using System.Reflection;

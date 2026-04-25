@@ -254,7 +254,7 @@ public class LocalStorageService(ApplicationDbContext db)
     }
 
     DirectoryInfo FilesDirectory => new("Files");
-    internal bool TryGetFile(string path, string token, string directoryName, string fileName, out string fullName, out StorageFile file, out string denyReason)
+    public bool TryGetFile(string path, string token, string directoryName, string fileName, out string fullName, out StorageFile file, out string denyReason)
     {
         denyReason = null!;
         fullName = null!;

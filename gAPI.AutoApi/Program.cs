@@ -1,54 +1,40 @@
-﻿using gAPI.AutoApi.Models;
-using gAPI.AutoApi.Models.Configs;
+﻿using gAPI.AutoApiServer.Helpers;
+using gAPI.AutoApiServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoApi;
+namespace gAPI.AutoApiServer;
 
 [Generator]
 public class Program : IIncrementalGenerator
 {
-    public SourceProductionContext CurrentSpc { get; private set; }
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autoapi.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
-
-        var combined = context.CompilationProvider.Combine(configFile);
-
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+        context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-            var (compilation, configText) = tuple;
-
-            CurrentSpc = spc;
-
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
 
             try
             {
-                var config = ServerConfigParser.Parse(configText!);
-                var dataModel = new ServiceContext(compilation, config);
-                Generator.Generate(dataModel, spc);
+                var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
+                var sharedReferences = new SharedReferences(allSymbols);
+                var serviceContext = new ServiceContext(allSymbols);
+                var serviceModelErrors = serviceContext.CheckForErrors();
+                var generator = new Generator(serviceContext, sharedReferences);  
+                generator.Generate(spc);
+
+                if (serviceModelErrors.Count > 0)
+                {
+                    ShowError(string.Join(", ", serviceModelErrors), spc);
+                }
             }
             catch (Exception ex)
             {

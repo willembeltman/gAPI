@@ -1,16 +1,12 @@
 ﻿using gAPI.AutoPage.Helpers;
 using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models.CrudlModels;
-using gAPI.AutoPage.Models.ServiceModels;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 
 namespace gAPI.AutoPage.Generators.Components;
 
-public class ComponentGenerator : BaseGenerator, IComponent
+public class ComponentGenerator : BaseGenerator
 {
     public ComponentGenerator(
         IContext context,
@@ -23,7 +19,7 @@ public class ComponentGenerator : BaseGenerator, IComponent
         Imports = imports;
         Method = method;
         Interface = method.Interface;
-        ResponseType = method.ResponseType.UnderlayingTypes[0];
+        ResponseType = method.Type.UnderlayingTypes[0];
 
         InnerResponseType = ResponseType;
 
@@ -43,7 +39,7 @@ public class ComponentGenerator : BaseGenerator, IComponent
 
         IsAuthorized = Method.IsAuthorized;
         IsNotAuthorized = Method.IsNotAuthorized;
-        ListDataSource = Context.SharedReferences.ListDataSource;
+        ListDataSource = Context.ListDataSource!;
 
         Name = $"{Interface.Name}{method.Name}";
         FileName = $"{Name}.razor";
@@ -84,10 +80,11 @@ public class ComponentGenerator : BaseGenerator, IComponent
         Imports.Reg("gAPI.Dtos");
         Imports.Reg("Microsoft.JSInterop");
 
+        Imports.Reg(Method.Type);
+
         foreach (var arg in args)
         {
             Imports.Reg(arg.Type);
-            Imports.Reg(Method.ResponseTypeDigger);
         }
 
         Imports.Reg(Interface);
@@ -237,10 +234,10 @@ public class ComponentGenerator : BaseGenerator, IComponent
 
         if (prop.IsForeignKeyType != null)
         {
-            var crudl = Context.Crudls.FirstOrDefault(a => a.Dto?.Type.FullName == prop.IsForeignKeyType.FullName);
+            var crudl = Context.Crudls.FirstOrDefault(a => a.ResponseTypeDigger?.Type.FullName == prop.IsForeignKeyType.FullName);
             if (crudl != null)
             {
-                var dto = crudl.Dto;
+                var dto = crudl.ResponseTypeDigger;
                 var interfaceMethod = crudl.Methods.FirstOrDefault(a => a.CrudlMethodType == Enums.CrudlMethodTypeEnum.List);
                 if (interfaceMethod != null && dto != null)
                 {
@@ -380,7 +377,7 @@ public class ComponentGenerator : BaseGenerator, IComponent
         }
 
         return $@"
-{space}<dl>{string.Join("", type.GetProperties().Select(prop =>
+{space}<dl>{string.Join("", type.GetProperties().Select((Func<ITypeHelperProperty, string>)(prop =>
         {
             if (prop.Type.GetProperties().Length > 0 &&
                 !prop.Type.IsPrimitive &&
@@ -388,14 +385,14 @@ public class ComponentGenerator : BaseGenerator, IComponent
             {
                 return $@"
 {space}    <dt>{prop.Name}</dt>
-{space}    <dd>{GenerateDisplayForType($"{space}        ", $"{name}.{prop.Name}", prop.Title, prop.Type)}
+{space}    <dd>{GenerateDisplayForType($"{space}        ", $"{name}.{prop.Name}", prop.Title, (ITypeHelper)prop.Type)}
 {space}    </dd>";
             }
 
             return $@"
 {space}    <dt>{prop.Name}</dt>
 {space}    <dd>@{name}.{prop.Name}</dd>";
-        }))}
+        })))}
 {space}</dl>";
     }
 

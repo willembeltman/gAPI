@@ -24,7 +24,7 @@ public class CrudMappingGenerator : BaseGenerator
     public BackendGenerator Context { get; }
     public DtoGenerator Dto { get; }
 
-    public SharedReference ApplyOrderByExtention => Context.SharedReferences.ApplyOrderByExtention;
+    public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
     public CrudUseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
@@ -65,7 +65,7 @@ public class CrudMappingGenerator : BaseGenerator
                     a.NavigationDbSet == null)
         };
 
-        Reg(ApplyOrderByExtention);
+        Reg(ApplyOrderByExtension);
         if (Entity.IsStorageFileUrlProperty)
             Reg("gAPI.Storage");
 

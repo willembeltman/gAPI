@@ -123,7 +123,7 @@ public class {Name}(
         if (State == null || Headers == null)
             throw new Exception(""Initialize the ServerAuthenticationService first please"");
 
-        var stateData = await GetStateData(ct);
+        var stateData = await GetStateDataAsync(ct);
         return await Make(Headers, stateData, ct);
     }}
 
@@ -193,7 +193,7 @@ public class {Name}(
         var user = new ClaimsPrincipal(identity);
         return user;
     }}
-    public async Task<StringValues> GetStateData(CancellationToken ct)
+    public async Task<StringValues> GetStateDataAsync(CancellationToken ct)
     {{
         if (State == null || Headers == null)
             throw new Exception(""Initialize the ServerAuthenticationService first please"");

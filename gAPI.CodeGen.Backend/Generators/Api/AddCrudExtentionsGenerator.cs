@@ -3,9 +3,9 @@ using gAPI.CodeGen.Backend.Models;
 
 namespace gAPI.CodeGen.Backend.Generators.Api;
 
-public class AddCrudExtentionsGenerator : BaseGenerator
+public class AddCrudExtensionsGenerator : BaseGenerator
 {
-    public AddCrudExtentionsGenerator(
+    public AddCrudExtensionsGenerator(
         BackendGenerator context)
     {
         Directory = context.Config.Api_Directory;
@@ -13,7 +13,7 @@ public class AddCrudExtentionsGenerator : BaseGenerator
 
         Context = context;
 
-        Name = "AddCrudExtentions";
+        Name = "AddCrudExtensions";
         FileName = $"{Name}.cs";
     }
 

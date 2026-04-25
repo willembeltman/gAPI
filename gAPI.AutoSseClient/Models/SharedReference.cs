@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace gAPI.AutoSseClient.Models;
 
-internal class SharedReference
+public class SharedReference
 {
     public SharedReference() { }
     public SharedReference(string fullName)
@@ -22,9 +22,9 @@ internal class SharedReference
         Namespace = a.ContainingNamespace.ToDisplayString();
     }
 
-    public string Name { get; protected set; } = string.Empty;
-    public string? Namespace { get; protected set; }
-    public string FullName => $"{Namespace}.{Name}";
+    public virtual string Name { get; protected set; } = string.Empty;
+    public virtual string? Namespace { get; protected set; }
+    public virtual string FullName => $"{Namespace}.{Name}";
 
     public override string ToString()
     {

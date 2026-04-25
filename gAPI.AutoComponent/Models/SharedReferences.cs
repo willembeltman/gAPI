@@ -18,13 +18,13 @@ public class SharedReferences
                 InheritsFromComponentBase(t))
             .Select(a => new SharedReference(a))];
 
-        IsFormFileExtention = allSymbols
+        IsFormFileExtension = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsFormFileExtentionAttribute"))
+                t.HasAttribute("gAPI.Attributes.IsFormFileExtensionAttribute"))
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
-                "Please add gAPI.AutoClient. IsFormFileExtention helper is missing.");
+                "Please add gAPI.AutoClient. IsFormFileExtension helper is missing.");
 
         FormFile = allSymbols
             .Where(t =>
@@ -34,10 +34,36 @@ public class SharedReferences
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "Please add gAPI.AutoClient. FormFile is missing.");
 
-        State = allSymbols
+        static int InheritsFrom(INamedTypeSymbol? symbol, INamedTypeSymbol baseType)
+        {
+            var count = 0;
+            while (symbol != null)
+            {
+                if (SymbolEqualityComparer.Default.Equals(symbol, baseType))
+                    return count;
+
+                symbol = symbol.BaseType;
+                count++;
+            }
+            return -1;
+        }
+
+        var stateBaseTypes = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Class &&
                 t.HasAttribute("gAPI.Attributes.IsStateDtoAttribute"))
+            .Cast<INamedTypeSymbol>()
+            .ToArray();
+
+        var stateObjects = allSymbols
+            .OfType<INamedTypeSymbol>()
+            .Where(t => t.TypeKind == TypeKind.Class)
+            .Select(t => new { type = t, count = stateBaseTypes.Max(baseType => InheritsFrom(t.BaseType, baseType)) })
+            .OrderByDescending(a => a.count)
+            .Select(a => a.type)
+            .ToArray();
+
+        State = stateObjects
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "The `State` dto is missing or does not have the required " +
@@ -91,34 +117,34 @@ public class SharedReferences
         }
 
 
-        var gAPI_IClientAuthenticationService_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Interfaces.IClientAuthenticationService")
-            ?? throw new Exception("gAPI.Interfaces.IClientAuthenticationService was not found. " +
+        var gAPI_IClientAuthenticatedHttpClient_Symbol =
+            compilation.GetTypeByMetadataName("gAPI.Interfaces.IClientAuthenticatedHttpClient")
+            ?? throw new Exception("gAPI.Interfaces.IClientAuthenticatedHttpClient was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoComponents references.");
 
-        Gapi_IClientAuthenticationService = new SharedReference(gAPI_IClientAuthenticationService_Symbol);
-        var iClientAuthenticationService_Symbol =
+        Gapi_IClientAuthenticatedHttpClient = new SharedReference(gAPI_IClientAuthenticatedHttpClient_Symbol);
+        var iClientAuthenticatedHttpClient_Symbol =
             allSymbols
                 .Where(t =>
                     t.TypeKind == TypeKind.Interface &&
                     t.AllInterfaces.Any(i =>
-                        SymbolEqualityComparer.Default.Equals(i, gAPI_IClientAuthenticationService_Symbol)))
+                        SymbolEqualityComparer.Default.Equals(i, gAPI_IClientAuthenticatedHttpClient_Symbol)))
                 .FirstOrDefault();
 
-        if (iClientAuthenticationService_Symbol != null)
+        if (iClientAuthenticatedHttpClient_Symbol != null)
         {
-            IClientAuthenticationService = new SharedReference(iClientAuthenticationService_Symbol);
+            IClientAuthenticatedHttpClient = new SharedReference(iClientAuthenticatedHttpClient_Symbol);
 
             var clientAuthenticationService_Symbol =
                 allSymbols
                     .Where(t =>
                         t.TypeKind == TypeKind.Class &&
                         t.AllInterfaces.Any(i =>
-                            SymbolEqualityComparer.Default.Equals(i, iClientAuthenticationService_Symbol)))
+                            SymbolEqualityComparer.Default.Equals(i, iClientAuthenticatedHttpClient_Symbol)))
                     .FirstOrDefault();
 
             if (clientAuthenticationService_Symbol != null)
-                ClientAuthenticationService = new SharedReference(clientAuthenticationService_Symbol);
+                ClientAuthenticatedHttpClient = new SharedReference(clientAuthenticationService_Symbol);
         }
 
         ErrorView = AllComponents.FirstOrDefault(a => a.Name == "ErrorView");
@@ -139,16 +165,16 @@ public class SharedReferences
     }
 
     public SharedReference[] AllComponents { get; }
-    public SharedReference Gapi_IClientAuthenticationService { get; }
-    public SharedReference IsFormFileExtention { get; }
+    public SharedReference Gapi_IClientAuthenticatedHttpClient { get; }
+    public SharedReference IsFormFileExtension { get; }
     public SharedReference FormFile { get; }
     public SharedReference State { get; }
     public SharedReference BaseResponse { get; }
     public SharedReference BaseResponseT { get; }
     public SharedReference BaseListResponseT { get; }
     public SharedReference StateChangedHandler { get; }
-    public SharedReference? IClientAuthenticationService { get; }
-    public SharedReference? ClientAuthenticationService { get; }
+    public SharedReference? IClientAuthenticatedHttpClient { get; }
+    public SharedReference? ClientAuthenticatedHttpClient { get; }
     public SharedReference? ItemDataSource { get; }
     public SharedReference? ListDataSource { get; }
     public SharedReference? ErrorView { get; }

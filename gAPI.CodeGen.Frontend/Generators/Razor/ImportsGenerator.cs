@@ -18,7 +18,7 @@ public class ImportsGenerator : BaseGenerator
 
     public FrontendConfig Config { get; }
 
-    internal void GenerateCode()
+    public void GenerateCode()
     {
         Reg("Microsoft.AspNetCore.Components.Web");
         Reg("Microsoft.AspNetCore.Components.Forms");

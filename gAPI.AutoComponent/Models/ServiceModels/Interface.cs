@@ -41,20 +41,19 @@ public class Interface : ISharedReference
         IsHidden = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
 
-        Methods = NamedTypeSymbol
+        Methods = [.. NamedTypeSymbol
             .GetMembers()
             .OfType<IMethodSymbol>()
             .Where(m => m.MethodKind == MethodKind.Ordinary)
             .Where(m => !m.GetAttributes().Any(attr => attr.AttributeClass?.Name == "IsHiddenAttribute"))
-            .Select(methodSymbol => new InterfaceMethod(serviceContext, this, methodSymbol))
-            .ToArray();
+            .Select(methodSymbol => new InterfaceMethod(serviceContext, this, methodSymbol))];
 
         Client = allSymbols
             .Where(a =>
                 a.TypeKind == TypeKind.Class &&
                 a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
             .Select(a => new Client(this, a))
-            .SingleOrDefault();
+            .FirstOrDefault();
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }

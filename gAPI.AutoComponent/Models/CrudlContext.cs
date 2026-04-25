@@ -26,7 +26,7 @@ public class CrudlContext
                 var responseType =
                     crudlMethodOfInterface.IsDelete ? crudlMethodOfInterface.IsDeleteType! :
                     crudlMethodOfInterface.IsFileDelete ? crudlMethodOfInterface.IsFileDeleteType! :
-                    crudlMethodOfInterface.ResponseTypeDigger.Type;
+                    crudlMethodOfInterface.TypeDigger.Type;
 
                 crudlMethods.Add(new CrudlMethod(
                     this,
@@ -45,7 +45,7 @@ public class CrudlContext
                     this,
                     @interface,
                     pageMethodOfInterface,
-                    pageMethodOfInterface.ResponseTypeDigger.Type));
+                    pageMethodOfInterface.TypeDigger.Type));
             }
         }
         AllCrudlMethods = crudlMethods
@@ -56,7 +56,7 @@ public class CrudlContext
                 this,
                 a.Key,
                 a.ToArray()))
-            .Where(a => a.Dto != null)
+            .Where(a => a.ResponseType != null)
             .ToArray();
         Pages = pageMethods
             .ToArray();

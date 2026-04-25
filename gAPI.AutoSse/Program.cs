@@ -1,59 +1,46 @@
-﻿using gAPI.AutoSse.Models;
-using gAPI.AutoSse.Models.Configs;
+﻿using gAPI.AutoSseServer.Helpers;
+using gAPI.AutoSseServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoSse;
+namespace gAPI.AutoSseServer;
 
 [Generator]
 public class Program : IIncrementalGenerator
 {
-    public SourceProductionContext CurrentSpc { get; private set; }
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autosse.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
-
-        var combined = context.CompilationProvider.Combine(configFile);
-
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
-        {
-            var (compilation, configText) = tuple;
-
-            CurrentSpc = spc;
-
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
+        context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
+        { 
 //#if DEBUG
-//                if (!Debugger.IsAttached)
-//                {
-//                    Debugger.Launch(); // Triggert dialoog om te attachen
-//                }
+//            if (!Debugger.IsAttached)
+//            {
+//                Debugger.Launch(); // Triggert dialoog om te attachen
+//            }
 //#endif
 
             try
             {
-                var config = ServerConfigParser.Parse(configText!);
-                var dataModel = new ServiceContext(compilation, config);
-                SsesGenerator.Generate(dataModel, spc);
+                var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
+                var sharedReferences = new SharedReferences(allSymbols);
+                var serviceContext = new ServiceContext(allSymbols);
+                var serviceModelErrors = serviceContext.CheckForErrors();
+                var generator = new Generator(serviceContext, sharedReferences);
+                generator.Generate(spc);
+
+                if (serviceModelErrors.Count > 0)
+                {
+                    ShowError(string.Join(", ", serviceModelErrors), spc);
+                }
             }
             catch (Exception ex)
             {
                 ShowError(ex.ToString(), spc);
-                throw;
+                //throw;
             }
 
         });
@@ -119,9 +106,9 @@ public class Program : IIncrementalGenerator
     //            var sb = $@"
     //namespace GeneratorTypes
     //{{
-    //    internal static class AllControllers
+    //    public static class AllControllers
     //    {{
-    //        internal static void ListAll()
+    //        public static void ListAll()
     //        {{
     //            System.Console.WriteLine(""Enums:"");
     //{sbEnums}

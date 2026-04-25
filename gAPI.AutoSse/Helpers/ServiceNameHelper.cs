@@ -1,11 +1,11 @@
-﻿namespace gAPI.AutoSse.Helpers;
+﻿namespace gAPI.AutoSseServer.Helpers;
 
-internal static class ServiceNameHelper
+public static class ServiceNameHelper
 {
     static string ServiceNameEnd = "Service";
     static string ClientHandlerNameEnd = "ClientHandler";
-    static string SseNameEnd = "Sse";
-    static string SseClientNameEnd = "SseClient";
+    static string HubNameEnd = "Hub";
+    static string ClientConnectionNameEnd = "ClientConnection";
     public static string RemoveInterfacePrefix(string apiName)
     {
         if (apiName.StartsWith("I"))
@@ -24,16 +24,16 @@ internal static class ServiceNameHelper
             return name.Substring(0, name.Length - ClientHandlerNameEnd.Length);
         return name;
     }
-    public static string RemoveSseName(string name)
+    public static string RemoveHubName(string name)
     {
-        if (name.ToLower().EndsWith(SseNameEnd.ToLower()))
-            return name.Substring(0, name.Length - SseNameEnd.Length);
+        if (name.ToLower().EndsWith(HubNameEnd.ToLower()))
+            return name.Substring(0, name.Length - HubNameEnd.Length);
         return name;
     }
-    public static string RemoveSseClientName(string name)
+    public static string RemoveClientConnectionName(string name)
     {
-        if (name.ToLower().EndsWith(SseClientNameEnd.ToLower()))
-            return name.Substring(0, name.Length - SseClientNameEnd.Length);
+        if (name.ToLower().EndsWith(ClientConnectionNameEnd.ToLower()))
+            return name.Substring(0, name.Length - ClientConnectionNameEnd.Length);
         return name;
     }
 }

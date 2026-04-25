@@ -26,7 +26,7 @@ public class CrudlContext
                 var responseType =
                     crudlMethodOfInterface.IsDelete ? crudlMethodOfInterface.IsDeleteType! :
                     crudlMethodOfInterface.IsFileDelete ? crudlMethodOfInterface.IsFileDeleteType! :
-                    crudlMethodOfInterface.ResponseTypeDigger.Type;
+                    crudlMethodOfInterface.TypeDigger.Type;
 
                 crudlMethods.Add(new CrudlMethod(
                     this,
@@ -42,7 +42,7 @@ public class CrudlContext
             foreach (var crudlMethodOfInterface in pageMethodsOfInterface)
             {
                 var crudlMethodType = crudlMethodOfInterface.CrudlMethodType;
-                var responseType = crudlMethodOfInterface.ResponseType;
+                var responseType = crudlMethodOfInterface.Type;
 
                 pageMethods.Add(new CrudlMethod(
                     this,
@@ -58,7 +58,7 @@ public class CrudlContext
             foreach (var crudlMethodOfInterface in componentMethodsOfInterface)
             {
                 var crudlMethodType = crudlMethodOfInterface.CrudlMethodType;
-                var responseType = crudlMethodOfInterface.ResponseType;
+                var responseType = crudlMethodOfInterface.Type;
 
                 componentMethods.Add(new CrudlMethod(
                     this,
@@ -70,12 +70,12 @@ public class CrudlContext
         }
         AllCrudlMethods = [.. crudlMethods];
         Crudls = [.. crudlMethods
-            .GroupBy(a => a.ResponseType)
+            .GroupBy(a => a.Type)
             .Select(a => new CrudlType(
                 this,
                 a.Key,
                 [.. a]))
-            .Where(a => a.Dto != null)];
+            .Where(a => a.ResponseTypeBase != null)];
         PageMethods = [.. pageMethods];
         ComponentMethods = [.. componentMethods];
     }

@@ -7,25 +7,39 @@ using System.Text;
 
 namespace gAPI.AutoSseClient;
 
-internal class Generator
+public class Generator
 {
-    internal static void Generate(ServiceContext dataModel, SourceProductionContext spc)
+    public Generator(ServiceContext serviceContext, SharedReferences sharedReferences)
     {
-        var Config = dataModel.Config;
+        ServiceContext = serviceContext;
+        SharedReferences = sharedReferences;
 
-        var SseClient = new SseClientGenerator(dataModel);
+        SseClient = new SseClientGenerator(this);
+        ISseManager = new ISseManagerGenerator(this);
+        SseManager = new ClientConnectionGenerator(this);
+        AutoSseExtension = new AutoSseExtensionGenerator(this);
+    }
+
+    public ServiceContext ServiceContext { get; }
+    public SharedReferences SharedReferences { get; }
+
+    public SseClientGenerator SseClient { get; }
+    public ISseManagerGenerator ISseManager { get; }
+    public ClientConnectionGenerator SseManager { get; }
+    public AutoSseExtensionGenerator AutoSseExtension { get; }
+
+    public void Generate(SourceProductionContext spc)
+    {
         SseClient.GenerateCode();
-        var SseClientFullName = Path.Combine(Config.HubClients_Destination.Directory, SseClient.FileName);
-        spc.AddSource(SseClientFullName, SourceText.From(SseClient.Code, Encoding.UTF8));
+        spc.AddSource(Path.Combine(SseClient.Directory, SseClient.FileName), SourceText.From(SseClient.Code, Encoding.UTF8));
 
-        var ISseManager = new ISseManagerGenerator(dataModel);
         ISseManager.GenerateCode();
-        var signalRHubFullName = Path.Combine(Config.HubClients_Destination.Directory, ISseManager.FileName);
-        spc.AddSource(signalRHubFullName, SourceText.From(ISseManager.Code, Encoding.UTF8));
+        spc.AddSource(Path.Combine(ISseManager.Directory, ISseManager.FileName), SourceText.From(ISseManager.Code, Encoding.UTF8));
 
-        var SseManager = new SseManagerGenerator(dataModel, ISseManager, SseClient);
         SseManager.GenerateCode();
-        var SseManagerFullName = Path.Combine(Config.HubClients_Destination.Directory, SseManager.FileName);
-        spc.AddSource(SseManagerFullName, SourceText.From(SseManager.Code, Encoding.UTF8));
+        spc.AddSource(Path.Combine(SseManager.Directory, SseManager.FileName), SourceText.From(SseManager.Code, Encoding.UTF8));
+
+        AutoSseExtension.GenerateCode();
+        spc.AddSource(Path.Combine(AutoSseExtension.Directory, AutoSseExtension.FileName), SourceText.From(AutoSseExtension.Code, Encoding.UTF8));
     }
 }

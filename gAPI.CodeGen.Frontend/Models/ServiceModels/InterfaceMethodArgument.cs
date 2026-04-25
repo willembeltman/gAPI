@@ -1,11 +1,11 @@
 ﻿using gAPI.Attributes;
+using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
-using Microsoft.CodeAnalysis;
 using System.Reflection;
 
 namespace gAPI.CodeGen.Frontend.Models.ServiceModels;
 
-public class InterfaceMethodArgument
+public class InterfaceMethodArgument : ICrudlMethodArgument
 {
     public InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, ParameterInfo parameterInfo)
     {
@@ -13,7 +13,7 @@ public class InterfaceMethodArgument
         ServiceMethod = serviceMethod;
         ParameterInfo = parameterInfo;
 
-        Name = parameterInfo.Name;
+        Name = parameterInfo.Name!;
         Title = parameterInfo.GetCustomAttribute<TitleAttribute>()?.Name ?? Name;
 
         var context = new NullabilityInfoContext();
@@ -27,11 +27,33 @@ public class InterfaceMethodArgument
         IsValueType = parameterInfo.ParameterType.IsValueType;
     }
 
+
+    ITypeHelper ITypeHelperProperty.Type => ParameterType;
+    public ITypeHelper? IsForeignKeyType => throw new NotImplementedException();
+    public bool IsForeignKey => throw new NotImplementedException();
+    public bool IsReadOnly => throw new NotImplementedException();
+    public bool IsForeignName => throw new NotImplementedException();
+    public bool IsStateManaged => throw new NotImplementedException();
+    public bool IsImmutable => throw new NotImplementedException();
+    public bool IsStorageFileUrlProperty => throw new NotImplementedException();
+    public bool IsKey => throw new NotImplementedException();
+    public bool IsName => throw new NotImplementedException();
+    public AutoComponent.Models.ServiceModels.ITypeHelperPropertyAttribute[] GetAttributes()
+    {
+        throw new NotImplementedException();
+    }
+
+
+
+
+
+
+
     public ServiceContext DataModel { get; }
     public InterfaceMethod ServiceMethod { get; }
     public ParameterInfo ParameterInfo { get; }
-    public string? Name { get; }
-    public string? Title { get; }
+    public string Name { get; }
+    public string Title { get; }
     public bool IsPassword { get; }
     public bool IsNullable { get; }
     public bool IsIFormFile { get; }
@@ -42,4 +64,5 @@ public class InterfaceMethodArgument
 
     TypeDigger? ParameterTypeRapportInner { get; set; }
     public TypeDigger ParameterTypeRapport => ParameterTypeRapportInner ??= new TypeDigger(DataModel, ParameterType.Type, IsNullable);
+
 }

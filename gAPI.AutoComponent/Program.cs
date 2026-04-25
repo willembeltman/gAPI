@@ -1,11 +1,8 @@
 ﻿using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Models;
-using gAPI.AutoComponent.Models.Configs;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -16,40 +13,23 @@ public class Program : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var configFile = context.AdditionalTextsProvider
-            .Where(file => Path.GetFileName(file.Path).Equals("gapi.autocomponent.json", StringComparison.OrdinalIgnoreCase))
-            .Select((file, ct) => file.GetText(ct)?.ToString())
-            .Collect()
-            .Select((configs, _) => configs.FirstOrDefault()); // string?
-
-        var combined = context.CompilationProvider.Combine(configFile);
-
-        context.RegisterSourceOutput(combined, (spc, tuple) =>
+        context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-            var (compilation, configText) = tuple;
-
-            if (string.IsNullOrWhiteSpace(configText))
-            {
-                ShowError($"Config parse error: Config file is empty", spc);
-                return;
-            }
-
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
 
             try
             {
-                var config = ComponentConfigParser.Parse(configText!);
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
                 var sharedReferences = new SharedReferences(compilation, allSymbols);
-                var serviceContext = new ServiceContext(compilation, config, allSymbols);
+                var serviceContext = new ServiceContext(compilation, allSymbols);
                 var crudlContext = new CrudlContext(serviceContext);
-                var generator = new Generator(config, sharedReferences, serviceContext, crudlContext, spc);
-                generator.GenerateViews();
+                var generator = new Generator(sharedReferences, serviceContext, crudlContext, spc);
+                generator.Generate();
             }
             catch (Exception ex)
             {

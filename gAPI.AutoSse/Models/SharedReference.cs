@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoSse.Models;
+namespace gAPI.AutoSseServer.Models;
 
 public class SharedReference
 {
@@ -22,9 +22,9 @@ public class SharedReference
         Namespace = a.ContainingNamespace.ToDisplayString();
     }
 
-    public string Name { get; protected set; } = string.Empty;
-    public string? Namespace { get; protected set; }
-    public string FullName => $"{Namespace}.{Name}";
+    public virtual string Name { get; protected set; } = string.Empty;
+    public virtual string? Namespace { get; protected set; }
+    public virtual string FullName => $"{Namespace}.{Name}";
 
     public override string ToString()
     {

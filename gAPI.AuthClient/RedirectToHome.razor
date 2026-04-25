@@ -1,0 +1,10 @@
+@inject NavigationManager Navigation
+
+<h1>YOU SHOULD NOT SEE THIS</h1>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

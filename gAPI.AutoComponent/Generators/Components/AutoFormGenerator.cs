@@ -1,6 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models;
-using gAPI.AutoComponent.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
@@ -13,18 +13,18 @@ public class AutoFormGenerator : BaseGenerator
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference formFile,
-        ISharedReference toFormFileAsyncExtention,
+        ISharedReference toFormFileAsyncExtension,
         string directory,
         string @namespace)
     {
         Context = context;
-        var iClientAuthenticationService = new SharedReference("gAPI.Interfaces", "IClientAuthenticationService");
+        var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces", "IClientAuthenticatedHttpClient");
         FormGenerator = new FormGenerator(
             dto,
             itemDataSource,
             listDataSource,
-            iClientAuthenticationService,
-            formFile, toFormFileAsyncExtention,
+            iClientAuthenticatedHttpClient,
+            formFile, toFormFileAsyncExtension,
             this,
             directory,
             @namespace);

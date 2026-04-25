@@ -1,21 +1,20 @@
 ﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models.Configs;
 using gAPI.AutoPage.Models.CrudlModels;
-using gAPI.AutoPage.SimpleRazorCompiler;
+using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Components
 {
-    public class AutoComponentGenerator : BaseGenerator, IComponent
+    public class AutoComponentGenerator : BaseGenerator
     {
-        public AutoComponentGenerator(Generator generator, CrudlMethod method, PageConfig config)
+        public AutoComponentGenerator(Generator generator, CrudlMethod method)
         {
             Context = generator;
             Generator = new ComponentGenerator(
                 generator,
                 method,
                 this,
-                config.Components_Destination.Directory,
-                config.Components_Destination.Namespace);
+                "Components",
+                "gAPI.Generated.Components");
 
             FileName = $"{Name}.g.cs";
         }
@@ -30,7 +29,7 @@ namespace gAPI.AutoPage.Generators.Components
         public bool IsNotAuthorized => Generator.IsNotAuthorized;
         public string Title => Generator.Title;
 
-        internal void GenerateCode()
+        public void GenerateCode()
         {
             Generator.GenerateCode();
 

@@ -13,7 +13,7 @@ public class CreateViewGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference baseResponseT,
         ISharedReference baseListResponseT,
-        ISharedReference iClientAuthenticationService,
+        ISharedReference iClientAuthenticatedHttpClient,
         ISharedReference formView,
         ISharedReference loaderView,
         ISharedReference errorView,
@@ -28,7 +28,7 @@ public class CreateViewGenerator : BaseGenerator
         BaseResponse = baseResponse;
         BaseResponseT = baseResponseT;
         BaseListResponseT = baseListResponseT;
-        IClientAuthenticationService = iClientAuthenticationService;
+        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
         FormView = formView;
         LoaderView = loaderView;
         ErrorView = errorView;
@@ -48,7 +48,7 @@ public class CreateViewGenerator : BaseGenerator
     public ISharedReference BaseResponse { get; }
     public ISharedReference BaseResponseT { get; }
     public ISharedReference BaseListResponseT { get; }
-    public ISharedReference IClientAuthenticationService { get; }
+    public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference FormView { get; }
     public ISharedReference LoaderView { get; }
     public ISharedReference ErrorView { get; }
@@ -74,7 +74,7 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
-        Imports.Reg(IClientAuthenticationService);
+        Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg(CrudlType.CreateMethod.Client);
         Imports.Reg(CrudlType.CreateMethod.Client?.Interface);
 
@@ -97,7 +97,7 @@ public class CreateViewGenerator : BaseGenerator
 @implements IAsyncDisposable{string.Join("", clients.Select(p => $@"
 @inject {p.ListMethod!.Client!.Interface.Name} {p.ListMethod!.Client!.Name}"))}
 @inject {CrudlType.CreateMethod.Client!.Interface.Name} {CrudlType.CreateMethod.Client.Name}
-@inject {IClientAuthenticationService.Name} ClientAuthenticationService
+@inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
@@ -137,7 +137,7 @@ public class CreateViewGenerator : BaseGenerator
 
         Cts = new CancellationTokenSource();
 
-        if (await ClientAuthenticationService.IsAuthenticatedAsync(Cts.Token) == false)
+        if (await ClientAuthenticatedHttpClient.IsAuthenticatedAsync(Cts.Token) == false)
             return;
 
         {name} = new {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty.TypeSimpleName}>(

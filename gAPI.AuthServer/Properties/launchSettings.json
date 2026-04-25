@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "gAPI.Core.Server": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:64713;http://localhost:64714"
+    }
+  }
+}

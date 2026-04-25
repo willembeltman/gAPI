@@ -1,5 +1,4 @@
-﻿using gAPI.AutoComponent.Generators.Helpers;
-using gAPI.CodeGen.Frontend.Generators;
+﻿using gAPI.CodeGen.Frontend.Generators;
 using gAPI.CodeGen.Frontend.Generators.Razor;
 using gAPI.CodeGen.Frontend.Generators.Razor.Components;
 using gAPI.CodeGen.Frontend.Generators.Razor.Layout;
@@ -27,41 +26,43 @@ public class FrontendGenerator
 
         var directory = Config.HelpersDirectory!.FullName;
         var @namespace = Config.HelpersNamespace!;
-        ItemDataSource = new ItemDataSourceGenerator(
-            SharedReferences.BaseResponseT,
-            SharedReferences.BaseResponse,
-            SharedReferences.IsFormFileExtention,
-            directory, @namespace)
-        {
-            FileName = "ItemDataSource.cs"
-        };
-        ListDataSource = new ListDataSourceGenerator(
-            SharedReferences.BaseListResponseT,
-            SharedReferences.BaseResponseT,
-            SharedReferences.BaseResponse,
-            ItemDataSource,
-            directory, @namespace)
-        {
-            FileName = "ListDataSource.cs"
-        };
+
+        //ItemDataSource = new ItemDataSourceGenerator(
+        //    SharedReferences.BaseResponseT,
+        //    SharedReferences.BaseResponse,
+        //    SharedReferences.IsFormFileExtension,
+        //    directory, @namespace)
+        //{
+        //    FileName = "ItemDataSource.cs"
+        //};
+        //ListDataSource = new ListDataSourceGenerator(
+        //    SharedReferences.BaseListResponseT,
+        //    SharedReferences.BaseResponseT,
+        //    SharedReferences.BaseResponse,
+        //    ItemDataSource,
+        //    directory, @namespace)
+        //{
+        //    FileName = "ListDataSource.cs"
+        //};
 
         directory = Config.AuthenticationDirectory!.FullName;
         @namespace = Config.AuthenticationNamespace!;
-        IClientAuthenticationService = new IClientAuthenticationServiceGenerator(
-            SharedReferences.State,
-            SharedReferences.StateChangedHandler,
-            directory, @namespace)
-        {
-            FileName = "IClientAuthenticationService.cs"
-        };
-        ClientAuthenticationService = new ClientAuthenticationServiceGenerator(
-            SharedReferences.State,
-            IClientAuthenticationService,
-            SharedReferences.StateChangedHandler,
-            directory, @namespace)
-        {
-            FileName = "ClientAuthenticationService.cs"
-        };
+
+        //IClientAuthenticatedHttpClient = new IClientAuthenticatedHttpClientGenerator(
+        //    SharedReferences.State,
+        //    SharedReferences.StateChangedHandler,
+        //    directory, @namespace)
+        //{
+        //    FileName = "IClientAuthenticatedHttpClient.cs"
+        //};
+        //ClientAuthenticatedHttpClient = new ClientAuthenticatedHttpClientGenerator(
+        //    SharedReferences.State,
+        //    IClientAuthenticatedHttpClient,
+        //    SharedReferences.StateChangedHandler,
+        //    directory, @namespace)
+        //{
+        //    FileName = "ClientAuthenticatedHttpClient.cs"
+        //};
 
         var pages = CrudlContext.AllPageMethods
             .Select(pageMethod => new PageGenerator(pageMethod, clientConfig, Imports))
@@ -82,10 +83,9 @@ public class FrontendGenerator
                 SharedReferences,
                 ServiceContext, 
                 Imports,
-                ItemDataSource, 
-                ListDataSource,
-                IClientAuthenticationService, 
-                ClientAuthenticationService))];
+                SharedReferences.ItemDataSource,
+                SharedReferences.ListDataSource,
+                SharedReferences.IClientAuthenticatedHttpClient))];
 
         NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
         NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
@@ -103,10 +103,10 @@ public class FrontendGenerator
     public NavMenuAuthenticatedGenerator NavMenuAuthenticated { get; }
     public NavMenuNotAuthenticatedGenerator NavMenuNotAuthenticated { get; }
 
-    public ItemDataSourceGenerator ItemDataSource { get; }
-    public ListDataSourceGenerator ListDataSource { get; }
-    public IClientAuthenticationServiceGenerator IClientAuthenticationService { get; }
-    public ClientAuthenticationServiceGenerator ClientAuthenticationService { get; }
+    //public ItemDataSourceGenerator ItemDataSource { get; }
+    //public ListDataSourceGenerator ListDataSource { get; }
+    //public IClientAuthenticatedHttpClientGenerator IClientAuthenticatedHttpClient { get; }
+    //public ClientAuthenticatedHttpClientGenerator ClientAuthenticatedHttpClient { get; }
 
     public CrudlGenerator[] Crudls { get; }
     public PageGenerator[] Pages { get; }
@@ -128,17 +128,17 @@ public class FrontendGenerator
         foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
         foreach (var crudl in Crudls) crudl.GenerateCode();
 
-        ItemDataSource.GenerateCode();
-        ItemDataSource.Save();
+        //ItemDataSource.GenerateCode();
+        //ItemDataSource.Save();
 
-        ListDataSource.GenerateCode();
-        ListDataSource.Save();
+        //ListDataSource.GenerateCode();
+        //ListDataSource.Save();
 
-        IClientAuthenticationService.GenerateCode();
-        IClientAuthenticationService.Save();
+        //IClientAuthenticatedHttpClient.GenerateCode();
+        //IClientAuthenticatedHttpClient.Save();
 
-        ClientAuthenticationService.GenerateCode();
-        ClientAuthenticationService.Save();
+        //ClientAuthenticatedHttpClient.GenerateCode();
+        //ClientAuthenticatedHttpClient.Save();
 
         Imports.GenerateCode();
     }

@@ -1,0 +1,31 @@
+@using gAPI.Dtos
+@if (Response?.Success == true)
+{
+    @ChildContent
+}
+else if (Response?.Success == false)
+{
+    <ErrorView Response="Response" />
+}
+else
+{
+    if (LoadingContent != null)
+    {
+        @LoadingContent
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public BaseResponse? Response { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? LoadingContent { get; set; }
+}

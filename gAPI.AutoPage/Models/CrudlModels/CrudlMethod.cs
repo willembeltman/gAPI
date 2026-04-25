@@ -1,8 +1,6 @@
 ﻿using gAPI.AutoPage.Enums;
-using gAPI.AutoPage.Helpers;
 using gAPI.AutoPage.Interfaces;
 using gAPI.AutoPage.Models.ServiceModels;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoPage.Models.CrudlModels;
@@ -12,13 +10,14 @@ public class CrudlMethod(
     Interface @interface,
     InterfaceMethod interfaceMethod,
     CrudlMethodTypeEnum crudlMethodType,
-    TypeHelper responeType) : ICrudlMethod
+    TypeHelper type) 
+    : ICrudlMethod
 {
     public CrudlContext Context { get; } = serviceContext;
     public Interface Interface { get; } = @interface;
     public InterfaceMethod InterfaceMethod { get; } = interfaceMethod;
     public CrudlMethodTypeEnum CrudlMethodType { get; } = crudlMethodType;
-    public TypeHelper ResponseType { get; } = responeType;
+    public TypeHelper Type { get; } = type;
 
     public CrudlType? CrudlType { get; set; }
 
@@ -40,28 +39,20 @@ public class CrudlMethod(
     public string? IsComponentSubmitText => InterfaceMethod.IsComponentSubmitText;
     public string? IsComponentResponseText => InterfaceMethod.IsComponentResponseText;
 
+    TypeDigger? TypeDiggerInner { get; set; }
+    public TypeDigger TypeDigger 
+        => TypeDiggerInner ??= new TypeDigger(Context.ServiceContext, Type.TypeSymbol, IsNullable);
 
     CrudlType? _ForeignType;
     public CrudlType ForeignType
         => _ForeignType ??= Context.Crudls
             .FirstOrDefault(a => a.ResponseType.FullName == IsListByForeignType?.FullName);
 
-    TypeDigger? _ResponseTypeDigger;
-    public TypeDigger ResponseTypeDigger
-    {
-        get
-        {
-            _ResponseTypeDigger ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol, IsNullable);
-            return _ResponseTypeDigger;
-        }
-    }
-
     ISharedReference ICrudlMethod.Interface => Interface;
     ISharedReference ICrudlMethod.Client => Client;
-    ISharedReference ICrudlMethod.ResponseTypeDigger => ResponseTypeDigger;
-    ITypeHelper ICrudlMethod.ResponseType => ResponseType;
+    ITypeHelper ICrudlMethod.Type => Type;
     ICrudlMethodArgument[] ICrudlMethod.Arguments => Arguments;
-
+    ITypeDigger ICrudlMethod.TypeDigger => TypeDigger;
 
     public override string ToString()
     {

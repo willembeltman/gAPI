@@ -75,7 +75,7 @@ public class {Name}(
     ILoggerFactory loggerFactory) 
     : {IServerAuthenticationStateFactory}
 {{
-    private readonly ILogger Logger = loggerFactory.CreateLogger(""ServerAuthenticationStateFactory"");
+    private readonly ILogger Logger = loggerFactory.CreateLogger<{Name}>();
 
     public async Task<ServerAuthenticationState> CreateAuthenticationStateAsync(
         {AuthenticationHeaders.FullName} headers,

@@ -21,6 +21,32 @@ public class CrudlMethod : ICrudlMethod
         ResponseRealType = responeType;
     }
 
+
+
+
+    ICrudlMethodArgument[] ICrudlMethod.Arguments => Arguments;
+
+    public AutoComponent.Enums.CrudlMethodTypeEnum CrudlMethodType => throw new NotImplementedException();
+
+    public bool IsNotAuthorized => throw new NotImplementedException();
+
+    public string? IsPageTitle => throw new NotImplementedException();
+
+    public string? IsPageSubmitText => throw new NotImplementedException();
+
+    public string? IsPageResponseText => throw new NotImplementedException();
+
+    public string? IsComponentTitle => throw new NotImplementedException();
+
+    public string? IsComponentSubmitText => throw new NotImplementedException();
+
+    public string? IsComponentResponseText => throw new NotImplementedException();
+
+
+
+
+
+
     public CrudlContext Context { get; }
     public Interface Interface { get; }
     public InterfaceMethod InterfaceMethod { get; }
@@ -48,18 +74,22 @@ public class CrudlMethod : ICrudlMethod
         => _ForeignType = _ForeignType ?? Context.Types
             .FirstOrDefault(a => a.ResponseType == ForeignRealType);
 
-    TypeDigger? _ResponseTypeDigger { get; set; }
-    public TypeDigger ResponseTypeDigger
+    TypeDigger? TypeDiggerInternal { get; set; }
+    public TypeDigger TypeDigger
     {
         get
         {
-            _ResponseTypeDigger = _ResponseTypeDigger ?? new TypeDigger(Context.ServiceContext, ResponseRealType, IsNullable);
-            return _ResponseTypeDigger;
+            TypeDiggerInternal = TypeDiggerInternal ?? new TypeDigger(Context.ServiceContext, ResponseRealType, IsNullable);
+            return TypeDiggerInternal;
         }
     }
 
     ISharedReference ICrudlMethod.Client => Client;
     ISharedReference ICrudlMethod.Interface => Interface;
+
+    public ITypeHelper Type => throw new NotImplementedException();
+
+    ITypeDigger ICrudlMethod.TypeDigger => TypeDigger;
 
     public override string ToString()
     {

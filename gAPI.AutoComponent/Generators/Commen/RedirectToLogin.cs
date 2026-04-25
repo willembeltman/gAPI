@@ -1,50 +1,50 @@
-﻿using gAPI.AutoComponent.Models;
+﻿//using gAPI.AutoComponent.Models;
 
-namespace gAPI.AutoComponent.Generators.Commen;
+//namespace gAPI.AutoComponent.Generators.Commen;
 
-public class RedirectToLoginGenerator : BaseGenerator
-{
-    public RedirectToLoginGenerator(Generator generator)
-    {
-        Generator = generator;
-        BaseResponse = generator.SharedReferences.BaseResponse;
+//public class RedirectToLoginGenerator : BaseGenerator
+//{
+//    public RedirectToLoginGenerator(Generator generator)
+//    {
+//        Generator = generator;
+//        BaseResponse = generator.SharedReferences.BaseResponse;
 
-        Namespace = generator.Config.Components_Destination.Namespace;
-        Directory = generator.Config.Components_Destination.Directory;
+//        Directory = "";
+//        Namespace = "gAPI.Generated.Components";
 
-        Name = "RedirectToLogin";
-        FileName = $"{Name}.g.cs";
-    }
+//        Name = "RedirectToLogin";
+//        FileName = $"{Name}.g.cs";
+//    }
 
-    public Generator Generator { get; }
-    public SharedReference BaseResponse { get; }
+//    public Generator Generator { get; }
+//    public SharedReference BaseResponse { get; }
 
-    public void GenerateCode()
-    {
-        Reg("System");
-        Reg("Microsoft.AspNetCore.Components");
-        Reg("Microsoft.AspNetCore.Components.Rendering");
-        Reg(BaseResponse);
+//    public void GenerateCode()
+//    {
+//        Reg("System");
+//        Reg("Microsoft.AspNetCore.Components");
+//        Reg("Microsoft.AspNetCore.Components.Rendering");
+//        Reg(BaseResponse);
 
-        Code = @$"{GetNamespacesCode()}
-#nullable enable
-namespace {Namespace}
-{{
-    public partial class {Name} : ComponentBase
-    {{
-        [Inject]
-        public NavigationManager Navigation {{ get; set; }} = default!;
+//        Code = @$"{GetNamespacesCode()}
+//#nullable enable
+//namespace {Namespace}
+//{{
+//    public partial class {Name} : ComponentBase
+//    {{
+//        [Inject]
+//        public NavigationManager Navigation {{ get; set; }} = default!;
 
-        protected override void OnInitialized()
-        {{
-            Navigation.NavigateTo(""/account/login"");
-        }}
+//        protected override void OnInitialized()
+//        {{
+//            Navigation.NavigateTo(""/account/login"");
+//        }}
 
-        protected override void BuildRenderTree(RenderTreeBuilder __builder)
-        {{
-            // No UI content, only redirect
-        }}
-    }}
-}}";
-    }
-}
+//        protected override void BuildRenderTree(RenderTreeBuilder __builder)
+//        {{
+//            // No UI content, only redirect
+//        }}
+//    }}
+//}}";
+//    }
+//}

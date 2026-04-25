@@ -1,5 +1,4 @@
-﻿using gAPI.AutoApiClient.Helpers;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
 namespace gAPI.AutoApiClient.Models;
@@ -35,6 +34,8 @@ public class InterfaceMethodArgument
     TypeHelper? ParameterTypeInner { get; set; }
     public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
 
-    TypeDigger? ParameterTypeRapportInner { get; set; }
-    public TypeDigger ParameterTypeRapport => ParameterTypeRapportInner ??= new TypeDigger(DataModel, ParameterType.TypeSymbol, IsNullable);
+    public override string ToString()
+    {
+        return Name;
+    }
 }

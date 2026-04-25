@@ -22,6 +22,7 @@ public class ServerAuthenticationMiddlewareGenerator : BaseGenerator
     {
         Reg("Microsoft.AspNetCore.Http");
         Reg("Microsoft.Extensions.Hosting");
+        Reg("System.Net");
         Reg(IServerAuthenticationService);
 
         Code = $@"{GetNamespacesCode()}
@@ -34,50 +35,69 @@ public class {Name}
     public {Name}(RequestDelegate next) => _next = next;
 
     public async Task Invoke(
-        HttpContext ctx,
+        HttpContext ___httpContext,
         {IServerAuthenticationService} authentication,
         IHostEnvironment hostEnvironment)
     {{
+        IPAddress? ___forwardedIp = ___httpContext.Connection.RemoteIpAddress;
+        if (___httpContext.Request.Headers.TryGetValue(""X-Forwarded-For"", out var ___ipHeader))
+        {{
+            var ___firstIp = ___ipHeader.ToString().Split(',')[0].Trim();
+            if (IPAddress.TryParse(___firstIp, out var ___parsedIp))
+                ___forwardedIp = ___parsedIp;
+        }}
+
+        var ___path = ___httpContext.Request.Path;
+        var ___queryString = ___httpContext.Request.QueryString;
+        if (___httpContext.Request.Headers.TryGetValue(""X-Forwarded-Uri"", out var ___uriHeader))
+        {{
+            if (Uri.TryCreate(new Uri(""http://dummy""), ___uriHeader.ToString(), out var ___uri))
+            {{
+                ___path = ___uri.AbsolutePath;
+                ___queryString = new QueryString(___uri.Query);
+            }}
+        }}
+
         var initResult = await authentication.InitializeAsync(
-            ctx.Request.Path,
-            ctx.Request.QueryString,
-            ctx.Connection.RemoteIpAddress,
-            ctx.Request.Cookies[""AuthenticationToken""],
-            ctx.Request.Headers[""X-SessionId""],
-            ctx.Request.Headers[""X-StateData""],
-            ctx.RequestAborted);
+            ___path
+            ___queryString,
+            ___forwardedIp,
+            ___httpContext.Request.Cookies[""AuthenticationToken""],
+            ___httpContext.Request.Headers[""X-SessionId""],
+            ___httpContext.Request.Headers[""X-StateData""],
+            ___httpContext.RequestAborted);
 
         if (initResult.Forbidden)
         {{
-            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            ___httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
             var response = hostEnvironment.IsDevelopment()
                 ? initResult.ForbiddenReason ?? ""Forbidden""
                 : ""Forbidden"";
-            await ctx.Response.WriteAsync(response, ctx.RequestAborted);
+            await ___httpContext.Response.WriteAsync(response, ___httpContext.RequestAborted);
             return;
         }}
 
-        ctx.Response.OnStarting(async () =>
+        ___httpContext.Response.OnStarting(async () =>
         {{
             if (authentication.Initialized == false)
                 return;
 
             var sessionId = authentication.SessionId;
-            var stateData = await authentication.GetStateData(ctx.RequestAborted);
+            var stateData = await authentication.GetStateDataAsync(___httpContext.RequestAborted);
 
-            ctx.Response.Headers[""X-SessionId""] = sessionId;
-            ctx.Response.Headers[""X-StateData""] = stateData;
+            ___httpContext.Response.Headers[""X-SessionId""] = sessionId;
+            ___httpContext.Response.Headers[""X-StateData""] = stateData;
 
             if (!authentication.UpdateCookie)
                 return;
 
-            if (ctx.Request.Cookies.TryGetValue(""AuthenticationToken"", out var _))
-                ctx.Response.Cookies.Delete(""AuthenticationToken"");
+            if (___httpContext.Request.Cookies.TryGetValue(""AuthenticationToken"", out var _))
+                ___httpContext.Response.Cookies.Delete(""AuthenticationToken"");
 
             if (authentication.CookieData == null)
                 return;
 
-            ctx.Response.Cookies.Append(
+            ___httpContext.Response.Cookies.Append(
                 ""AuthenticationToken"",
                 authentication.CookieData,
                 new CookieOptions
@@ -88,7 +108,7 @@ public class {Name}
                 }});
         }});
 
-        await _next(ctx);
+        await _next(___httpContext);
     }}
 }}";
         Save(false);

@@ -2,21 +2,21 @@
 
 //namespace gAPI.CodeGen.FrontEnd.Step2Generators.SingleFiles;
 
-//public class ClientAuthenticationServiceGenerator : BaseGenerator
+//public class ClientAuthenticatedHttpClientGenerator : BaseGenerator
 //{
-//    public ClientAuthenticationServiceGenerator(IClientAuthenticationServiceGenerator iClientAuthenticationService)
+//    public ClientAuthenticatedHttpClientGenerator(IClientAuthenticatedHttpClientGenerator iClientAuthenticatedHttpClient)
 //    {
-//        IClientAuthenticationService = iClientAuthenticationService;
-//        Config = iClientAuthenticationService.Config;
+//        IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
+//        Config = iClientAuthenticatedHttpClient.Config;
 
 //        Directory = Config.DotNetClientServicesDirectory;
 //        Namespace = Config.DotNetClientServicesNamespace;
 
-//        Name = "ClientAuthenticationService";
+//        Name = "ClientAuthenticatedHttpClient";
 //        FileName = $"{Name}.g.cs";
 //    }
 
-//    public IClientAuthenticationServiceGenerator IClientAuthenticationService { get; }
+//    public IClientAuthenticatedHttpClientGenerator IClientAuthenticatedHttpClient { get; }
 //    public Step2GeneratorConfig Config { get; }
 
 //    public void GenerateCode()

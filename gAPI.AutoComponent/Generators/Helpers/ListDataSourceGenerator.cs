@@ -10,7 +10,7 @@ public class ListDataSourceGenerator : BaseGenerator
         ISharedReference baseResponse,
         ISharedReference itemDataSource,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         BaseListResponseT = baseListResponseT;
         BaseResponseT = baseResponseT;

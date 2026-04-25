@@ -11,8 +11,6 @@ public class ServiceContext
 {
     public ServiceContext(FrontendConfig config)
     {
-        //Config = config ?? throw new Exception("ServerConfig cannot be null");
-
         var allTypes =
             config.Assemblies.SelectMany(a => a.GetTypes()).ToArray();
 

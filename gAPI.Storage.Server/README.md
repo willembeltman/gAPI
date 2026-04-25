@@ -7,7 +7,7 @@ By installing this NuGet package into a blank ASP.NET project, you instantly tra
 
 - Stores both file data and the metadata database directly within the website’s hosting environment.
 - Designed for one-time deployment — after publishing, the storage server should not require further updates.
-- Uses gAPI.EntityFrameworkDisk to store the database directly on disk inside the web project.
+- Uses gAPI.Storage.Server.EntityFrameworkDisk to store the database directly on disk inside the web project.
 - Uses gAPI.Storage as a shared library for core storage operations.
 
 ## Features

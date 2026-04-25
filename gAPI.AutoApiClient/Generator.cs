@@ -1,8 +1,8 @@
 ﻿using gAPI.AutoApiClient.Generators;
 using gAPI.AutoApiClient.Models;
-using gAPI.AutoApiClient.Models.Configs;
+using gAPI.AutoSerializer;
+using gAPI.AutoSerializer.Generators;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,46 +12,47 @@ namespace gAPI.AutoApiClient;
 public class Generator
 {
     public Generator(
-        ClientConfig config,
+        ServiceContext serviceContext,
         SharedReferences sharedReferences,
-        ServiceContext serviceContext, 
-        Microsoft.CodeAnalysis.SourceProductionContext spc)
+        CustomObjectMethod[] customMultipartFormDataContentSerializers)
     {
-        Config = config;
         SharedReferences = sharedReferences;
         ServiceContext = serviceContext;
-        this.spc = spc;
+        CustomMultipartFormDataContentSerializers = customMultipartFormDataContentSerializers;
 
-        FormFile = new FormFileGenerator(Config);
-        IsFormFileExtention = new IsFormFileExtentionGenerator(Config);
-        //ItemDataSource = new ItemDataSourceGenerator(Config);
-        //ListDataSource = new ListDataSourceGenerator(Config);
-        Clients = ServiceContext.Interfaces
-            .Select(service => new ApiClientGenerator(service, this, Config))
+        FormFile = new FormFileGenerator(this);
+        IsFormFileExtension = new FormFileExtensionGenerator(this);
+        Clients = ServiceContext.ApiInterfaces
+            .Concat(ServiceContext.MinimalApiInterfaces)
+            .Select(service => new ApiClientGenerator(this, service, customMultipartFormDataContentSerializers))
             .ToArray();
-        AddAutoClientServices = new AddAutoClientServicesGenerator(Clients, Config);
+        AddAutoClientServices = new AutoApiClientExtensionGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
+    public CustomObjectMethod[] CustomMultipartFormDataContentSerializers { get; }
+    public SharedReferences SharedReferences { get; }
 
-    private Microsoft.CodeAnalysis.SourceProductionContext spc;
-
-    public ClientConfig Config { get; }
     public ApiClientGenerator[] Clients { get; }
-    public AddAutoClientServicesGenerator AddAutoClientServices { get; }
+    public AutoApiClientExtensionGenerator AddAutoClientServices { get; }
     public FormFileGenerator FormFile { get; }
-    public IsFormFileExtentionGenerator IsFormFileExtention { get; }
-    public SharedReferences SharedReferences { get;  }
+    public FormFileExtensionGenerator IsFormFileExtension { get; }
 
-    internal void Generate()
+    public void Generate(Microsoft.CodeAnalysis.SourceProductionContext spc)
     {
         FormFile.GenerateCode();
-        var formFileFullName = Path.Combine(Config.Helpers_Destination.Directory, FormFile.FileName);
-        spc.AddSource(formFileFullName, SourceText.From(FormFile.Code, Encoding.UTF8));
+        if (!string.IsNullOrEmpty(FormFile.Code))
+        {
+            var formFileFullName = Path.Combine(FormFile.Directory, FormFile.FileName);
+            spc.AddSource(formFileFullName, SourceText.From(FormFile.Code, Encoding.UTF8));
+        }
 
-        IsFormFileExtention.GenerateCode();
-        var toFormFileExtentionFullName = Path.Combine(Config.Helpers_Destination.Directory, IsFormFileExtention.FileName);
-        spc.AddSource(toFormFileExtentionFullName, SourceText.From(IsFormFileExtention.Code, Encoding.UTF8));
+        IsFormFileExtension.GenerateCode();
+        if (!string.IsNullOrEmpty(IsFormFileExtension.Code))
+        {
+            var toFormFileExtensionFullName = Path.Combine(IsFormFileExtension.Directory, IsFormFileExtension.FileName);
+            spc.AddSource(toFormFileExtensionFullName, SourceText.From(IsFormFileExtension.Code, Encoding.UTF8));
+        }
 
         //ItemDataSource.GenerateCode();
         //var itemDataSourceFullName = Path.Combine(Config.Helpers_Destination.Directory, ItemDataSource.FileName);
@@ -64,12 +65,27 @@ public class Generator
         foreach (var client in Clients)
         {
             client.GenerateCode();
-            var clientFullName = Path.Combine(Config.Clients_Destination.Directory, client.FileName);
+            var clientFullName = Path.Combine(client.Directory, client.FileName);
             spc.AddSource(clientFullName, SourceText.From(client.Code, Encoding.UTF8));
         }
 
         AddAutoClientServices.GenerateCode();
-        var addAutoClientServicesFullName = Path.Combine(Config.Clients_Destination.Directory, AddAutoClientServices.FileName);
+        var addAutoClientServicesFullName = Path.Combine(AddAutoClientServices.Directory, AddAutoClientServices.FileName);
         spc.AddSource(addAutoClientServicesFullName, SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
+
+
+        foreach (var api in Clients)
+        {
+            var items = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(api.NeededSerializers.ToArray(), CustomMultipartFormDataContentSerializers.Select(a => a.Type));
+            foreach (var item in items)
+            {
+                var serializerGenerator = new MultipartFormDataContentSerializerGenerator(item, CustomMultipartFormDataContentSerializers);
+                serializerGenerator.Namespace = api.Namespace!;
+                var code = serializerGenerator.Generate();
+                spc.AddSource(
+                    serializerGenerator.FileName,
+                    SourceText.From(code, Encoding.UTF8));
+            }
+        }
     }
 }
