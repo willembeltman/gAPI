@@ -18,13 +18,6 @@ namespace gAPI.Core.Server;
 
 public static partial class AddAuthenticationServicesExtension
 {
-    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services)
-    {
-        services.AddScoped<IStateMapping<AuthUser, AuthStateDto>, AuthStateMapping>();
-        services.AddScoped<IStateUserMapping<AuthUser, AuthStateUserDto>, AuthStateUserMapping>();
-        services.AddScoped<IStateParser<AuthStateDto>, DefaultStateParser>();
-        return services.AddAuthenticationServices<AuthUser, AuthStateDto>();
-    }
     public static IServiceCollection AddAuthenticationServices<TUser, TStateDto>(this IServiceCollection services)
         where TUser : AuthUser, new()
         where TStateDto : AuthStateDto, new()

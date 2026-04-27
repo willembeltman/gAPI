@@ -130,7 +130,7 @@ public class {Name} : {ISseManager.Name}
     }}
 
     public async Task MessageReceivedAsync({SendRequestDto} message, CancellationToken ct)
-    {{
+    {{{(Interfaces.Length > 0 ? $@"
         switch (message.ServiceId.Value)
         {{{string.Join("\r\n", Interfaces
         .Select(i =>
@@ -161,7 +161,7 @@ public class {Name} : {ISseManager.Name}
                 }}
                 break;";
         }))}
-        }}
+        }}" : "")}
     }}
 
     public async ValueTask DisposeAsync()

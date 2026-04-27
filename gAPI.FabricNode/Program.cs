@@ -27,7 +27,13 @@ Console.WriteLine("Setup server...");
 await using var server = new FabricServer(config.Port, textArea);
 
 Console.WriteLine("Starting server...");
-if (Console.WindowWidth < 10)
+var windowwidth = 0;
+try
+{
+    windowwidth = Console.WindowWidth;
+}
+catch { }
+if (windowwidth < 10)
 {
     await server.StartAsync();
     return;
