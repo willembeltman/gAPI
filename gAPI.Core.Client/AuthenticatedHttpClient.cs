@@ -3,18 +3,15 @@ using gAPI.Dtos;
 using gAPI.Ids;
 using gAPI.Interfaces;
 using gAPI.Sse;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
-using gAPI.Core.Extentions;
-using gAPI.Extensions;
 
 namespace gAPI.Core.Client;
 
 public class AuthenticatedHttpClient<TStateDto>(
     IStateParser<TStateDto> stateSerializer,
     IHttpClientFactory httpClientFactory,
-    NavigationManager navigation)
+    INavigationManager navigation)
     : AuthenticationStateProvider,
       IAuthenticatedHttpClient<TStateDto>
     where TStateDto : AuthStateDto, new()
@@ -234,7 +231,7 @@ public class AuthenticatedHttpClient<TStateDto>(
     private HttpRequestMessage CreateRequest(HttpMethod method, string url)
     {
         var request = new HttpRequestMessage(method, url);
-        var pathAndQuery = "/" + navigation.ToBaseRelativePath(navigation.Uri);
+        var pathAndQuery = "/" + navigation.GetPathAndQuery();
         request.Headers.TryAddWithoutValidation("X-Forwarded-Uri", pathAndQuery);
         request.Headers.TryAddWithoutValidation("X-SessionId", SessionId.ToString());
         request.Headers.TryAddWithoutValidation("X-StateData", stateSerializer.ToStringBase64(State));
@@ -279,5 +276,6 @@ public class AuthenticatedHttpClient<TStateDto>(
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 }
