@@ -57,6 +57,16 @@ public abstract class BaseGenerator : SharedReference
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);
     }
+    public void Reg(TypeHelper type)
+    {
+        if ((type.IsTaskT || type.IsArray || type.IsList) && type.UnderlayingTypes.Length > 0)
+        {
+            Reg(type.UnderlayingTypes[0]);
+        }
+
+        if (type?.Namespace != null)
+            Namespaces.Add(type.Namespace);
+    }
 
     public void UnReg(string @namespace)
     {
