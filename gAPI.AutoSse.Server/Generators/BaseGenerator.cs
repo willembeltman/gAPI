@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace gAPI.AutoSseServer.Generators;
 
-public abstract class _BaseGenerator : SharedReference
+public abstract class BaseGenerator : SharedReference
 {
     public string Directory { get; protected set; } = string.Empty;
     public string FileName { get; protected set; } = string.Empty;
@@ -46,7 +46,7 @@ public abstract class _BaseGenerator : SharedReference
         if (type?.Namespace != null)
             Namespaces.Add(type.Namespace);
     }
-    public void Reg(_BaseGenerator generator)
+    public void Reg(BaseGenerator generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);

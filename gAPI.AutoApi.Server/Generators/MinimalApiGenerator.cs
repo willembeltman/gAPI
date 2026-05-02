@@ -120,7 +120,7 @@ public static class {Name}
             [FromBody]{arg.ParameterType.Name} {arg.Name}",
 
                         // CancellationToken nooit annoteren
-                        (_, { ParameterType: { Name: "CancellationToken" } }) =>
+                        (_, { ParameterType.Name: "CancellationToken" }) =>
                             $@"
             {arg.ParameterType.Name} {arg.Name}",
 

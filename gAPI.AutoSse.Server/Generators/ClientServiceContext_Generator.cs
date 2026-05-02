@@ -4,7 +4,7 @@ using gAPI.AutoSseServer.Models;
 
 namespace gAPI.AutoSseServer.Generators;
 
-public class ClientServiceContext_Generator : _BaseGenerator
+public class ClientServiceContext_Generator : BaseGenerator
 {
     public ClientServiceContext_Generator(
         Generator context,

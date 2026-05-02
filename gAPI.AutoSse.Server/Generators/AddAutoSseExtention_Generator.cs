@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace gAPI.AutoSseServer.Generators;
 
-public class AddAutoSseExtention_Generator : _BaseGenerator
+public class AddAutoSseExtention_Generator : BaseGenerator
 {
     public AddAutoSseExtention_Generator(
         Generator context)

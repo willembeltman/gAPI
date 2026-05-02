@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace gAPI.AutoSseServer.Generators;
 
-public class ClientService_Generator : _BaseGenerator
+public class ClientService_Generator : BaseGenerator
 {
     public ClientService_Generator(Generator context, Interface @interface)
     {
