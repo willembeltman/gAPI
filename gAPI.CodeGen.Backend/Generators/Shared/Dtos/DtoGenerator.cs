@@ -22,11 +22,11 @@ public class DtoGenerator : BaseGenerator
         DbSet = dbSet;
 
         // Generate Service Handlers
-        CrudUseCase = new CrudUseCasesGenerator(
+        CrudUseCase = new UseCasesGenerator(
             context,
             this);
 
-        CrudMapping = new CrudMappingGenerator(
+        CrudMapping = new MappingGenerator(
             context,
             this);
 
@@ -49,8 +49,8 @@ public class DtoGenerator : BaseGenerator
 
     public Entity Entity => DbSet.Entity;
 
-    public CrudUseCasesGenerator CrudUseCase { get; }
-    public CrudMappingGenerator CrudMapping { get; }
+    public UseCasesGenerator CrudUseCase { get; }
+    public MappingGenerator CrudMapping { get; }
     public CrudServiceInterfaceGenerator ServiceInterface { get; }
     public CrudServiceGenerator Service { get; }
 

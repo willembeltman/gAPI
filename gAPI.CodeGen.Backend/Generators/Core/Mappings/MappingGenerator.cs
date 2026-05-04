@@ -6,9 +6,9 @@ using gAPI.CodeGen.Backend.Models.Entities;
 
 namespace gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
 
-public class CrudMappingGenerator : BaseGenerator
+public class MappingGenerator : BaseGenerator
 {
-    public CrudMappingGenerator(
+    public MappingGenerator(
         BackendGenerator context,
         DtoGenerator dto)
     {
@@ -25,7 +25,7 @@ public class CrudMappingGenerator : BaseGenerator
     public DtoGenerator Dto { get; }
 
     public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
-    public CrudUseCasesGenerator CrudUseCase => Dto.CrudUseCase;
+    public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
 

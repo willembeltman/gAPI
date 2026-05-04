@@ -18,7 +18,7 @@ public class CrudServiceGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"{Entity.Name!.ToMultiple()}Service";
+        Name = $"{Entity.Name!.ToMultiple()}CrudService";
         FileName = $"{Name}.cs";
     }
 

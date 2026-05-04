@@ -27,7 +27,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
     public BackendGenerator Context { get; }
     public DtoGenerator Dto { get; }
 
-    public CrudMappingGenerator CrudMapping => Dto.CrudMapping;
+    public MappingGenerator CrudMapping => Dto.CrudMapping;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
     //public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
