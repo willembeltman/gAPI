@@ -28,19 +28,19 @@ public class CrudUseCasesGenerator : BaseGenerator
 
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    //public SharedReference AuthenticationState => Context.SharedReferences.ServerAuthenticationState;
-    //public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
-    //public StateGenerator State => Context.State;
     public DbContext DbContext => Context.DbContext;
 
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;
+    public SharedReference IAuthenticationService => Context.SharedReferences.IAuthenticationService;
+    public SharedReference StateDto => Context.State;
+    public SharedReference User => Context.DbContext.UserEntity;
 
     public void GenerateCode()
     {
         var keyType = Entity.Properties.FirstOrDefault(a => a.IsKey)?.TypeSimpleName ?? "long";
 
-        Reg(IServerAuthenticationService);
+        Reg(User);
+        Reg(IAuthenticationService);
         Reg(DbContext.Type);
         Reg(Entity.Type);
         Reg("Microsoft.EntityFrameworkCore");
@@ -56,34 +56,34 @@ public class CrudUseCasesGenerator : BaseGenerator
     //        attachCode = @$"
     //{{
     //    if (entity == null) return false;
-    //    if (auth.State.User == null) return false;{string.Join("", Entity.Properties
+    //    if (authenticationService.State.User == null) return false;{string.Join("", Entity.Properties
     //        .Where(a => a.IsStateManaged != null)
     //        .Select(prop => @$"
-    //    {(prop.IsStateManaged!.CheckForNull ? $"if (auth.State.{prop.IsStateManaged!.Name} == null) return false;" : "")}
-    //    entity.{prop.Name} = auth.State.{prop.IsStateManaged!.Name}{(prop.IsStateManaged.UseValue ? ".Value" : "")};"))}
+    //    {(prop.IsStateManaged!.CheckForNull ? $"if (authenticationService.State.{prop.IsStateManaged!.Name} == null) return false;" : "")}
+    //    entity.{prop.Name} = authenticationService.State.{prop.IsStateManaged!.Name}{(prop.IsStateManaged.UseValue ? ".Value" : "")};"))}
     //    await db.{DbSet.Name}.AddAsync(entity, ct);
     //    await db.SaveChangesAsync(ct);
     //    return true;
     //}}";
     //    }
 
-        var authenticated = Dto.Entity.IsAuthorize ? "auth.State.DbUser != null" : "true";
+        var authenticated = Dto.Entity.IsAuthorize ? "authenticationService.State.User != null" : "true";
 
         Code = $@"{GetNamespacesCode()}
 namespace {Namespace};
 
 public class {Name}(
     {DbContext.Name} db,
-    {IServerAuthenticationService} auth)
+    IAuthenticationService<{User}, {StateDto.FullName}> authenticationService)
     : {IUseCase.FullName}<{Entity.Name}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
     public async Task<bool> IsAllowedAsync(CancellationToken ct) => {authenticated};
     public async Task<bool> CanListAsync(CancellationToken ct) => {authenticated};
-    public async Task<bool> CanCreateAsync(CancellationToken ct) => auth.State.DbUser != null;
-    public async Task<bool> CanCreateAsync({Dto.FullName} dto, CancellationToken ct) => auth.State.DbUser != null;
+    public async Task<bool> CanCreateAsync(CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> CanCreateAsync({Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
     public async Task<bool> CanReadAsync({Dto.FullName} dto, CancellationToken ct) => {authenticated};
-    public async Task<bool> CanUpdateAsync({Dto.FullName} dto, CancellationToken ct) => auth.State.DbUser != null;
-    public async Task<bool> CanDeleteAsync({Dto.FullName} dto, CancellationToken ct) => auth.State.DbUser != null;
+    public async Task<bool> CanUpdateAsync({Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> CanDeleteAsync({Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
 
     public async Task<{Entity.Name}?> FindByMatchAsync({Dto.FullName} dto, CancellationToken ct) {(Entity.Properties.Any(a => a.IsName != null) ? $@"
         => await db.{DbSet.Name}{string.Join("", Entity.ForeignKeyProperties.Select(p => $@"

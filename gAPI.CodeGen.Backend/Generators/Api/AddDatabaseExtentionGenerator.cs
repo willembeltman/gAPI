@@ -7,8 +7,8 @@ public class AddDatabaseExtensionGenerator : BaseGenerator
     public AddDatabaseExtensionGenerator(
         BackendGenerator context)
     {
-        Directory = context.Config.Api_Directory;
-        Namespace = context.Config.Api_Namespace;
+        Directory = context.Config.Extensions_Directory;
+        Namespace = context.Config.Extensions_Namespace;
 
         Context = context;
 

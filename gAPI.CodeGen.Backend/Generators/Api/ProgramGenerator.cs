@@ -8,7 +8,7 @@
 //    public ProgramGenerator(
 //        BackendGenerator context)
 //    {
-//        Directory = context.Config.Api_Directory;
+//        Directory = context.Config.Extensions_Directory;
 //        Namespace = null;
 
 //        Context = context;

@@ -8,8 +8,8 @@ public class SharedReferences(BackendConfig config)
     public SharedReference BaseResponseT { get; } = new SharedReference("gAPI.Dtos.BaseResponseT");
     public SharedReference BaseListResponseT { get; } = new SharedReference("gAPI.Dtos.BaseListResponseT");
     public SharedReference CreateServerConfigExtension { get; } = new SharedReference("gAPI.Extensions.CreateServerConfigExtension");
-    public SharedReference AddAutoApiExtension { get; } = new SharedReference(config.Api_Namespace, "AddAutoApiExtension"); // todo??
-    public SharedReference AddAutoSseExtension { get; } = new SharedReference(config.Api_Namespace, "AddAutoSseExtension"); // todo??
+    public SharedReference AddAutoApiExtension { get; } = new SharedReference(config.Extensions_Namespace, "AddAutoApiExtension"); // todo??
+    public SharedReference AddAutoSseExtension { get; } = new SharedReference(config.Extensions_Namespace, "AddAutoSseExtension"); // todo??
     public SharedReference AddStorageExtension { get; } = new SharedReference("gAPI.Storage.AddStorageExtension");
     public SharedReference ServerConfig { get; } = new SharedReference("gAPI.Dtos.ServerConfig");
     public SharedReference IUseCase { get; } = new SharedReference("gAPI.Interfaces.IUseCase");
@@ -33,4 +33,6 @@ public class SharedReferences(BackendConfig config)
     public SharedReference IsPassword { get; } = new SharedReference("gAPI.Attibutes.IsPassword");
     public SharedReference IsLogoffPage { get; } = new SharedReference("gAPI.Attibutes.IsLogoffPage");
     public SharedReference IServerAuthenticationService { get; } = new SharedReference("gAPI.Interfaces.IServerAuthenticationService");
+    public SharedReference IAuthenticationService { get; } = new SharedReference("gAPI.Core.Server.IAuthenticationService");
+    public SharedReference BaseResponseErrorEnum { get; } = new SharedReference("gAPI.Enums.BaseResponseErrorEnum");
 }

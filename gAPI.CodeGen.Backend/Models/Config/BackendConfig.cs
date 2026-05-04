@@ -33,8 +33,8 @@ public record BackendConfig(
     DirectoryInfo Core_CrudServicesDirectory,
     string Core_CrudServicesNamespace,
 
-    DirectoryInfo Api_Directory,
-    string Api_Namespace
+    DirectoryInfo Extensions_Directory,
+    string Extensions_Namespace
 );
 
 //public class BackendConfig
@@ -75,8 +75,8 @@ public record BackendConfig(
 //        Core_CrudMappingsNamespace = core_CrudMappingsNamespace;
 //        Core_CrudServicesDirectory = core_CrudServicesDirectory;
 //        Core_CrudServicesNamespace = core_CrudServicesNamespace;
-//        Api_Directory = api_Directory;
-//        Api_Namespace = api_Namespace;
+//        Extensions_Directory = api_Directory;
+//        Extensions_Namespace = api_Namespace;
 
 
 //    }
@@ -88,8 +88,8 @@ public record BackendConfig(
 //    public DirectoryInfo Shared_StateDtosDirectory { get; }
 //    public string Shared_StateDtosNamespace { get; }
 
-//    public DirectoryInfo Api_Directory { get; }
-//    public string Api_Namespace { get; }
+//    public DirectoryInfo Extensions_Directory { get; }
+//    public string Extensions_Namespace { get; }
 
 //    public DirectoryInfo Data_AuthenticationDirectory { get; }
 //    public string Data_AuthenticationNamespace { get; }

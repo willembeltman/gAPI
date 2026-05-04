@@ -33,13 +33,17 @@ public class CrudServiceGenerator : BaseGenerator
 
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;
     public SharedReference Mapping => Context.SharedReferences.Mapping;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
+    public SharedReference IAuthenticationService => Context.SharedReferences.IAuthenticationService;
+    public SharedReference StateDto => Context.State;
+    public SharedReference User => Context.DbContext.UserEntity;
+    public SharedReference BaseResponseErrorEnum => Context.SharedReferences.BaseResponseErrorEnum;
 
     public void GenerateCode()
     {
         Reg(Dto);
         Reg(ServiceInterface);
         Reg(BaseResponseT);
+        Reg(BaseResponseErrorEnum);
         Reg("Microsoft.EntityFrameworkCore");
         if (Entity.IsStorageFileUrlProperty)
         {
@@ -49,7 +53,8 @@ public class CrudServiceGenerator : BaseGenerator
         if (Entity.Properties
                 .Any(p => p.IsStateManaged != null))
         {
-            Reg(IServerAuthenticationService);
+            Reg(IAuthenticationService);
+            Reg(User);
 
         }
 
@@ -64,10 +69,10 @@ public class CrudServiceGenerator : BaseGenerator
     public async Task<{BaseListResponseT.Name}<{Dto.Name}>> ListBy{nav.Name}({nav.TypeSimpleName} {nav.Name.ToCamelCase()}, int? skip, int? take, string[]? orderby, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         if (!await useCase.CanListAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entities = useCase
             .ListAll()
@@ -77,7 +82,7 @@ public class CrudServiceGenerator : BaseGenerator
         var dtos = mapping.ProjectToDtosAsync(entities, orderby, skip, take, ct);
 
         if (dtos == null)
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorGettingData = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorGettingData }};
 
         return new {BaseListResponseT.Name}<{Dto.Name}>()
         {{
@@ -92,10 +97,10 @@ public class CrudServiceGenerator : BaseGenerator
     public async Task<{BaseListResponseT.Name}<{Dto.Name}>> ListNotBy{nav.Name}({nav.TypeSimpleName} {nav.Name.ToCamelCase()}, int? skip, int? take, string[]? orderby, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         if (!await useCase.CanListAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entities = useCase
             .ListAll()
@@ -105,7 +110,7 @@ public class CrudServiceGenerator : BaseGenerator
         var dtos = mapping.ProjectToDtosAsync(entities, orderby, skip, take, ct);
 
         if (dtos == null)
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorGettingData = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorGettingData }};
 
         return new {BaseListResponseT.Name}<{Dto.Name}>()
         {{
@@ -153,16 +158,16 @@ public class CrudServiceGenerator : BaseGenerator
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> FileUpdate({Entity.KeyProperty.TypeSimpleName} {Dto.Name!.ToLower()}{Entity.KeyProperty.Name}, IFormFile? file, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
         {(Entity.IsUser ? "" : string.Join("", StateManagedProperties))}
         var entity = await useCase.FindByIdAsync({Dto.Name.ToLower()}{Entity.KeyProperty.Name}, ct);
         if (entity == null)
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorItemNotFound = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotFound }};
 
         var dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.CanUpdateAsync(dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         if (file != null)
         {{
@@ -173,7 +178,7 @@ public class CrudServiceGenerator : BaseGenerator
         dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.UpdateAsync(entity, dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorUpdatingState = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorUpdatingState }};
 
         return new {BaseResponseT.Name}<{Dto.Name}>() 
         {{ 
@@ -185,24 +190,24 @@ public class CrudServiceGenerator : BaseGenerator
     public async Task<{BaseResponseT.Name}<bool>> FileDelete({Entity.KeyProperty.TypeSimpleName} {Dto.Name.ToLower()}{Entity.KeyProperty.Name}, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entity = await useCase.FindByIdAsync({Dto.Name.ToLower()}{Entity.KeyProperty.Name}, ct);
 
         if (entity == null)
-            return new {BaseResponseT.Name}<bool>() {{ ErrorItemNotFound = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotFound }};
 
         var dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.CanDeleteAsync(dto, ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         await storageService.DeleteStorageFileAsync(entity, ct);
 
         dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.UpdateAsync(entity, dto, ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorUpdatingState = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorUpdatingState }};
 
         return new {BaseResponseT.Name}<bool>() 
         {{ 
@@ -219,26 +224,26 @@ public class {Name}(
     {IUseCase.FullName}<{Entity.FullName}, {Dto.Name}, {Entity.KeyProperty.TypeSimpleName}> useCase,
     {Mapping.FullName}<{Entity.FullName}, {Dto.Name}> mapping{(Entity.IsStorageFileUrlProperty ? @",
     IStorageService storageService" : "")}{(Entity.Properties.Any(a => a.IsStateManaged != null) ? $@",
-    IServerAuthenticationService authenticationService" : "")})
+    IAuthenticationService<{User}, {StateDto.FullName}> authenticationService" : "")})
     : {ServiceInterface.Name}
 {{
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> Create({Dto.Name} dto, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};{StateManagedProperties}
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};{StateManagedProperties}
 
         var entity = await useCase.FindByMatchAsync(dto, ct);
 
         if (entity != null)
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorAlreadyUsed = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorAlreadyUsed }};
 
         entity = mapping.ToEntity(dto, new {Entity.FullName}());
 
         if (!await useCase.CanCreateAsync(dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         if (!await useCase.AddAsync(entity, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorAttachingState = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorAttachingState }};
 
         dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
@@ -252,16 +257,16 @@ public class {Name}(
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> Read({Entity.KeyProperty.TypeSimpleName} {Dto.Name!.ToLower()}{Entity.KeyProperty.Name}, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entity = await useCase.FindByIdAsync({Dto.Name.ToLower()}{Entity.KeyProperty.Name}, ct);
         if (entity == null)
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorItemNotFound = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotFound }};
 
         var dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.CanReadAsync(dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         return new {BaseResponseT.Name}<{Dto.Name}>() 
         {{ 
@@ -273,22 +278,22 @@ public class {Name}(
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> Update({Dto.Name} dto, CancellationToken ct)
     {{
         if (dto == null)
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorItemNotSupplied = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotSupplied }};
 
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};{StateManagedProperties}
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};{StateManagedProperties}
 
         var entity = await useCase.FindByIdAsync(dto.Id, ct);
         if (entity == null)
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorItemNotFound = true }};{ImmutableProperties}
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotFound }};{ImmutableProperties}
 
         if (!await useCase.CanUpdateAsync(dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         mapping.ToEntity(dto, entity);
 
         if (!await useCase.UpdateAsync(entity, dto, ct))
-            return new {BaseResponseT.Name}<{Dto.Name}>() {{ ErrorUpdatingState = true }};
+            return new {BaseResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorUpdatingState }};
 
         dto = await mapping.ToDtoAsync(entity, dto, ct);
 
@@ -302,21 +307,21 @@ public class {Name}(
     public async Task<{BaseResponseT.Name}<bool>> Delete({Entity.KeyProperty.TypeSimpleName} {Dto.Name.ToLower()}{Entity.KeyProperty.Name}, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entity = await useCase.FindByIdAsync({Dto.Name.ToLower()}{Entity.KeyProperty.Name}, ct);
         if (entity == null)
-            return new {BaseResponseT.Name}<bool>() {{ ErrorItemNotFound = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorItemNotFound }};
 
         var dto = await mapping.ToDtoAsync(entity, new {Dto.Name}(), ct);
 
         if (!await useCase.CanDeleteAsync(dto, ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorNotAuthorized = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 " + (Entity.IsStorageFileUrlProperty ? $@"
         await storageService.DeleteStorageFileAsync(entity, ct);
 " : "") + $@"
         if (!await useCase.RemoveAsync(entity, ct))
-            return new {BaseResponseT.Name}<bool>() {{ ErrorUpdatingState = true }};
+            return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorUpdatingState }};
 
         return new {BaseResponseT.Name}<bool>() 
         {{ 
@@ -328,10 +333,10 @@ public class {Name}(
     public async Task<{BaseListResponseT.Name}<{Dto.Name}>> List(int? skip, int? take, string[]? orderby, CancellationToken ct)
     {{
         if (!await useCase.IsAllowedAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         if (!await useCase.CanListAsync(ct))
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorNotAuthorized = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
 
         var entities = useCase.ListAll();
 
@@ -339,7 +344,7 @@ public class {Name}(
         var dtos = mapping.ProjectToDtosAsync(entities, orderby, skip, take, ct);
 
         if (dtos == null)
-            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ ErrorGettingData = true }};
+            return new {BaseListResponseT.Name}<{Dto.Name}>() {{ Error = {BaseResponseErrorEnum}.ErrorGettingData }};
 
         return new {BaseListResponseT.Name}<{Dto.Name}>()
         {{
