@@ -12,6 +12,11 @@ public class ControllerGenerator : BaseGenerator
         Context = context;
         Interface = @interface;
 
+        if (Service == null)
+        {
+            throw new Exception($"Cannot find service for interface '{Interface.Name}'");
+        }
+
         Directory = "";
         Namespace = Service.Namespace;
 
