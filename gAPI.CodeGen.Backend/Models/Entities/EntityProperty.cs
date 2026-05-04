@@ -1,12 +1,11 @@
 ﻿using gAPI.Attributes;
-using gAPI.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
 namespace gAPI.CodeGen.Backend.Models.Entities;
 
-public class EntityProperty : IPropertyInfoRapport, INameProperty
+public class EntityProperty : IPropertyInfoRapport
 {
     public EntityProperty(Entity entity, PropertyInfo propertyInfo)
     {

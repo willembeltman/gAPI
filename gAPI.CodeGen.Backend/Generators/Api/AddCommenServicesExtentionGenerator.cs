@@ -1,40 +1,40 @@
-﻿using gAPI.CodeGen.Backend.Models;
+﻿//using gAPI.CodeGen.Backend.Models;
 
-namespace gAPI.CodeGen.Backend.Generators.Api;
+//namespace gAPI.CodeGen.Backend.Generators.Api;
 
-public class AddCommenServicesExtensionGenerator : BaseGenerator
-{
-    public AddCommenServicesExtensionGenerator(
-        BackendGenerator context)
-    {
-        Directory = context.Config.Api_Directory;
-        Namespace = context.Config.Api_Namespace;
+//public class AddCommenServicesExtensionGenerator : BaseGenerator
+//{
+//    public AddCommenServicesExtensionGenerator(
+//        BackendGenerator context)
+//    {
+//        Directory = context.Config.Api_Directory;
+//        Namespace = context.Config.Api_Namespace;
         
-        Context = context;
+//        Context = context;
 
-        Name = "AddCommenServicesExtension";
-        FileName = $"{Name}.cs";
-    }
+//        Name = "AddCommenServicesExtension";
+//        FileName = $"{Name}.cs";
+//    }
 
-    public BackendGenerator Context { get; }
+//    public BackendGenerator Context { get; }
 
-    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
+//    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
 
-    public void GenerateCode()
-    {
-        Reg(ServerConfig);
-        Code = $@"{GetNamespacesCode()}
-namespace {Namespace};
+//    public void GenerateCode()
+//    {
+//        Reg(ServerConfig);
+//        Code = $@"{GetNamespacesCode()}
+//namespace {Namespace};
 
-public static class {Name}
-{{
-    public static IServiceCollection AddCommenServices(this IServiceCollection services, {ServerConfig} serverConfig)
-    {{
-        services.AddSingleton(serverConfig);
-        services.AddSingleton(TimeProvider.System);
-        return services;
-    }}
-}}";
-        Save(false);
-    }
-}
+//public static class {Name}
+//{{
+//    public static IServiceCollection AddCommenServices(this IServiceCollection services, {ServerConfig} serverConfig)
+//    {{
+//        services.AddSingleton(serverConfig);
+//        services.AddSingleton(TimeProvider.System);
+//        return services;
+//    }}
+//}}";
+//        Save(false);
+//    }
+//}

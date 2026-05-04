@@ -21,7 +21,7 @@ public class SseClientGenerator : BaseGenerator
     public ServiceContext DataModel => Context.ServiceContext;
 
     public SharedReference IClientAuthenticationService => Context.SharedReferences.IClientAuthenticatedHttpClient;
-    public SharedReference ISseClientConnection => Context.SharedReferences.ISseClientConnection;
+    public SharedReference IClientConnection => Context.SharedReferences.IClientConnection;
     public SharedReference SseServiceId => Context.SharedReferences.ServiceId;
     public SharedReference SseHostId => Context.SharedReferences.SseHostId;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
@@ -33,7 +33,7 @@ public class SseClientGenerator : BaseGenerator
         Reg("System.Text");
 
         Reg(IClientAuthenticationService);
-        Reg(ISseClientConnection);
+        Reg(IClientConnection);
         Reg(SseServiceId);
         Reg(SseHostId);
         Reg(SendRequestDto);
@@ -44,8 +44,9 @@ namespace {Namespace};
 
 public class {Name}(
     {IClientAuthenticationService} clientAuthenticationService,
-    {ISseClientConnection} sseManager,
+    {IClientConnection} sseManager,
     {SseServiceId} serviceId)
+    : IDisposable
 {{
     private CancellationTokenSource Cts = new();
 
@@ -145,9 +146,9 @@ public class {Name}(
         return true;
     }}
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {{
-        await Cts.CancelAsync();
+        Cts.Cancel();
         Cts.Dispose();
     }}
 }}";

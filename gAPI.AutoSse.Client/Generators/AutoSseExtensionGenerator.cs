@@ -18,7 +18,7 @@ public class AutoSseExtensionGenerator : BaseGenerator
 
     public Generator Context { get; }
     public SharedReference ClientConnection => Context.SseManager;
-    public SharedReference IClientConnection => Context.ISseManager;
+    public SharedReference IClientConnection => Context.SharedReferences.IClientConnection;
     public SharedReference SseManagerCollection => Context.SharedReferences.SseManagerCollection;
 
     public override void GenerateCode()

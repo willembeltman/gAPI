@@ -51,7 +51,7 @@ public class SharedReferences
         //Mapping = new SharedReference("gAPI.Interfaces.Mapping"); //Find("gAPI.Interfaces.Mapping", allSymbols);
         //IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Interfaces.IWssLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
-        ISseClientConnection = SharedReferenceFinder.Find("gAPI.Interfaces.ISseClientConnection", allSymbols);
+        IClientConnection = SharedReferenceFinder.Find("gAPI.Interfaces.IClientConnection", allSymbols);
 
         //SseHostCollection = SharedReferenceFinder.Find("gAPI.Collections.SseHostCollection", allSymbols);
         //WssConnectionCollection = SharedReferenceFinder.Find("gAPI.Collections.WssConnectionCollection", allSymbols);
@@ -101,7 +101,7 @@ public class SharedReferences
     //public SharedReference InvokeResponseDoneDto { get; }
     //public SharedReference FrontendConfig { get;  }
     public SharedReference SseManagerCollection { get;}
-    public SharedReference ISseClientConnection { get; }
+    public SharedReference IClientConnection { get; }
     public SharedReference SseHostId { get; }
     public SharedReference SseManagerId { get; }
 }

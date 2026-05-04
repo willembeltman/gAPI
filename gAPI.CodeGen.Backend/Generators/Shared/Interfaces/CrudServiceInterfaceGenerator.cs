@@ -1,4 +1,4 @@
-﻿using gAPI.CodeGen.Backend.Generators.Core.Authentication;
+﻿//using gAPI.CodeGen.Backend.Generators.Core.Authentication;
 using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
@@ -30,8 +30,8 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
     public CrudMappingGenerator CrudMapping => Dto.CrudMapping;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
-    public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
-    public ServerAuthenticationStateGenerator AuthenticationState => Context.ServerAuthenticationState;
+    //public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
+    //public ServerAuthenticationStateGenerator AuthenticationState => Context.ServerAuthenticationState;
     public SharedReference BaseListResponseT => Context.SharedReferences.BaseListResponseT;
     public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
     public StateGenerator State => Context.State;

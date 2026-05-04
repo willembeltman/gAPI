@@ -1,4 +1,4 @@
-﻿using gAPI.CodeGen.Backend.Generators.Core.Authentication;
+﻿//using gAPI.CodeGen.Backend.Generators.Core.Authentication;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
 using gAPI.CodeGen.Backend.Helpers;
@@ -28,10 +28,10 @@ public class CrudUseCasesGenerator : BaseGenerator
 
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
-    public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
-    public ServerAuthenticationStateGenerator AuthenticationState => Context.ServerAuthenticationState;
-    public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
-    public StateGenerator State => Context.State;
+    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
+    //public SharedReference AuthenticationState => Context.SharedReferences.ServerAuthenticationState;
+    //public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
+    //public StateGenerator State => Context.State;
     public DbContext DbContext => Context.DbContext;
 
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;

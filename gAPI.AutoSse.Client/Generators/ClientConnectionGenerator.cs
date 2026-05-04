@@ -19,7 +19,6 @@ public class ClientConnectionGenerator : BaseGenerator
 
     public Generator Context { get; }
     public ServiceContext DataModel => Context.ServiceContext;
-    public ISseManagerGenerator ISseManager => Context.ISseManager;
     public SseClientGenerator SseClient => Context.SseClient;
 
     public Interface[] Interfaces => Context.ServiceContext.HubInterfaces;
@@ -29,6 +28,7 @@ public class ClientConnectionGenerator : BaseGenerator
     public SharedReference SseServiceId => Context.SharedReferences.ServiceId;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference SseManagerId => Context.SharedReferences.SseManagerId;
+    public SharedReference IClientConnection => Context.SharedReferences.IClientConnection;
 
     public override void GenerateCode()
     {
@@ -36,7 +36,7 @@ public class ClientConnectionGenerator : BaseGenerator
         Reg("System.Collections.Concurrent");
         Reg("System.Collections.Immutable");
         Reg("System.Text");
-        Reg(ISseManager);
+        Reg(IClientConnection);
         Reg(SseClient);
         Reg(IClientAuthenticationService);
         Reg(SseManagerCollection);
@@ -49,7 +49,7 @@ public class ClientConnectionGenerator : BaseGenerator
 #nullable enable
 namespace {Namespace};
 
-public class {Name} : {ISseManager.Name}
+public class {Name} : {IClientConnection.Name}
 {{
     private readonly {IClientAuthenticationService.Name} ClientAuthenticationService;
     private readonly {SseManagerCollection.Name} SseManagerCollection;
@@ -64,7 +64,6 @@ public class {Name} : {ISseManager.Name}
         }))}
 
     public {SseManagerId} Id {{ get; }}
-    public bool Initialized => true;
 
     public {Name}(
         {IClientAuthenticationService.Name} clientAuthenticationService,
@@ -75,7 +74,7 @@ public class {Name} : {ISseManager.Name}
         Id = SseManagerCollection.Add(this);
     }}
 
-    public async Task SubscribeAsync(object implementation)
+    public void SubscribeAsync(object implementation)
     {{
         {string.Join("\r\n        else ", Interfaces
         .Select(i =>
@@ -106,7 +105,7 @@ public class {Name} : {ISseManager.Name}
         }}")}
     }}
 
-    public async Task UnsubscribeAsync(object implementation)
+    public void UnsubscribeAsync(object implementation)
     {{
         {string.Join("\r\n        else ", Interfaces
         .Select(i =>
@@ -119,7 +118,7 @@ public class {Name} : {ISseManager.Name}
             if ({i.Title}s.Length == 0 &&
                 ServiceClients.TryRemove(serviceId, out var client))
             {{
-                await client.DisposeAsync();
+                client.Dispose();
             }}
         }}";
         }))}{(Interfaces.Length == 0 ? "" : $@"
@@ -164,13 +163,13 @@ public class {Name} : {ISseManager.Name}
         }}" : "")}
     }}
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {{
         Cts.Cancel();
         Cts.Dispose();
         foreach (var client in ServiceClients.Values)
         {{
-            await client.DisposeAsync();
+            client.Dispose();
         }}
         SseManagerCollection.Remove(Id);
     }}{string.Join("", Interfaces

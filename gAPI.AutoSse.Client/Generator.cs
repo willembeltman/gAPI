@@ -15,7 +15,6 @@ public class Generator
         SharedReferences = sharedReferences;
 
         SseClient = new SseClientGenerator(this);
-        ISseManager = new ISseManagerGenerator(this);
         SseManager = new ClientConnectionGenerator(this);
         AutoSseExtension = new AutoSseExtensionGenerator(this);
     }
@@ -24,7 +23,6 @@ public class Generator
     public SharedReferences SharedReferences { get; }
 
     public SseClientGenerator SseClient { get; }
-    public ISseManagerGenerator ISseManager { get; }
     public ClientConnectionGenerator SseManager { get; }
     public AutoSseExtensionGenerator AutoSseExtension { get; }
 
@@ -32,9 +30,6 @@ public class Generator
     {
         SseClient.GenerateCode();
         spc.AddSource(Path.Combine(SseClient.Directory, SseClient.FileName), SourceText.From(SseClient.Code, Encoding.UTF8));
-
-        ISseManager.GenerateCode();
-        spc.AddSource(Path.Combine(ISseManager.Directory, ISseManager.FileName), SourceText.From(ISseManager.Code, Encoding.UTF8));
 
         SseManager.GenerateCode();
         spc.AddSource(Path.Combine(SseManager.Directory, SseManager.FileName), SourceText.From(SseManager.Code, Encoding.UTF8));

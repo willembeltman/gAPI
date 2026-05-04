@@ -28,7 +28,7 @@ CSharp
 
     @implements ITestSseService
     @implements IAsyncDisposable
-    @inject ISseManager SseManager
+    @inject IClientConnection SseManager
 
     @code {
         async Task ITestSseService.ServerToClientMethod(string? message)

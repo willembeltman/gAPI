@@ -33,7 +33,7 @@ public class CrudServiceGenerator : BaseGenerator
 
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;
     public SharedReference Mapping => Context.SharedReferences.Mapping;
-    public SharedReference IServerAuthenticationService => Context.IServerAuthenticationService;
+    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
     public void GenerateCode()
     {
