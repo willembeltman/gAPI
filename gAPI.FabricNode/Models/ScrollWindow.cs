@@ -1,19 +1,10 @@
-﻿using System.Drawing;
+﻿using gAPI.FabricNode.Enums;
+using System.Drawing;
 
-public class ScrollWindow : IConsole
+namespace gAPI.FabricNode.Models;
+
+public class ScrollWindow(string title, Point point, Size size, HorizontalAlign align = HorizontalAlign.Left) : IConsole
 {
-    public ScrollWindow(string title, Point point, Size size, HorizontalAlign align = HorizontalAlign.Left)
-    {
-        Title = title;
-        Point = point;
-        Size = size;
-        Align = align;
-    }
-
-    string Title;
-    Point Point;
-    Size Size;
-    HorizontalAlign Align;
     ColorLine[] Items = [];
     string[] oldItems = [];
     int topIndex = 0;
@@ -25,12 +16,12 @@ public class ScrollWindow : IConsole
         Dirty = true;
     }
 
-    public int X => Point.X * Console.WindowWidth / 120;
-    public int Y => Point.Y * Console.WindowHeight / 30;
-    public int Width => Size.Width * Console.WindowWidth / 120;
-    public int Height => Size.Height * Console.WindowHeight / 30;
+    public int X => point.X * Console.WindowWidth / 120;
+    public int Y => point.Y * Console.WindowHeight / 30;
+    public int Width => size.Width * Console.WindowWidth / 120;
+    public int Height => size.Height * Console.WindowHeight / 30;
 
-    public ColorLine[] RealLines => Items.SelectMany(a => GetLineBreaked(a)).ToArray();
+    public ColorLine[] RealLines => [.. Items.SelectMany(a => GetLineBreaked(a))];
 
     private IEnumerable<ColorLine> GetLineBreaked(ColorLine value2)
     {
@@ -57,7 +48,7 @@ public class ScrollWindow : IConsole
 
         Console.BackgroundColor = ConsoleColor.DarkBlue; ;
         Console.SetCursorPosition(X, Y);
-        Console.WriteLine(FillString(Title, Width, HorizontalAlign.Center));
+        Console.WriteLine(FillString(title, Width, HorizontalAlign.Center));
 
         var max = Y + Height;
         var i = topIndex;
@@ -72,7 +63,7 @@ public class ScrollWindow : IConsole
             {
                 Console.ForegroundColor = item.Color;
             }
-            Console.WriteLine(FillString(item?.Text ?? "", Width, Align));
+            Console.WriteLine(FillString(item?.Text ?? "", Width, align));
             i++;
             y2++;
         }
@@ -153,10 +144,9 @@ public class ScrollWindow : IConsole
         }
     }
 
-    public string FillString(string text, int width, HorizontalAlign align)
+    public static string FillString(string text, int width, HorizontalAlign align)
     {
-        if (text == null)
-            text = string.Empty;
+        text ??= string.Empty;
 
         if (width <= 0)
             return string.Empty;

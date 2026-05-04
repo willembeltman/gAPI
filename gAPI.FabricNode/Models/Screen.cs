@@ -1,13 +1,9 @@
-﻿public class Screen
-{
-    public Screen(ScrollWindow[] windows)
-    {
-        Windows = windows;
-        Selected = windows.First();
-    }
+﻿namespace gAPI.FabricNode.Models;
 
-    public ScrollWindow[] Windows { get; }
-    public ScrollWindow Selected { get; private set; }
+public class Screen(ScrollWindow[] windows)
+{
+    public ScrollWindow[] Windows { get; } = windows;
+    public ScrollWindow Selected { get; private set; } = windows.First();
     int oldindex = -1;
 
     public void Render(bool force)

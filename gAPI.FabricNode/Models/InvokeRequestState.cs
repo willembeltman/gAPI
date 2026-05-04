@@ -1,4 +1,4 @@
-﻿using gAPI.FabricNode;
+﻿using gAPI.FabricNode.Interfaces;
 using gAPI.Ids;
 
 namespace gAPI.FabricNode.Models;

@@ -1,11 +1,10 @@
 ﻿using gAPI.Dtos;
 using gAPI.FabricNode.Collections;
-using gAPI.FabricNode.Models;
 using gAPI.Ids;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 
-namespace gAPI.FabricNode;
+namespace gAPI.FabricNode.Models;
 
 public class FabricManager
 {

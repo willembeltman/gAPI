@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace gAPI.FabricNode;
+namespace gAPI.FabricNode.Models;
 
 public class FabricConfig
 {

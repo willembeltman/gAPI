@@ -1,11 +1,12 @@
 ﻿using gAPI.FabricNode.Collections;
+using gAPI.FabricNode.Interfaces;
 using gAPI.Ids;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace gAPI.FabricNode.Models;
 
-public record Service(ServiceId Id, FabricManager fabricManager) : IActor
+public record Service(ServiceId Id, FabricManager FabricManager) : IActor
 {
     public ServiceId Id { get; } = Id;
     public UserCollection Users { get; } = new();
@@ -46,7 +47,7 @@ public record Service(ServiceId Id, FabricManager fabricManager) : IActor
         }
         else
         {
-            return (fabricManager.Connections, this);
+            return (FabricManager.Connections, this);
         }
     }
 

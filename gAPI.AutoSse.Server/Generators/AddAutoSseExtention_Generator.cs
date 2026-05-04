@@ -50,6 +50,7 @@ public class AddAutoSseExtention_Generator : BaseGenerator
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Builder");
         Reg("Microsoft.AspNetCore.Http");
+        Reg("Microsoft.Extensions.Logging");
         Reg("Microsoft.Extensions.DependencyInjection");
 
         foreach (var item in Context.ClientContexts)
