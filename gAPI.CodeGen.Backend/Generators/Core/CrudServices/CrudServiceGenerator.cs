@@ -44,7 +44,7 @@ public class CrudServiceGenerator : BaseGenerator
         Reg(ServiceInterface);
         Reg(BaseResponseT);
         Reg(BaseResponseErrorEnum);
-        Reg("Microsoft.EntityFrameworkCore");
+        //Reg("Microsoft.EntityFrameworkCore");
         if (Entity.IsStorageFileUrlProperty)
         {
             Reg("gAPI.Storage");
