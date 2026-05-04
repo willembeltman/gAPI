@@ -41,55 +41,8 @@ namespace {Namespace};
 public class {Name}
 {{
     public {User}? User {{ get; set; }}
-
-    public StringValues CreateStateData()
-    {{
-        var json = JsonSerializer.Serialize(
-            this,
-            new JsonSerializerOptions
-            {{
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            }});
-
-        var base64State = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
-        return new StringValues([base64State]);
-    }}
-
-    public static State? FromStateData(IEnumerable<string> stateDataValues)
-    {{
-        string? headerValue = stateDataValues.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(headerValue))
-            return null;
-
-        try
-        {{
-            var json = Encoding.UTF8.GetString(
-                Convert.FromBase64String(headerValue));
-
-            var state = JsonSerializer.Deserialize<State>(json);
-            return state;
-        }}
-        catch
-        {{
-            return null;
-        }}
-    }}
-
-    public bool IsDifferent(State? value)
-    {{
-        if (value == null)
-            return true;
-
-        return
-            User?.Id != value.User?.Id ||
-            User?.UserName != value.User?.UserName ||
-            User?.Email != value.User?.Email ||
-            User?.StorageFileUrl != value.User?.StorageFileUrl ||
-            User?.CurrentCompany?.Id != value.User?.CurrentCompany?.Id ||
-            User?.CurrentCompany?.Name != value.User?.CurrentCompany?.Name;
-    }}
 }}";
 
-        //Save(false);
+        Save(false);
     }
 }
