@@ -1,5 +1,6 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Api;
-using gAPI.CodeGen.Backend.Generators.Core.Authentication;
+using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
+
 //using gAPI.CodeGen.Backend.Generators.Core.Services;
 //using gAPI.CodeGen.Backend.Generators.Data.Authentication;
 using gAPI.CodeGen.Backend.Generators.Shared.Dtos;

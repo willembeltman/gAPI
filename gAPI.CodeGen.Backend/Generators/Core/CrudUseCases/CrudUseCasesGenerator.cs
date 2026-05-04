@@ -42,7 +42,7 @@ public class CrudUseCasesGenerator : BaseGenerator
         Reg(User);
         Reg(IAuthenticationService);
         Reg(DbContext.Type);
-        Reg(Entity.Type);
+        //Reg(Entity.Type);
         Reg("Microsoft.EntityFrameworkCore");
 
         var attachCode = @$" 
@@ -74,8 +74,8 @@ namespace {Namespace};
 
 public class {Name}(
     {DbContext.Name} db,
-    IAuthenticationService<{User}, {StateDto.FullName}> authenticationService)
-    : {IUseCase.FullName}<{Entity.Name}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
+    IAuthenticationService<{User.FullName}, {StateDto.FullName}> authenticationService)
+    : {IUseCase.FullName}<{Entity.FullName}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
     public async Task<bool> IsAllowedAsync(CancellationToken ct) => {authenticated};
     public async Task<bool> CanListAsync(CancellationToken ct) => {authenticated};

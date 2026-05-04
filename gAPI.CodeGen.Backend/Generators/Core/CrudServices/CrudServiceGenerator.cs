@@ -54,8 +54,6 @@ public class CrudServiceGenerator : BaseGenerator
                 .Any(p => p.IsStateManaged != null))
         {
             Reg(IAuthenticationService);
-            Reg(User);
-
         }
 
         var loadBysCode = string.Join("", Entity.Properties
@@ -224,7 +222,7 @@ public class {Name}(
     {IUseCase.FullName}<{Entity.FullName}, {Dto.Name}, {Entity.KeyProperty.TypeSimpleName}> useCase,
     {Mapping.FullName}<{Entity.FullName}, {Dto.Name}> mapping{(Entity.IsStorageFileUrlProperty ? @",
     IStorageService storageService" : "")}{(Entity.Properties.Any(a => a.IsStateManaged != null) ? $@",
-    IAuthenticationService<{User}, {StateDto.FullName}> authenticationService" : "")})
+    IAuthenticationService<{User.FullName}, {StateDto.FullName}> authenticationService" : "")})
     : {ServiceInterface.Name}
 {{
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> Create({Dto.Name} dto, CancellationToken ct)
