@@ -62,7 +62,7 @@ public class {Name}{(IsStorageFileUrlProperty ? $" : {IStorageFileDtoAttribute}"
     [IsStorageFileUrlProperty]
     public string? StorageFileUrl {{ get; set; }}" : "")}
 }}";
-        //Save();
+        Save();
     }
 
 

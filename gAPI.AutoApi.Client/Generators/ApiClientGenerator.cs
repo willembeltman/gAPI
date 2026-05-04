@@ -79,9 +79,19 @@ public class {Name}(
         var args = method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).ToArray();
         var cancellationToken = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
 
+
+        var skipTakeQueryItems = method.Arguments
+            .Where(a => a.Name == "skip" || a.Name == "take");
+
         var arguments = string.Join(",", method.Arguments.Select(arg => $@"
         {arg.ParameterType} {arg}"));
-        var writeProps = string.Join(
+        var writeProps =
+                method.IsList || method.IsListBy || method.IsListNotBy
+                ? $@"
+        var queryItems = new List<string>();{string.Join("", skipTakeQueryItems.Select(a => $@"
+        if ({a.Name} != null)
+            queryItems.Add($""{a.Name}={{{a.Name}}}"");"))}"
+                : string.Join(
             "",
             args.Select(arg =>
                 PropertyHelper.GenerateMultipartFormDataContentWriteCode(
