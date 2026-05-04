@@ -3,6 +3,7 @@ using gAPI.AutoApiClient.Models;
 using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -73,18 +74,22 @@ public class Generator
         var addAutoClientServicesFullName = Path.Combine(AddAutoClientServices.Directory, AddAutoClientServices.FileName);
         spc.AddSource(addAutoClientServicesFullName, SourceText.From(AddAutoClientServices.Code, Encoding.UTF8));
 
+        HashSet<string> added = [];
 
         foreach (var api in Clients)
         {
             var items = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(api.NeededSerializers.ToArray(), CustomMultipartFormDataContentSerializers.Select(a => a.Type));
             foreach (var item in items)
             {
-                var serializerGenerator = new MultipartFormDataContentSerializerGenerator(item, CustomMultipartFormDataContentSerializers);
-                serializerGenerator.Namespace = api.Namespace!;
-                var code = serializerGenerator.Generate();
-                spc.AddSource(
-                    serializerGenerator.FileName,
-                    SourceText.From(code, Encoding.UTF8));
+                if (added.Add(item.Name))
+                {
+                    var serializerGenerator = new MultipartFormDataContentSerializerGenerator(item, CustomMultipartFormDataContentSerializers);
+                    serializerGenerator.Namespace = api.Namespace!;
+                    var code = serializerGenerator.Generate();
+                    spc.AddSource(
+                        serializerGenerator.FileName,
+                        SourceText.From(code, Encoding.UTF8));
+                }
             }
         }
     }
