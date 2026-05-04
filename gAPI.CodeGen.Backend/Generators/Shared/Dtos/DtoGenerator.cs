@@ -62,7 +62,6 @@ public class DtoGenerator : BaseGenerator
 
         Reg("gAPI.Attributes");
         Reg("gAPI.Interfaces");
-        Reg("gAPI.Enums");
         if (Entity.IsStorageFileUrlProperty)
         {
             Reg("gAPI.Storage");
