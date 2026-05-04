@@ -96,7 +96,7 @@ public class DtoGenerator : BaseGenerator
         foreach (var property in properties)
         {
             if (property.IsHidden) continue;
-            if (property.IsLijst) continue;
+            if (property.IsLijst && property.IsArrayType == false) continue;
 
             if (property.NavigationDbSet != null && property.NavigationItemProperty != null)
             {
@@ -206,14 +206,21 @@ public class DtoGenerator : BaseGenerator
             {
                 propertiesCode = CreateAttributes(propertiesCode, property);
 
-                if (property.TypeSimpleName == "string")
+                if (property.TypeSimpleName == "string" && property.IsLijst == false)
                 {
                     propertiesCode += $"    public {property.TypeSimpleName} {property.Name} {{ get; set; }} = string.Empty;\r\n";
                 }
                 else
                 {
                     Reg(property.Type);
-                    propertiesCode += $"    public {property.TypeSimpleName} {property.Name} {{ get; set; }} = new();\r\n";
+                    if (property.IsArrayType)
+                    {
+                        propertiesCode += $"    public {property.TypeSimpleName}[] {property.Name} {{ get; set; }} = [];\r\n";
+                    }
+                    else
+                    {
+                        propertiesCode += $"    public {property.TypeSimpleName} {property.Name} {{ get; set; }} = new();\r\n";
+                    }
                 }
             }
         }
@@ -311,7 +318,7 @@ public class DtoGenerator : BaseGenerator
         return propertiesCode;
     }
 #nullable disable
-    string FormatValue(object value)
+    static string FormatValue(object value)
     {
         return value switch
         {
