@@ -16,6 +16,8 @@ public class StateDtoGenerator : BaseGenerator
         Context = context;
         StateObject = stateObject;
 
+        IsUser = context.DbContext.StateUser == stateObject;
+
         Properties = stateObject.KeyProperties.Select(a => new StateDtoPropertyGenerator(this, a, true))
             .Concat(stateObject.ForeignProperties.Select(a => new StateDtoPropertyGenerator(this, a)))
             .Concat(stateObject.Properties.Select(a => new StateDtoPropertyGenerator(this, a)))
@@ -29,6 +31,7 @@ public class StateDtoGenerator : BaseGenerator
 
     public BackendGenerator Context { get; }
     public StateObject StateObject { get; }
+    public bool IsUser { get; }
     public StateDtoPropertyGenerator[] Properties { get; }
     public bool IsStorageFileUrlProperty { get; }
 
@@ -62,7 +65,8 @@ public class {Name}{(IsStorageFileUrlProperty ? $" : {IStorageFileDtoAttribute}"
     [IsStorageFileUrlProperty]
     public string? StorageFileUrl {{ get; set; }}" : "")}
 }}";
-        Save();
+        if (!IsUser)
+            Save();
     }
 
 

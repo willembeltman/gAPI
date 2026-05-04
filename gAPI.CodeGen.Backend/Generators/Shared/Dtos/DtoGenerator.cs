@@ -158,21 +158,25 @@ public class DtoGenerator : BaseGenerator
                     // Empty constructor
                     propertiesCode += $"    [IsName]\r\n";
                 }
-                else if (string.IsNullOrEmpty(property.IsName.Start))
-                {
-                    // End constructor
-                    if (string.IsNullOrEmpty(property.IsName.End))
-                        propertiesCode += $"    [IsName(FormattingOption.{property.IsName.FormattingOption})]\r\n";
-                    else
-                        propertiesCode += $"    [IsName(FormattingOption.{property.IsName.FormattingOption}, \"{property.IsName.End}\")]\r\n";
-                }
                 else
                 {
-                    // Start constructor
-                    if (string.IsNullOrEmpty(property.IsName.End))
-                        propertiesCode += $"    [IsName(\"{property.IsName.Start}\", FormattingOption.{property.IsName.FormattingOption})]\r\n";
+                    Reg("gAPI.Enums");
+                    if (string.IsNullOrEmpty(property.IsName.Start))
+                    {
+                        // End constructor
+                        if (string.IsNullOrEmpty(property.IsName.End))
+                            propertiesCode += $"    [IsName(FormattingOption.{property.IsName.FormattingOption})]\r\n";
+                        else
+                            propertiesCode += $"    [IsName(FormattingOption.{property.IsName.FormattingOption}, \"{property.IsName.End}\")]\r\n";
+                    }
                     else
-                        propertiesCode += $"    [IsName(\"{property.IsName.Start}\", FormattingOption.{property.IsName.FormattingOption}, \"{property.IsName.End}\")]\r\n";
+                    {
+                        // Start constructor
+                        if (string.IsNullOrEmpty(property.IsName.End))
+                            propertiesCode += $"    [IsName(\"{property.IsName.Start}\", FormattingOption.{property.IsName.FormattingOption})]\r\n";
+                        else
+                            propertiesCode += $"    [IsName(\"{property.IsName.Start}\", FormattingOption.{property.IsName.FormattingOption}, \"{property.IsName.End}\")]\r\n";
+                    }
                 }
             }
 
