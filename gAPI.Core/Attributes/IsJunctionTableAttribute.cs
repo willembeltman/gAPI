@@ -2,7 +2,7 @@
 
 namespace gAPI.Attributes;
 
-[AttributeUsage(AttributeTargets.Interface)]
+[AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class)]
 public class IsJunctionTableAttribute(Type typeLeft, Type typeRight) : Attribute
 {
     public Type TypeLeft { get; } = typeLeft;
