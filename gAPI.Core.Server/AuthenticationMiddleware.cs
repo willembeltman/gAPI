@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using System.Net;
-using gAPI.Core.Server.Extensions;
-using gAPI.Core.Extentions;
 
 namespace gAPI.Core.Server;
 
