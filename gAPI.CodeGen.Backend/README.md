@@ -31,7 +31,7 @@ You reference this package in a small generator project and configure it:
         dbContextType: typeof(ApplicationDbContext),
 
         sharedDtoDirectory: EnvironmentPathHelper.GetDirectory(root, @"YourApp.Shared\Dtos"),
-        sharedDtoNamespace: "YourApp.Shared.Dtos",
+        sharedDtoNamespace: "YourApp.Shared.Public.Dtos",
         sharedInterfacesDirectory: EnvironmentPathHelper.GetDirectory(root, @"YourApp.Shared\Interfaces"),
         sharedInterfacesNamespace: "YourApp.Shared.Interfaces",
         sharedResponseDtoDirectory: EnvironmentPathHelper.GetDirectory(root, @"YourApp.Shared\ResponseDtos"),

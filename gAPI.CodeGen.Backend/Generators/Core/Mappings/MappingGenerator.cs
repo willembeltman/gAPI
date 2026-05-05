@@ -1,5 +1,5 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Core.CrudHandlers;
-using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;

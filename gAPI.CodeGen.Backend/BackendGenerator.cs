@@ -3,7 +3,7 @@ using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
 
 //using gAPI.CodeGen.Backend.Generators.Core.Services;
 //using gAPI.CodeGen.Backend.Generators.Data.Authentication;
-using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
 //using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 //using gAPI.CodeGen.Backend.Generators.Shared.RequestDtos;
 //using gAPI.CodeGen.Backend.Generators.Shared.ResponseDtos;
@@ -33,7 +33,7 @@ public class BackendGenerator
         //UserIpSessionTokenRoute = new UserIpSessionTokenRouteGenerator(this);
         //UserIpSessionTokenRouteRequest = new UserIpSessionTokenRouteRequestGenerator(this);
 
-        // Shared.Dtos 
+        // Shared.Public.Dtos 
         Dtos = [.. DbContext.DbSets
             .Where(a => !a.Entity.IsHidden)
             .Select(dbSet => new DtoGenerator(this, dbSet))];

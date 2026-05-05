@@ -1,6 +1,6 @@
 ﻿//using gAPI.CodeGen.Backend.Generators.Core.Authentication;
 using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
-using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;

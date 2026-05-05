@@ -7,7 +7,7 @@ using gAPI.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+namespace gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
 
 public class DtoGenerator : BaseGenerator
 {

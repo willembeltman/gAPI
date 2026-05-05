@@ -1,4 +1,4 @@
-﻿using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+﻿using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
