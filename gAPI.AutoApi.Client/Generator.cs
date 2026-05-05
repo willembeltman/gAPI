@@ -84,7 +84,7 @@ public class Generator
                 if (added.Add(item.Name))
                 {
                     var serializerGenerator = new MultipartFormDataContentSerializerGenerator(item, CustomMultipartFormDataContentSerializers);
-                    serializerGenerator.Namespace = api.Namespace!;
+                    //serializerGenerator.Namespace = api.Namespace!;
                     var code = serializerGenerator.Generate();
                     spc.AddSource(
                         serializerGenerator.FileName,

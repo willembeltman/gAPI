@@ -93,15 +93,18 @@ public class {Name}(
             queryItems.Add($""{a.Name}={{{a.Name}}}"");"))}"
                 : string.Join(
             "",
-            args.Select(arg =>
-                PropertyHelper.GenerateMultipartFormDataContentWriteCode(
+            args.Select(arg => {
+                Reg(arg.ParameterType.Type);
+                var code = PropertyHelper.GenerateMultipartFormDataContentWriteCode(
                     arg.ParameterType.Type,
                     arg.Name,
                     arg.Name,
                     "        ",
                     false,
                     true
-                )));
+                );
+                return code;
+            }));
         var responseCode = GenerateResponse(method, args, cancellationToken);
         var returnCode = GenerateReturn(method, args, cancellationToken);
 

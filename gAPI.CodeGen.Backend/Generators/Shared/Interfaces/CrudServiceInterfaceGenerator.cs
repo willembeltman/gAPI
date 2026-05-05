@@ -13,8 +13,8 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         BackendGenerator context,
         DtoGenerator dto)
     {
-        Directory = context.Config.Shared_InterfacesDirectory;
-        Namespace = context.Config.Shared_InterfacesNamespace;
+        Directory = context.Config.Shared_CrudInterfacesDirectory;
+        Namespace = context.Config.Shared_CrudInterfacesNamespace;
 
         Context = context;
         Dto = dto;
