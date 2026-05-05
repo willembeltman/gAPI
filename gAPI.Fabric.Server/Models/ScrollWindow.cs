@@ -1,7 +1,7 @@
-﻿using gAPI.FabricNode.Enums;
+﻿using gAPI.Fabric.Enums;
 using System.Drawing;
 
-namespace gAPI.FabricNode.Models;
+namespace gAPI.Fabric.Models;
 
 public class ScrollWindow(string title, Point point, Size size, HorizontalAlign align = HorizontalAlign.Left) : IConsole
 {

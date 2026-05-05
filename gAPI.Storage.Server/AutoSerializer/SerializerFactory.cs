@@ -1,6 +1,6 @@
 ﻿using gAPI.Storage.Server.EntityFrameworkDisk;
 using gAPI.Storage.Server.Helpers;
-using gAPI.Ids;
+using gAPI.Core.Ids;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
@@ -20,7 +20,7 @@ internal static class SerializerFactory<T>
             using System;
             using System.IO;
             using System.Linq;
-            using gAPI.Ids;
+            using gAPI.Core.Ids;
 
             public static class {className}
             {{

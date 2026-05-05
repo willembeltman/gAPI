@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using Microsoft.CodeAnalysis;

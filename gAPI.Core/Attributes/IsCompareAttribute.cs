@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
 public class IsCompareAttribute : CompareAttribute

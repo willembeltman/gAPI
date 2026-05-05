@@ -14,7 +14,7 @@ and let the generator handle the rest.
 
 CSharp
 
-    using gAPI.Attributes;
+    using gAPI.Core.Attributes;
 
     [GenerateHub]
     public interface ITestSseService

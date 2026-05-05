@@ -1,7 +1,7 @@
-﻿using gAPI.Dtos;
-using gAPI.Ids;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 // Warning: This interface is only for escaping the gAPI core module to the application specific implementation
 // Do not use this interface for mocking as it doesn't expose the full interface

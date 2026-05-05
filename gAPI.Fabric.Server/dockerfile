@@ -2,12 +2,12 @@
 WORKDIR /src
 
 # copy csproj + restore
-COPY gAPI.FabricNode/gAPI.FabricNode.csproj gAPI.FabricNode/
-RUN dotnet restore gAPI.FabricNode/gAPI.FabricNode.csproj
+COPY gAPI.FFabric/gAPI.FFabric.csproj gAPI.FFabric/
+RUN dotnet restore gAPI.FFabric/gAPI.FFabric.csproj
 
 # copy rest + build
 COPY . .
-WORKDIR /src/gAPI.FabricNode
+WORKDIR /src/gAPI.FFabric
 RUN dotnet publish -c Release -o /app /p:UseAppHost=false
 
 # runtime
@@ -20,4 +20,4 @@ COPY --from=build /app .
 EXPOSE 9494
 
 ENV LOCALHOST=NO
-ENTRYPOINT ["dotnet", "gAPI.FabricNode.dll"]
+ENTRYPOINT ["dotnet", "gAPI.FFabric.dll"]

@@ -1,7 +1,7 @@
-# gAPI.Storage
+# gAPI.Core.Server.Storage
 
-A .NET 9.0 client library for connecting to a gAPI.Storage.Server instance.
-This package uses the shared gAPI.Storage library to provide seamless communication and file transfer between your application and a remote storage server.
+A .NET 9.0 client library for connecting to a gAPI.Core.Server.Storage.Server instance.
+This package uses the shared gAPI.Core.Server.Storage library to provide seamless communication and file transfer between your application and a remote storage server.
 
 ## How it works
 
@@ -40,5 +40,5 @@ Register the configuration in your program setup:
 ## Features
 
 - Simple API for uploading, downloading, and managing files stored on a remote gAPI storage server.
-- Built on the shared gAPI.Storage library for consistent data contracts.
+- Built on the shared gAPI.Core.Server.Storage library for consistent data contracts.
 - Works seamlessly with entities implementing IStorageFile.

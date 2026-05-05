@@ -1,8 +1,8 @@
-﻿using gAPI.Delegates;
-using gAPI.Dtos;
-using gAPI.Ids;
-using gAPI.Interfaces;
-using gAPI.Sse;
+﻿using gAPI.Core.Delegates;
+using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
+using gAPI.Core.Sse;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 

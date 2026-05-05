@@ -3,7 +3,7 @@ using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
 using gAPI.CodeGen.Backend.Generators.Core.CrudServices;
 using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Models.Entities;
-using gAPI.Enums;
+using gAPI.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
@@ -60,8 +60,8 @@ public class DtoGenerator : BaseGenerator
         var properties = Entity.Properties
             .ToArray();
 
-        Reg("gAPI.Attributes");
-        Reg("gAPI.Interfaces");
+        Reg("gAPI.Core.Attributes");
+        Reg("gAPI.Core.Interfaces");
         if (Entity.IsStorageFileUrlProperty)
         {
             Reg("gAPI.Storage");
@@ -160,7 +160,7 @@ public class DtoGenerator : BaseGenerator
                 }
                 else
                 {
-                    Reg("gAPI.Enums");
+                    Reg("gAPI.Core.Enums");
                     if (string.IsNullOrEmpty(property.IsName.Start))
                     {
                         // End constructor

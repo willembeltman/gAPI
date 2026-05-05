@@ -28,7 +28,7 @@ public class FormFileExtensionGenerator : BaseGenerator
         if (Context.SharedReferences.AuthClient_ToFormFileExtension != null)
             return;
 
-        Code = $@"using gAPI.Attributes;
+        Code = $@"using gAPI.Core.Attributes;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.IO;

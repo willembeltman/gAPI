@@ -1,8 +1,8 @@
-﻿using gAPI.Delegates;
-using gAPI.Ids;
-using gAPI.Sse;
+﻿using gAPI.Core.Delegates;
+using gAPI.Core.Ids;
+using gAPI.Core.Sse;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 public interface IClientAuthenticatedHttpClient : IDisposable
 {

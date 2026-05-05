@@ -1,5 +1,5 @@
 ﻿using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
+using gAPI.Core.Server.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace gAPI.Core.Server;
@@ -9,7 +9,7 @@ public class AuthenticationSecurity<TUser, TStateDto>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
     TimeProvider timeProvider,
     ServerConfig config) 
-    : gAPI.Interfaces.IAuthenticationSecurity
+    : gAPI.Core.Interfaces.IAuthenticationSecurity
     where TUser : AuthUser
 {
     public async Task<bool> BeforeLoginAsync(CancellationToken ct)

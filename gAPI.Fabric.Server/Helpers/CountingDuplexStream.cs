@@ -1,4 +1,4 @@
-﻿namespace gAPI.FabricNode.Helpers;
+﻿namespace gAPI.Fabric.Helpers;
 
 public sealed class CountingDuplexStream(Stream inner) : Stream
 {

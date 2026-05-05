@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Primitives;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 public interface IStateParser<TStateDto>
 {

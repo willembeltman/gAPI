@@ -1,6 +1,6 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 [IsStateDto]
 [GenerateSerializer]

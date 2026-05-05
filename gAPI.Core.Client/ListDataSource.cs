@@ -1,4 +1,4 @@
-﻿using gAPI.Dtos;
+﻿using gAPI.Core.Dtos;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;

@@ -1,6 +1,6 @@
-﻿using gAPI.Ids;
+﻿using gAPI.Core.Ids;
 
-namespace gAPI.Sse;
+namespace gAPI.Core.Sse;
 
 public class ApiResult
 {

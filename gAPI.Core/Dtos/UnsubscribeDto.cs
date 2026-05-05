@@ -1,8 +1,8 @@
-﻿using gAPI.Attributes;
-using gAPI.Ids;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public class UnsubscribeDto

@@ -1,9 +1,9 @@
-﻿using gAPI.Attributes;
-using gAPI.Enums;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Enums;
 using System.Buffers.Binary;
 using System.Text;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public static class PrimitivesSpanSerializer
 {

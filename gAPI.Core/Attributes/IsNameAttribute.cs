@@ -1,7 +1,7 @@
-﻿using gAPI.Enums;
+﻿using gAPI.Core.Enums;
 using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class IsNameAttribute : Attribute

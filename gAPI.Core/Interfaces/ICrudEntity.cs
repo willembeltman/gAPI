@@ -1,4 +1,4 @@
-﻿namespace gAPI.Interfaces;
+﻿namespace gAPI.Core.Interfaces;
 
 public interface ICrudEntity
 {

@@ -1,14 +1,13 @@
-﻿using gAPI.Dtos;
-using gAPI.Ids;
-using gAPI.Interfaces;
-using Microsoft.CodeAnalysis;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
-namespace gAPI.Fabric;
+namespace gAPI.Core.Server.Fabric;
 
 public sealed class FabricClient : IAsyncDisposable
 {

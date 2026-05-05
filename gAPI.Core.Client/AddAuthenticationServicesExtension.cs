@@ -1,6 +1,6 @@
-﻿using gAPI.Dtos;
-using gAPI.Interfaces;
-using gAPI.Serializers;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
+using gAPI.Core.Serializers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,7 +27,7 @@ public static class AddAuthenticationServicesExtension
         // Register global client authentication service
         services.AddScoped<AuthenticatedHttpClient<TStateDto>>();
         services.AddScoped<IAuthenticatedHttpClient<TStateDto>>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
-        services.AddScoped<gAPI.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
+        services.AddScoped<gAPI.Core.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
 
         // Set up authorization core

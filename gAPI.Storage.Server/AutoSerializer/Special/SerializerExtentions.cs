@@ -1,5 +1,5 @@
-﻿using gAPI.Attributes;
-using gAPI.Ids;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
 namespace gAPI.Storage.Server.AutoSerializer.Special;
 

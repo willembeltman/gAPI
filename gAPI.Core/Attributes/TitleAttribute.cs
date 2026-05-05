@@ -1,4 +1,4 @@
-﻿namespace gAPI.Attributes;
+﻿namespace gAPI.Core.Attributes;
 
 public class TitleAttribute(string name) : Attribute
 {

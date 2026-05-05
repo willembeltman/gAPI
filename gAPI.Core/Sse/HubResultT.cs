@@ -1,4 +1,4 @@
-﻿namespace gAPI.Sse;
+﻿namespace gAPI.Core.Sse;
 
 public class HubResultT<T> : HubResult
 {

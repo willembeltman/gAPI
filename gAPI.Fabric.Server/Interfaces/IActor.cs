@@ -1,4 +1,4 @@
-﻿namespace gAPI.FabricNode.Interfaces;
+﻿namespace gAPI.Fabric.Interfaces;
 
 public interface IActor
 {

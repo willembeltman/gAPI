@@ -1,4 +1,4 @@
-﻿namespace gAPI.Dtos;
+﻿namespace gAPI.Core.Server.Dtos;
 
 public class ServerConfig
 {

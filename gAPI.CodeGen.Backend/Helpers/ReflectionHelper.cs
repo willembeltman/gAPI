@@ -1,4 +1,4 @@
-﻿using gAPI.Storage;
+﻿using gAPI.Core.Server.Storage;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 

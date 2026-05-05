@@ -1,4 +1,4 @@
-﻿namespace gAPI.FabricNode.Enums;
+﻿namespace gAPI.Fabric.Enums;
 
 public enum HorizontalAlign
 {

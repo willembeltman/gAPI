@@ -160,8 +160,8 @@ public static class {Name}
 //public static class {Name}
 //{{
 //    public static void AddAutoApi<TInterface, TImplementation>(this IServiceCollection services, string frontendUrl, params Assembly[] assembliesToScan)
-//        where TInterface : class, gAPI.Interfaces.IServerAuthenticationService
-//        where TImplementation : class, gAPI.Interfaces.IServerAuthenticationService, TInterface
+//        where TInterface : class, gAPI.Core.Interfaces.IServerAuthenticationService
+//        where TImplementation : class, gAPI.Core.Interfaces.IServerAuthenticationService, TInterface
 //    {{
 //        // JSON standaard op invariant zetten
 //        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
@@ -195,7 +195,7 @@ public static class {Name}
 //        // Add gAPI server authentication 
 //        services.AddScoped<TImplementation>() ;
 //        services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>())   ;
-//        services.AddScoped<gAPI.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
+//        services.AddScoped<gAPI.Core.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
 //        services.AddAuthentication(""gAPI"")
 //                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Authentication.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
 //        services.AddAuthorization();

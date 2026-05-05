@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 #nullable enable
-namespace gAPI.Storage.Mock;
+namespace gAPI.Core.Server.Storage.Mock;
 
 public class MockStorageService : IStorageService
 {

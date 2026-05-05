@@ -1,4 +1,4 @@
-﻿namespace gAPI.Attributes;
+﻿namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class IsComponentAttribute(string title, string submitText = "Submit", string responseText = "Response") : Attribute

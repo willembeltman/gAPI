@@ -1,8 +1,8 @@
-﻿using gAPI.Ids;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using System.Collections.Concurrent;
 
-namespace gAPI.Collections;
+namespace gAPI.Core.Collections;
 
 public sealed class SseManagerCollection
 {

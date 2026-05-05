@@ -1,7 +1,6 @@
 ﻿using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
-using gAPI.Wss;
-using gAPI.Interfaces;
+using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using System.Net;
+using gAPI.Core.Server.Authentication;
 
 namespace gAPI.Core.Server;
 

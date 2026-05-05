@@ -1,6 +1,6 @@
-﻿using gAPI.Dtos;
+﻿using gAPI.Core.Dtos;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 public interface IWssClientConnection : IWssLoggerFactory
 {

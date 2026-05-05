@@ -1,3 +1,3 @@
-﻿namespace gAPI.Delegates;
+﻿namespace gAPI.Core.Delegates;
 
 public delegate void StateChangedHandler();

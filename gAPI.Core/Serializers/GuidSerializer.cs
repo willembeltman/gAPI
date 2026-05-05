@@ -1,8 +1,8 @@
-﻿using gAPI.Attributes;
-using gAPI.AttributesSerializers;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.AttributesSerializers;
 using System.Reflection.Metadata;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public static class GuidSerializer
 {

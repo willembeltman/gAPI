@@ -1,4 +1,4 @@
-﻿namespace gAPI.Ids;
+﻿namespace gAPI.Core.Ids;
 
 public readonly record struct UserId(string? Value)
 {

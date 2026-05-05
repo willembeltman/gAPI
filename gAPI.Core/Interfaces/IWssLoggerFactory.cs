@@ -1,7 +1,7 @@
-﻿using gAPI.Wss;
+﻿using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 public interface IWssLoggerFactory : ILoggerFactory
 {

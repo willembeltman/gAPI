@@ -1,7 +1,7 @@
-﻿using gAPI.Dtos;
+﻿using gAPI.Core.Server.Dtos;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace gAPI.Extensions;
+namespace gAPI.Core.Server.Extensions;
 
 public static class AddCommenServicesExtension
 {

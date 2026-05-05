@@ -1,9 +1,9 @@
-﻿using gAPI.FabricNode.Interfaces;
-using gAPI.Ids;
+﻿using gAPI.Fabric.Interfaces;
+using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace gAPI.FabricNode.Models;
+namespace gAPI.Fabric.Models;
 
 public record Session(SessionId Id) : IActor
 {

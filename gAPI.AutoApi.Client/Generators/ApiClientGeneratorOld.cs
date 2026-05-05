@@ -34,8 +34,8 @@ public class ApiClientGeneratorOld : BaseGenerator
         Reg("System.Net.Http.Headers");
         Reg("Microsoft.AspNetCore.Http");
         Reg("System.Globalization");
-        Reg("gAPI.Extensions");
-        Reg("gAPI.Dtos");
+        Reg("gAPI.Core.Extensions");
+        Reg("gAPI.Core.Dtos");
         Reg(BaseResponse);
         Reg(BaseResponseT);
 

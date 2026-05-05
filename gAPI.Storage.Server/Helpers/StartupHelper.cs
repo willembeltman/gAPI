@@ -1,6 +1,6 @@
 ﻿
 
-namespace gAPI.Helpers;
+namespace gAPI.Core.Helpers;
 
 public static class StartupHelper
 {

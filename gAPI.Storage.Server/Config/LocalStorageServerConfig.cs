@@ -1,4 +1,4 @@
-﻿using gAPI.Storage.StorageServer.Dtos;
+﻿using gAPI.Core.Server.Storage.StorageServer.Dtos;
 using System.Text;
 
 namespace gAPI.Storage.Server.Config;

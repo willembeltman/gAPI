@@ -1,5 +1,5 @@
 ﻿using gAPI.Storage.Server.Config;
-using gAPI.Storage.StorageServer.Dtos.Requests;
+using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

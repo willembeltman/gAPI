@@ -1,7 +1,7 @@
-﻿using gAPI.AttributesSerializers;
+﻿using gAPI.Core.AttributesSerializers;
 using System.Buffers.Binary;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public static class DateTimeOffsetSerializers
 {

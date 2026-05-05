@@ -1,7 +1,7 @@
-﻿using gAPI.Storage.StorageServer.Dtos;
+﻿using gAPI.Core.Server.Storage.StorageServer.Dtos;
 
 #nullable enable
-namespace gAPI.Storage.StorageServer;
+namespace gAPI.Core.Server.Storage.StorageServer;
 
 public class StorageServerConfig
 {

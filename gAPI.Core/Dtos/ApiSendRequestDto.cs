@@ -1,7 +1,7 @@
-﻿using gAPI.Attributes;
-using gAPI.Ids;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public class ApiSendRequestDto

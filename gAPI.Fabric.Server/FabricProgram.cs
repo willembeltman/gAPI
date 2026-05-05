@@ -1,13 +1,13 @@
-﻿using gAPI.FabricNode.Models;
+﻿using gAPI.Fabric.Models;
 using System.Diagnostics;
 
-namespace gAPI.FabricNode;
+namespace gAPI.Fabric;
 
 public class FabricProgram
 {
     public static async Task StartAsync()
     {
-        gAPI.Fabric.FabricClient
+        //gAPI.Core.Server.Fabric.FabricClient
         Thread.Sleep(200);
 
         Console.WriteLine("Getting the config...");

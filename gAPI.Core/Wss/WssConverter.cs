@@ -1,7 +1,7 @@
-﻿using gAPI.Enums;
-using gAPI.Ids;
+﻿using gAPI.Core.Enums;
+using gAPI.Core.Ids;
 
-namespace gAPI.Fabric;
+namespace gAPI.Core.Server.Fabric;
 
 public class WssConverter
 {

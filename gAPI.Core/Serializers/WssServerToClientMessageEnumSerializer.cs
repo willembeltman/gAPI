@@ -1,7 +1,7 @@
-﻿using gAPI.AttributesSerializers;
-using gAPI.Enums;
+﻿using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Enums;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public static class WssServerToClientMessageEnumSerializer
 {

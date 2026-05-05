@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
-using gAPI.Storage;
+using gAPI.Core.Dtos;
+using gAPI.Core.Server.Storage;
 
 namespace gAPI.Core.Server.Mappings;
 

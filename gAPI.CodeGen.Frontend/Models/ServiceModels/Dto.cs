@@ -1,6 +1,6 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.CodeGen.Frontend.Helpers;
-using gAPI.Interfaces;
+using gAPI.Core.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 

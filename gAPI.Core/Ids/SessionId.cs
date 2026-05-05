@@ -1,9 +1,9 @@
-﻿using gAPI.Extensions;
+﻿using gAPI.Core.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using System.Security.Cryptography;
 
-namespace gAPI.Ids;
+namespace gAPI.Core.Ids;
 
 public readonly record struct SessionId(string Value)
 {

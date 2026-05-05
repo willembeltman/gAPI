@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
 
-namespace gAPI.Ids;
+namespace gAPI.Core.Ids;
 
 public readonly record struct RequestId(string Value)
 {

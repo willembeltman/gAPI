@@ -1,4 +1,4 @@
-﻿namespace gAPI.FabricNode.Models;
+﻿namespace gAPI.Fabric.Models;
 
 public class Screen(ScrollWindow[] windows)
 {

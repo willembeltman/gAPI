@@ -1,7 +1,7 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Wss;
+namespace gAPI.Core.Wss;
 
 [GenerateSerializer]
 public class WssLoggerLogDto

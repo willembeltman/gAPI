@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.IO;

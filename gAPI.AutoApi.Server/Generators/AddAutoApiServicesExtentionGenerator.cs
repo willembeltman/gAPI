@@ -23,7 +23,7 @@ public class AddAutoApiServicesExtensionGenerator : BaseGenerator
     {
         Reg("Microsoft.Extensions.DependencyInjection");
         var propertiesCode = "";
-        foreach (var controller in Context.Apis.Where(a => a.Interface.FullName != "gAPI.Interfaces.IAccountService"))
+        foreach (var controller in Context.Apis.Where(a => a.Interface.FullName != "gAPI.Core.Interfaces.IAccountService"))
         {
             var service = controller.Service;
             var @interface = controller.Interface;

@@ -3,7 +3,7 @@
 namespace gAPI.Core.Server;
 
 public interface IAuthenticationService<TUser, TStateDto> 
-    : gAPI.Interfaces.IServerAuthenticationService
+    : gAPI.Core.Interfaces.IServerAuthenticationService
     where TUser : AuthUser
 {
     TStateDto? ClientState { get; }

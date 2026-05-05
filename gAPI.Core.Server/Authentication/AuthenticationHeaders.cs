@@ -1,15 +1,13 @@
-﻿using gAPI.Extensions;
-using gAPI.Ids;
+﻿using gAPI.Core.Extensions;
+using gAPI.Core.Ids;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using System.IO;
 using System.Net;
 
-namespace gAPI.Authentication;
+namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationHeaders
 {
-
     public PathString Path { get; }
     public QueryString Query { get; }
     public IPAddress IpAdress { get; }

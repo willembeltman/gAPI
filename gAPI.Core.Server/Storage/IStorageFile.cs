@@ -1,4 +1,4 @@
-﻿namespace gAPI.Storage;
+﻿namespace gAPI.Core.Server.Storage;
 
 public interface IStorageFile
 {

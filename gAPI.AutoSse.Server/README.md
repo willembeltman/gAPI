@@ -13,7 +13,7 @@ It enables your services to stream messages directly to subscribed Blazor client
 
 CSharp
 
-    using gAPI.Attributes;
+    using gAPI.Core.Attributes;
 
     [GenerateHub]
     public interface ITestSseService

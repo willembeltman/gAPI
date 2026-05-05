@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 /// <summary>
 /// Markeert een methode als een gefilterde "List"-operatie op basis van een foreign key.

@@ -1,4 +1,4 @@
-﻿namespace gAPI.Helpers;
+﻿namespace gAPI.Core.Helpers;
 
 public class EnvironmentPathHelper
 {

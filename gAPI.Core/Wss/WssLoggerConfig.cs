@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace gAPI.Wss;
+namespace gAPI.Core.Wss;
 
 public static class WssLoggerConfig
 {

@@ -1,9 +1,9 @@
 ﻿using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
-using gAPI.Interfaces;
-using gAPI.Enums;
-using gAPI.Extensions;
+using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using gAPI.Core.Extensions;
+using gAPI.Core.Enums;
 
 namespace gAPI.Core.Server;
 

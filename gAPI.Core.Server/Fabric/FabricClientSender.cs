@@ -1,10 +1,10 @@
-﻿using gAPI.Dtos;
-using gAPI.Enums;
-using gAPI.Ids;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Server.Enums;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Fabric;
+namespace gAPI.Core.Server.Fabric;
 
 public class FabricClientSender(
     FabricClient fabricClient,

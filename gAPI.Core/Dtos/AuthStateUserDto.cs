@@ -1,8 +1,8 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.Storage;
 using System.ComponentModel.DataAnnotations;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 public class AuthStateUserDto : IStorageFileDto
 {

@@ -2,7 +2,7 @@
 
 public static class StartupHelper
 {
-    public static void ShowApiStarted(gAPI.Dtos.ServerConfig serverConfig, bool isDevelopment = false)
+    public static void ShowApiStarted(gAPI.Core.Server.Dtos.ServerConfig serverConfig, bool isDevelopment = false)
     {
         Console.WriteLine("##################################");
         Console.WriteLine("##                              ##");

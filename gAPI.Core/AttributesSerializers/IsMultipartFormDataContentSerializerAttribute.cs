@@ -1,4 +1,4 @@
-﻿namespace gAPI.AttributesSerializers;
+﻿namespace gAPI.Core.AttributesSerializers;
 
 public class IsMultipartFormDataContentSerializerAttribute : Attribute
 {

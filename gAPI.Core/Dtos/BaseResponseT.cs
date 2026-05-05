@@ -1,4 +1,4 @@
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 public class BaseResponseT<T> : BaseResponse
 {

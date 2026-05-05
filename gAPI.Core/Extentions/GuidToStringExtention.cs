@@ -2,7 +2,7 @@
 
 #pragma warning disable IDE0060
 
-namespace gAPI.Extensions;
+namespace gAPI.Core.Extensions;
 
 public static class GuidToStringExtension
 {

@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.ComponentModel.DataAnnotations;

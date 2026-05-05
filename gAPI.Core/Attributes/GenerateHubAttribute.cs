@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Interface)]
 public class GenerateHubAttribute : Attribute

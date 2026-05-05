@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class IsFileDeleteAttribute(Type updateType) : Attribute

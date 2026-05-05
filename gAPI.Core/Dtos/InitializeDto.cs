@@ -1,7 +1,7 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using Microsoft.Extensions.Primitives;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public class InitializeDto

@@ -1,4 +1,4 @@
-﻿namespace gAPI.Authentication;
+﻿namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationInitializeResult
 {

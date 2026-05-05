@@ -1,4 +1,4 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos;
+﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos;
 
 
 public class Credential

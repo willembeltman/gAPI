@@ -1,6 +1,6 @@
 using gAPI.Storage.Server.Services;
-using gAPI.Storage.StorageServer.Dtos.Requests;
-using gAPI.Storage.StorageServer.Dtos.Responses;
+using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
+using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

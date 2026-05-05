@@ -1,4 +1,4 @@
-﻿using gAPI.Extensions;
+﻿using gAPI.Core.Extensions;
 using System.Text;
 
 namespace gAPI.Core.Extentions;

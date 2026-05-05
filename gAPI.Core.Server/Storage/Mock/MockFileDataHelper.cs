@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace gAPI.Storage.Mock;
+namespace gAPI.Core.Server.Storage.Mock;
 
 public static class MockFileDataHelper
 {

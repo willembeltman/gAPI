@@ -1,11 +1,11 @@
-﻿using gAPI.AttributesSerializers;
+﻿using gAPI.Core.AttributesSerializers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Net.Http.Headers;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public static class IFormFileSerializer
 {

@@ -1,6 +1,6 @@
 ﻿//using gAPI.CodeGen.Backend.Models;
 //using gAPI.CodeGen.Backend.Models.Entities;
-//using gAPI.Ids;
+//using gAPI.Core.Ids;
 
 //namespace gAPI.CodeGen.Backend.Generators.Data.Authentication;
 

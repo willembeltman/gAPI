@@ -1,7 +1,7 @@
-﻿using gAPI.Interfaces;
+﻿using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Wss;
+namespace gAPI.Core.Wss;
 
 public sealed class WssLogger(string category, IWssLoggerFactory hub) : ILogger
 {

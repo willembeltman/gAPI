@@ -1,6 +1,6 @@
-﻿using gAPI.Enums;
+﻿using gAPI.Core.Enums;
 
-namespace gAPI.Dtos;
+namespace gAPI.Core.Dtos;
 
 public class BaseResponse
 {

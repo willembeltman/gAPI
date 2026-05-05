@@ -1,5 +1,4 @@
-﻿using gAPI.Attributes;
-using gAPI.AutoComponent.Interfaces;
+﻿using gAPI.Core.Attributes;
 using gAPI.CodeGen.Frontend.Models.Configs;
 using Microsoft.CodeAnalysis;
 using System.Reflection;

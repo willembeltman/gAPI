@@ -41,8 +41,8 @@ public class ApiClientGenerator : BaseGenerator
         Reg("System.Net.Http.Headers");
         Reg("Microsoft.AspNetCore.Http");
         Reg("System.Globalization");
-        Reg("gAPI.Extensions");
-        Reg("gAPI.Dtos");
+        Reg("gAPI.Core.Extensions");
+        Reg("gAPI.Core.Dtos");
         Reg("System.Globalization");
 
         var methods = string.Join("", Interface.Methods.Select(method => GenerateMethod(method)));

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class IsForeignKeyAttribute(Type type) : Attribute

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace gAPI.Storage;
+namespace gAPI.Core.Server.Storage;
 
 
 public interface IStorageService

@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.CodeGen.Backend.Helpers;
 using System.Reflection;
 

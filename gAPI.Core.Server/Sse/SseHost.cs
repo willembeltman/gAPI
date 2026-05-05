@@ -1,13 +1,13 @@
-﻿using gAPI.Collections;
-using gAPI.Dtos;
-using gAPI.Fabric;
-using gAPI.Ids;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Server.Collections;
+using gAPI.Core.Dtos;
+using gAPI.Core.Server.Fabric;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
-namespace gAPI.Sse;
+namespace gAPI.Core.Sse;
 
 public class SseHost(
     SseHostCollection sseHostCollection,

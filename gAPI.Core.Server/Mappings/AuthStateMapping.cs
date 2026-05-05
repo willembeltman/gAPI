@@ -1,5 +1,5 @@
 ﻿using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
+using gAPI.Core.Dtos;
 
 namespace gAPI.Core.Server.Mappings;
 

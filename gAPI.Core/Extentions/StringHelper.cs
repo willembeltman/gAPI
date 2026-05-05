@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace gAPI.Extensions;
+namespace gAPI.Core.Extensions;
 
 public static class StringHelper
 {

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace gAPI.Extensions;
+namespace gAPI.Core.Server.Extensions;
 
 public static class ApplyOrderByExtension
 {

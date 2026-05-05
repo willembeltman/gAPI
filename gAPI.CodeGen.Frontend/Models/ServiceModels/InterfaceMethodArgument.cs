@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
 using System.Reflection;

@@ -1,8 +1,8 @@
-﻿using gAPI.Dtos;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Serializers;
+namespace gAPI.Core.Serializers;
 
 public class DefaultStateParser(ILoggerFactory loggerFactory) : IStateParser<AuthStateDto>
 {

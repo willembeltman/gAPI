@@ -1,4 +1,4 @@
-﻿namespace gAPI.Wss;
+﻿namespace gAPI.Core.Server.Authentication;
 
 public sealed class ServerAuthenticationAccessor
 {

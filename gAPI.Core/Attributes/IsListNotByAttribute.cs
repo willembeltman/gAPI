@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.Attributes;
+namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class IsListNotByAttribute(string foreignKeyName, Type foreignType) : Attribute

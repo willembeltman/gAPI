@@ -1,11 +1,11 @@
-﻿using gAPI.Collections;
-using gAPI.Dtos;
-using gAPI.Fabric;
-using gAPI.Ids;
-using gAPI.Interfaces;
+﻿using gAPI.Core.Server.Collections;
+using gAPI.Core.Dtos;
+using gAPI.Core.Server.Fabric;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Wss;
+namespace gAPI.Core.Server.Wss;
 
 public class WssServiceSubscription 
     : ISseHost

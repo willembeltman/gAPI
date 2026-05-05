@@ -1,8 +1,8 @@
-﻿using gAPI.Attributes;
-using gAPI.Dtos;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 using System.ComponentModel.DataAnnotations;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 [GenerateMinimalApi]
 public interface IAccountService

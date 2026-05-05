@@ -1,8 +1,8 @@
-﻿using gAPI.Dtos;
-using gAPI.Storage;
+﻿using gAPI.Core.Server.Dtos;
+using gAPI.Core.Server.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace gAPI.Extensions;
+namespace gAPI.Core.Server.Extensions;
 
 public static class AddStorageExtension
 {

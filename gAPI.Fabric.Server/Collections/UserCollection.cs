@@ -1,8 +1,8 @@
-﻿using gAPI.FabricNode.Models;
-using gAPI.Ids;
+﻿using gAPI.Fabric.Models;
+using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 
-namespace gAPI.FabricNode.Collections;
+namespace gAPI.Fabric.Collections;
 
 public class UserCollection
 {

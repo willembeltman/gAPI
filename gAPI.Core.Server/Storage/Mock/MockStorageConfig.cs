@@ -1,5 +1,5 @@
 ﻿#nullable enable
-namespace gAPI.Storage.Mock;
+namespace gAPI.Core.Server.Storage.Mock;
 
 // Configuration
 public class MockStorageConfig

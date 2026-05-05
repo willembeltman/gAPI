@@ -1,4 +1,4 @@
-﻿namespace gAPI.Storage.StorageServer.Dtos.Responses;
+﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
 
 
 public class SaveResponse : Response

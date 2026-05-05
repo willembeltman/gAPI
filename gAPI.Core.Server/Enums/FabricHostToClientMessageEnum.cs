@@ -1,4 +1,4 @@
-﻿namespace gAPI.Enums;
+﻿namespace gAPI.Core.Server.Enums;
 
 public enum FabricHostToClientMessageEnum
 {

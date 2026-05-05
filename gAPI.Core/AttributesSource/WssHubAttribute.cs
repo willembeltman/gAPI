@@ -1,4 +1,4 @@
-﻿namespace gAPI.AttributesSource;
+﻿namespace gAPI.Core.AttributesSource;
 
 public class WssHubAttribute : Attribute
 {

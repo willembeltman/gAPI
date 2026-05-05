@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 #nullable enable
-namespace gAPI.Storage.AzureStorage;
+namespace gAPI.Core.Server.Storage.AzureStorage;
 
 // This was fully written by Claude Sonnet 4, sorry I couldn't be bothered, not going to use it anyways
 public class AzureStorageService : IStorageService

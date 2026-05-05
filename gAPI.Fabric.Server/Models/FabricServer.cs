@@ -1,8 +1,8 @@
-﻿using gAPI.FabricNode.Helpers;
+﻿using gAPI.Fabric.Helpers;
 using System.Net;
 using System.Net.Sockets;
 
-namespace gAPI.FabricNode.Models;
+namespace gAPI.Fabric.Models;
 
 public sealed class FabricServer(int port, IConsole Console) : IAsyncDisposable
 {

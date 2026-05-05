@@ -45,7 +45,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         {
             Reg("Microsoft.AspNetCore.Http");
         }
-        Reg("gAPI.Attributes");
+        Reg("gAPI.Core.Attributes");
 
         var loadBysCode = string.Join("", Entity.Properties
             .Where(a => a.IsNavigationItem)

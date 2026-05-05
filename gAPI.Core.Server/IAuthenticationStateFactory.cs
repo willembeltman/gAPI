@@ -1,6 +1,6 @@
-﻿using gAPI.Authentication;
+﻿using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
+using gAPI.Core.Server.Dtos;
 
 namespace gAPI.Core.Server;
 

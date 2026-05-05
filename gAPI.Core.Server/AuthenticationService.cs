@@ -1,9 +1,9 @@
-﻿using gAPI.Authentication;
+﻿using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
-using gAPI.Dtos;
-using gAPI.Interfaces;
-using gAPI.Collections;
-using gAPI.Ids;
+using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Collections;
+using gAPI.Core.Ids;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
@@ -33,7 +33,7 @@ public class AuthenticationService<TUser, TStateDto>(
 
     public bool Initialized { get; private set; }
 
-    AuthenticationInitializeResult gAPI.Interfaces.IServerAuthenticationService.Result
+    AuthenticationInitializeResult gAPI.Core.Interfaces.IServerAuthenticationService.Result
         => Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     TStateDto? IAuthenticationService<TUser, TStateDto>.ClientState
         => ReceivedClientState;
@@ -41,13 +41,13 @@ public class AuthenticationService<TUser, TStateDto>(
         => State ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     AuthenticationState<TUser> IAuthenticationService<TUser, TStateDto>.AuthenticationState
         => AuthenticationState ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    SessionId gAPI.Interfaces.IServerAuthenticationService.SessionId
+    SessionId gAPI.Core.Interfaces.IServerAuthenticationService.SessionId
         => Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    UserId gAPI.Interfaces.IServerAuthenticationService.UserId
+    UserId gAPI.Core.Interfaces.IServerAuthenticationService.UserId
         => new(AuthenticationState?.User?.Id.ToString());
-    bool gAPI.Interfaces.IServerAuthenticationService.UpdateCookie
+    bool gAPI.Core.Interfaces.IServerAuthenticationService.UpdateCookie
         => Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    string? gAPI.Interfaces.IServerAuthenticationService.CookieData
+    string? gAPI.Core.Interfaces.IServerAuthenticationService.CookieData
         => Headers?.CookieData;
     public StringValues SessionData
         => Headers?.SessionData ?? throw new Exception("Initialize the ServerAuthenticationService first please");

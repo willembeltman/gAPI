@@ -1,11 +1,11 @@
-﻿using gAPI.Authentication;
-using gAPI.Ids;
+﻿using gAPI.Core.Server.Authentication;
+using gAPI.Core.Ids;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Net;
 using System.Security.Claims;
 
-namespace gAPI.Interfaces;
+namespace gAPI.Core.Interfaces;
 
 public interface IServerAuthenticationService
 {

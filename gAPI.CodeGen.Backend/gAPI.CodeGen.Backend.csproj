@@ -59,7 +59,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
-	  <ProjectReference Include="..\gAPI.CodeGen.Core\gAPI.CodeGen.Core.csproj" />
 	  <ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
 	</ItemGroup>
 

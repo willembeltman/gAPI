@@ -1,11 +1,11 @@
-﻿using gAPI.Storage.AzureStorage;
-using gAPI.Storage.Mock;
-using gAPI.Storage.StorageServer;
-using gAPI.Storage.StorageServer.Dtos;
+﻿using gAPI.Core.Server.Storage.AzureStorage;
+using gAPI.Core.Server.Storage.Mock;
+using gAPI.Core.Server.Storage.StorageServer;
+using gAPI.Core.Server.Storage.StorageServer.Dtos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace gAPI.Storage;
+namespace gAPI.Core.Server.Storage;
 
 public class StorageService : IStorageService
 {

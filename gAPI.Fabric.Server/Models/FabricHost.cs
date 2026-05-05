@@ -1,19 +1,19 @@
-﻿using gAPI.Interfaces;
-using gAPI.Dtos;
-using gAPI.Enums;
-using gAPI.Fabric;
-using gAPI.FabricNode.Collections;
-using gAPI.Wss;
-using gAPI.Ids;
+﻿using gAPI.Core.Interfaces;
+using gAPI.Core.Dtos;
+using gAPI.Core.Server.Enums;
+using gAPI.Core.Server.Fabric;
+using gAPI.Fabric.Collections;
+using gAPI.Core.Wss;
+using gAPI.Core.Ids;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading.Channels;
-using gAPI.FabricNode.Interfaces;
-using gAPI.FabricNode.Helpers;
+using gAPI.Fabric.Interfaces;
+using gAPI.Fabric.Helpers;
 
-namespace gAPI.FabricNode.Models;
+namespace gAPI.Fabric.Models;
 
 public sealed class FabricHost : IWssLoggerFactory
 {

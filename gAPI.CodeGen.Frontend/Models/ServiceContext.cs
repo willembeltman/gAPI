@@ -1,4 +1,4 @@
-﻿using gAPI.Attributes;
+﻿using gAPI.Core.Attributes;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;

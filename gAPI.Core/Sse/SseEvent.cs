@@ -1,7 +1,7 @@
-﻿using gAPI.Dtos;
+﻿using gAPI.Core.Dtos;
 using System.Text.Json;
 
-namespace gAPI.Sse;
+namespace gAPI.Core.Sse;
 
 public class SseEvent
 {

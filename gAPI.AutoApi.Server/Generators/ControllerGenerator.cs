@@ -32,7 +32,7 @@ public class ControllerGenerator : BaseGenerator
     {
         Reg(Interface);
         Reg("Microsoft.AspNetCore.Mvc");
-        Reg("gAPI.Dtos");
+        Reg("gAPI.Core.Dtos");
 
         var synchroniousMethod = Interface.Methods.FirstOrDefault(method => method.IsAsync == false);
         if (synchroniousMethod != null)

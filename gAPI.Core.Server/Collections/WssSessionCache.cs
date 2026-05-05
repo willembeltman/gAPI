@@ -1,7 +1,7 @@
-﻿using gAPI.Ids;
+﻿using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 
-namespace gAPI.Collections;
+namespace gAPI.Core.Server.Collections;
 
 public sealed class WssSessionCache
 {
