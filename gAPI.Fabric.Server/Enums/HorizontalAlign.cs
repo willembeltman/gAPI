@@ -1,4 +1,4 @@
-﻿namespace gAPI.Fabric.Enums;
+﻿namespace gAPI.Fabric.Server.Enums;
 
 public enum HorizontalAlign
 {

@@ -56,7 +56,7 @@ public class WssHub_Generator : _BaseGenerator
         Reg("gAPI.Serializers");
         Reg("gAPI.Collections");
         Reg("gAPI.Dtos");
-        Reg("gAPI.Fabric");
+        Reg("gAPI.Fabric.Server");
         Reg("gAPI.Wss");
         Reg("gAPI.Ids");
         Reg("gAPI.Interfaces");

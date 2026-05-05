@@ -1,7 +1,7 @@
-﻿using gAPI.Fabric.Interfaces;
+﻿using gAPI.Fabric.Server.Interfaces;
 using gAPI.Core.Ids;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.Fabric.Server.Models;
 
 public sealed class InvokeRequestState
 {

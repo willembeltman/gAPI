@@ -1,10 +1,10 @@
-﻿using gAPI.Fabric.Collections;
-using gAPI.Fabric.Interfaces;
+﻿using gAPI.Fabric.Server.Collections;
+using gAPI.Fabric.Server.Interfaces;
 using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.Fabric.Server.Models;
 
 public record Service(ServiceId Id, FabricManager FabricManager) : IActor
 {

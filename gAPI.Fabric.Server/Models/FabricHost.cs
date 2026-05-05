@@ -2,7 +2,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Fabric;
-using gAPI.Fabric.Collections;
+using gAPI.Fabric.Server.Collections;
 using gAPI.Core.Wss;
 using gAPI.Core.Ids;
 using Microsoft.Extensions.Logging;
@@ -10,10 +10,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading.Channels;
-using gAPI.Fabric.Interfaces;
-using gAPI.Fabric.Helpers;
+using gAPI.Fabric.Server.Interfaces;
+using gAPI.Fabric.Server.Helpers;
 
-namespace gAPI.Fabric.Models;
+namespace gAPI.Fabric.Server.Models;
 
 public sealed class FabricHost : IWssLoggerFactory
 {

@@ -1,4 +1,4 @@
-﻿namespace gAPI.Fabric.Helpers;
+﻿namespace gAPI.Fabric.Server.Helpers;
 
 public static class StartupHelper
 {

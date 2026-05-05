@@ -12,7 +12,7 @@ public class SharedReferences
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthenticationHeaders = SharedReferenceFinder.Find("gAPI.Authentication.AuthenticationHeaders", allSymbols);
 
-        FabricClient = SharedReferenceFinder.Find("gAPI.Fabric.FabricClient", allSymbols);
+        FabricClient = SharedReferenceFinder.Find("gAPI.Fabric.Server.FabricClient", allSymbols);
 
         SseHost = SharedReferenceFinder.Find("gAPI.Sse.SseHost", allSymbols);
         //WssService = SharedReferenceFinder.Find("gAPI.Sse.WssService", allSymbols);
