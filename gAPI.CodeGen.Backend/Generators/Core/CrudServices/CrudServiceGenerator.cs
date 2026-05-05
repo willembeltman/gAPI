@@ -47,7 +47,7 @@ public class CrudServiceGenerator : BaseGenerator
         //Reg("Microsoft.EntityFrameworkCore");
         if (Entity.IsStorageFileUrlProperty)
         {
-            Reg("gAPI.Storage");
+            Reg("gAPI.Core.Server.Storage");
             Reg("Microsoft.AspNetCore.Http");
         }
         if (Entity.Properties

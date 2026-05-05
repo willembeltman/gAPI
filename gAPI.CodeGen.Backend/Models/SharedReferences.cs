@@ -17,9 +17,9 @@ public class SharedReferences(BackendConfig config)
     public SharedReference GapiIServerAuthenticationService { get; } = new SharedReference("gAPI.Core.Interfaces.IServerAuthenticationService");
     public SharedReference AuthenticationHeaders { get; } = new SharedReference("gAPI.Core.Server.Authentication.AuthenticationHeaders");
     public SharedReference AuthenticationInitializeResult { get; } = new SharedReference("gAPI.Core.Server.Authentication.AuthenticationInitializeResult");
-    public SharedReference IStorageService { get; } = new SharedReference("gAPI.Storage.IStorageService");
+    public SharedReference IStorageService { get; } = new SharedReference("gAPI.Core.Server.Storage.IStorageService");
     public SharedReference IsStateDto { get; } = new SharedReference("gAPI.Core.Attributes.IsStateDto");
-    public SharedReference ApplyOrderByExtension { get; } = new SharedReference("gAPI.Core.Extensions.ApplyOrderBy");
+    public SharedReference ApplyOrderByExtension { get; } = new SharedReference("gAPI.Core.Server.Extensions.ApplyOrderBy");
     public SharedReference StringExtensions { get; } = new SharedReference("gAPI.Core.Extensions.StringExtensions");
     public SharedReference IsAuthorized { get; } = new SharedReference("gAPI.Core.Attributes.IsAuthorized");
     public SharedReference IsNotAuthorized { get; } = new SharedReference("gAPI.Core.Attributes.IsNotAuthorized");

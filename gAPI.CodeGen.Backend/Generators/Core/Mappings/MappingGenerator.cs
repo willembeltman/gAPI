@@ -25,9 +25,11 @@ public class MappingGenerator : BaseGenerator
     public DtoGenerator Dto { get; }
 
     public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
+    public SharedReference IStorageService => Context.SharedReferences.IStorageService;
     public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
+
 
     public void GenerateCode()
     {
@@ -67,14 +69,14 @@ public class MappingGenerator : BaseGenerator
 
         Reg(ApplyOrderByExtension);
         if (Entity.IsStorageFileUrlProperty)
-            Reg("gAPI.Storage");
+            Reg(IStorageService);
 
         Code = $@"{GetNamespacesCode()}
 namespace {Namespace};
 
 public class {Name}(
-    gAPI.Core.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.IsStorageFileUrlProperty ? @", 
-    IStorageService storageService" : "")}) 
+    gAPI.Core.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.IsStorageFileUrlProperty ? @$", 
+    {IStorageService} storageService" : "")}) 
     : gAPI.Core.Interfaces.Mapping<{typeEntity.FullName}, {typeDto.FullName}>
 {{
     public override {typeEntity.FullName} ToEntity(
@@ -129,7 +131,7 @@ a.ForeignEntityNameProperties
 )},"))}
 #nullable enable
             }})
-            .ApplyOrderBy(orderby);
+            .{ApplyOrderByExtension}(orderby);
 
         if (skip != null)
         {{
