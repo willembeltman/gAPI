@@ -19,7 +19,7 @@ public class ClientConnectionGenerator : BaseGenerator
 
     public Generator Context { get; }
     public ServiceContext DataModel => Context.ServiceContext;
-    public SseClientGenerator SseClient => Context.SseClient;
+    public SharedReference SseClient => Context.SharedReferences.SseClient;
 
     public Interface[] Interfaces => Context.ServiceContext.HubInterfaces;
 

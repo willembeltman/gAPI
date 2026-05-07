@@ -14,7 +14,7 @@ public class Generator
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
 
-        SseClient = new SseClientGenerator(this);
+        //SseClient = new SseClientGenerator(this);
         SseManager = new ClientConnectionGenerator(this);
         AutoSseExtension = new AutoSseExtensionGenerator(this);
     }
@@ -22,14 +22,14 @@ public class Generator
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
 
-    public SseClientGenerator SseClient { get; }
+    //public SseClientGenerator SseClient { get; }
     public ClientConnectionGenerator SseManager { get; }
     public AutoSseExtensionGenerator AutoSseExtension { get; }
 
     public void Generate(SourceProductionContext spc)
     {
-        SseClient.GenerateCode();
-        spc.AddSource(Path.Combine(SseClient.Directory, SseClient.FileName), SourceText.From(SseClient.Code, Encoding.UTF8));
+        //SseClient.GenerateCode();
+        //spc.AddSource(Path.Combine(SseClient.Directory, SseClient.FileName), SourceText.From(SseClient.Code, Encoding.UTF8));
 
         SseManager.GenerateCode();
         spc.AddSource(Path.Combine(SseManager.Directory, SseManager.FileName), SourceText.From(SseManager.Code, Encoding.UTF8));

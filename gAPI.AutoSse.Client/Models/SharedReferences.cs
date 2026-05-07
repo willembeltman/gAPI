@@ -1,4 +1,5 @@
-﻿using gAPI.AutoSseClient.Helpers;
+﻿using gAPI.AutoSseClient.Generators;
+using gAPI.AutoSseClient.Helpers;
 using Microsoft.CodeAnalysis;
 
 namespace gAPI.AutoSseClient.Models;
@@ -59,6 +60,7 @@ public class SharedReferences
 
         //WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Wss.WssClientConnection", allSymbols);
         //IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssClientConnection", allSymbols);
+        SseClient = SharedReferenceFinder.Find("gAPI.Core.Sse.SseClient", allSymbols);
     }
 
     //public SharedReference FabricClient { get; }
@@ -104,4 +106,5 @@ public class SharedReferences
     public SharedReference IClientConnection { get; }
     public SharedReference SseHostId { get; }
     public SharedReference SseManagerId { get; }
+    public SharedReference SseClient { get; }
 }

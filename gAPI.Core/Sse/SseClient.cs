@@ -1,0 +1,119 @@
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+
+namespace gAPI.Core.Sse;
+
+public class SseClient(
+    IClientAuthenticatedHttpClient clientAuthenticationService,
+    IClientConnection sseManager,
+    ServiceId serviceId)
+    : IDisposable
+{
+    private CancellationTokenSource Cts = new();
+
+    public ServiceId ServiceId { get; } = serviceId;
+    public SseHostId? SseHostId { get; private set; }
+
+    public async Task ConnectAsync()
+    {
+        while (!Cts.IsCancellationRequested)
+        {
+            await Cts.CancelAsync();
+            Cts.Dispose();
+            Cts = new();
+
+            try
+            {
+                var url = $"/ssehost/connect/{WebUtility.UrlEncode(ServiceId.Value)}";
+                using var stream = await clientAuthenticationService.GetStreamAsync(url, Cts.Token);
+                using var streamReader = new StreamReader(stream);
+
+                var buffer = new StringBuilder();
+                var chunk = new char[1024];
+
+                while (!Cts.IsCancellationRequested)
+                {
+                    var read = await streamReader.ReadAsync(chunk.AsMemory(0, chunk.Length), Cts.Token);
+                    if (read <= 0) break;
+
+                    buffer.Append(chunk, 0, read);
+
+                    while (TryExtractFrame(buffer, out var frame))
+                    {
+                        if (!ParseFrame(frame, out string eventName, out string eventData))
+                            continue;
+
+                        if (eventName == "SseHostId")
+                        {
+                            if (long.TryParse(eventData, out var id))
+                                SseHostId = new SseHostId(id);
+                        }
+                        else if (eventName == "SendRequestDto")
+                        {
+                            var sendRequest = JsonSerializer.Deserialize<SendRequestDto>(eventData);
+                            if (sendRequest != null)
+                                _ = sseManager.MessageReceivedAsync(sendRequest, Cts.Token);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with SSE: {ex}");
+            }
+        }
+    }
+    private static bool TryExtractFrame(StringBuilder buffer, out string frame)
+    {
+        for (int i = 0; i < buffer.Length - 1; i++)
+        {
+            if (buffer[i] == '\n' && buffer[i + 1] == '\n')
+            {
+                frame = buffer.ToString(0, i);
+                buffer.Remove(0, i + 2);
+                return true;
+            }
+        }
+
+        frame = null!;
+        return false;
+    }
+    private bool ParseFrame(string frame, out string eventName, out string eventData)
+    {
+        eventName = null!;
+        eventData = null!;
+        var dataBuilder = new StringBuilder();
+
+        var lines = frame.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("event:"))
+            {
+                eventName = line[6..].TrimStart();
+            }
+            else if (line.StartsWith("data:"))
+            {
+                if (dataBuilder.Length > 0)
+                    dataBuilder.Append('\n');
+
+                dataBuilder.Append(line[5..].TrimStart());
+            }
+        }
+
+        if (eventName == null)
+            return false;
+
+        eventData = dataBuilder.ToString();
+        return true;
+    }
+
+    public void Dispose()
+    {
+        Cts.Cancel();
+        Cts.Dispose();
+    }
+}
