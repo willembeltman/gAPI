@@ -33,7 +33,7 @@ public class BackendGenerator
         //UserIpSessionTokenRoute = new UserIpSessionTokenRouteGenerator(this);
         //UserIpSessionTokenRouteRequest = new UserIpSessionTokenRouteRequestGenerator(this);
 
-        // UwvLlm.Shared.Dtos 
+        // UwvLlm.Shared.Public.Dtos 
         Dtos = [.. DbContext.DbSets
             .Where(a => !a.Entity.IsHidden)
             .Select(dbSet => new DtoGenerator(this, dbSet))];
