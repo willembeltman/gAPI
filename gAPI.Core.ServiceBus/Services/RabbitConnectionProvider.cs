@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client;
-using UwvLlm.Infrastructure.Messaging.Interfaces;
 using Microsoft.Extensions.Configuration;
+using gAPI.Core.ServiceBus.Interfaces;
 
-namespace UwvLlm.Infrastructure.Messaging.Services;
+namespace gAPI.Core.ServiceBus.Services;
 
 public class RabbitConnectionProvider : IRabbitConnectionProvider
 {

@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client;
 
-namespace UwvLlm.Infrastructure.Messaging.Interfaces;
+namespace gAPI.Core.ServiceBus.Interfaces;
 
 public interface IRabbitConnectionProvider
 {

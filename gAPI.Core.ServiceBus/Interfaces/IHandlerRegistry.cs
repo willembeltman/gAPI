@@ -1,6 +1,6 @@
-﻿using UwvLlm.Infrastructure.Messaging.Messages;
+﻿using gAPI.Core.ServiceBus.Messages;
 
-namespace UwvLlm.Infrastructure.Messaging.Interfaces;
+namespace gAPI.Core.ServiceBus.Interfaces;
 
 public interface IHandlerRegistry
 {

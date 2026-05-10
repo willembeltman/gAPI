@@ -1,4 +1,4 @@
-﻿namespace UwvLlm.Infrastructure.Messaging.Messages;
+﻿namespace gAPI.Core.ServiceBus.Messages;
 
 public record ServiceBusMessage(
     string MessageType,

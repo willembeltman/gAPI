@@ -1,16 +1,16 @@
-﻿using RabbitMQ.Client;
+﻿using gAPI.Core.ServiceBus.Interfaces;
+using gAPI.Core.ServiceBus.Messages;
+using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
-using UwvLlm.Infrastructure.Messaging.Interfaces;
-using UwvLlm.Infrastructure.Messaging.Messages;
 
-namespace UwvLlm.Infrastructure.Messaging.Services;
+namespace gAPI.Core.ServiceBus.Services;
 
 public class ServiceBusSender(
     IRabbitConnectionProvider provider) 
     : IServiceBusSender
 {
-    public async Task SendAsync<TMessage>(Api.Core.Enums.ServiceBusReceiver bus, TMessage message, CancellationToken ct)
+    public async Task SendAsync<TMessage>(Enums.ServiceBusReceiver bus, TMessage message, CancellationToken ct)
     {
         var connection = await provider.GetConnectionAsync();
         using var channel = await connection.CreateChannelAsync();

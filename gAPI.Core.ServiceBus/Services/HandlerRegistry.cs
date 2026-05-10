@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using gAPI.Core.ServiceBus.Interfaces;
+using gAPI.Core.ServiceBus.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
-using UwvLlm.Infrastructure.Messaging.Interfaces;
-using UwvLlm.Infrastructure.Messaging.Messages;
 
-namespace UwvLlm.Infrastructure.Messaging.Services;
+namespace gAPI.Core.ServiceBus.Services;
 
 public class HandlerRegistry : IHandlerRegistry
 {

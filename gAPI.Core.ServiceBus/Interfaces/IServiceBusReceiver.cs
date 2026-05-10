@@ -1,6 +1,6 @@
-﻿using UwvLlm.Api.Core.Enums;
+﻿using gAPI.Core.ServiceBus.Enums;
 
-namespace UwvLlm.Infrastructure.Messaging.Interfaces;
+namespace gAPI.Core.ServiceBus.Interfaces;
 
 public interface IServiceBusReceiver
 {

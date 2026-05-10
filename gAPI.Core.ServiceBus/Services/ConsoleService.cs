@@ -1,6 +1,6 @@
-﻿using UwvLlm.Infrastructure.Messaging.Interfaces;
+﻿using gAPI.Core.ServiceBus.Interfaces;
 
-namespace UwvLlm.Infrastructure.Messaging.Services;
+namespace gAPI.Core.ServiceBus.Services;
 
 public class ConsoleService : IConsoleService
 {

@@ -1,4 +1,4 @@
-﻿namespace UwvLlm.Api.Core.Enums;
+﻿namespace gAPI.Core.ServiceBus.Enums;
 
 public enum ServiceBusReceiver
 {

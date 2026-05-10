@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using gAPI.Core.ServiceBus.Interfaces;
+using gAPI.Core.ServiceBus.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using UwvLlm.Api.Core.Enums;
-using UwvLlm.Infrastructure.Messaging.Interfaces;
-using UwvLlm.Infrastructure.Messaging.Messages;
 
-namespace UwvLlm.Infrastructure.Messaging.Services;
+namespace gAPI.Core.ServiceBus.Services;
 
 public class ServiceBusReceiver(
     IRabbitConnectionProvider provider,
@@ -16,7 +15,7 @@ public class ServiceBusReceiver(
     IConsoleService console) 
     : IServiceBusReceiver
 {
-    public async Task StartAsync(Api.Core.Enums.ServiceBusReceiver bus, CancellationToken ct)
+    public async Task StartAsync(Enums.ServiceBusReceiver bus, CancellationToken ct)
     {
         var connection = await provider.GetConnectionAsync();
         var channel = await connection.CreateChannelAsync();
