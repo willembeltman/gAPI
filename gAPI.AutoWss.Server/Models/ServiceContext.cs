@@ -13,7 +13,7 @@ public class ServiceContext
         var hubInterfaceSymbols = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
-                t.HasAttribute("gAPI.Attributes.GenerateHubAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.GenerateHubAttribute"))
             .ToArray();
 
         HubInterfaces = hubInterfaceSymbols
@@ -23,7 +23,7 @@ public class ServiceContext
         var apiInterfaceSymbols = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
-                t.HasAttribute("gAPI.Attributes.GenerateApiAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.GenerateApiAttribute"))
             .ToArray();
 
         ApiInterfaces = apiInterfaceSymbols
@@ -33,10 +33,11 @@ public class ServiceContext
         var minimalApiInterfaceSymbols = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
-                t.HasAttribute("gAPI.Attributes.GenerateMinimalApiAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.GenerateMinimalApiAttribute"))
             .ToArray();
 
         MinimalApiInterfaces = minimalApiInterfaceSymbols
+            .Where(a => a.ToDisplayString() != "gAPI.Core.Interfaces.IAccountService")
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
             .ToArray();
     }

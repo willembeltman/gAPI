@@ -66,9 +66,9 @@ public class SpanSerializerGenerator
         Namespaces.Add("using System;\r\n");
         Namespaces.Add("using System.Buffers.Binary;\r\n");
         Namespaces.Add("using System.Text;\r\n");
-        Namespaces.Add("using gAPI.AttributesSerializers;\r\n");
-        Namespaces.Add("using gAPI.Attributes;\r\n");
-        Namespaces.Add("using gAPI.Serializers;\r\n");
+        Namespaces.Add("using gAPI.Core.AttributesSerializers;\r\n");
+        Namespaces.Add("using gAPI.Core.Attributes;\r\n");
+        Namespaces.Add("using gAPI.Core.Serializers;\r\n");
 
         var usings = string.Join("", Namespaces.Distinct().OrderBy(a => a));
         if (usings.Length > 0) usings = usings + "\r\n";

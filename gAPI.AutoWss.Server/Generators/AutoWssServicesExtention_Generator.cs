@@ -66,6 +66,7 @@ public class AutoWssServicesExtensionGenerator : _BaseGenerator
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
+        Reg("Microsoft.Extensions.DependencyInjection");
 
         foreach (var mini in Context.MinimalApis)
         {
@@ -141,7 +142,7 @@ public static class {Name}
         // Apis{string.Join("", Context.ServiceContext.ApiInterfaces.Select(apiinterface => $@"
         services.AddScoped<{apiinterface.Name}, {apiinterface.Service.Name}>();"))}
 
-        // Minimal Apis{string.Join("", Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Interfaces.IAccountService").Select(apiinterface => $@"
+        // Minimal Apis{string.Join("", Context.ServiceContext.MinimalApiInterfaces.Select(apiinterface => $@"
         services.AddScoped<{apiinterface.Name}, {apiinterface.Service.Name}>();"))}
 
         return services;

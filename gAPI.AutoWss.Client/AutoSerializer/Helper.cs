@@ -57,7 +57,7 @@ public static class Helper
     public static bool HasGenerateSerializerAttribute(INamedTypeSymbol type)
     {
         return type.GetAttributes()
-            .Any(a => a.AttributeClass?.ToDisplayString() == "gAPI.Attributes.GenerateSerializerAttribute");
+            .Any(a => a.AttributeClass?.ToDisplayString() == "gAPI.Core.Attributes.GenerateSerializerAttribute");
     }
 
     public static bool HasSerializerReadAttribute(IMethodSymbol method)

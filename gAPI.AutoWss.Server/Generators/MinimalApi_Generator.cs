@@ -46,6 +46,10 @@ public class MinimalApi_Generator : _BaseGenerator
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
         Reg("Microsoft.AspNetCore.Mvc.ModelBinding");
+        Reg("Microsoft.AspNetCore.Http");
+        Reg("Microsoft.AspNetCore.Routing");
+        Reg("Microsoft.Extensions.Hosting");
+        Reg("Microsoft.AspNetCore.Builder");
         Reg("System.Net");
 
         Code = @$"{GetNamespacesCode()}

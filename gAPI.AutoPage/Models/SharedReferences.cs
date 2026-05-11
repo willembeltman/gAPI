@@ -21,7 +21,7 @@ public class SharedReferences : ISharedReferences
         FormFileExtension = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsFormFileExtensionAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.IsFormFileExtensionAttribute"))
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "Please add gAPI.AutoClient. IsFormFileExtension helper is missing.");
@@ -29,7 +29,7 @@ public class SharedReferences : ISharedReferences
         FormFile = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsFormFileAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.IsFormFileAttribute"))
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "Please add gAPI.AutoClient. FormFile is missing.");
@@ -51,7 +51,7 @@ public class SharedReferences : ISharedReferences
         var stateBaseTypes = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Class &&
-                t.HasAttribute("gAPI.Attributes.IsStateDtoAttribute"))
+                t.HasAttribute("gAPI.Core.Attributes.IsStateDtoAttribute"))
             .Cast<INamedTypeSymbol>()
             .ToArray();
 
@@ -67,7 +67,7 @@ public class SharedReferences : ISharedReferences
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "The `State` dto is missing or does not have the required " +
-                "`gAPI.Attributes.IsStateDtoAttribute`. " +
+                "`gAPI.Core.Attributes.IsStateDtoAttribute`. " +
                 "Ensure your shared project defines a `State` dto and that it is annotated with " +
                 "`[IsStateDtoAttribute]`.");
 
@@ -78,18 +78,18 @@ public class SharedReferences : ISharedReferences
         StateChangedHandler = new SharedReference(StateChangedHandler_Symbol);
 
         var baseResponse_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Dtos.BaseResponse") ??
-            throw new Exception("gAPI.Dtos.BaseResponse was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Dtos.BaseResponse") ??
+            throw new Exception("gAPI.Core.Dtos.BaseResponse was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
         BaseResponse = new SharedReference(baseResponse_Symbol);
         var baseResponseT_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Dtos.BaseResponseT`1") ??
-            throw new Exception("gAPI.Dtos.BaseResponseT was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Dtos.BaseResponseT`1") ??
+            throw new Exception("gAPI.Core.Dtos.BaseResponseT was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
         BaseResponseT = new SharedReference(baseResponseT_Symbol);
         var baseListResponseT_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Dtos.BaseListResponseT`1") ??
-            throw new Exception("gAPI.Dtos.BaseListResponseT was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Dtos.BaseListResponseT`1") ??
+            throw new Exception("gAPI.Core.Dtos.BaseListResponseT was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
         BaseListResponseT = new SharedReference(baseListResponseT_Symbol);
 

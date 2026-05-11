@@ -48,8 +48,8 @@ public class ClientConnectionGenerator : BaseGenerator
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
-        Reg("gAPI.Attributes");
-        Reg("gAPI.Serializers");
+        Reg("gAPI.Core.Attributes");
+        Reg("gAPI.Core.Serializers");
         Reg(WssClientConnection);
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);

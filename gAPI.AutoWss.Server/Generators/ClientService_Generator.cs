@@ -40,8 +40,8 @@ public class ClientService_Generator : _BaseGenerator
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
-        Reg("gAPI.Attributes");
-        Reg("gAPI.Serializers");
+        Reg("gAPI.Core.Attributes");
+        Reg("gAPI.Core.Serializers");
         Reg("System.Runtime.CompilerServices");
         Reg(Interface);
         Reg(FabricClient);

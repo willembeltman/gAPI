@@ -52,14 +52,14 @@ public class WssHub_Generator : _BaseGenerator
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
-        Reg("gAPI.Attributes");
-        Reg("gAPI.Serializers");
-        Reg("gAPI.Collections");
-        Reg("gAPI.Dtos");
-        Reg("gAPI.Fabric.Server");
-        Reg("gAPI.Wss");
-        Reg("gAPI.Ids");
-        Reg("gAPI.Interfaces");
+        Reg("gAPI.Core.Attributes");
+        Reg("gAPI.Core.Serializers");
+        Reg("gAPI.Core.Server.Collections");
+        Reg("gAPI.Core.Dtos");
+        Reg("gAPI.Core.Server.Fabric");
+        Reg("gAPI.Core.Server.Wss");
+        Reg("gAPI.Core.Ids");
+        Reg("gAPI.Core.Interfaces");
         Reg("Microsoft.CodeAnalysis");
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {

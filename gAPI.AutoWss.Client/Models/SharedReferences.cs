@@ -7,27 +7,27 @@ public class SharedReferences
 {
     public SharedReferences(INamedTypeSymbol[] allSymbols)
     {
-        ServiceId = SharedReferenceFinder.Find("gAPI.Ids.ServiceId", allSymbols);
-        RequestId = SharedReferenceFinder.Find("gAPI.Ids.RequestId", allSymbols);
-        BaseResponseT = new SharedReference("gAPI.Dtos.BaseResponseT"); 
-        BaseResponse = SharedReferenceFinder.Find("gAPI.Dtos.BaseResponse", allSymbols);
-        InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Dtos.InvokeRequestDto", allSymbols);
-        InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Dtos.InvokeResponseDto", allSymbols);
-        SendRequestDto = SharedReferenceFinder.Find("gAPI.Dtos.SendRequestDto", allSymbols);
-        SubscribeDto = SharedReferenceFinder.Find("gAPI.Dtos.SubscribeDto", allSymbols);
-        UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Dtos.UnsubscribeDto", allSymbols);
-        ApiSendRequestDto = SharedReferenceFinder.Find("gAPI.Dtos.ApiSendRequestDto", allSymbols);
-        ApiInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Dtos.ApiInvokeRequestDto", allSymbols);
-        ApiInvokeResponseDto = SharedReferenceFinder.Find("gAPI.Dtos.ApiInvokeResponseDto", allSymbols);
-        ApiInvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Dtos.ApiInvokeResponseDoneDto", allSymbols);
-        InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Dtos.InvokeResponseDoneDto", allSymbols);
-        FrontendConfig = SharedReferenceFinder.Find("gAPI.Dtos.FrontendConfig", allSymbols);
-        IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Interfaces.IWssLoggerFactory", allSymbols);
-        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
-        WssClientConnection = SharedReferenceFinder.Find("gAPI.Wss.WssClientConnection", allSymbols);
-        IWssClientConnection = SharedReferenceFinder.Find("gAPI.Interfaces.IWssClientConnection", allSymbols);
-        AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Attributes.IsFormFileAttribute", allSymbols);
-        AuthClient_ToFormFileExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Attributes.IsFormFileExtensionAttribute", allSymbols);
+        ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
+        RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
+        BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT"); 
+        BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
+        InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
+        InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
+        SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
+        SubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SubscribeDto", allSymbols);
+        UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.UnsubscribeDto", allSymbols);
+        ApiSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiSendRequestDto", allSymbols);
+        ApiInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiInvokeRequestDto", allSymbols);
+        ApiInvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiInvokeResponseDto", allSymbols);
+        ApiInvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiInvokeResponseDoneDto", allSymbols);
+        InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
+        FrontendConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.FrontendConfig", allSymbols);
+        IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssLoggerFactory", allSymbols);
+        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
+        WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Wss.WssClientConnection", allSymbols);
+        IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssClientConnection", allSymbols);
+        AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileAttribute", allSymbols);
+        AuthClient_ToFormFileExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileExtensionAttribute", allSymbols);
     }
 
     public SharedReference ServiceId { get; }

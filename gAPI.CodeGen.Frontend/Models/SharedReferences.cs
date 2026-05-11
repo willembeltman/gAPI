@@ -47,9 +47,9 @@ public class SharedReferences
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new Exception("cannot find RedirectToLogin");
 
-        BaseResponse = new SharedReference("gAPI.Dtos.BaseResponse");
-        BaseResponseT = new SharedReference("gAPI.Dtos.BaseResponseT");
-        BaseListResponseT = new SharedReference("gAPI.Dtos.BaseListResponseT");
+        BaseResponse = new SharedReference("gAPI.Core.Dtos.BaseResponse");
+        BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
+        BaseListResponseT = new SharedReference("gAPI.Core.Dtos.BaseListResponseT");
         StateChangedHandler = new SharedReference("gAPI.Delegates.StateChangedHandler");
         IClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces.IClientAuthenticatedHttpClient");
         ItemDataSource = new SharedReference("gAPI.Core.Client.ItemDataSource");
@@ -84,7 +84,7 @@ public class SharedReferences
             .Select(a => new SharedReference(a))
             .FirstOrDefault() ?? throw new InvalidOperationException(
                 "The `State` dto is missing or does not have the required " +
-                "`gAPI.Attributes.IsStateDtoAttribute`. " +
+                "`gAPI.Core.Attributes.IsStateDtoAttribute`. " +
                 "Ensure your shared project defines a `State` dto and that it is annotated with " +
                 "`[IsStateDtoAttribute]`.");
 

@@ -28,7 +28,7 @@ public class FormFileGenerator : BaseGenerator
         if (Context.SharedReferences.AuthClient_FormFile != null)
             return;
 
-        Code = $@"using gAPI.Attributes;
+        Code = $@"using gAPI.Core.Attributes;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 

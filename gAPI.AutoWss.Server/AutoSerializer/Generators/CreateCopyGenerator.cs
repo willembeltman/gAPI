@@ -51,8 +51,8 @@ public class CreateCopyGenerator
         string propsCode = CreatePropsCode();
 
         Namespaces.Add("using System.IO;\r\n");
-        Namespaces.Add("using gAPI.AttributesSerializers;\r\n");
-        Namespaces.Add("using gAPI.Attributes;\r\n");
+        Namespaces.Add("using gAPI.Core.AttributesSerializers;\r\n");
+        Namespaces.Add("using gAPI.Core.Attributes;\r\n");
 
         var usings = string.Join("", Namespaces.Distinct());
         if (usings.Length > 0) usings = usings + "\r\n";

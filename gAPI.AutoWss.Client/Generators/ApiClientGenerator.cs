@@ -43,8 +43,8 @@ public class ApiClientGenerator : BaseGenerator
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
-        Reg("gAPI.Attributes");
-        Reg("gAPI.Serializers");
+        Reg("gAPI.Core.Attributes");
+        Reg("gAPI.Core.Serializers");
         Reg(Interface);
         Reg(WssClientConnection);
         Reg(IWssLoggerFactory);

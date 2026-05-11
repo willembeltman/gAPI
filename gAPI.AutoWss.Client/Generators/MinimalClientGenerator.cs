@@ -51,8 +51,8 @@ public class MinimalClientGenerator : BaseGenerator
         Reg("System.Net.Http.Headers");
         Reg("Microsoft.AspNetCore.Http");
         Reg("System.Globalization");
-        Reg("gAPI.Extensions");
-        Reg("gAPI.Dtos");
+        Reg("gAPI.Core.Extensions");
+        Reg("gAPI.Core.Dtos");
 
         var methods = string.Join("", Interface.Methods.Select(method => GenerateMethod(method)));
 

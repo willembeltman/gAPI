@@ -68,6 +68,10 @@ public class AutoWssExtensionGenerator : _BaseGenerator
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
         Reg("System.Net");
+        Reg("Microsoft.AspNetCore.Builder");
+        Reg("Microsoft.AspNetCore.Http");
+        Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.Extensions.Logging");
 
         foreach (var mini in Context.MinimalApis)
         {

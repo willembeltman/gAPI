@@ -95,7 +95,7 @@ public class PageGenerator : BaseGenerator, IPage
         Imports.Reg("Microsoft.AspNetCore.Components");
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.AspNetCore.Components.Web");
-        Imports.Reg("gAPI.Dtos");
+        Imports.Reg("gAPI.Core.Dtos");
         Imports.Reg("Microsoft.JSInterop");
         Imports.Reg(Method.TypeDigger);
 
