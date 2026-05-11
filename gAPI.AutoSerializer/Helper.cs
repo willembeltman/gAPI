@@ -105,9 +105,11 @@ public static class Helper
 
     public static PropertyGeneric[] GetProperties(INamedTypeSymbol typeSymbol, bool generic = false)
     {
-
         var props = typeSymbol.GetMembers().OfType<IPropertySymbol>()
-            .Where(p => p.GetMethod != null && p.GetAttributes().Any(a => a.ToString().EndsWith("NotMappedAttribute")) == false)
+            .Where(p => 
+                p.GetMethod != null &&
+                p.SetMethod != null &&
+                p.GetAttributes().Any(a => a.ToString().EndsWith("NotMappedAttribute")) == false)
             .Select(p => new PropertyGeneric(p, typeSymbol.IsGenericType || generic))
             .ToArray();
         if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "Object")

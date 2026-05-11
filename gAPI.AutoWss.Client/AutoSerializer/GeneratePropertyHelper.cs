@@ -505,9 +505,7 @@ public class GeneratePropertyHelper(
         var customSerializer = CustomMultipartFormDataContentSerializers
             .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
 
-        var name = fromApiClient ?
-            $@"""{fieldName}""" :
-            $@"$""{{___name}}.{fieldName}""";
+        var name = $@"""{fieldName}""";
 
         // CUSTOM SERIALIZER
         if (customSerializer != null)

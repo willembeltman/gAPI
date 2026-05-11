@@ -18,12 +18,12 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-            //#if DEBUG
-            //            if (!Debugger.IsAttached)
-            //            {
-            //                Debugger.Launch(); // Triggert dialoog om te attachen
-            //            }
-            //#endif
+//#if DEBUG
+//            if (!Debugger.IsAttached)
+//            {
+//                Debugger.Launch(); // Triggert dialoog om te attachen
+//            }
+//#endif
 
             try
             {
