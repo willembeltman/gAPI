@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
@@ -60,9 +59,9 @@ public class TypeHelper : ITypeHelper
         NameInner = GetSimpleCsTypeByName(NameInner);
         NameEnd = nullable;
         Namespace = typeSymbol.ContainingNamespace?.ToDisplayString();
-        
+
         Setup(serviceContext, typeSymbol, history);
-        
+
         if (typeSymbol is INamedTypeSymbol namedType)
         {
             IsNullable = IsNullable || namedType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated);
@@ -288,7 +287,7 @@ public class TypeHelper : ITypeHelper
     public override string ToString()
     {
         return FullName;
-    } 
+    }
 
     ITypeHelperProperty[] ITypeHelper.GetProperties()
     {

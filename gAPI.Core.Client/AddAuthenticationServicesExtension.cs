@@ -21,7 +21,7 @@ public static class AddAuthenticationServicesExtension
 
         // Configure named client for WebAssembly with cookies
         services
-            .AddHttpClient("WithCookies", opt => opt.BaseAddress = new Uri(apiAddress)) 
+            .AddHttpClient("WithCookies", opt => opt.BaseAddress = new Uri(apiAddress))
             .AddHttpMessageHandler<WithCookiesHandler>();
 
         // Register global client authentication service

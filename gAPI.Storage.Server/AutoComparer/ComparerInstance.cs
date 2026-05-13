@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Storage.Server.AutoComparer;
+﻿namespace gAPI.Storage.Server.AutoComparer;
 
 public class ComparerInstance<TIn, TOut>
 {

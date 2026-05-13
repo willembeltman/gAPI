@@ -7,10 +7,10 @@ using System.Text.Json;
 namespace gAPI.Core.ServiceBus.Services;
 
 public class ServiceBusSender(
-    IRabbitConnectionProvider provider) 
+    IRabbitConnectionProvider provider)
     : IServiceBusSender
 {
-    public async Task SendAsync<TMessage>(Enums.ServiceBusReceiver bus, TMessage message, CancellationToken ct)
+    public async Task SendAsync<TMessage>(string busName, TMessage message, CancellationToken ct)
     {
         var connection = await provider.GetConnectionAsync();
         using var channel = await connection.CreateChannelAsync();
@@ -25,7 +25,7 @@ public class ServiceBusSender(
 
         await channel.BasicPublishAsync(
             exchange: "",
-            routingKey: Enum.GetName(bus)!,
+            routingKey: busName,
             mandatory: true,
             basicProperties: new BasicProperties { Persistent = true },
             body: body,

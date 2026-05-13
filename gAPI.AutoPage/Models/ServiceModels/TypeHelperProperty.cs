@@ -31,7 +31,7 @@ public class TypeHelperProperty : ITypeHelperProperty
         IsKey = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "KeyAttribute");
         IsName = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsNameAttribute");
         IsStorageFileUrlProperty = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStorageFileUrlPropertyAttribute");
-         
+
         var isForeignNameAttr = propertySymbol.GetAttributes()
             .FirstOrDefault(a => a.AttributeClass?.Name == "IsForeignNameAttribute");
 

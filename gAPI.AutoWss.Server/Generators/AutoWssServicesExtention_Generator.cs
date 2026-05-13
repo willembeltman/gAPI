@@ -51,7 +51,7 @@ public class AutoWssServicesExtensionGenerator : _BaseGenerator
         {
             return;
         }
-        
+
         Reg(WssHub);
         Reg(IClientContext);
         Reg(ClientContext);
@@ -136,7 +136,7 @@ public static class {Name}
     public static IServiceCollection AddAutoWssServices(this IServiceCollection services)
     {{
         // Hubs
-        services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a =>$@"
+        services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
         services.AddScoped<{a.IClientContext.Name}, {a.Name}>();"))}
 
         // Apis{string.Join("", Context.ServiceContext.ApiInterfaces.Select(apiinterface => $@"

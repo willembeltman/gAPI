@@ -12,16 +12,16 @@ public class ServiceBusReceiver(
     IRabbitConnectionProvider provider,
     //IHandlerRegistry registry,
     IServiceProvider sp,
-    IConsoleService console) 
+    IConsoleService console)
     : IServiceBusReceiver
 {
-    public async Task StartAsync(Enums.ServiceBusReceiver bus, CancellationToken ct)
+    public async Task StartAsync(string busName, CancellationToken ct)
     {
         var connection = await provider.GetConnectionAsync();
         var channel = await connection.CreateChannelAsync();
 
         await channel.QueueDeclareAsync(
-            Enum.GetName(bus)!,
+            busName,
             durable: true,
             exclusive: false,
             autoDelete: false);
@@ -51,6 +51,6 @@ public class ServiceBusReceiver(
             }
         };
 
-        await channel.BasicConsumeAsync(Enum.GetName(bus)!, false, consumer);
+        await channel.BasicConsumeAsync(busName!, false, consumer);
     }
 }

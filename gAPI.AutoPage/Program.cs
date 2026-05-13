@@ -3,7 +3,6 @@ using gAPI.AutoPage.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -16,12 +15,12 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
 
             try
             {

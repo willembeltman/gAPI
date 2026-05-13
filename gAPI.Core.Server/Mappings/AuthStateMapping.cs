@@ -1,9 +1,9 @@
-﻿using gAPI.Core.Server.Entities;
-using gAPI.Core.Dtos;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Server.Entities;
 
 namespace gAPI.Core.Server.Mappings;
 
-public class AuthStateMapping (
+public class AuthStateMapping(
     IStateUserMapping<AuthUser, AuthStateUserDto> userMapping)
     : IStateMapping<AuthUser, AuthStateDto>
 {

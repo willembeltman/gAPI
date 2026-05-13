@@ -1,20 +1,20 @@
-﻿using gAPI.Core.Server.Collections;
-using gAPI.Core.Dtos;
-using gAPI.Core.Server.Fabric;
+﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Fabric;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Server.Wss;
 
-public class WssServiceSubscription 
+public class WssServiceSubscription
     : ISseHost
     , IAsyncDisposable
 {
     public WssServiceSubscription(
-        ISignalRInvoker connection, 
+        ISignalRInvoker connection,
         ILoggerFactory loggerFactory,
-        SseHostCollection hubHosts, 
+        SseHostCollection hubHosts,
         FabricClient fabricClient,
         ConnectionId connectionId,
         ServiceId serviceId,

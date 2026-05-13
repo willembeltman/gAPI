@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.IndexSets;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.IndexSets;
 
 public static class IndexSetCollection
 {

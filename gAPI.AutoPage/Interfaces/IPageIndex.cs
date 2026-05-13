@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace gAPI.AutoPage.Interfaces
 {
-    public interface IPageIndex 
+    public interface IPageIndex
     {
         string Route { get; }
         string? Title { get; }

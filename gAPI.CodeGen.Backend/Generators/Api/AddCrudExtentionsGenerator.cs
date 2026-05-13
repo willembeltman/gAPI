@@ -21,7 +21,7 @@ public class AddCrudExtensionsGenerator : BaseGenerator
 
     public DtoGenerator[] Dtos => Context.Dtos;
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;
-    public SharedReference Mapping => Context.SharedReferences.Mapping;   
+    public SharedReference Mapping => Context.SharedReferences.Mapping;
 
     public void GenerateCode()
     {

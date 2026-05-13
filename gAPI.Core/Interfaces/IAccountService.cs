@@ -36,13 +36,13 @@ public interface IAccountService
     [IsNotAuthorized]
     [IsPage("/Account/Login", "Login", "Log in", "")]
     Task<BaseResponse> LoginAsync(
-        [Title("E-mail")] 
+        [Title("E-mail")]
         string email,
-        
+
         [Title("Password")]
         [Required(ErrorMessage = "Password is required")]
         [IsPassword]
-        string password, 
+        string password,
 
         CancellationToken ct);
 

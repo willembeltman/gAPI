@@ -51,7 +51,7 @@ public class AutoWssExtensionGenerator : _BaseGenerator
         {
             return;
         }
-        
+
         Reg(WssHub);
         Reg(IClientContext);
         Reg(ClientContext);

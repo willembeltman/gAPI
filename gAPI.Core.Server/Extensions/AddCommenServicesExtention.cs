@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Server.Dtos;
+﻿using gAPI.Core.Dtos;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace gAPI.Core.Server.Extensions;

@@ -52,10 +52,10 @@ public sealed class WssLogger(string category, IWssLoggerFactory hub) : ILogger
             Category = Category,
             Timestamp = DateTimeOffset.UtcNow,
             StackTrace = exception?.ToString(),
-            Data = data?.Select(a => new SignalRLogDataDto(){ Key = a.Key, Value = a.Value?.ToString() }).ToArray()
+            Data = data?.Select(a => new SignalRLogDataDto() { Key = a.Key, Value = a.Value?.ToString() }).ToArray()
         };
 
-        hub.Send_Log_ToServerAsync(dto).GetAwaiter().GetResult();  
+        hub.Send_Log_ToServerAsync(dto).GetAwaiter().GetResult();
     }
 
     // Kleine private scope-implementatie

@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Server.Dtos;
+﻿using gAPI.Core.Dtos;
 using Microsoft.Extensions.Configuration;
 
-namespace gAPI.Core.Server.Extensions;
+namespace gAPI.Core.Extensions;
 
 public static class CreateServerConfigExtension
 {

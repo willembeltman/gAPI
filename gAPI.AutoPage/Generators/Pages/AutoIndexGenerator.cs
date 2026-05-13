@@ -9,14 +9,14 @@ namespace gAPI.AutoPage.Generators.Pages
     {
         public AutoIndexGenerator(
             Generator generator,
-            string key, 
+            string key,
             AutoPageGenerator[] autoPageGenerators)
         {
             Context = generator;
 
             Generator = new IndexGenerator(
-                key, 
-                autoPageGenerators.Select(a => a.Generator), 
+                key,
+                autoPageGenerators.Select(a => a.Generator),
                 this,
                 "Pages",
                 "gAPI.Generated.Pages");

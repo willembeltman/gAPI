@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace gAPI.Storage.Server.AutoComparer.Helpers;
+﻿namespace gAPI.Storage.Server.AutoComparer.Helpers;
 
 public class TypeComparerInfo
 {

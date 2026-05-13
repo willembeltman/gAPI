@@ -1,6 +1,6 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.CodeGen.Frontend.Enums;
+﻿using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.Core.Attributes;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 

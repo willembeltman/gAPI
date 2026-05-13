@@ -11,7 +11,7 @@ public class SharedReferences(BackendConfig config)
     public SharedReference AddAutoApiExtension { get; } = new SharedReference(config.Extensions_Namespace, "AddAutoApiExtension"); // todo??
     public SharedReference AddAutoSseExtension { get; } = new SharedReference(config.Extensions_Namespace, "AddAutoSseExtension"); // todo??
     public SharedReference AddStorageExtension { get; } = new SharedReference("gAPI.Storage.AddStorageExtension");
-    public SharedReference ServerConfig { get; } = new SharedReference("gAPI.Core.Server.Dtos.ServerConfig");
+    public SharedReference ServerConfig { get; } = new SharedReference("gAPI.Core.Dtos.ServerConfig");
     public SharedReference IUseCase { get; } = new SharedReference("gAPI.Core.Interfaces.IUseCase");
     public SharedReference Mapping { get; } = new SharedReference("gAPI.Core.Interfaces.Mapping");
     public SharedReference GapiIServerAuthenticationService { get; } = new SharedReference("gAPI.Core.Interfaces.IServerAuthenticationService");

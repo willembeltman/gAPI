@@ -10,7 +10,7 @@ public class DetailsGenerator : BaseGenerator
         ISharedReference itemDataSource,
         IBaseGenerator imports,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         Dto = dto;
         ItemDataSource = itemDataSource;

@@ -122,7 +122,7 @@ public class {Name}(
                 code += $@"
     public async Task {method.Name}(
         {string.Join(
-            $",\r\n        ", 
+            $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
         var payload = new {Interface.Title}_{method.Name}

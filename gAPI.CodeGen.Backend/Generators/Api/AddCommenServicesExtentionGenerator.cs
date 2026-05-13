@@ -9,7 +9,7 @@
 //    {
 //        Directory = context.Config.Extensions_Directory;
 //        Namespace = context.Config.Extensions_Namespace;
-        
+
 //        Context = context;
 
 //        Name = "AddCommenServicesExtension";

@@ -147,7 +147,7 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
             position = endIndex + 1;
             position = ReadBody(markup, position);
         }
-        return position; 
+        return position;
     }
     private int ReadXmlAttributes(string markup, int position)
     {

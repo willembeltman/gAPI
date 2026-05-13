@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Navigators;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Navigators;
 
 public class Navigator<T>
 {

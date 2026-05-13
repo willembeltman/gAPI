@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Navigators;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Navigators;
 
 public static class NavigatorCollection
 {

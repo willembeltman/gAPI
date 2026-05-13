@@ -10,7 +10,7 @@ public class DropDownGenerator : BaseGenerator
         ISharedReference listDataSource,
         IBaseGenerator imports,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         CrudlType = crudlType;
         ListDataSource = listDataSource;

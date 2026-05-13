@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +6,7 @@ namespace gAPI.AutoWssClient.Models;
 
 public class TypeHelper : SharedReference
 {
-    public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false) 
+    public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
     {
         Type = typeSymbol;
         ServiceContext = dataModel;

@@ -1,7 +1,5 @@
 ﻿using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.Configs;
-using gAPI.CodeGen.Frontend.Models.ServiceModels;
-using System.IO;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Page;
 
@@ -65,7 +63,7 @@ public class IndexGenerator : BaseGenerator
 
     </Authorized>
     <NotAuthorized Context=""_"">
-{(Pages.Any(a=> a.IsAuthorized == false) 
+{(Pages.Any(a => a.IsAuthorized == false)
 ? string.Join("", Pages.Where(a => a.IsAuthorized == false).Select(a => $@"
         <div class=""px-3"">
             <NavLink class=""nav-link"" href=""{a.Route}"">

@@ -5,7 +5,7 @@ namespace gAPI.AutoComponent.Models.ServiceModels;
 
 public class InterfaceMethodArgumentAttribute(
     InterfaceMethodArgument parent,
-    AttributeData attr, 
+    AttributeData attr,
     INamedTypeSymbol named) // is attr.AttributeClass!
     : ITypeHelperPropertyAttribute
 {

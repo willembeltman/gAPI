@@ -111,7 +111,7 @@ public static class {Name}
             };
             var methodArguments = string.Join(", ",
             [
-                ..method.Arguments.Select(arg => 
+                ..method.Arguments.Select(arg =>
                     (method, arg) switch
                     {
                         // IFormFile is altijd body

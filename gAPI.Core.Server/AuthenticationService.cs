@@ -1,9 +1,9 @@
-﻿using gAPI.Core.Server.Authentication;
-using gAPI.Core.Server.Entities;
-using gAPI.Core.Dtos;
-using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Collections;
+﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Authentication;
+using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;

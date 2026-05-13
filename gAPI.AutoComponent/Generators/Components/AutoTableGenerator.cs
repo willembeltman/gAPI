@@ -1,8 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models;
-using gAPI.AutoComponent.Models.ServiceModels;
 using gAPI.SimpleRazorCompiler;
-using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
@@ -14,7 +12,7 @@ public class AutoTableGenerator : BaseGenerator
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         Context = context;
         var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces", "IClientAuthenticatedHttpClient");

@@ -2,12 +2,9 @@
 using gAPI.AutoApiServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml;
 
 namespace gAPI.AutoApiServer;
 
@@ -27,7 +24,7 @@ public class Generator
 
         AddAutoApiServices = new AddAutoApiServicesExtensionGenerator(this);
         AddAutoApi = new AddAutoApiExtensionGenerator(this);
-     }
+    }
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
@@ -51,7 +48,7 @@ public class Generator
 
         AddAutoApiServices.GenerateCode();
         spc.AddSource(Path.Combine(AddAutoApiServices.Directory, AddAutoApiServices.FileName), SourceText.From(AddAutoApiServices.Code, Encoding.UTF8));
-        
+
         AddAutoApi.GenerateCode();
         spc.AddSource(Path.Combine(AddAutoApi.Directory, AddAutoApi.FileName), SourceText.From(AddAutoApi.Code, Encoding.UTF8));
     }

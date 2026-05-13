@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Interfaces;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Interfaces;
 
 public interface IDiskSet<T> : IDiskSet, ILongCollection<T>, IKeyedSet<T>
 {

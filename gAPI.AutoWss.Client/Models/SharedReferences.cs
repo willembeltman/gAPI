@@ -9,7 +9,7 @@ public class SharedReferences
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
-        BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT"); 
+        BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
         BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
@@ -50,5 +50,5 @@ public class SharedReferences
     public SharedReference? AuthClient_ToFormFileExtension { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
     public SharedReference InvokeResponseDoneDto { get; }
-    public SharedReference FrontendConfig { get;  }
+    public SharedReference FrontendConfig { get; }
 }

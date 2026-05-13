@@ -1,5 +1,4 @@
-﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models.CrudlModels;
+﻿using gAPI.AutoPage.Models.CrudlModels;
 using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Components

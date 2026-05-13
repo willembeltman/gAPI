@@ -8,7 +8,7 @@ public class ClientContext_Generator : BaseGenerator
     public ClientContext_Generator(
         Generator context)
     {
-        Context = context; 
+        Context = context;
 
         Directory = "";
         Namespace = "gAPI.Generated";

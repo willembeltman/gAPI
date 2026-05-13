@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoSseClient.Models;
-using System.Linq;
 
 namespace gAPI.AutoSseClient.Generators;
 

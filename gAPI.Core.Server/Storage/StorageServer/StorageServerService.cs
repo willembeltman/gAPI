@@ -48,7 +48,7 @@ public class StorageServerService : IStorageService
                 $"Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext jet.");
 
         var key = new StorageFileCacheKey(id, type);
-        return UrlCache.AddOrUpdate(key, 
+        return UrlCache.AddOrUpdate(key,
             (StorageFileCacheKey key) =>
             {
                 AuthenticateHttpClient(ct).GetAwaiter().GetResult();

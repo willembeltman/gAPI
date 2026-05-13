@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Models;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Models;
 
 public static class DbContextModelCollection
 {

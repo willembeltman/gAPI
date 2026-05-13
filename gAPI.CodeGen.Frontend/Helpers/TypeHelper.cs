@@ -1,6 +1,4 @@
 ﻿using gAPI.AutoComponent.Interfaces;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace gAPI.CodeGen.Frontend.Helpers;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace gAPI.Storage.Server.AutoSerializer;
+﻿namespace gAPI.Storage.Server.AutoSerializer;
 
 public class SerializerInstance<T>
 {

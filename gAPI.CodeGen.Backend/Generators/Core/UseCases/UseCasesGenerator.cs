@@ -50,21 +50,21 @@ public class UseCasesGenerator : BaseGenerator
         await db.SaveChangesAsync(ct);
         return true;
     }}";
-    //    if (Entity.Properties.Any(a => a.IsStateManaged != null))
-    //    {
-    //        attachCode = @$"
-    //{{
-    //    if (entity == null) return false;
-    //    if (authenticationService.State.User == null) return false;{string.Join("", Entity.Properties
-    //        .Where(a => a.IsStateManaged != null)
-    //        .Select(prop => @$"
-    //    {(prop.IsStateManaged!.CheckForNull ? $"if (authenticationService.State.{prop.IsStateManaged!.Name} == null) return false;" : "")}
-    //    entity.{prop.Name} = authenticationService.State.{prop.IsStateManaged!.Name}{(prop.IsStateManaged.UseValue ? ".Value" : "")};"))}
-    //    await db.{DbSet.Name}.AddAsync(entity, ct);
-    //    await db.SaveChangesAsync(ct);
-    //    return true;
-    //}}";
-    //    }
+        //    if (Entity.Properties.Any(a => a.IsStateManaged != null))
+        //    {
+        //        attachCode = @$"
+        //{{
+        //    if (entity == null) return false;
+        //    if (authenticationService.State.User == null) return false;{string.Join("", Entity.Properties
+        //        .Where(a => a.IsStateManaged != null)
+        //        .Select(prop => @$"
+        //    {(prop.IsStateManaged!.CheckForNull ? $"if (authenticationService.State.{prop.IsStateManaged!.Name} == null) return false;" : "")}
+        //    entity.{prop.Name} = authenticationService.State.{prop.IsStateManaged!.Name}{(prop.IsStateManaged.UseValue ? ".Value" : "")};"))}
+        //    await db.{DbSet.Name}.AddAsync(entity, ct);
+        //    await db.SaveChangesAsync(ct);
+        //    return true;
+        //}}";
+        //    }
 
         var authenticated = Dto.Entity.IsAuthorize ? "authenticationService.State.User != null" : "true";
 

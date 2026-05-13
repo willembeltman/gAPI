@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk;
 
 public static class DbContextCollection<T>
     where T : class, new()

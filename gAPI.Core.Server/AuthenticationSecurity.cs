@@ -1,5 +1,5 @@
-﻿using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Dtos;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Server.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace gAPI.Core.Server;
@@ -8,7 +8,7 @@ public class AuthenticationSecurity<TUser, TStateDto>(
     IAuthenticationService<TUser, TStateDto> authentication,
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
     TimeProvider timeProvider,
-    ServerConfig config) 
+    ServerConfig config)
     : gAPI.Core.Interfaces.IAuthenticationSecurity
     where TUser : AuthUser
 {

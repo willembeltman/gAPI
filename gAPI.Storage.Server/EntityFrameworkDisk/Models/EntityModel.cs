@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Models;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Models;
 
 
 public class EntityModel

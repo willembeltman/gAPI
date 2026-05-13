@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Fabric.Server.Collections;
 using gAPI.Core.Ids;
+using gAPI.Fabric.Server.Collections;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 
@@ -28,7 +28,7 @@ public class FabricManager
         var fabricHost = new FabricHost(
             this,
             tcpClient,
-            Connections, 
+            Connections,
             console);
         fabricHost.Start();
 

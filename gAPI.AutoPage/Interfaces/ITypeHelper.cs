@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace gAPI.AutoPage.Interfaces;
+﻿namespace gAPI.AutoPage.Interfaces;
 
 public interface ITypeHelper : ISharedReference
 {

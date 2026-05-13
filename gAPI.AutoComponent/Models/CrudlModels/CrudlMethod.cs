@@ -10,7 +10,7 @@ public class CrudlMethod(
     Interface @interface,
     InterfaceMethod interfaceMethod,
     CrudlMethodTypeEnum crudlMethodType,
-    TypeHelper type) 
+    TypeHelper type)
     : ICrudlMethod
 {
     public CrudlContext Context { get; } = serviceContext;
@@ -40,7 +40,7 @@ public class CrudlMethod(
     public string? IsComponentResponseText => InterfaceMethod.IsComponentResponseText;
 
     TypeDigger? TypeDiggerInner { get; set; }
-    public TypeDigger TypeDigger 
+    public TypeDigger TypeDigger
         => TypeDiggerInner ??= new TypeDigger(Context.ServiceContext, Type.TypeSymbol, IsNullable);
 
     CrudlType? _ForeignType;

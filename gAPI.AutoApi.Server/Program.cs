@@ -3,7 +3,6 @@ using gAPI.AutoApiServer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -16,12 +15,12 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
 
             try
             {
@@ -29,7 +28,7 @@ public class Program : IIncrementalGenerator
                 var sharedReferences = new SharedReferences(allSymbols);
                 var serviceContext = new ServiceContext(allSymbols);
                 var serviceModelErrors = serviceContext.CheckForErrors();
-                var generator = new Generator(serviceContext, sharedReferences);  
+                var generator = new Generator(serviceContext, sharedReferences);
                 generator.Generate(spc);
 
                 if (serviceModelErrors.Count > 0)

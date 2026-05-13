@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Enums;
-using System;
 
 namespace gAPI.Core.Attributes;
 

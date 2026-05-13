@@ -1,5 +1,4 @@
-﻿using gAPI.AutoSseClient.Generators;
-using gAPI.AutoSseClient.Helpers;
+﻿using gAPI.AutoSseClient.Helpers;
 using Microsoft.CodeAnalysis;
 
 namespace gAPI.AutoSseClient.Models;
@@ -35,7 +34,7 @@ public class SharedReferences
         //InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         //InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
-        //ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.ServerConfig", allSymbols);
+        //ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerConfig", allSymbols);
         //SubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SubscribeDto", allSymbols);
         //UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.UnsubscribeDto", allSymbols);
         //ApiSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiSendRequestDto", allSymbols);
@@ -102,7 +101,7 @@ public class SharedReferences
     //public SharedReference ApiInvokeResponseDoneDto { get; }
     //public SharedReference InvokeResponseDoneDto { get; }
     //public SharedReference FrontendConfig { get;  }
-    public SharedReference SseManagerCollection { get;}
+    public SharedReference SseManagerCollection { get; }
     public SharedReference IClientConnection { get; }
     public SharedReference SseHostId { get; }
     public SharedReference SseManagerId { get; }

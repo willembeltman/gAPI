@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Interfaces;
-using gAPI.Core.Dtos;
+﻿using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,7 +15,7 @@ namespace gAPI.Core.Wss;
 public abstract class WssClientConnection : IWssClientConnection
 {
     public WssClientConnection(
-        IClientAuthenticatedHttpClient httpClient, 
+        IClientAuthenticatedHttpClient httpClient,
         IOptions<FrontendConfig> options)
     {
         HttpClient = httpClient;
@@ -217,7 +217,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 }
             }
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
             cts.Cancel();

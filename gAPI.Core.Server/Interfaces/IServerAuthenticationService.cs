@@ -1,5 +1,5 @@
-﻿using gAPI.Core.Server.Authentication;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Net;

@@ -1,8 +1,6 @@
-﻿using gAPI.Core.ServiceBus.Enums;
-
-namespace gAPI.Core.ServiceBus.Interfaces;
+﻿namespace gAPI.Core.ServiceBus.Interfaces;
 
 public interface IServiceBusSender
 {
-    Task SendAsync<TMessage>(ServiceBusReceiver bus, TMessage message, CancellationToken ct);
+    Task SendAsync<TMessage>(string bus, TMessage message, CancellationToken ct);
 }

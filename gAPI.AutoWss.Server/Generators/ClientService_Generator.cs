@@ -133,7 +133,8 @@ public class {Name}(
             var ___span = new Span<byte>(response.BinaryData);
             yield return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions)};
         }}
-    }}"; }))}
+    }}";
+}))}
 {string.Join("", Interface.Methods.Select(method => $@"
     public byte[] {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"
         {arg.ParameterType} {arg}"))})

@@ -1,7 +1,5 @@
 ﻿using gAPI.AutoWssServer.Helpers;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
 
 namespace gAPI.AutoWssServer.Models;
 
@@ -17,7 +15,7 @@ public class SharedReferences
         //SseHost = SharedReferenceFinder.Find("gAPI.Core.Server.Sse.SseHost", allSymbols);
         //WssService = SharedReferenceFinder.Find("gAPI.Sse.WssService", allSymbols);
         HubResult = SharedReferenceFinder.Find("gAPI.Core.Sse.HubResult", allSymbols);
-        HubResultT = new SharedReference("gAPI.Core.Sse.HubResultT"); 
+        HubResultT = new SharedReference("gAPI.Core.Sse.HubResultT");
         SseEvent = SharedReferenceFinder.Find("gAPI.Core.Sse.SseEvent", allSymbols);
 
         ConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ConnectionId", allSymbols);
@@ -32,7 +30,7 @@ public class SharedReferences
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
-        ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.ServerConfig", allSymbols);
+        ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerConfig", allSymbols);
         SubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SubscribeDto", allSymbols);
         UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.UnsubscribeDto", allSymbols);
         ApiSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiSendRequestDto", allSymbols);

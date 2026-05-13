@@ -160,8 +160,8 @@ public class {Name}(
         ? $@"
         await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(new {responseType}() {{ Success = true }});"
-        :   underlaying.IsBaseResponse || 
-            underlaying.IsBaseResponseT || 
+        : underlaying.IsBaseResponse ||
+            underlaying.IsBaseResponseT ||
             underlaying.IsBaseListResponseT
             ? $@"
         var response = await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Storage.Server.AutoComparer.Engine;
+﻿namespace gAPI.Storage.Server.AutoComparer.Engine;
 
 internal struct ComparerKey
 {

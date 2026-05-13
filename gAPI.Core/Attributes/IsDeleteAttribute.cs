@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Core.Attributes;
+﻿namespace gAPI.Core.Attributes;
 
 /// <summary>
 /// Markeert een methode als een "Delete"-operatie voor een entiteit.

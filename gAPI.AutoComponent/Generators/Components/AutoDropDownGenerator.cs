@@ -10,7 +10,7 @@ public class AutoDropDownGenerator : BaseGenerator
         ICrudlType crudlType,
         ISharedReference listDataSource,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         Context = context;
         DropDownGenerator = new DropDownGenerator(

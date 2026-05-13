@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Core.Server.Storage.Mock;
+﻿namespace gAPI.Core.Server.Storage.Mock;
 
 // Mock file data storage
 public class MockFileData

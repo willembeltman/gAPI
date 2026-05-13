@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.EntityDefinitions;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.EntityDefinitions;
 
 public static class EntityDefinitionCollection
 {

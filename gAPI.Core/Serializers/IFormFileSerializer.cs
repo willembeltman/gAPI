@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Net.Http.Headers;
 using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace gAPI.Core.Serializers;
 
@@ -56,7 +55,7 @@ public static class IFormFileSerializer
         var keyCount = ___reader.ReadInt32();
         for (int i = 0; i < keyCount; i++)
         {
-            var key = ___reader.ReadString();  
+            var key = ___reader.ReadString();
             var value = ___reader.ReadString();
             obj.Headers[key] = new StringValues(value);
         }
@@ -130,7 +129,7 @@ public static class IFormFileSerializer
         //PrimitivesSpanSerializer.WriteUShort(ref span, ref offset, Magic); // Magic string `GA` => it's a gAPI stream
         offset += 4;
         //PrimitivesSpanSerializer.WriteUInt(ref span, ref offset, TypeId); // Type identifier
-        offset += 4; 
+        offset += 4;
         //PrimitivesSpanSerializer.WriteUInt(ref span, ref offset, SchemaHash); // Schema identifier
 
         offset += 4;

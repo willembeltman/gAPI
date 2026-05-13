@@ -1,6 +1,4 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.Core.Enums;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Text;
 
 namespace gAPI.Core.Serializers;

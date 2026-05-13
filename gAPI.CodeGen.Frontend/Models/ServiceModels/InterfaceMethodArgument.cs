@@ -1,6 +1,6 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.AutoComponent.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.Core.Attributes;
 using System.Reflection;
 
 namespace gAPI.CodeGen.Frontend.Models.ServiceModels;

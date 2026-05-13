@@ -28,11 +28,11 @@ public class Generator
             .ToArray();
 
         IClientContext = new IClientContext_Generator(this);
-        
+
         ClientContext = new ClientContext_Generator(this);
-       
+
         AddAutoSseExtension = new AddAutoSseExtention_Generator(this);
-      
+
     }
 
     public ServiceContext ServiceContext { get; }
@@ -65,14 +65,14 @@ public class Generator
         {
             iClientHandlerContext.GenerateCode();
             spc.AddSource(
-                Path.Combine(iClientHandlerContext.Directory, iClientHandlerContext.FileName), 
+                Path.Combine(iClientHandlerContext.Directory, iClientHandlerContext.FileName),
                 SourceText.From(iClientHandlerContext.Code, Encoding.UTF8));
         }
         foreach (var clientHandlerContext in ClientContexts)
         {
             clientHandlerContext.GenerateCode();
             spc.AddSource(
-                Path.Combine(clientHandlerContext.Directory, clientHandlerContext.FileName), 
+                Path.Combine(clientHandlerContext.Directory, clientHandlerContext.FileName),
                 SourceText.From(clientHandlerContext.Code, Encoding.UTF8));
         }
 

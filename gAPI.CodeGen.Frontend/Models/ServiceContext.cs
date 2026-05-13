@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.CodeGen.Frontend.Helpers;
+﻿using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
+using gAPI.Core.Attributes;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 

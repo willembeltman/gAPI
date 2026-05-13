@@ -94,7 +94,7 @@ public class FindCustomSerializer
             .ToDictionary(r => r.Type, SymbolEqualityComparer.Default);
 
         var customSpanSerializers = serializerWriteClasses
-            .Select(w => readerByType.ContainsKey(w.Type) ? w : 
+            .Select(w => readerByType.ContainsKey(w.Type) ? w :
                 throw new Exception($"Cannot find IsSpanSerializerRead method for type {w.Type}"))
             .Select(w => lengthByType.ContainsKey(w.Type) ? w :
                 throw new Exception($"Cannot find IsSpanSerializerLength method for type {w.Type}"))

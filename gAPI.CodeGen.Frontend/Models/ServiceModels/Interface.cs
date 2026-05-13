@@ -1,6 +1,6 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.AutoComponent.Interfaces;
+﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.Core.Attributes;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 
@@ -17,7 +17,7 @@ public class Interface : ISharedReference
         Namespace = Type.Namespace;
 
         Title = Name;
-        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);        
+        Title = ServiceNameHelper.RemoveInterfacePrefix(Title);
         var generateApiAttr = type
             .GetCustomAttribute<GenerateApiAttribute>();
         if (generateApiAttr != null)

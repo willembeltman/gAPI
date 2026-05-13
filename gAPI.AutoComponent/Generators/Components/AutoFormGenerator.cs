@@ -1,7 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.AutoComponent.Models;
 using gAPI.SimpleRazorCompiler;
-using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
 

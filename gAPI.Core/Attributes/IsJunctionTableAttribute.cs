@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Core.Attributes;
+﻿namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class)]
 public class IsJunctionTableAttribute(Type typeLeft, Type typeRight) : Attribute

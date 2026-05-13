@@ -1,5 +1,4 @@
-﻿using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
-using gAPI.CodeGen.Backend.Models.Entities;
+﻿using gAPI.CodeGen.Backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace gAPI.CodeGen.Backend.Models;
@@ -35,7 +34,7 @@ public class DbContext : SharedReference
 
         var stateObjects = new List<StateObject>();
         StateUser = new StateObject(UserEntity, stateObjects);
-        StateObjects = [..stateObjects];
+        StateObjects = [.. stateObjects];
     }
 
     public Type Type { get; }

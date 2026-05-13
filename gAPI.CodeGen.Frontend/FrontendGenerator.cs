@@ -74,14 +74,14 @@ public class FrontendGenerator
 
         PageIndexes = [.. Pages
             .GroupBy(a => a.RoutePath)
-            .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];            
+            .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
 
         Crudls = [.. CrudlContext.Types
             .Select(crudl => new CrudlGenerator(
                 crudl,
-                Config, 
+                Config,
                 SharedReferences,
-                ServiceContext, 
+                ServiceContext,
                 Imports,
                 SharedReferences.ItemDataSource,
                 SharedReferences.ListDataSource,

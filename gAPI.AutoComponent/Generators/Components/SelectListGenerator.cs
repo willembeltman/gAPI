@@ -13,7 +13,7 @@ public class SelectListGenerator : BaseGenerator
         ISharedReference baseListResponse,
         IBaseGenerator imports,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         CrudlType = dto;
         ItemDataSource = itemDataSource;
@@ -263,7 +263,7 @@ else
         if (OnSelect.HasDelegate)
             await OnSelect.InvokeAsync(item);
     }}
-    {string.Join("", orderableProps.Select(p =>$@"
+    {string.Join("", orderableProps.Select(p => $@"
     private async Task OrderBy{p.Name}Clicked()
     {{
         if (DataSource != null)

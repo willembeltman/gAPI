@@ -1,9 +1,6 @@
 ﻿using gAPI.AutoComponent.Helpers;
 using gAPI.AutoComponent.Interfaces;
-using gAPI.SimpleRazorCompiler;
-using System;
 using System.Linq;
-using System.Reflection;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
@@ -14,7 +11,7 @@ public class GridEditGenerator : BaseGenerator
         ISharedReference listDataSource,
         IBaseGenerator imports,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         CrudlType = dto;
         ListDataSource = listDataSource;

@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Extensions;
-using Microsoft.AspNetCore.WebUtilities;
+﻿using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using System.Security.Cryptography;
 

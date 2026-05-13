@@ -4,8 +4,8 @@ using Microsoft.CodeAnalysis;
 namespace gAPI.AutoComponent.Models.ServiceModels;
 
 public class TypeHelperPropertyAttribute(
-    TypeHelperProperty parent, 
-    AttributeData attr, 
+    TypeHelperProperty parent,
+    AttributeData attr,
     INamedTypeSymbol named,
     ITypeSymbol[] history)
     : ITypeHelperPropertyAttribute

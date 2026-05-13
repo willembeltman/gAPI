@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.DbContextExtenders;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.DbContextExtenders;
 
 public class DbContextExtender
 {

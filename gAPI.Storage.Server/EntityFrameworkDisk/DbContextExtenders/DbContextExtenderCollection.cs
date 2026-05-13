@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.DbContextExtenders;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.DbContextExtenders;
 
 public static class DbContextExtenderCollection
 {

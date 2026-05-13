@@ -9,5 +9,5 @@ public enum WssClientToServerMessageEnum
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
-    Log 
+    Log
 }

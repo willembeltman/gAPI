@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
 
 
 public class DownloadResponse : Response

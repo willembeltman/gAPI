@@ -1,5 +1,5 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.CodeGen.Backend.Helpers;
+﻿using gAPI.CodeGen.Backend.Helpers;
+using gAPI.Core.Attributes;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 

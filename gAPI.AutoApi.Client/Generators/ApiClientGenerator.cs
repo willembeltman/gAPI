@@ -93,7 +93,8 @@ public class {Name}(
             queryItems.Add($""{a.Name}={{{a.Name}}}"");"))}"
                 : string.Join(
             "",
-            args.Select(arg => {
+            args.Select(arg =>
+            {
                 Reg(arg.ParameterType.Type);
                 var code = PropertyHelper.GenerateMultipartFormDataContentWriteCode(
                     arg.ParameterType.Type,

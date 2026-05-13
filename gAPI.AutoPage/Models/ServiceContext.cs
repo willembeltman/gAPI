@@ -14,7 +14,7 @@ public class ServiceContext
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
                 (
-                    t.HasAttribute("gAPI.Core.Attributes.GenerateApiAttribute") || 
+                    t.HasAttribute("gAPI.Core.Attributes.GenerateApiAttribute") ||
                     t.HasAttribute("gAPI.Core.Attributes.GenerateMinimalApiAttribute")
                 ))
             .ToArray();

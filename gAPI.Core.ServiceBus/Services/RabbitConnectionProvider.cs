@@ -1,6 +1,6 @@
-﻿using RabbitMQ.Client;
+﻿using gAPI.Core.ServiceBus.Interfaces;
 using Microsoft.Extensions.Configuration;
-using gAPI.Core.ServiceBus.Interfaces;
+using RabbitMQ.Client;
 
 namespace gAPI.Core.ServiceBus.Services;
 

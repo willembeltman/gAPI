@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 
 namespace gAPI.Core.Dtos;
 

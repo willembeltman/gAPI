@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Core.Attributes;
+﻿namespace gAPI.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Property)]
 public class IsStateManagedAttribute(string stateProperty, bool checkForNull = false, bool useValue = false, bool isString = false) : Attribute

@@ -1,8 +1,5 @@
 ﻿using gAPI.Storage.Server.AutoComparer.Helpers;
 using gAPI.Storage.Server.Helpers;
-using Microsoft.CodeAnalysis;
-using System;
-using System.Linq;
 
 namespace gAPI.Storage.Server.AutoComparer.Engine;
 
@@ -33,7 +30,7 @@ internal static class ComparerFactory<TIn, TOut>
 
         Console.WriteLine($"{DateTime.Now:t} Generated '{className}'");
 
-        return instance;    
+        return instance;
     }
 
     private static string GenerateClass(Type typeIn, Type typeOut, string className, string @namespace, string mapMethodName)

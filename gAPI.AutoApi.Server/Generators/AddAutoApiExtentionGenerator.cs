@@ -154,71 +154,71 @@ public static class {Name}
 
 
 
-//        Code = $@"{GetNamespacesCode()}
-//namespace {Namespace};
+        //        Code = $@"{GetNamespacesCode()}
+        //namespace {Namespace};
 
-//public static class {Name}
-//{{
-//    public static void AddAutoApi<TInterface, TImplementation>(this IServiceCollection services, string frontendUrl, params Assembly[] assembliesToScan)
-//        where TInterface : class, gAPI.Core.Interfaces.IServerAuthenticationService
-//        where TImplementation : class, gAPI.Core.Interfaces.IServerAuthenticationService, TInterface
-//    {{
-//        // JSON standaard op invariant zetten
-//        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-//        {{
-//            options.SerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-//            options.SerializerOptions.PropertyNamingPolicy = null;
-//            options.SerializerOptions.WriteIndented = false;
-//        }});
+        //public static class {Name}
+        //{{
+        //    public static void AddAutoApi<TInterface, TImplementation>(this IServiceCollection services, string frontendUrl, params Assembly[] assembliesToScan)
+        //        where TInterface : class, gAPI.Core.Interfaces.IServerAuthenticationService
+        //        where TImplementation : class, gAPI.Core.Interfaces.IServerAuthenticationService, TInterface
+        //    {{
+        //        // JSON standaard op invariant zetten
+        //        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+        //        {{
+        //            options.SerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        //            options.SerializerOptions.PropertyNamingPolicy = null;
+        //            options.SerializerOptions.WriteIndented = false;
+        //        }});
 
-//        // Add normal asp.net core controllers
-//        services.AddControllers();
+        //        // Add normal asp.net core controllers
+        //        services.AddControllers();
 
-//        // Http context accessor for gAPI
-//        services.AddHttpContextAccessor();
+        //        // Http context accessor for gAPI
+        //        services.AddHttpContextAccessor();
 
-//        // Remaining services
-//        services.AddAutoApiServices();
+        //        // Remaining services
+        //        services.AddAutoApiServices();
 
-//        // Add Cors
-//        services.AddCors(options =>
-//        {{
-//            options.AddPolicy(""AllowSpecificOrigin"", policy =>
-//            {{
-//                policy.WithOrigins(frontendUrl)
-//                      .AllowAnyMethod()
-//                      .AllowAnyHeader()
-//                      .AllowCredentials();
-//            }});
-//        }});
+        //        // Add Cors
+        //        services.AddCors(options =>
+        //        {{
+        //            options.AddPolicy(""AllowSpecificOrigin"", policy =>
+        //            {{
+        //                policy.WithOrigins(frontendUrl)
+        //                      .AllowAnyMethod()
+        //                      .AllowAnyHeader()
+        //                      .AllowCredentials();
+        //            }});
+        //        }});
 
-//        // Add gAPI server authentication 
-//        services.AddScoped<TImplementation>() ;
-//        services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>())   ;
-//        services.AddScoped<gAPI.Core.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
-//        services.AddAuthentication(""gAPI"")
-//                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Authentication.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
-//        services.AddAuthorization();
+        //        // Add gAPI server authentication 
+        //        services.AddScoped<TImplementation>() ;
+        //        services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>())   ;
+        //        services.AddScoped<gAPI.Core.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<TImplementation>());
+        //        services.AddAuthentication(""gAPI"")
+        //                        .AddScheme<AuthenticationSchemeOptions, BSD.Core.Authentication.ServerAuthenticationHandler>(""gAPI"", _ => {{ }});
+        //        services.AddAuthorization();
 
-//    }}
+        //    }}
 
-//    public static void MapAutoApi(this WebApplication app)
-//    {{
-//        app.UseForwardedHeaders(new ForwardedHeadersOptions
-//        {{
-//            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-//        }});
+        //    public static void MapAutoApi(this WebApplication app)
+        //    {{
+        //        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        //        {{
+        //            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        //        }});
 
-//        app.UseCors(""AllowSpecificOrigin"");
+        //        app.UseCors(""AllowSpecificOrigin"");
 
-//        app.MapControllers();
+        //        app.MapControllers();
 
-//        app.UseMiddleware<BSD.Core.Authentication.ServerAuthenticationMiddleware>();
-//        app.UseAuthentication();
-//        app.UseAuthorization();
-//    }}
-//}}
-//";
+        //        app.UseMiddleware<BSD.Core.Authentication.ServerAuthenticationMiddleware>();
+        //        app.UseAuthentication();
+        //        app.UseAuthorization();
+        //    }}
+        //}}
+        //";
 
     }
 }

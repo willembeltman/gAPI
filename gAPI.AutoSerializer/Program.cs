@@ -16,17 +16,17 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
             try
             {
                 var allSymbols = Helper.GetAllTypes(compilation.GlobalNamespace).ToArray();
-                
-                var customSerializers = FindCustomSerializer.GetAllCustomSerializers(allSymbols); 
+
+                var customSerializers = FindCustomSerializer.GetAllCustomSerializers(allSymbols);
                 var customSpanSerializers = FindCustomSerializer.GetAllCustomSpanSerializers(allSymbols);
                 var customComparers = FindCustomSerializer.GetAllCustomComparers(allSymbols);
                 var customCreateCopys = FindCustomSerializer.GetAllCustomCreateCopys(allSymbols);

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace gAPI.Storage.Server.EntityFrameworkDisk.Interfaces;
+﻿namespace gAPI.Storage.Server.EntityFrameworkDisk.Interfaces;
 
 public interface IKeyedSet<T> : IKeyedSet
 {

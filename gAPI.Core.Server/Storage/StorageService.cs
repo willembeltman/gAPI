@@ -72,7 +72,7 @@ public class StorageService : IStorageService
     {
         var remoteConfig = new StorageServerConfig();
 
-        if (parts.TryGetValue("UrlTimeout", out var urlTimeoutString)) 
+        if (parts.TryGetValue("UrlTimeout", out var urlTimeoutString))
             if (int.TryParse(urlTimeoutString, out var urlTimeout))
                 remoteConfig.UrlTimeoutSeconds = urlTimeout;
 

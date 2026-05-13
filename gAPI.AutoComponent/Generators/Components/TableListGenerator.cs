@@ -13,7 +13,7 @@ public class TableListGenerator : BaseGenerator
         ISharedReference baseListResponse,
         IBaseGenerator imports,
         string directory,
-        string @namespace) 
+        string @namespace)
     {
         CrudlType = dto;
         ItemDataSource = itemDataSource;

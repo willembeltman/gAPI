@@ -15,9 +15,9 @@ namespace gAPI.AutoPage;
 public class Generator : IContext
 {
     public Generator(
-        SharedReferences sharedReferences, 
+        SharedReferences sharedReferences,
         ServiceContext serviceContext,
-        CrudlContext crudlContext, 
+        CrudlContext crudlContext,
         SourceProductionContext spc)
     {
         SharedReferences = sharedReferences;
@@ -38,7 +38,7 @@ public class Generator : IContext
         RootPages = [.. pageMethods.Where(a => a.RoutePath == "/")];
 
         PageIndexes = [.. Pages
-            .GroupBy(a => a.RoutePath) 
+            .GroupBy(a => a.RoutePath)
             .Select(a => new AutoIndexGenerator(this, a.Key, [.. a]))];
 
         NavMenuAuthenticated = new AutoNavMenuAuthenticatedGenerator(this);

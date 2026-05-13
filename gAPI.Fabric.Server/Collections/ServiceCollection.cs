@@ -1,5 +1,5 @@
-﻿using gAPI.Fabric.Server.Models;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
+using gAPI.Fabric.Server.Models;
 using System.Collections;
 using System.Collections.Concurrent;
 
@@ -17,7 +17,7 @@ public class ServiceCollection : IEnumerable<Service>
     public Service this[ServiceId serviceId]
     {
         get => Services.GetOrAdd(
-            serviceId, 
+            serviceId,
             serviceId => new Service(serviceId, FabricManager));
         set => Services[serviceId] = value;
     }

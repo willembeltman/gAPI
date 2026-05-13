@@ -2,7 +2,7 @@
 
 namespace gAPI.Core.Server;
 
-public interface IAuthenticationService<TUser, TStateDto> 
+public interface IAuthenticationService<TUser, TStateDto>
     : gAPI.Core.Interfaces.IServerAuthenticationService
     where TUser : AuthUser
 {

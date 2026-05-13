@@ -1,12 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
 using System.Linq;
 
 namespace gAPI.AutoSseServer.Models;
 
 public class TypeHelper : SharedReference
 {
-    public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false) 
+    public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
     {
         Type = typeSymbol;
         DataModel = dataModel;
