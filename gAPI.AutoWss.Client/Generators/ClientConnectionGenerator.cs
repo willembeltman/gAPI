@@ -97,8 +97,8 @@ public class {Name}
 {{
     public {Name}(
         {IClientAuthenticatedHttpClient} httpClient, 
-        IOptions<{FrontendConfig}> options)
-        : base(httpClient, options)
+        {FrontendConfig} frontendConfig)
+        : base(httpClient, frontendConfig)
     {{
         ___Logger = ((IWssLoggerFactory)this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}

@@ -36,7 +36,7 @@ public class ServiceContext
             .ToArray();
 
         MinimalApiInterfaces = minimalApiInterfaceSymbols
-            .Where(a => a.ToDisplayString() != "gAPI.Core.Interfaces.IAccountService")
+            //.Where(a => a.ToDisplayString() != "gAPI.Core.Interfaces.IAccountService")
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
             .ToArray();
     }

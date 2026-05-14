@@ -21,6 +21,7 @@ public class AutoWssExtensionGenerator : BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
+    public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
 
     public override void GenerateCode()
     {
@@ -29,6 +30,7 @@ public class AutoWssExtensionGenerator : BaseGenerator
         Reg(IClientConnection);
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
+        Reg(FrontendConfig);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -46,18 +48,28 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress)
+    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
     {{
         // Set up authorization core
         services.AddAuthorizationCore();
 
+        // Set up configuration
+        var config = new {FrontendConfig}()
+        {{
+            ApiBackendUrl = apiAddress,
+            WssBackendUrl = wssAddress
+        }};
+        services.AddSingleton(config);
+
+        // Connection stuff
         services.AddScoped<{ClientConnection}>();
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
 
-        // Services{string.Join("", Context.Apis.Select(api => $@"
+        // Api clients{string.Join("", Context.Apis.Select(api => $@"
         services.AddScoped<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}
-{string.Join("", Context.MinimalApis.Select(api => $@"
+        
+        // Minimal api clients{string.Join("", Context.MinimalApis.Select(api => $@"
         services.AddScoped<{api.Interface}, {api}>();"))}
 
         return services;

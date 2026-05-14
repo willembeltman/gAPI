@@ -4,7 +4,6 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
@@ -16,11 +15,11 @@ public abstract class WssClientConnection : IWssClientConnection
 {
     public WssClientConnection(
         IClientAuthenticatedHttpClient httpClient,
-        IOptions<FrontendConfig> options)
+        FrontendConfig frontendConfig)
     {
         HttpClient = httpClient;
         HttpClient.OnStateHasChanged += HttpClient_OnStateHasChanged;
-        FrontendConfig = options.Value;
+        FrontendConfig = frontendConfig;
         Logger = ((IWssLoggerFactory)this).CreateLogger<WssClientConnection>();
     }
 

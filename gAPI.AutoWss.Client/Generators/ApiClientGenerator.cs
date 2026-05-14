@@ -92,8 +92,8 @@ public sealed class {Name}(
         {arg.ParameterType} {arg}" : $@"
         {arg.ParameterType} {arg} = default"))})
     {{
-        if (___clientConnection.Initialized == false)
-            throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
@@ -103,7 +103,7 @@ public sealed class {Name}(
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 
-        await ___clientConnection.TryConnectAsync(___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         await ___clientConnection.Send_SendRequest_ToServerAsync(new {ApiSendRequestDto}()
         {{
@@ -124,8 +124,8 @@ public sealed class {Name}(
         {arg.ParameterType} {arg}" : $@"
         {arg.ParameterType} {arg} = default"))})
     {{
-        if (___clientConnection.Initialized == false)
-            throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
@@ -164,7 +164,7 @@ public sealed class {Name}(
             }}
         }}, ___activityCts.Token);
 
-        await ___clientConnection.TryConnectAsync(___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
         await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {ApiInvokeRequestDto}()
         {{
             RequestId = ___requestId,
@@ -202,8 +202,8 @@ public sealed class {Name}(
         {arg.ParameterType} {arg}" : $@"
         [EnumeratorCancellation] {arg.ParameterType} {arg} = default"))})
     {{
-        if (___clientConnection.Initialized == false)
-            throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception(""Not initialized, please wait or contact tech support if you already waited."");
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
@@ -243,7 +243,7 @@ public sealed class {Name}(
             }}
         }}, ___activityCts.Token);
 
-        await ___clientConnection.TryConnectAsync(___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
         await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {ApiInvokeRequestDto}()
         {{
             RequestId = ___requestId,
