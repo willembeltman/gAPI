@@ -1,7 +1,7 @@
 ﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
 
 
-public class SaveResponse : Response
+public class AppendResponse : Response
 {
     public long Length { get; set; }
     public string? EntityFileName { get; set; }

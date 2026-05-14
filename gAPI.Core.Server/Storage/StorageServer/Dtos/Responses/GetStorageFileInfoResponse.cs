@@ -33,7 +33,6 @@ public class GetStorageFileInfoResponse : Response
         }
     }
 
-    public string? Sha256 { get; set; }
     public long? Length { get; set; }
     public string? EntityFileName { get; set; }
 }

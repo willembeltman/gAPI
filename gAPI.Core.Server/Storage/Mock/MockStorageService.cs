@@ -4,21 +4,16 @@ using System.Collections.Concurrent;
 #nullable enable
 namespace gAPI.Core.Server.Storage.Mock;
 
-public class MockStorageService : IStorageService
+public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageService
 {
-    private readonly MockStorageConfig Config;
+    private readonly MockStorageConfig Config = config.Value;
     private static readonly ConcurrentDictionary<string, MockFileData> MockStorage = new();
 
-    public MockStorageService(IOptions<MockStorageConfig> config)
-    {
-        Config = config.Value;
-    }
-
-    private string GetFileKey(IStorageFile storageFile)
+    private static string GetFileKey(IStorageFile storageFile)
     {
         return $"{storageFile.GetType().Name}/{storageFile.Id}";
     }
-    private string GetFileKey(string type, string id)
+    private static string GetFileKey(string type, string id)
     {
         return $"{type}/{id}";
     }
@@ -36,7 +31,7 @@ public class MockStorageService : IStorageService
             throw new ArgumentException(
                 "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
-        await Task.Delay(Config.SimulateLatencyMs); // Simuleer netwerk latency
+        await Task.Delay(Config.SimulateLatencyMs, ct); // Simuleer netwerk latency
 
         var fileKey = GetFileKey(type, id);
 
@@ -51,7 +46,7 @@ public class MockStorageService : IStorageService
             throw new ArgumentException(
                 "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
-        await Task.Delay(Config.SimulateLatencyMs); // Simuleer netwerk latency
+        await Task.Delay(Config.SimulateLatencyMs, ct); // Simuleer netwerk latency
 
         var fileKey = GetFileKey(storageFile);
 
@@ -104,4 +99,18 @@ public class MockStorageService : IStorageService
         return deleted;
     }
 
+    public Task<string?> AppendStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> AppendStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> SaveStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -30,6 +30,16 @@ public class StorageController(LocalStorageService storageService) : ControllerB
     }
 
     [HttpPost]
+    public AppendResponse AppendStorageFile([FromForm] AppendRequest model, IFormFile file, CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+            return new AppendResponse { Success = false, Message = "No file uploaded" };
+
+        var stream = file.OpenReadStream();
+        return storageService.AppendStorageFile(model, stream, ct);
+    }
+
+    [HttpPost]
     public DeleteResponse DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
         return storageService.DeleteStorageFile(model, ct);

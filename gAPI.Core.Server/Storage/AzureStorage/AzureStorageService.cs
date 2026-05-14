@@ -25,12 +25,12 @@ public class AzureStorageService : IStorageService
         BlobServiceClient = new BlobServiceClient(Config.ConnectionString);
     }
 
-    private string GetBlobName(IStorageFile storageFile)
+    private static string GetBlobName(IStorageFile storageFile)
     {
         // Gebruik TypeName en Id voor unieke blob naam
         return $"{storageFile.GetType().Name}/{storageFile.Id}";
     }
-    private string GetBlobName(string type, string id)
+    private static string GetBlobName(string type, string id)
     {
         // Gebruik TypeName en Id voor unieke blob naam
         return $"{type}/{id}";
@@ -137,7 +137,7 @@ public class AzureStorageService : IStorageService
             }
         };
 
-        var response = await blobClient.UploadAsync(stream, uploadOptions, ct);
+        await blobClient.UploadAsync(stream, uploadOptions, ct);
 
         // Genereer URL voor direct gebruik
         return await GetStorageFileUrlAsync(storageFile, ct);
@@ -160,4 +160,18 @@ public class AzureStorageService : IStorageService
         return response.Value;
     }
 
+    public Task<string?> AppendStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> AppendStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> SaveStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        throw new NotImplementedException();
+    }
 }

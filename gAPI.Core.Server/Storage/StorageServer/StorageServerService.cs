@@ -10,8 +10,8 @@ namespace gAPI.Core.Server.Storage.StorageServer;
 
 public class StorageServerService : IStorageService
 {
-    private record StorageFileCacheKey(string id, string type);
-    private record StorageFileCacheValue(string? url, DateTimeOffset created);
+    private record StorageFileCacheKey(string Id, string Type);
+    private record StorageFileCacheValue(string? Url, DateTimeOffset Created);
 
     private readonly SemaphoreSlim _authLock = new(1, 1);
     private readonly string ServerUrl;
@@ -49,16 +49,16 @@ public class StorageServerService : IStorageService
 
         var key = new StorageFileCacheKey(id, type);
         return UrlCache.AddOrUpdate(key,
-            (StorageFileCacheKey key) =>
+            key =>
             {
                 AuthenticateHttpClient(ct).GetAwaiter().GetResult();
                 return Update(key);
             },
-            (StorageFileCacheKey key, StorageFileCacheValue value) =>
+            (key, value) =>
             {
-                if (value.created > DateTime.GetUtcNow().AddSeconds(-Config.Value.UrlTimeoutSeconds)) return value;
+                if (value.Created > DateTime.GetUtcNow().AddSeconds(-Config.Value.UrlTimeoutSeconds)) return value;
                 return Update(key);
-            }).url;
+            }).Url;
     }
 
     public async Task<string?> SaveStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
@@ -73,14 +73,14 @@ public class StorageServerService : IStorageService
             throw new ArgumentException(
                 $"Cannot use storage file server for entities without StorageMimeType filled.");
 
-        await AuthenticateHttpClient(ct);
-
         var storageFileTypeName = storageFile.GetType().Name;
         var storageFileId = storageFile.Id;
         return await SaveStorageFileAsync(storageFileTypeName, storageFileId, fileName, mimeType, stream, ct, allowOverwrite);
     }
     public async Task<string?> SaveStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
     {
+        await AuthenticateHttpClient(ct);
+
         var content = new MultipartFormDataContent();
         var saveRequest = new SaveRequest
         {
@@ -108,9 +108,69 @@ public class StorageServerService : IStorageService
         using var response = await HttpClient.PostAsync("/Storage/SaveStorageFile", content);
         response.EnsureSuccessStatusCode();
 
-        var model = await response.Content.ReadFromJsonAsync<SaveResponse>();
-        if (model == null)
-            throw new Exception("Could not cast response from file server");
+        var model = await response.Content.ReadFromJsonAsync<SaveResponse>() 
+            ?? throw new Exception("Could not cast response from file server");
+        if (!model.Success)
+            throw new Exception(model.Message);
+        if (model.Url == null)
+            throw new Exception("Url is empty");
+        if (!Uri.IsWellFormedUriString(model.Url, UriKind.Absolute))
+            throw new Exception("getExternalUrlResponse.Url is not set or is not a valid URL. Please provide a valid server URL.");
+
+        var key = new StorageFileCacheKey(saveRequest.Id, saveRequest.TypeName);
+        UrlCache[key] = new StorageFileCacheValue(model.Url, DateTime.GetUtcNow());
+        return model.Url;
+    }
+
+    public async Task<string?> AppendStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        if (string.IsNullOrWhiteSpace(storageFile.Id) || storageFile.Id == "0")
+            throw new ArgumentException(
+                $"Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext jet.");
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException(
+                $"Cannot use storage file server for entities without StorageFileName filled.");
+        if (string.IsNullOrWhiteSpace(mimeType))
+            throw new ArgumentException(
+                $"Cannot use storage file server for entities without StorageMimeType filled.");
+
+        var storageFileTypeName = storageFile.GetType().Name;
+        var storageFileId = storageFile.Id;
+        return await AppendStorageFileAsync(storageFileTypeName, storageFileId, fileName, mimeType, stream, ct, allowOverwrite);
+    }
+    public async Task<string?> AppendStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true)
+    {
+        await AuthenticateHttpClient(ct);
+
+        var content = new MultipartFormDataContent();
+        var saveRequest = new AppendRequest
+        {
+            TypeName = storageFileTypeName,
+            Id = storageFileId,
+            FileName = fileName,
+            MimeType = mimeType,
+            AllowCreate = allowCreate,
+            BaseUrl = ServerUrl
+        };
+
+        // Voeg JSON-velden als string toe
+        content.Add(new StringContent(saveRequest.Id.ToString()), nameof(AppendRequest.Id));
+        content.Add(new StringContent(saveRequest.FileName), nameof(AppendRequest.FileName));
+        content.Add(new StringContent(saveRequest.TypeName), nameof(AppendRequest.TypeName));
+        content.Add(new StringContent(saveRequest.MimeType), nameof(AppendRequest.MimeType));
+        content.Add(new StringContent(saveRequest.BaseUrl), nameof(AppendRequest.BaseUrl));
+        content.Add(new StringContent(saveRequest.AllowCreate ? "true" : "false"), nameof(AppendRequest.AllowCreate));
+
+        // Voeg bestand toe
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+        content.Add(fileContent, "file", fileName);
+
+        using var response = await HttpClient.PostAsync("/Storage/AppendStorageFile", content);
+        response.EnsureSuccessStatusCode();
+
+        var model = await response.Content.ReadFromJsonAsync<AppendResponse>()
+            ?? throw new Exception("Could not cast response from file server");
         if (!model.Success)
             throw new Exception(model.Message);
         if (model.Url == null)
@@ -144,12 +204,11 @@ public class StorageServerService : IStorageService
             BaseUrl = ServerUrl
         };
 
-        using var responseMessage = await HttpClient.PostAsJsonAsync("/Storage/DeleteStorageFile", request);
+        using var responseMessage = await HttpClient.PostAsJsonAsync("/Storage/DeleteStorageFile", request, ct);
         responseMessage.EnsureSuccessStatusCode();
 
-        var response = await responseMessage.Content.ReadFromJsonAsync<DeleteResponse>();
-        if (response == null)
-            throw new Exception("Could not cast response from file server");
+        var response = await responseMessage.Content.ReadFromJsonAsync<DeleteResponse>(ct)
+            ?? throw new Exception("Could not cast response from file server");
         if (throwIfNotFound && response.Success == false)
             throw new Exception(response.Message);
 
@@ -214,13 +273,11 @@ public class StorageServerService : IStorageService
 
         //Console.WriteLine($"StorageServerService.AuthenticateHttpClient UserName={credential.UserName}");
 
-        using var response = await HttpClient.PostAsJsonAsync("/Auth/Login", loginRequest);
+        using var response = await HttpClient.PostAsJsonAsync("/Auth/Login", loginRequest, ct);
         response.EnsureSuccessStatusCode();
 
-        var loginResult = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        var jwtToken = loginResult?.Token;
-        if (jwtToken == null) throw new Exception("Kan geen token ophalen");
-
+        var loginResult = await response.Content.ReadFromJsonAsync<LoginResponse>(ct);
+        var jwtToken = (loginResult?.Token) ?? throw new Exception("Kan geen token ophalen");
         HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
     }
 
@@ -238,17 +295,15 @@ public class StorageServerService : IStorageService
     {
         var request = new GetStorageFileInfoRequest()
         {
-            Id = key.id,
-            TypeName = key.type,
+            Id = key.Id,
+            TypeName = key.Type,
             BaseUrl = ServerUrl
         };
 
         using var response = HttpClient.PostAsJsonAsync("/Storage/GetStorageFileInfo", request).GetAwaiter().GetResult();
         response.EnsureSuccessStatusCode();
 
-        var model = response.Content.ReadFromJsonAsync<GetStorageFileInfoResponse>().GetAwaiter().GetResult();
-        if (model == null)
-            throw new Exception("Could not cast response from file server");
+        var model = response.Content.ReadFromJsonAsync<GetStorageFileInfoResponse>().GetAwaiter().GetResult() ?? throw new Exception("Could not cast response from file server");
         if (!string.IsNullOrWhiteSpace(model.Url) && !Uri.IsWellFormedUriString(model.Url, UriKind.Absolute))
             throw new Exception("getExternalUrlResponse.Url is not set or is not a valid URL. Please provide a valid server URL.");
 

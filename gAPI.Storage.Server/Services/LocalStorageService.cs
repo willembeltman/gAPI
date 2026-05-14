@@ -68,7 +68,6 @@ public class LocalStorageService(ApplicationDbContext db)
             MimeType = storageFile.MimeType,
             EntityFileName = storageFile.EntityFileName,
             Length = storageFile.Length,
-            Sha256 = storageFile.Sha256,
             Token = token.Token,
         };
     }
@@ -131,8 +130,7 @@ public class LocalStorageService(ApplicationDbContext db)
             StorageFolderId = storageFolder.Id,
             FileName = fileName,
             Length = length,
-            MimeType = model.MimeType,
-            Sha256 = sha256
+            MimeType = model.MimeType
         };
         db.StorageFiles.Add(storageFile);
         db.SaveChanges();
@@ -154,8 +152,85 @@ public class LocalStorageService(ApplicationDbContext db)
             EntityFileName = storageFile.EntityFileName,
             FileName = storageFile.FileName,
             Length = storageFile.Length,
-            MimeType = storageFile.MimeType,
-            Sha256 = storageFile.Sha256
+            MimeType = storageFile.MimeType
+        };
+    }
+    public AppendResponse AppendStorageFile(AppendRequest model, Stream inputStream, CancellationToken ct)
+    {
+        if (!Directory.Exists) Directory.Create();
+
+        var fileName = $"{model.Id}{model.FileName}";
+        var directoryFullName = Path.Combine(Directory.FullName, model.TypeName);
+        var directoryInfo = new DirectoryInfo(directoryFullName);
+        if (!directoryInfo.Exists) directoryInfo.Create();
+        var fullName = Path.Combine(directoryFullName, fileName);
+
+        var length = 0L;
+
+        using (inputStream)
+        using (var outputStream = File.Open(fullName, FileMode.Append))
+        {
+            length = outputStream.Position;
+
+            var buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = inputStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                outputStream.Write(buffer, 0, bytesRead);
+                length += bytesRead;
+            }
+        }
+
+        var storageFolder = db.StorageFolders.FirstOrDefault(a => a.Name == model.TypeName);
+        if (storageFolder == null)
+        {
+            storageFolder = new StorageFolder()
+            {
+                Name = model.TypeName,
+            };
+            db.StorageFolders.Add(storageFolder);
+            db.SaveChanges();
+        }
+
+        var storageFile = db.StorageFiles
+            .FirstOrDefault(a =>
+                a.StorageFolderId == storageFolder.Id &&
+                a.EntityFileName == model.FileName);
+        if (storageFile != null)
+        {
+            db.StorageFiles.Remove(storageFile);
+            db.SaveChanges();
+        }
+        storageFile = new StorageFile()
+        {
+            EntityId = model.Id,
+            EntityFileName = model.FileName,
+            StorageFolderId = storageFolder.Id,
+            FileName = fileName,
+            Length = length,
+            MimeType = model.MimeType
+        };
+        db.StorageFiles.Add(storageFile);
+        db.SaveChanges();
+
+        var externalUrlRequest = new GetStorageFileInfoRequest()
+        {
+            Id = model.Id,
+            TypeName = model.TypeName,
+            BaseUrl = model.BaseUrl
+        };
+        var externalUrlResponse = GetStorageFileUrl(externalUrlRequest, ct);
+
+        return new AppendResponse()
+        {
+            Success = true,
+            Url = externalUrlResponse.Url,
+            //StorageFileId = storageFile.Id,
+            //EntityId = storageFile.EntityId,
+            EntityFileName = storageFile.EntityFileName,
+            FileName = storageFile.FileName,
+            Length = storageFile.Length,
+            MimeType = storageFile.MimeType
         };
     }
 

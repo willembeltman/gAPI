@@ -14,5 +14,4 @@ public class StorageFile
     public string? FileName { get; set; }
     public long Length { set; get; }
     public string? MimeType { set; get; }
-    public string? Sha256 { get; set; }
 }

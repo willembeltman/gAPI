@@ -1,15 +1,8 @@
 ﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
 
-public class OpenResponse
+public class OpenResponse(string mimeType, string fileName, Stream stream)
 {
-    public string MimeType { get; }
-    public string FileName { get; }
-    public Stream Stream { get; }
-
-    public OpenResponse(string mimeType, string fileName, Stream stream)
-    {
-        MimeType = mimeType;
-        FileName = fileName;
-        Stream = stream;
-    }
+    public string MimeType { get; } = mimeType;
+    public string FileName { get; } = fileName;
+    public Stream Stream { get; } = stream;
 }

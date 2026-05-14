@@ -42,7 +42,7 @@ public class StorageService : IStorageService
         };
     }
 
-    private IStorageService CreateMockService(Dictionary<string, string> parts)
+    private static MockStorageService CreateMockService(Dictionary<string, string> parts)
     {
         var mockConfig = new MockStorageConfig();
 
@@ -54,7 +54,7 @@ public class StorageService : IStorageService
 
         return new MockStorageService(Options.Create(mockConfig));
     }
-    private IStorageService CreateAzureService(Dictionary<string, string> parts)
+    private static AzureStorageService CreateAzureService(Dictionary<string, string> parts)
     {
         var remoteConfig = new AzureStorageConfig();
 
@@ -68,7 +68,7 @@ public class StorageService : IStorageService
 
         return new AzureStorageService(Options.Create(remoteConfig));
     }
-    private IStorageService CreateStorageServerService(Dictionary<string, string> parts, TimeProvider dateTime)
+    private static StorageServerService CreateStorageServerService(Dictionary<string, string> parts, TimeProvider dateTime)
     {
         var remoteConfig = new StorageServerConfig();
 
@@ -102,6 +102,13 @@ public class StorageService : IStorageService
         Implementation.GetStorageFileUrlAsync(storageFile, ct);
     public Task<string?> SaveStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true) =>
         Implementation.SaveStorageFileAsync(storageFile, fileName, mimeType, stream, ct, allowOverwrite);
+    public Task<string?> SaveStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true) =>
+        Implementation.SaveStorageFileAsync(storageFileTypeName, storageFileId, fileName, mimeType, stream, ct, allowOverwrite);
+    public Task<string?> AppendStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true) =>
+        Implementation.AppendStorageFileAsync(storageFile, fileName, mimeType, stream, ct, allowCreate);
+    public Task<string?> AppendStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true) =>
+        Implementation.AppendStorageFileAsync(storageFileTypeName, storageFileId, fileName, mimeType, stream, ct, allowCreate);
+
     public Task<bool> DeleteStorageFileAsync(IStorageFile storageFile, CancellationToken ct, bool throwIfNotFound = false) =>
         Implementation.DeleteStorageFileAsync(storageFile, ct, throwIfNotFound);
 }
