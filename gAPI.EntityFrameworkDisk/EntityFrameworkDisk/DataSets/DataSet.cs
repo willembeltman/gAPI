@@ -385,18 +385,52 @@ public class DataSet<T> : IDiskSet<T>
         return GetEnumerable().AsQueryable().Where(expression);
     }
 
+    //private IEnumerable<T>? GetFindKeyFromExpression(Expression<Func<T, bool>> expression)
+    //{
+    //    if (KeyName == null || KeyType == null) return null;
+
+    //    if (expression.Body is BinaryExpression binary &&
+    //        binary.NodeType == ExpressionType.Equal &&
+    //        binary.Left is MemberExpression member &&
+    //        binary.Right is ConstantExpression constant &&
+    //        member.Member.Name == KeyName)
+    //    {
+    //        var keyValue = constant.Value;
+    //        if (keyValue != null && keyValue.GetType() == KeyType)
+    //        {
+    //            return Find(keyValue).Select(a => a.Item);
+    //        }
+    //    }
+
+    //    return null;
+    //}
     private IEnumerable<T>? GetFindKeyFromExpression(Expression<Func<T, bool>> expression)
     {
-        if (KeyName == null || KeyType == null) return null;
+        if (KeyName == null || KeyType == null)
+            return null;
 
         if (expression.Body is BinaryExpression binary &&
             binary.NodeType == ExpressionType.Equal &&
             binary.Left is MemberExpression member &&
-            binary.Right is ConstantExpression constant &&
             member.Member.Name == KeyName)
         {
-            var keyValue = constant.Value;
-            if (keyValue != null && keyValue.GetType() == KeyType)
+            object? keyValue = null;
+
+            switch (binary.Right)
+            {
+                case ConstantExpression constant:
+                    keyValue = constant.Value;
+                    break;
+
+                default:
+                    keyValue = Expression
+                        .Lambda(binary.Right)
+                        .Compile()
+                        .DynamicInvoke();
+                    break;
+            }
+
+            if (keyValue != null && KeyType.IsAssignableFrom(keyValue.GetType()))
             {
                 return Find(keyValue).Select(a => a.Item);
             }
