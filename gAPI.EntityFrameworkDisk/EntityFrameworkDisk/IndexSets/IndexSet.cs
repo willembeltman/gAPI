@@ -7,7 +7,7 @@ namespace gAPI.Storage.Server.EntityFrameworkDisk.IndexSets;
 
 public class IndexSet<T> : IIndexSet<T>
 {
-    private const int BufferSize = 1024;
+    private const int BufferSize = 1024 * 8;
     private readonly ReaderWriterLockSlim Lock;
     private readonly EntityDefinition EntityDefinition;
     private readonly string InfoFullName;
@@ -538,5 +538,4 @@ public class IndexSet<T> : IIndexSet<T>
 
     public IEnumerator<IndexItem> GetEnumerator() => GetEnumerable().GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
 }
