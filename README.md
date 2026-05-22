@@ -374,7 +374,28 @@ Tiny internal test project.
 It compiles.
 That's about all the guarantees it currently provides 😄
 
-Please don't use it as a reference.
+Please don't use it as a reference. If you want to see example usage, check the `UwvLlm` project instead.
+
+https://github.com/willembeltman/UwvLlm
+
+---
+
+## gAPI.EntityFrameworkDisk
+
+An experimental file-based persistence library inspired by classic Entity Framework-style workflows.
+
+Instead of using a traditional SQL database, data is stored directly on disk using generated serializers and indexed storage structures.
+
+Features:
+
+High-performance generated serializers
+Key index files for fast lookups
+Experimental lazy loading support
+Experimental support for complex DDD-style entities and aggregates
+
+The library is primarily designed for lightweight/self-hosted scenarios and is currently used internally by gAPI.Storage.Server.
+
+It is still highly experimental and actively evolving.
 
 ---
 
