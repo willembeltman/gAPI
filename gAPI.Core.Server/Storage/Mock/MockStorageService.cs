@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
 #nullable enable
@@ -9,13 +10,9 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
     private readonly MockStorageConfig Config = config.Value;
     private static readonly ConcurrentDictionary<string, MockFileData> MockStorage = new();
 
-    private static string GetFileKey(IStorageFile storageFile)
+    private string GetFileKey(IStorageFile storageFile)
     {
         return $"{storageFile.GetType().Name}/{storageFile.Id}";
-    }
-    private static string GetFileKey(string type, string id)
-    {
-        return $"{type}/{id}";
     }
     private string GenerateMockUrl(string fileKey)
     {
@@ -25,39 +22,34 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
         return $"{baseUrl}/files/{hash}/{Uri.EscapeDataString(fileKey)}";
     }
 
-    public async Task<string?> GetStorageFileUrlAsync(string id, string type, CancellationToken ct)
+    public Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(id) || id == "0")
+        var key = GetFileKey(storageFile);
+        return GetStorageFileUrlAsync(key, ct);
+    }
+    public async Task<string?> GetStorageFileUrlAsync(string key, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException(
                 "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
         await Task.Delay(Config.SimulateLatencyMs, ct); // Simuleer netwerk latency
 
-        var fileKey = GetFileKey(type, id);
 
-        if (!MockStorage.ContainsKey(fileKey))
+        if (!MockStorage.ContainsKey(key))
             return null;
 
-        return GenerateMockUrl(fileKey);
+        return GenerateMockUrl(key);
     }
-    public async Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(storageFile.Id) || storageFile.Id == "0")
-            throw new ArgumentException(
-                "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
-        await Task.Delay(Config.SimulateLatencyMs, ct); // Simuleer netwerk latency
-
-        var fileKey = GetFileKey(storageFile);
-
-        if (!MockStorage.ContainsKey(fileKey))
-            return null;
-
-        return GenerateMockUrl(fileKey);
-    }
     public async Task<string?> SaveStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
     {
-        if (string.IsNullOrWhiteSpace(storageFile.Id) || storageFile.Id == "0")
+        var key = GetFileKey(storageFile);
+        return await SaveStorageFileAsync(key, fileName, mimeType, stream, ct, allowOverwrite);
+    }
+    public async Task<string?> SaveStorageFileAsync(string key, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    {
+        if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException(
                 "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
@@ -71,30 +63,33 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
 
         await Task.Delay(Config.SimulateLatencyMs); // Simuleer upload tijd
 
-        var fileKey = GetFileKey(storageFile);
-
         // Check overwrite
-        if (!allowOverwrite && MockStorage.ContainsKey(fileKey))
-            throw new Exception($"File already exists and overwrite is not allowed: {fileKey}");
+        if (!allowOverwrite && MockStorage.ContainsKey(key))
+            throw new Exception($"File already exists and overwrite is not allowed: {key}");
 
         var mockFileData = await MockFileDataHelper.ProcessStreamAsync(stream, fileName, mimeType);
-        MockStorage[fileKey] = mockFileData;
+        MockStorage[key] = mockFileData;
 
-        return GenerateMockUrl(fileKey);
+        return GenerateMockUrl(key);
     }
-    public async Task<bool> DeleteStorageFileAsync(IStorageFile storageFile, CancellationToken ct, bool throwIfNotFound = false)
+
+    public Task<bool> DeleteStorageFileAsync(IStorageFile storageFile, CancellationToken ct, bool throwIfNotFound = false)
     {
-        if (string.IsNullOrWhiteSpace(storageFile.Id) || storageFile.Id == "0")
+        var key = GetFileKey(storageFile);
+        return DeleteStorageFileAsync(key, ct, throwIfNotFound);
+    }
+    public async Task<bool> DeleteStorageFileAsync(string key, CancellationToken ct, bool throwIfNotFound = false)
+    {
+        if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException(
                 "Cannot use storage file server for entities with Id = 0, this indicates the entity has not been attached to the dbcontext yet.");
 
         await Task.Delay(Config.SimulateLatencyMs); // Simuleer netwerk latency
 
-        var fileKey = GetFileKey(storageFile);
-        var deleted = MockStorage.TryRemove(fileKey, out _);
+        var deleted = MockStorage.TryRemove(key, out _);
 
         if (!deleted && throwIfNotFound)
-            throw new Exception($"File not found: {fileKey}");
+            throw new Exception($"File not found: {key}");
 
         return deleted;
     }
@@ -103,13 +98,12 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
     {
         throw new NotImplementedException();
     }
-
-    public Task<string?> AppendStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true)
+    public Task<string?> AppendStorageFileAsync(string key, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true)
     {
         throw new NotImplementedException();
     }
 
-    public Task<string?> SaveStorageFileAsync(string storageFileTypeName, string storageFileId, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true)
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct)
     {
         throw new NotImplementedException();
     }

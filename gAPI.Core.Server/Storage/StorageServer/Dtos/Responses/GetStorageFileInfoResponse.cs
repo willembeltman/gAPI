@@ -10,6 +10,9 @@ public class GetStorageFileInfoResponse : Response
     public string? FileName { get; set; }
     public string? Token { get; set; }
     public string? MimeType { get; set; }
+    public long? Length { get; set; }
+    public string? EntityFileName { get; set; }
+
     [JsonIgnore]
     public string? Url
     {
@@ -32,7 +35,4 @@ public class GetStorageFileInfoResponse : Response
             return $"{uri.Scheme}://{uri.Host}:{uri.Port}/{BaseFolder}/{Uri.EscapeDataString(Folder)}/{Uri.EscapeDataString(FileName)}?token={Token}";
         }
     }
-
-    public long? Length { get; set; }
-    public string? EntityFileName { get; set; }
 }

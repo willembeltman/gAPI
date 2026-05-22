@@ -16,7 +16,7 @@ public class AuthStateUserMapping(
         dto.Id = entity.Id;
         dto.UserName = entity.UserName;
         dto.Email = entity.Email;
-        dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync(dto.Id.ToString(), "User", ct);
+        dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync($"User/{dto.Id}", ct);
         return dto;
     }
 }

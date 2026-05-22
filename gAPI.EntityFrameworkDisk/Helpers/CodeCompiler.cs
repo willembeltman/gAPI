@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using System.Reflection;
 
-namespace gAPI.Storage.Server.Helpers;
+namespace gAPI.EntityFrameworkDisk.Helpers;
 
 public static class CodeCompiler
 {

@@ -9,40 +9,49 @@ namespace gAPI.Storage.Server.Services;
 public class LocalStorageService(ApplicationDbContext db)
 {
     const string BaseFolder = "Content";
-    static readonly DirectoryInfo Directory = new DirectoryInfo("Files");
+    static readonly DirectoryInfo Directory = new("Files");
 
     public GetStorageFileInfoResponse GetStorageFileUrl(GetStorageFileInfoRequest model, CancellationToken ct)
     {
+        var split = model.Key.Split('/');
+        var typeName = "_";
+        var id = model.Key;
+        if (split.Length > 1)
+        {
+            typeName = split[0];
+            id = id.Substring(typeName.Length + 1);
+        }
+
         var storageFolder = db.StorageFolders
-            .FirstOrDefault(a => a.Name == model.TypeName);
+            .FirstOrDefault(a => a.Name == typeName);
         if (storageFolder == null)
             return new GetStorageFileInfoResponse()
             {
-                Message = "Folder doesn't exists"
+                ErrorMessage = "Folder doesn't exists"
             };
 
-        var directoryFullName = Path.Combine(Directory.FullName, model.TypeName);
+        var directoryFullName = Path.Combine(Directory.FullName, typeName);
         if (!System.IO.Directory.Exists(directoryFullName))
             return new GetStorageFileInfoResponse()
             {
-                Message = "Folder doesn't exists on disk"
+                ErrorMessage = "Folder doesn't exists on disk"
             };
 
         var storageFile = db.StorageFiles
             .FirstOrDefault(a =>
                 a.StorageFolderId == storageFolder.Id &&
-                a.EntityId == model.Id);
+                a.EntityId == model.Key);
         if (storageFile?.FileName == null)
             return new GetStorageFileInfoResponse()
             {
-                Message = "File doesn't exists"
+                ErrorMessage = "File doesn't exists"
             };
 
         var fullName = Path.Combine(directoryFullName, storageFile.FileName);
         if (!File.Exists(fullName))
             return new GetStorageFileInfoResponse()
             {
-                Message = "File doesn't exists on disk"
+                ErrorMessage = "File doesn't exists on disk"
             };
 
         var token = new StorageFileToken()
@@ -74,10 +83,19 @@ public class LocalStorageService(ApplicationDbContext db)
 
     public SaveResponse SaveStorageFile(SaveRequest model, Stream inputStream, CancellationToken ct)
     {
+        var split = model.Key.Split('/');
+        var typeName = "_";
+        var id = model.Key;
+        if (split.Length > 1)
+        {
+            typeName = split[0];
+            id = id.Substring(typeName.Length + 1);
+        }
+
         if (!Directory.Exists) Directory.Create();
 
-        var fileName = $"{model.Id}{model.FileName}";
-        var directoryFullName = Path.Combine(Directory.FullName, model.TypeName);
+        var fileName = $"{model.Key}{model.FileName}";
+        var directoryFullName = Path.Combine(Directory.FullName, typeName);
         var directoryInfo = new DirectoryInfo(directoryFullName);
         if (!directoryInfo.Exists) directoryInfo.Create();
         var fullName = Path.Combine(directoryFullName, fileName);
@@ -98,17 +116,17 @@ public class LocalStorageService(ApplicationDbContext db)
                 length += bytesRead;
             }
 
-            hasher.TransformFinalBlock(new byte[0], 0, 0);
+            hasher.TransformFinalBlock([], 0, 0);
             var hashBytes = hasher.Hash;
             sha256 = ToHexStringLower(hashBytes!);
         }
 
-        var storageFolder = db.StorageFolders.FirstOrDefault(a => a.Name == model.TypeName);
+        var storageFolder = db.StorageFolders.FirstOrDefault(a => a.Name == typeName);
         if (storageFolder == null)
         {
             storageFolder = new StorageFolder()
             {
-                Name = model.TypeName,
+                Name = typeName,
             };
             db.StorageFolders.Add(storageFolder);
             db.SaveChanges();
@@ -125,7 +143,7 @@ public class LocalStorageService(ApplicationDbContext db)
         }
         storageFile = new StorageFile()
         {
-            EntityId = model.Id,
+            EntityId = model.Key,
             EntityFileName = model.FileName,
             StorageFolderId = storageFolder.Id,
             FileName = fileName,
@@ -137,8 +155,7 @@ public class LocalStorageService(ApplicationDbContext db)
 
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
-            Id = model.Id,
-            TypeName = model.TypeName,
+            Key = model.Key,
             BaseUrl = model.BaseUrl
         };
         var externalUrlResponse = GetStorageFileUrl(externalUrlRequest, ct);
@@ -157,10 +174,19 @@ public class LocalStorageService(ApplicationDbContext db)
     }
     public AppendResponse AppendStorageFile(AppendRequest model, Stream inputStream, CancellationToken ct)
     {
+        var split = model.Key.Split('/');
+        var typeName = "_";
+        var id = model.Key;
+        if (split.Length > 1)
+        {
+            typeName = split[0];
+            id = id.Substring(typeName.Length + 1);
+        }
+
         if (!Directory.Exists) Directory.Create();
 
-        var fileName = $"{model.Id}{model.FileName}";
-        var directoryFullName = Path.Combine(Directory.FullName, model.TypeName);
+        var fileName = $"{model.Key}{model.FileName}";
+        var directoryFullName = Path.Combine(Directory.FullName, typeName);
         var directoryInfo = new DirectoryInfo(directoryFullName);
         if (!directoryInfo.Exists) directoryInfo.Create();
         var fullName = Path.Combine(directoryFullName, fileName);
@@ -181,12 +207,12 @@ public class LocalStorageService(ApplicationDbContext db)
             }
         }
 
-        var storageFolder = db.StorageFolders.FirstOrDefault(a => a.Name == model.TypeName);
+        var storageFolder = db.StorageFolders.FirstOrDefault(a => a.Name == typeName);
         if (storageFolder == null)
         {
             storageFolder = new StorageFolder()
             {
-                Name = model.TypeName,
+                Name = typeName,
             };
             db.StorageFolders.Add(storageFolder);
             db.SaveChanges();
@@ -203,7 +229,7 @@ public class LocalStorageService(ApplicationDbContext db)
         }
         storageFile = new StorageFile()
         {
-            EntityId = model.Id,
+            EntityId = model.Key,
             EntityFileName = model.FileName,
             StorageFolderId = storageFolder.Id,
             FileName = fileName,
@@ -215,8 +241,7 @@ public class LocalStorageService(ApplicationDbContext db)
 
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
-            Id = model.Id,
-            TypeName = model.TypeName,
+            Key = model.Key,
             BaseUrl = model.BaseUrl
         };
         var externalUrlResponse = GetStorageFileUrl(externalUrlRequest, ct);
@@ -236,43 +261,52 @@ public class LocalStorageService(ApplicationDbContext db)
 
     public DeleteResponse DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
+        var split = model.Key.Split('/');
+        var typeName = "_";
+        var id = model.Key;
+        if (split.Length > 1)
+        {
+            typeName = split[0];
+            id = id.Substring(typeName.Length + 1);
+        }
+
         var storageFolder = db.StorageFolders
-            .FirstOrDefault(a => a.Name == model.TypeName);
+            .FirstOrDefault(a => a.Name == typeName);
         if (storageFolder == null)
             return new DeleteResponse()
             {
-                Message = "Folder doesn't exists"
+                ErrorMessage = "Folder doesn't exists"
             };
 
-        var directoryFullName = Path.Combine(Directory.FullName, model.TypeName);
+        var directoryFullName = Path.Combine(Directory.FullName, typeName);
         if (!System.IO.Directory.Exists(directoryFullName))
             return new DeleteResponse()
             {
-                Message = "Folder doesn't exists on disk"
+                ErrorMessage = "Folder doesn't exists on disk"
             };
 
         var storageFile = db.StorageFiles
             .FirstOrDefault(a =>
                 a.StorageFolderId == storageFolder.Id &&
-                a.EntityId == model.Id);
+                a.EntityId == model.Key);
         if (storageFile?.FileName == null)
             return new DeleteResponse()
             {
-                Message = "File doesn't exists"
+                ErrorMessage = "File doesn't exists"
             };
 
         var fullName = Path.Combine(directoryFullName, storageFile.FileName);
         if (!File.Exists(fullName))
             return new DeleteResponse()
             {
-                Message = "File doesn't exists on disk"
+                ErrorMessage = "File doesn't exists on disk"
             };
 
         // Forceer delete, wacht tot alle lezers weg zijn
         if (!ForceDelete(fullName))
             return new DeleteResponse()
             {
-                Message = "File couldn't be deleted because it is in use, and we have waited 30sec while trying to exclusively lock the file, but that also failed. I failed you, I hope you try again in a few minutes because this should work, but I am just not worthy for the battle of exclusivity, just like reallife lol."
+                ErrorMessage = "File couldn't be deleted because it is in use, and we have waited 30sec while trying to exclusively lock the file, but that also failed. I failed you, I hope you try again in a few minutes because this should work, but I am just not worthy for the battle of exclusivity, just like reallife lol."
             };
 
         db.StorageFiles.Remove(storageFile);

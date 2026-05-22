@@ -1,4 +1,4 @@
-﻿namespace gAPI.Storage.Server.Helpers;
+﻿namespace gAPI.EntityFrameworkDisk.Helpers;
 
 public static class PrimitiveTypesHelper
 {

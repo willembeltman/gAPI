@@ -1,5 +1,5 @@
 ﻿using gAPI.Storage.Server.Data.Entities;
-using gAPI.Storage.Server.EntityFrameworkDisk;
+using gAPI.EntityFrameworkDisk;
 
 #nullable disable
 

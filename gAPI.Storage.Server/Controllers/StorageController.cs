@@ -23,7 +23,7 @@ public class StorageController(LocalStorageService storageService) : ControllerB
     public SaveResponse SaveStorageFile([FromForm] SaveRequest model, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
-            return new SaveResponse { Success = false, Message = "No file uploaded" };
+            return new SaveResponse { Success = false, ErrorMessage = "No file uploaded" };
 
         var stream = file.OpenReadStream();
         return storageService.SaveStorageFile(model, stream, ct);
@@ -33,7 +33,7 @@ public class StorageController(LocalStorageService storageService) : ControllerB
     public AppendResponse AppendStorageFile([FromForm] AppendRequest model, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
-            return new AppendResponse { Success = false, Message = "No file uploaded" };
+            return new AppendResponse { Success = false, ErrorMessage = "No file uploaded" };
 
         var stream = file.OpenReadStream();
         return storageService.AppendStorageFile(model, stream, ct);

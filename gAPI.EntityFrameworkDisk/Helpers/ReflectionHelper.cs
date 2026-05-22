@@ -1,8 +1,8 @@
-﻿using gAPI.Storage.Server.EntityFrameworkDisk;
+﻿using gAPI.EntityFrameworkDisk.Interfaces;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
-namespace gAPI.Storage.Server.Helpers;
+namespace gAPI.EntityFrameworkDisk.Helpers;
 
 public static class ReflectionHelper
 {

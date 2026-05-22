@@ -1,3 +1,21 @@
 <Solution>
-  <Project Path="gAPI.Core/gAPI.Core.csproj" />
+    <Project Path="gAPI.AutoApi.Client/gAPI.AutoApi.Client.csproj" />
+    <Project Path="gAPI.AutoApi.Server/gAPI.AutoApi.Server.csproj" />
+    <Project Path="gAPI.AutoComponent/gAPI.AutoComponent.csproj" />
+    <Project Path="gAPI.AutoPage/gAPI.AutoPage.csproj" />
+    <Project Path="gAPI.AutoSerializer/gAPI.AutoSerializer.csproj" />
+    <Project Path="gAPI.AutoSse.Client/gAPI.AutoSse.Client.csproj" />
+    <Project Path="gAPI.AutoSse.Server/gAPI.AutoSse.Server.csproj" />
+    <Project Path="gAPI.AutoWss.Client/gAPI.AutoWss.Client.csproj" />
+    <Project Path="gAPI.AutoWss.Server/gAPI.AutoWss.Server.csproj" />
+    <Project Path="gAPI.CodeGen.Backend/gAPI.CodeGen.Backend.csproj" />
+    <Project Path="gAPI.CodeGen.Frontend/gAPI.CodeGen.Frontend.csproj" />
+    <Project Path="gAPI.Core.Client/gAPI.Core.Client.csproj" />
+    <Project Path="gAPI.Core.Server/gAPI.Core.Server.csproj" />
+    <Project Path="gAPI.Core.ServiceBus/gAPI.Core.ServiceBus.csproj" />
+    <Project Path="gAPI.Core/gAPI.Core.csproj" />
+    <Project Path="gAPI.EntityFrameworkDisk/gAPI.EntityFrameworkDisk.csproj" Id="029210cf-d7d2-4357-9b15-b40d069194be" />
+    <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
+    <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
+    <Project Path="gAPI.Tester/gAPI.Tester.csproj" />
 </Solution>
