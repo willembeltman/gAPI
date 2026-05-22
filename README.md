@@ -388,10 +388,11 @@ Instead of using a traditional SQL database, data is stored directly on disk usi
 
 Features:
 
-High-performance generated serializers
-Key index files for fast lookups
-Experimental lazy loading support
-Experimental support for complex DDD-style entities and aggregates
+* High-performance generated serializers
+* Key index files for fast lookups
+* Linq expression support for key index based queries
+* Experimental lazy loading support
+* Experimental support for complex DDD-style entities and aggregates
 
 The library is primarily designed for lightweight/self-hosted scenarios and is currently used internally by gAPI.Storage.Server.
 
