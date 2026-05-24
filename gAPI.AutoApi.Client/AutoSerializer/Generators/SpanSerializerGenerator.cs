@@ -125,8 +125,9 @@ public static class {Name}
     }
     public (string readprops, string functions) CreateReadProps()
     {
-        string readProps;
-        string functions = "";
+        var readProps = string.Empty; 
+        var functions = string.Empty; 
+        var functionNames = new HashSet<string>();
 
         if (IsRecord)
         {
@@ -142,7 +143,7 @@ public static class {Name}
                     .Select(p =>
                     {
                         var prop = Properties.FirstOrDefault(pr => pr.Property.Name == p.Name) ?? Properties[0];
-                        return PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions);
+                        return PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions, functionNames);
                     })
                     .ToArray();
 
@@ -153,7 +154,7 @@ public static class {Name}
             {
                 readProps = $@"            
         var value = new {TypeSymbolName}();{string.Join("", Properties.Select(prop => $@"
-        value.{prop.Property.Name} = {PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions)};"))}
+        value.{prop.Property.Name} = {PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions, functionNames)};"))}
         return value;";
             }
         }
@@ -161,7 +162,7 @@ public static class {Name}
         {
             readProps = $@"
         var value = new {TypeSymbolName}();{string.Join("", Properties.Select(prop => $@"
-        value.{prop.Property.Name} = {PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions)};"))}
+        value.{prop.Property.Name} = {PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions, functionNames)};"))}
         return value;";
         }
 

@@ -1,10 +1,10 @@
-﻿using gAPI.CodeGen.Backend.Generators.Core.CrudHandlers;
-using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
+﻿using gAPI.CodeGen.Backend.Generators.Core.UseCases;
+using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
-namespace gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
+namespace gAPI.CodeGen.Backend.Generators.Core.Mappings;
 
 public class MappingGenerator : BaseGenerator
 {
@@ -38,7 +38,7 @@ public class MappingGenerator : BaseGenerator
 
         var context = new NameContext()
         {
-            DtoNameProperties = Entity.Properties
+            DtoNameProperties = [.. Entity.Properties
                 .Where(a =>
                     a.IsHidden == false &&
                     a.IsLijst == false &&
@@ -46,11 +46,8 @@ public class MappingGenerator : BaseGenerator
                 .Select(a => new DtoNameProperty()
                 {
                     NameProperty = a,
-                    ForeignEntityNameProperties = a.NavigationDbSet!.Entity.Properties
-                        .Where(a => a.IsName != null)
-                        .ToArray()
-                })
-                .ToArray(),
+                    ForeignEntityNameProperties = [.. a.NavigationDbSet!.Entity.Properties.Where(a => a.IsName != null)]
+                })],
 
             MatchedEntityProperties = Entity.Properties
                 .Where(a =>
@@ -149,7 +146,7 @@ a.ForeignEntityNameProperties
         {typeDto.FullName} dto,
         CancellationToken ct)
     {{{(Entity.IsStorageFileUrlProperty ? @$"
-        dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync(dto.{Entity.KeyProperty.Name}.ToString(), ""{Entity.Name}"", ct);" : "")}
+        dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync($""{Entity.Name}/{{dto.{Entity.KeyProperty.Name}}}"", ct);" : "")}
         dto.CanUpdate = await useCase.CanUpdateAsync(dto, ct);
         dto.CanDelete = await useCase.CanDeleteAsync(dto, ct);
     }}

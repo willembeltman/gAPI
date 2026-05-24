@@ -1,5 +1,5 @@
-﻿using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
-using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
+﻿using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
+using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
@@ -18,7 +18,7 @@ public class CrudServiceGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"{Entity.Name}CrudService";
+        Name = $"{Entity.Name.ToMultiple()}CrudService";
         FileName = $"{Name}.cs";
     }
 
@@ -88,7 +88,7 @@ public class CrudServiceGenerator : BaseGenerator
             Skip = skip ?? 0,
             Take = take ?? 0,
             CanCreate = await useCase.CanCreateAsync(ct),
-            Response = dtos
+            Response = await dtos.ToArrayAsync(ct)
         }};
     }}
 
@@ -116,7 +116,7 @@ public class CrudServiceGenerator : BaseGenerator
             Skip = skip ?? 0,
             Take = take ?? 0,
             CanCreate = await useCase.CanCreateAsync(ct),
-            Response = dtos
+            Response = await dtos.ToArrayAsync(ct)
         }};
     }}";
                 return code;
@@ -350,7 +350,7 @@ public class {Name}(
             Skip = skip ?? 0,
             Take = take ?? 0,
             CanCreate = await useCase.CanCreateAsync(ct),
-            Response = dtos
+            Response = await dtos.ToArrayAsync(ct)
         }};
     }}{loadBysCode}{fileCode}
 }}";

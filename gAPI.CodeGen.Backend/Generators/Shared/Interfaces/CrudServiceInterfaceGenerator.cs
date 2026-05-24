@@ -1,7 +1,8 @@
 ﻿//using gAPI.CodeGen.Backend.Generators.Core.Authentication;
-using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
-using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
+using gAPI.CodeGen.Backend.Generators.Core.Mappings;
+using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
+using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
@@ -19,7 +20,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"I{Entity.Name}CrudService";
+        Name = $"I{Entity.Name.ToMultiple()}CrudService";
         FileName = $"{Name}.cs";
     }
 

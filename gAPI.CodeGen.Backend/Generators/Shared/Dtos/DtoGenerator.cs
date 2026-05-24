@@ -1,13 +1,13 @@
-﻿using gAPI.CodeGen.Backend.Generators.Core.CrudHandlers;
-using gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
-using gAPI.CodeGen.Backend.Generators.Core.CrudServices;
+﻿using gAPI.CodeGen.Backend.Generators.Core.CrudServices;
+using gAPI.CodeGen.Backend.Generators.Core.Mappings;
+using gAPI.CodeGen.Backend.Generators.Core.UseCases;
 using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Models.Entities;
 using gAPI.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
+namespace gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 
 public class DtoGenerator : BaseGenerator
 {

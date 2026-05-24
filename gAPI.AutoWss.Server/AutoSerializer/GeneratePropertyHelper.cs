@@ -310,7 +310,7 @@ public class GeneratePropertyHelper(
 {indent}PrimitivesSpanSerializer.Write{method}(ref ___span, ref ___offset, {propName});";
     }
 
-    public string GenerateSpanReadCode(ITypeSymbol type, bool fromGeneric, ref string functions)
+    public string GenerateSpanReadCode(ITypeSymbol type, bool fromGeneric, ref string functions, HashSet<string> functionNames)
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
@@ -352,20 +352,26 @@ public class GeneratePropertyHelper(
                 return start + $@"PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset)";
 
             Reg(array.ElementType.ContainingNamespace.ToDisplayString());
-            functions += $@"
 
-    static {array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}[] BuildList(ReadOnlySpan<byte> ___span, ref int ___offset, int count)
+            var functionName = $"BuildList{array.ElementType.Name}";
+            if (!functionNames.Contains(functionName))
+            {
+                functionNames.Add(functionName);
+                functions += $@"
+
+    static {array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}[] {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int count)
     {{
         var list = new List<{array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}>(count);
         for (int i = 0; i < count; i++)
         {{
-            var item = {GenerateSpanReadCode(array.ElementType, fromGeneric, ref functions)};
+            var item = {GenerateSpanReadCode(array.ElementType, fromGeneric, ref functions, functionNames)};
             list.Add(item);
         }}
         return [.. list];
     }}";
+            }
 
-            return start + $@"BuildList(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
+            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
         }
 
         var name = Helper.GetName(underlyingType);

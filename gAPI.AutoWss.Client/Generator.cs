@@ -4,6 +4,7 @@ using gAPI.AutoWssClient.Generators;
 using gAPI.AutoWssClient.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -61,11 +62,17 @@ public class Generator
         Generate2(spc, FormFile);
         Generate2(spc, FormFileExtension);
 
+        var generatedItems = new HashSet<string>();
+
         foreach (var api in Apis)
         {
             var items = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(api.NeededSerializers.ToArray(), CustomSpanSerializers.Select(a => a.Type));
             foreach (var item in items)
             {
+                var name = item.ToDisplayString();
+                if (generatedItems.Contains(name)) continue;
+                generatedItems.Add(name);
+
                 var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
                 serializerGenerator.Namespace = api.Namespace!;
                 var code = serializerGenerator.Generate();
@@ -80,6 +87,10 @@ public class Generator
             var items = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(api.NeededSerializers.ToArray(), CustomMultipartFormDataContentSerializers.Select(a => a.Type));
             foreach (var item in items)
             {
+                var name = item.ToDisplayString();
+                if (generatedItems.Contains(name)) continue;
+                generatedItems.Add(name);
+
                 var serializerGenerator = new MultipartFormDataContentSerializerGenerator(item, CustomMultipartFormDataContentSerializers);
                 serializerGenerator.Namespace = api.Namespace!;
                 var code = serializerGenerator.Generate();
@@ -92,6 +103,10 @@ public class Generator
         var items2 = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(ClientConnection.NeededSerializers.ToArray(), CustomSpanSerializers.Select(a => a.Type));
         foreach (var item in items2)
         {
+            var name = item.ToDisplayString();
+            if (generatedItems.Contains(name)) continue;
+            generatedItems.Add(name);
+
             var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
             serializerGenerator.Namespace = ClientConnection.Namespace!;
             var code = serializerGenerator.Generate();

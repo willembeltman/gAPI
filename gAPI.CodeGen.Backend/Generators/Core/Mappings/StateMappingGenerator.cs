@@ -1,7 +1,7 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Shared.StateDtos;
 using gAPI.CodeGen.Backend.Models;
 
-namespace gAPI.CodeGen.Backend.Generators.Core.CrudMappings;
+namespace gAPI.CodeGen.Backend.Generators.Core.Mappings;
 
 public class StateMappingGenerator : BaseGenerator
 {

@@ -1,10 +1,10 @@
 ﻿//using gAPI.CodeGen.Backend.Generators.Core.Authentication;
-using gAPI.CodeGen.Backend.Generators.Shared.Public.Dtos;
+using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
 
-namespace gAPI.CodeGen.Backend.Generators.Core.CrudHandlers;
+namespace gAPI.CodeGen.Backend.Generators.Core.UseCases;
 
 public class UseCasesGenerator : BaseGenerator
 {

@@ -184,7 +184,7 @@ public class ListDataSource<T, TKey>(
             yield break;
         }
 
-        await foreach (var item in Response.Response)
+        foreach (var item in Response.Response)
         {
             yield return new ItemDataSource<T, TKey>(
                 GetPrimaryKey: a => GetPrimaryKey(a),
