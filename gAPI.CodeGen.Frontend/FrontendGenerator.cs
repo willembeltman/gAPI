@@ -1,6 +1,5 @@
 ﻿using gAPI.CodeGen.Frontend.Generators;
 using gAPI.CodeGen.Frontend.Generators.Razor;
-using gAPI.CodeGen.Frontend.Generators.Razor.Components;
 using gAPI.CodeGen.Frontend.Generators.Razor.Layout;
 using gAPI.CodeGen.Frontend.Generators.Razor.Pages.Page;
 using gAPI.CodeGen.Frontend.Models;
@@ -19,10 +18,10 @@ public class FrontendGenerator
         CrudlContext = new CrudlContext(ServiceContext, SharedReferences);
         Imports = new ImportsGenerator(clientConfig);
 
-        ErrorView = new ErrorViewGenerator(this);
-        LoaderView = new LoaderViewGenerator(this);
-        RedirectToHome = new RedirectToHomeGenerator(this);
-        RedirectToLogin = new RedirectToLoginGenerator(this);
+        //ErrorView = new ErrorViewGenerator(this);
+        //LoaderView = new LoaderViewGenerator(this);
+        //RedirectToHome = new RedirectToHomeGenerator(this);
+        //RedirectToLogin = new RedirectToLoginGenerator(this);
 
         //var directory = Config.HelpersDirectory!.FullName;
         //var @namespace = Config.HelpersNamespace!;
@@ -96,10 +95,10 @@ public class FrontendGenerator
     public ServiceContext ServiceContext { get; }
     public CrudlContext CrudlContext { get; }
 
-    public ErrorViewGenerator ErrorView { get; }
-    public LoaderViewGenerator LoaderView { get; }
-    public RedirectToHomeGenerator RedirectToHome { get; }
-    public RedirectToLoginGenerator RedirectToLogin { get; }
+    //public ErrorViewGenerator ErrorView { get; }
+    //public LoaderViewGenerator LoaderView { get; }
+    //public RedirectToHomeGenerator RedirectToHome { get; }
+    //public RedirectToLoginGenerator RedirectToLogin { get; }
     public NavMenuAuthenticatedGenerator NavMenuAuthenticated { get; }
     public NavMenuNotAuthenticatedGenerator NavMenuNotAuthenticated { get; }
 
@@ -116,10 +115,10 @@ public class FrontendGenerator
 
     public void Run()
     {
-        ErrorView.GenerateCode();
-        LoaderView.GenerateCode();
-        RedirectToHome.GenerateCode();
-        RedirectToLogin.GenerateCode();
+        //ErrorView.GenerateCode();
+        //LoaderView.GenerateCode();
+        //RedirectToHome.GenerateCode();
+        //RedirectToLogin.GenerateCode();
         NavMenuAuthenticated.GenerateCode();
         NavMenuNotAuthenticated.GenerateCode();
 

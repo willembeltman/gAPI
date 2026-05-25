@@ -17,7 +17,8 @@ public class ServiceContext
         var interfaceTypes = allTypes
             .Where(t =>
                 t.IsInterface &&
-                t.GetCustomAttributes(typeof(GenerateApiAttribute), inherit: true).Length > 0
+                (t.GetCustomAttributes(typeof(GenerateApiAttribute), inherit: true).Length > 0 ||
+                t.GetCustomAttributes(typeof(GenerateMinimalApiAttribute), inherit: true).Length > 0)
             )
             .ToArray();
 
