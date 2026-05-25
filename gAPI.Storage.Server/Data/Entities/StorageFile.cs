@@ -9,9 +9,8 @@ public class StorageFile
     public long Id { set; get; }
     public long StorageFolderId { set; get; }
 
-    public string? EntityFileName { set; get; }
-    public string? EntityId { get; set; }
-    public string? FileName { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
     public long Length { set; get; }
-    public string? MimeType { set; get; }
+    public string MimeType { set; get; } = string.Empty;
 }

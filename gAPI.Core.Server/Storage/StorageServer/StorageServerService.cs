@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
 using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+using gAPI.Core.Server.Storage.StorageServer.Enums;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
@@ -38,16 +39,21 @@ public class StorageServerService : IStorageService
     }
 
 
-    private string GetFileKey(IStorageFile storageFile)
+    private static string GetFileKey(IStorageFile storageFile)
     {
         return $"{storageFile.GetType().Name}/{storageFile.Id}";
     }
 
+    public async Task<GetStorageFileInfoResponse> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct)
+    {
+        var key = GetFileKey(storageFile);
+        return await GetStorageFileInfo(key, ct);
+    }
     public async Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct)
     {
         var request = new GetStorageFileInfoRequest()
         {
-            Key = key,
+            StorageKey = key,
             BaseUrl = ServerUrl
         };
 
@@ -108,7 +114,7 @@ public class StorageServerService : IStorageService
         var content = new MultipartFormDataContent();
         var saveRequest = new SaveRequest
         {
-            Key = key,
+            StorageKey = key,
             FileName = fileName,
             MimeType = mimeType,
             AllowOverwrite = allowOverwrite,
@@ -116,7 +122,7 @@ public class StorageServerService : IStorageService
         };
 
         // Voeg JSON-velden als string toe
-        content.Add(new StringContent(saveRequest.Key.ToString()), nameof(SaveRequest.Key));
+        content.Add(new StringContent(saveRequest.StorageKey.ToString()), nameof(SaveRequest.StorageKey));
         content.Add(new StringContent(saveRequest.FileName), nameof(SaveRequest.FileName));
         content.Add(new StringContent(saveRequest.MimeType), nameof(SaveRequest.MimeType));
         content.Add(new StringContent(saveRequest.BaseUrl), nameof(SaveRequest.BaseUrl));
@@ -130,10 +136,10 @@ public class StorageServerService : IStorageService
         using var response = await HttpClient.PostAsync("/Storage/SaveStorageFile", content);
         response.EnsureSuccessStatusCode();
 
-        var model = await response.Content.ReadFromJsonAsync<SaveResponse>() 
+        var model = await response.Content.ReadFromJsonAsync<SaveResponse>()
             ?? throw new Exception("Could not cast response from file server");
-        if (!model.Success)
-            throw new Exception(model.ErrorMessage);
+        if (!model.Success && model.ErrorMessage.HasValue)
+            throw new Exception(Enum.GetName<ErrorMessagesEnum>(model.ErrorMessage.Value));
         if (model.Url == null)
             throw new Exception("Url is empty");
         if (!Uri.IsWellFormedUriString(model.Url, UriKind.Absolute))
@@ -165,7 +171,7 @@ public class StorageServerService : IStorageService
         var content = new MultipartFormDataContent();
         var saveRequest = new AppendRequest
         {
-            Key = key,
+            StorageKey = key,
             FileName = fileName,
             MimeType = mimeType,
             AllowCreate = allowCreate,
@@ -173,7 +179,7 @@ public class StorageServerService : IStorageService
         };
 
         // Voeg JSON-velden als string toe
-        content.Add(new StringContent(saveRequest.Key.ToString()), nameof(AppendRequest.Key));
+        content.Add(new StringContent(saveRequest.StorageKey.ToString()), nameof(AppendRequest.StorageKey));
         content.Add(new StringContent(saveRequest.FileName), nameof(AppendRequest.FileName));
         content.Add(new StringContent(saveRequest.MimeType), nameof(AppendRequest.MimeType));
         content.Add(new StringContent(saveRequest.BaseUrl), nameof(AppendRequest.BaseUrl));
@@ -189,8 +195,8 @@ public class StorageServerService : IStorageService
 
         var model = await response.Content.ReadFromJsonAsync<AppendResponse>()
             ?? throw new Exception("Could not cast response from file server");
-        if (!model.Success)
-            throw new Exception(model.ErrorMessage);
+        if (!model.Success && model.ErrorMessage.HasValue)
+            throw new Exception(Enum.GetName<ErrorMessagesEnum>(model.ErrorMessage.Value));
         if (model.Url == null)
             throw new Exception("Url is empty");
         if (!Uri.IsWellFormedUriString(model.Url, UriKind.Absolute))
@@ -215,7 +221,7 @@ public class StorageServerService : IStorageService
     {
         var request = new DeleteRequest()
         {
-            Key = key,
+            StorageKey = key,
             BaseUrl = ServerUrl
         };
 
@@ -224,8 +230,8 @@ public class StorageServerService : IStorageService
 
         var response = await responseMessage.Content.ReadFromJsonAsync<DeleteResponse>(ct)
             ?? throw new Exception("Could not cast response from file server");
-        if (throwIfNotFound && response.Success == false)
-            throw new Exception(response.ErrorMessage);
+        if (throwIfNotFound && response.Success == false && response.ErrorMessage.HasValue)
+            throw new Exception(Enum.GetName<ErrorMessagesEnum>(response.ErrorMessage.Value));
 
         UrlCache.Remove(key, out _);
         return response.Deleted;
@@ -309,7 +315,7 @@ public class StorageServerService : IStorageService
     {
         var request = new GetStorageFileInfoRequest()
         {
-            Key = key,
+            StorageKey = key,
             BaseUrl = ServerUrl
         };
 

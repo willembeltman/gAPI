@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
 using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+using gAPI.Core.Server.Storage.StorageServer.Enums;
 using Microsoft.Extensions.Options;
 
 #nullable enable
@@ -38,102 +39,100 @@ public class AzureStorageService : IStorageService
         return containerClient;
     }
 
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct)
+    {
+        var key = GetBlobName(storageFile);
+        return GetStorageFileInfo(key, ct);
+    }
     public async Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                return new GetStorageFileInfoResponse
-                {
-                    Success = false,
-                    ErrorMessage = "Key is empty."
-                };
-            }
-
-            var containerClient = await GetContainerClientAsync(ct);
-
-            var blobClient = containerClient.GetBlobClient(key);
-
-            var exists = await blobClient.ExistsAsync(ct);
-
-            if (!exists.Value)
-            {
-                return new GetStorageFileInfoResponse
-                {
-                    Success = false,
-                    ErrorMessage = $"File not found: {key}"
-                };
-            }
-
-            var properties = await blobClient.GetPropertiesAsync(null, ct);
-
-            // Folder/FileName afsplitsen
-            var lastSlash = key.LastIndexOf('/');
-
-            string? folder = null;
-            string? fileName = key;
-
-            if (lastSlash >= 0)
-            {
-                folder = key[..lastSlash];
-                fileName = key[(lastSlash + 1)..];
-            }
-
-            // SAS token genereren
-            string? token = null;
-
-            if (blobClient.CanGenerateSasUri)
-            {
-                var sasBuilder = new BlobSasBuilder
-                {
-                    BlobContainerName = Config.ContainerName,
-                    BlobName = key,
-                    Resource = "b",
-                    ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(15)
-                };
-
-                sasBuilder.SetPermissions(BlobSasPermissions.Read);
-
-                var sasUri = blobClient.GenerateSasUri(sasBuilder);
-
-                token = sasUri.Query.TrimStart('?');
-            }
-
-            return new GetStorageFileInfoResponse
-            {
-                Success = true,
-
-                BaseUrl = $"{blobClient.Uri.Scheme}://{blobClient.Uri.Host}" +
-                          (blobClient.Uri.Port is > 0 and not 80
-                              ? $":{blobClient.Uri.Port}"
-                              : ""),
-
-                // Azure blobs hebben niet echt folders
-                BaseFolder = Config.ContainerName,
-
-                Folder = folder,
-                FileName = fileName,
-
-                Token = token,
-
-                MimeType = properties.Value.ContentType,
-                Length = properties.Value.ContentLength,
-
-                EntityFileName =
-                    properties.Value.Metadata.TryGetValue("OriginalFileName", out var originalName)
-                        ? originalName
-                        : null
-            };
-        }
-        catch (Exception ex)
+        if (string.IsNullOrWhiteSpace(key))
         {
             return new GetStorageFileInfoResponse
             {
                 Success = false,
-                ErrorMessage = ex.Message
+                ErrorMessage = ErrorMessagesEnum.KeyIsEmpty
             };
         }
+
+        var containerClient = await GetContainerClientAsync(ct);
+
+        var blobClient = containerClient.GetBlobClient(key);
+
+        var exists = await blobClient.ExistsAsync(ct);
+
+        if (!exists.Value)
+        {
+            return new GetStorageFileInfoResponse
+            {
+                Success = false,
+                ErrorMessage = ErrorMessagesEnum.FileDoesntExists
+            };
+        }
+
+        var properties = await blobClient.GetPropertiesAsync(null, ct);
+
+        //// Folder/FileName afsplitsen
+        //var lastSlash = key.LastIndexOf('/');
+
+        //string? folder = null;
+        //string? fileName = key;
+
+        //if (lastSlash >= 0)
+        //{
+        //    folder = key[..lastSlash];
+        //    fileName = key[(lastSlash + 1)..];
+        //}
+
+        // SAS token genereren
+        string? token = null;
+
+        if (blobClient.CanGenerateSasUri)
+        {
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = Config.ContainerName,
+                BlobName = key,
+                Resource = "b",
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(15)
+            };
+
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+            var sasUri = blobClient.GenerateSasUri(sasBuilder);
+
+            token = sasUri.Query.TrimStart('?');
+        }
+
+        return new GetStorageFileInfoResponse
+        {
+            Success = true,
+
+            BaseUrl = $"{blobClient.Uri.Scheme}://{blobClient.Uri.Host}" +
+                      (blobClient.Uri.Port is > 0 and not 80
+                          ? $":{blobClient.Uri.Port}"
+                          : ""),
+
+            // Azure blobs hebben niet echt folders
+            BaseFolder = Config.ContainerName,
+
+            FileInfo = new StorageFileInfo()
+            {
+                Key = key,
+
+                MimeType = properties.Value.ContentType,
+                Length = properties.Value.ContentLength,
+
+                FileName =
+                    properties.Value.Metadata.TryGetValue("OriginalFileName", out var originalName)
+                        ? originalName
+                        : throw new InvalidOperationException("Did not save filename")
+
+            },
+
+
+            Token = token,
+        };
     }
 
     public Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct)

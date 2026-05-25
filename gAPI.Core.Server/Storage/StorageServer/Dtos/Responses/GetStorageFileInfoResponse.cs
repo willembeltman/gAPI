@@ -6,22 +6,20 @@ public class GetStorageFileInfoResponse : Response
 {
     public string? BaseUrl { get; set; }
     public string? BaseFolder { get; set; }
-    public string? Folder { get; set; }
-    public string? FileName { get; set; }
+    public StorageFileInfo? FileInfo { get; set; }
+
     public string? Token { get; set; }
-    public string? MimeType { get; set; }
-    public long? Length { get; set; }
-    public string? EntityFileName { get; set; }
 
     [JsonIgnore]
     public string? Url
     {
         get
         {
-            if (string.IsNullOrWhiteSpace(BaseUrl) ||
+            if (FileInfo == null ||
+                string.IsNullOrWhiteSpace(BaseUrl) ||
                 string.IsNullOrWhiteSpace(BaseFolder) ||
-                string.IsNullOrWhiteSpace(Folder) ||
-                string.IsNullOrWhiteSpace(FileName) ||
+                string.IsNullOrWhiteSpace(FileInfo.Key) ||
+                string.IsNullOrWhiteSpace(FileInfo.Key) ||
                 string.IsNullOrWhiteSpace(Token))
             {
                 return null;
@@ -30,9 +28,9 @@ public class GetStorageFileInfoResponse : Response
             var uri = new Uri(BaseUrl);
             if (uri.Port <= 0 || uri.Port == 80)
             {
-                return $"{uri.Scheme}://{uri.Host}/{BaseFolder}/{Uri.EscapeDataString(Folder)}/{Uri.EscapeDataString(FileName)}?token={Token}";
+                return $"{uri.Scheme}://{uri.Host}/{BaseFolder}/{Uri.EscapeDataString(FileInfo.Key)}?token={Token}";
             }
-            return $"{uri.Scheme}://{uri.Host}:{uri.Port}/{BaseFolder}/{Uri.EscapeDataString(Folder)}/{Uri.EscapeDataString(FileName)}?token={Token}";
+            return $"{uri.Scheme}://{uri.Host}:{uri.Port}/{BaseFolder}/{Uri.EscapeDataString(FileInfo.Key)}?token={Token}";
         }
     }
 }

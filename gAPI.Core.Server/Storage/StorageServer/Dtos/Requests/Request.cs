@@ -3,5 +3,5 @@
 public class Request
 {
     public string BaseUrl { get; set; } = string.Empty;
-    public string Key { get; set; } = string.Empty;
+    public string StorageKey { get; set; } = string.Empty;
 }

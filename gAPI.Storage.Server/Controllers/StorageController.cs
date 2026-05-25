@@ -1,5 +1,6 @@
 using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
 using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+using gAPI.Core.Server.Storage.StorageServer.Enums;
 using gAPI.Storage.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -14,33 +15,33 @@ namespace gAPI.Storage.Server.Controllers;
 public class StorageController(LocalStorageService storageService) : ControllerBase
 {
     [HttpPost]
-    public GetStorageFileInfoResponse GetStorageFileInfo(GetStorageFileInfoRequest model, CancellationToken ct)
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(GetStorageFileInfoRequest model, CancellationToken ct)
     {
         return storageService.GetStorageFileUrl(model, ct);
     }
 
     [HttpPost]
-    public SaveResponse SaveStorageFile([FromForm] SaveRequest model, IFormFile file, CancellationToken ct)
+    public async Task<SaveResponse> SaveStorageFile([FromForm] SaveRequest model, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
-            return new SaveResponse { Success = false, ErrorMessage = "No file uploaded" };
+            return new SaveResponse { Success = false, ErrorMessage = ErrorMessagesEnum.NoFileUploaded };
 
         var stream = file.OpenReadStream();
-        return storageService.SaveStorageFile(model, stream, ct);
+        return await storageService.SaveStorageFile(model, stream, ct);
     }
 
     [HttpPost]
-    public AppendResponse AppendStorageFile([FromForm] AppendRequest model, IFormFile file, CancellationToken ct)
+    public async Task<AppendResponse> AppendStorageFile([FromForm] AppendRequest model, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
-            return new AppendResponse { Success = false, ErrorMessage = "No file uploaded" };
+            return new AppendResponse { Success = false, ErrorMessage = ErrorMessagesEnum.NoFileUploaded };
 
         var stream = file.OpenReadStream();
-        return storageService.AppendStorageFile(model, stream, ct);
+        return await storageService.AppendStorageFile(model, stream, ct);
     }
 
     [HttpPost]
-    public DeleteResponse DeleteStorageFile(DeleteRequest model, CancellationToken ct)
+    public Task<DeleteResponse> DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
         return storageService.DeleteStorageFile(model, ct);
     }

@@ -5,6 +5,7 @@ namespace gAPI.Core.Server.Storage;
 
 public interface IStorageService
 {
+    Task<GetStorageFileInfoResponse> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct);
     Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct);
 
     Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct);

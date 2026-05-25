@@ -10,7 +10,7 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
     private readonly MockStorageConfig Config = config.Value;
     private static readonly ConcurrentDictionary<string, MockFileData> MockStorage = new();
 
-    private string GetFileKey(IStorageFile storageFile)
+    private static string GetFileKey(IStorageFile storageFile)
     {
         return $"{storageFile.GetType().Name}/{storageFile.Id}";
     }
@@ -20,6 +20,15 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
         var baseUrl = Config.BaseUrl ?? "https://mock-storage.local";
         var hash = FileKeyHashHelper.GetFileKeyHash(fileKey);
         return $"{baseUrl}/files/{hash}/{Uri.EscapeDataString(fileKey)}";
+    }
+
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 
     public Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct)
@@ -103,8 +112,4 @@ public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageSe
         throw new NotImplementedException();
     }
 
-    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
 }
