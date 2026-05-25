@@ -63,19 +63,24 @@ public class FrontendGenerator
         //    FileName = "ClientAuthenticatedHttpClient.cs"
         //};
 
-        var pages = CrudContext.AllPageMethods
-            .Select(pageMethod => new PageGenerator(pageMethod, clientConfig, Imports))
-            .ToArray();
+        if (Config.GenerateIsPage)
+        {
+            var pages = CrudContext.AllPageMethods
+                .Select(pageMethod => new PageGenerator(pageMethod, clientConfig, Imports))
+                .ToArray();
 
-        Pages = [.. pages.Where(a => a.RoutePath != "/")];
+            Pages = [.. pages.Where(a => a.RoutePath != "/")];
+            RootPages = [.. pages.Where(a => a.RoutePath == "/")];
 
-        RootPages = [.. pages.Where(a => a.RoutePath == "/")];
-
-        PageIndexes = [.. Pages
+            PageIndexes = [.. Pages
             .GroupBy(a => a.RoutePath)
             .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
 
-        Cruds = [.. CrudContext.Types
+            NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
+            NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
+        }
+
+        Cruds = [.. CrudContext.AllCrudTypes
             .Select(crud => new CrudGenerator(
                 crud,
                 Config,
@@ -85,33 +90,31 @@ public class FrontendGenerator
                 SharedReferences.ItemDataSource,
                 SharedReferences.ListDataSource,
                 SharedReferences.IClientAuthenticatedHttpClient))];
-
-        NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
-        NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
     }
 
     public FrontendConfig Config { get; }
     public SharedReferences SharedReferences { get; }
     public ServiceContext ServiceContext { get; }
+    public ImportsGenerator Imports { get; }
+
     public CrudContext CrudContext { get; }
+    public CrudGenerator[] Cruds { get; }
 
     //public ErrorViewGenerator ErrorView { get; }
     //public LoaderViewGenerator LoaderView { get; }
     //public RedirectToHomeGenerator RedirectToHome { get; }
     //public RedirectToLoginGenerator RedirectToLogin { get; }
-    public NavMenuAuthenticatedGenerator NavMenuAuthenticated { get; }
-    public NavMenuNotAuthenticatedGenerator NavMenuNotAuthenticated { get; }
 
     //public ItemDataSourceGenerator ItemDataSource { get; }
     //public ListDataSourceGenerator ListDataSource { get; }
     //public IClientAuthenticatedHttpClientGenerator IClientAuthenticatedHttpClient { get; }
     //public ClientAuthenticatedHttpClientGenerator ClientAuthenticatedHttpClient { get; }
 
-    public CrudGenerator[] Cruds { get; }
-    public PageGenerator[] Pages { get; }
-    public PageGenerator[] RootPages { get; }
-    public IndexGenerator[] PageIndexes { get; }
-    public ImportsGenerator Imports { get; }
+    public NavMenuAuthenticatedGenerator? NavMenuAuthenticated { get; }
+    public NavMenuNotAuthenticatedGenerator? NavMenuNotAuthenticated { get; }
+    public PageGenerator[]? Pages { get; }
+    public PageGenerator[]? RootPages { get; }
+    public IndexGenerator[]? PageIndexes { get; }
 
     public void Run()
     {
@@ -119,13 +122,21 @@ public class FrontendGenerator
         //LoaderView.GenerateCode();
         //RedirectToHome.GenerateCode();
         //RedirectToLogin.GenerateCode();
-        NavMenuAuthenticated.GenerateCode();
-        NavMenuNotAuthenticated.GenerateCode();
 
-        foreach (var page in Pages) page.GenerateCode();
-        foreach (var page in RootPages) page.GenerateCode();
-        foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
-        foreach (var crud in Cruds) crud.GenerateCode();
+        if (NavMenuAuthenticated != null)
+            NavMenuAuthenticated.GenerateCode();
+        if (NavMenuNotAuthenticated != null)
+            NavMenuNotAuthenticated.GenerateCode();
+
+        if (Pages != null)
+            foreach (var page in Pages) page.GenerateCode();
+        if (RootPages != null)
+            foreach (var page in RootPages) page.GenerateCode();
+        if (PageIndexes != null)
+            foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
+
+        foreach (var crud in Cruds) 
+            crud.GenerateCode();
 
         //ItemDataSource.GenerateCode();
         //ItemDataSource.Save();

@@ -66,12 +66,12 @@ public class CrudMethod : ICrudMethod
 
     CrudType? _ResponseType;
     public CrudType? ResponseType
-        => _ResponseType = _ResponseType ?? Context.Types
+        => _ResponseType = _ResponseType ?? Context.AllCrudTypes
             .FirstOrDefault(a => a.ResponseType == ResponseRealType);
 
     CrudType? _ForeignType;
     public CrudType? ForeignType
-        => _ForeignType = _ForeignType ?? Context.Types
+        => _ForeignType = _ForeignType ?? Context.AllCrudTypes
             .FirstOrDefault(a => a.ResponseType == ForeignRealType);
 
     TypeDigger? TypeDiggerInternal { get; set; }

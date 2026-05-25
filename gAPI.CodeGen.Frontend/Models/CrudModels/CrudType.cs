@@ -85,7 +85,7 @@ public class CrudType : ICrudType
         get
         {
             if (_JunctionLeftApi == null && JunctionLeftRealType != null)
-                _JunctionLeftApi = CrudContext.Types.FirstOrDefault(a => a.ResponseType == JunctionLeftRealType);
+                _JunctionLeftApi = CrudContext.AllCrudTypes.FirstOrDefault(a => a.ResponseType == JunctionLeftRealType);
             return _JunctionLeftApi;
         }
     }
@@ -96,7 +96,7 @@ public class CrudType : ICrudType
         get
         {
             if (_JunctionRightApi == null && JunctionRightRealType != null)
-                _JunctionRightApi = CrudContext.Types.FirstOrDefault(a => a.ResponseType == JunctionRightRealType);
+                _JunctionRightApi = CrudContext.AllCrudTypes.FirstOrDefault(a => a.ResponseType == JunctionRightRealType);
             return _JunctionRightApi;
         }
     }
@@ -109,13 +109,13 @@ public class CrudType : ICrudType
 
     CrudMethod[]? _ForeignListByMethods;
     public CrudMethod[] ForeignListByMethods
-        => _ForeignListByMethods = _ForeignListByMethods ?? CrudContext.AllMethods
+        => _ForeignListByMethods = _ForeignListByMethods ?? CrudContext.AllCrudMethods
         .Where(a => a.MethodType == CrudMethodTypeEnum.ListBy && a.ForeignRealType == ResponseType)
         .ToArray();
 
     CrudMethod[]? _ForeignListNotByMethods;
     public CrudMethod[] ForeignListNotByMethods
-        => _ForeignListNotByMethods = _ForeignListNotByMethods ?? CrudContext.AllMethods
+        => _ForeignListNotByMethods = _ForeignListNotByMethods ?? CrudContext.AllCrudMethods
         .Where(a => a.MethodType == CrudMethodTypeEnum.ListNotBy && a.ForeignRealType == ResponseType)
         .ToArray();
 

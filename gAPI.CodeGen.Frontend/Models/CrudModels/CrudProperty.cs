@@ -50,7 +50,7 @@ public class CrudProperty : ICrudProperty
             if (_ListByMethodLoaded == false)
             {
                 _ListByMethodLoaded = true;
-                _ListByMethod = CrudType.CrudContext.AllMethods
+                _ListByMethod = CrudType.CrudContext.AllCrudMethods
                     .FirstOrDefault(a =>
                         a.MethodType == CrudMethodTypeEnum.ListBy &&
                         a.ResponseRealType == CrudType.ResponseType &&
@@ -73,7 +73,7 @@ public class CrudProperty : ICrudProperty
             if (_ReadMethodLoaded == false && ListByMethod != null)
             {
                 _ReadMethodLoaded = true;
-                _ReadMethod = CrudType.CrudContext.AllMethods
+                _ReadMethod = CrudType.CrudContext.AllCrudMethods
                     .FirstOrDefault(a =>
                         a.MethodType == CrudMethodTypeEnum.Read &&
                         a.ResponseRealType == ListByMethod.ForeignRealType);
@@ -96,7 +96,7 @@ public class CrudProperty : ICrudProperty
             if (_ListMethodLoaded == false && ListByMethod != null)
             {
                 _ListMethodLoaded = true;
-                _ListMethod = CrudType.CrudContext.AllMethods
+                _ListMethod = CrudType.CrudContext.AllCrudMethods
                     .FirstOrDefault(a =>
                         a.MethodType == CrudMethodTypeEnum.List &&
                         a.ResponseRealType == ListByMethod.ForeignRealType);

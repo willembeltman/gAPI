@@ -42,22 +42,19 @@ public class CrudContext
                 pageMethods.Add(method);
             }
         }
-        AllMethods = modelMethods
-            .ToArray();
-        AllPageMethods = pageMethods
-            .ToArray();
-        Types = modelMethods
+        AllCrudMethods = [.. modelMethods];
+        AllCrudTypes = [.. modelMethods
             .GroupBy(a => a.ResponseRealType)
             .Select(a => new CrudType(
                 this,
                 a.Key,
-                a.ToArray()))
-            .ToArray();
+                a.ToArray()))];
+        AllPageMethods = [.. pageMethods];
     }
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
 
-    public CrudMethod[] AllMethods { get; }
+    public CrudMethod[] AllCrudMethods { get; }
     public InterfaceMethod[] AllPageMethods { get; }
-    public CrudType[] Types { get; }
+    public CrudType[] AllCrudTypes { get; }
 }
