@@ -55,7 +55,7 @@ public class CrudlMethod : ICrudlMethod
 
     public string Name => InterfaceMethod.Name;
     public InterfaceMethodArgument[] Arguments => InterfaceMethod.Arguments;
-    public Client Client => Interface.Client!;
+    //public Client Client => Interface.Client!;
     public bool HasIFormFile => Arguments.Any(a => a.IsIFormFile);
     public bool IsAuthorized => InterfaceMethod.IsAuthorized;
     public bool IsNullable => InterfaceMethod.IsNullable;
@@ -84,7 +84,7 @@ public class CrudlMethod : ICrudlMethod
         }
     }
 
-    ISharedReference ICrudlMethod.Client => Client;
+    //ISharedReference ICrudlMethod.Client => Client;
     ISharedReference ICrudlMethod.Interface => Interface;
 
     public ITypeHelper Type => throw new NotImplementedException();

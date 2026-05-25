@@ -49,7 +49,6 @@ public class CrudlMethod(
             .FirstOrDefault(a => a.ResponseType.FullName == IsListByForeignType?.FullName);
 
     ISharedReference ICrudlMethod.Interface => Interface;
-    ISharedReference ICrudlMethod.Client => Client;
     ITypeHelper ICrudlMethod.Type => Type;
     ICrudlMethodArgument[] ICrudlMethod.Arguments => Arguments;
     ITypeDigger ICrudlMethod.TypeDigger => TypeDigger;

@@ -70,8 +70,8 @@ public class DeleteViewGenerator : BaseGenerator
         var keyType = CrudlType.KeyProperty.TypeSimpleName;
         var pluralName = CrudlType.Name.ToMultiple().ToLower();
 
-        var readName = CrudlType.ReadMethod.Client!.Name;
-        var deleteName = CrudlType.DeleteMethod.Client!.Name;
+        var readName = CrudlType.ReadMethod.Interface.Name.ToCamelCase();
+        var deleteName = CrudlType.DeleteMethod.Interface.Name.ToCamelCase();
 
         var idGetter = "id";
         var paramRouteType = $":{keyType}?";
@@ -90,10 +90,10 @@ public class DeleteViewGenerator : BaseGenerator
         Code = $@"@page ""/{pluralName}/delete/{{id{paramRouteType}}}""
 @implements IAsyncDisposable{GetRazorNamespacesCode()}{(readName == deleteName
     ? $@"
-@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}"
+@inject {CrudlType.ReadMethod.Interface.Name} {readName}"
     : $@"
-@inject {CrudlType.ReadMethod.Client.Interface.Name} {readName}
-@inject {CrudlType.DeleteMethod.Client.Interface.Name} {deleteName}")}
+@inject {CrudlType.ReadMethod.Interface.Name} {readName}
+@inject {CrudlType.DeleteMethod.Interface.Name} {deleteName}")}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager

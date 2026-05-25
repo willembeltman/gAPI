@@ -24,6 +24,9 @@ public class ImportsGenerator : BaseGenerator
         Reg("Microsoft.AspNetCore.Components.Forms");
         Reg("Microsoft.AspNetCore.Components.Routing");
         Reg("Microsoft.AspNetCore.Components.Authorization");
+        Reg("gAPI.Core.Interfaces");
+        Reg("gAPI.Core.Dtos");
+        Reg("gAPI.Core.Client");
         Reg(Config.ComponentsNamespace);
         //Reg(Config.HelpersNamespace);
 

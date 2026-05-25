@@ -69,7 +69,7 @@ public class FormGenerator : BaseGenerator
         foreach (var client in clients)
         {
             Imports.Reg(client.ForeignKeyType);
-            Imports.Reg(client.ListMethod?.Client);
+            Imports.Reg(client.ListMethod?.Interface);
         }
 
         foreach (var p in CrudlType.Properties)

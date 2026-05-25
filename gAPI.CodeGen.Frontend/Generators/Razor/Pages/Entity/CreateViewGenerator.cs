@@ -75,8 +75,7 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
         Imports.Reg(IClientAuthenticatedHttpClient);
-        Imports.Reg(CrudlType.CreateMethod.Client);
-        Imports.Reg(CrudlType.CreateMethod.Client?.Interface);
+        Imports.Reg(CrudlType.CreateMethod.Interface);
 
         var clients = CrudlType.ForeignItemProperties
             .Where(p => !p.IsStateManaged && !p.IsReadOnly)
@@ -84,8 +83,7 @@ public class CreateViewGenerator : BaseGenerator
 
         foreach (var client in clients)
         {
-            Imports.Reg(client.ListMethod!.Client!.Interface.Namespace);
-            Imports.Reg(client.ListMethod.Client);
+            Imports.Reg(client.ListMethod!.Interface);
             Imports.Reg(client.ForeignKeyType!);
         }
 
@@ -95,8 +93,8 @@ public class CreateViewGenerator : BaseGenerator
 
         Code = $@"@page ""/{nameLowerPlural}/create""
 @implements IAsyncDisposable{string.Join("", clients.Select(p => $@"
-@inject {p.ListMethod!.Client!.Interface.Name} {p.ListMethod!.Client!.Name}"))}
-@inject {CrudlType.CreateMethod.Client!.Interface.Name} {CrudlType.CreateMethod.Client.Name}
+@inject {p.ListMethod!.Interface.Name} {p.ListMethod!.Name.ToCamelCase()}"))}
+@inject {CrudlType.CreateMethod.Interface.Name} {CrudlType.CreateMethod.Name.ToCamelCase()}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -144,11 +142,11 @@ public class CreateViewGenerator : BaseGenerator
             GetPrimaryKey: {CrudlType.Name.ToLower()} => {CrudlType.Name.ToLower()}.{CrudlType.KeyProperty.Name},
             AfterSaveAction: {CrudlType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
             AfterCancelAction: {CrudlType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
-            Create: {CrudlType.CreateMethod.Client.Name}.Create,
+            Create: {CrudlType.CreateMethod.Name.ToCamelCase()}.Create,
             Read: null,
             Update: null,
             Delete: null,{(CrudlType.IsStorageFileUrlProperty ? $@"
-            FileUpdate: {CrudlType.CreateMethod.Client.Name}.FileUpdate,
+            FileUpdate: {CrudlType.CreateMethod.Name.ToCamelCase()}.FileUpdate,
             FileDelete: null" : $@"
             FileUpdate: null,
             FileDelete: null")}
@@ -159,7 +157,7 @@ public class CreateViewGenerator : BaseGenerator
             JS,
             StateHasChanged,
             GetPrimaryKey: {p.ForeignKeyType.Name.ToLower()} => {p.ForeignKeyType.Name.ToLower()}.{p.ForeignKeyType.KeyProperty.Name},
-            List: {p.ListMethod!.Client!.Name}.List,
+            List: {p.ListMethod!.Name.ToCamelCase()}.List,
             SetForeignKey: null,
             AfterSaveAction: null,
             AfterCancelAction: null,

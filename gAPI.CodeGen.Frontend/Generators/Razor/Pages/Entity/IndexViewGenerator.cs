@@ -56,15 +56,15 @@ public class IndexViewGenerator : BaseGenerator
         Imports.Reg(RedirectToLoginView);
         Imports.Reg(ListDataSource);
         Imports.Reg(CrudlType);
-        Imports.Reg(CrudlType.ListMethod.Client!.Interface);
+        Imports.Reg(CrudlType.ListMethod.Interface);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
         Imports.Reg("Microsoft.JSInterop");
 
         var pluralName = CrudlType.Name!.ToMultiple().ToLower();
         var pluralTitle = CrudlType.Name.ToMultiple();
-        var serviceName = CrudlType.ListMethod.Client.Name;
-        var interfaceName = CrudlType.ListMethod.Client.Interface.Name;
+        var serviceName = CrudlType.ListMethod.Name.ToCamelCase();
+        var interfaceName = CrudlType.ListMethod.Interface.Name;
         var entityName = CrudlType.Name;
         var keyType = CrudlType.KeyProperty.TypeSimpleName;
 
