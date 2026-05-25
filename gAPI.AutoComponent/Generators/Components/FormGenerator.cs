@@ -7,7 +7,7 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class FormGenerator : BaseGenerator
 {
     public FormGenerator(
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference iClientAuthenticatedHttpClient,
@@ -17,7 +17,7 @@ public class FormGenerator : BaseGenerator
         string directory,
         string @namespace)
     {
-        CrudlType = dto;
+        CrudType = dto;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         Imports = imports;
@@ -36,7 +36,7 @@ public class FormGenerator : BaseGenerator
     public ISharedReference IClientAuthenticatedHttpClient { get; }
     public ISharedReference FormFile { get; }
     public ISharedReference IsFormFileExtension { get; }
-    public ICrudlType CrudlType { get; }
+    public ICrudType CrudType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
 
@@ -51,19 +51,19 @@ public class FormGenerator : BaseGenerator
             "System.Collections.Generic",
             "System.Threading.Tasks"
         ]);
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(IClientAuthenticatedHttpClient);
 
-        if (CrudlType.IsStorageFileUrlProperty)
+        if (CrudType.IsStorageFileUrlProperty)
         {
             Imports.Reg("Microsoft.AspNetCore.Http");
             Imports.Reg(FormFile);
             Imports.Reg(IsFormFileExtension);
         }
 
-        var clients = CrudlType.ForeignItemProperties
+        var clients = CrudType.ForeignItemProperties
             .Where(p => !p.IsStateManaged)
             .ToArray();
         foreach (var client in clients)
@@ -72,13 +72,13 @@ public class FormGenerator : BaseGenerator
             Imports.Reg(client.ListMethod?.Interface);
         }
 
-        foreach (var p in CrudlType.Properties)
+        foreach (var p in CrudType.Properties)
         {
             Imports.Reg(p.TypeDigger);
             Imports.Reg(p.ForeignKeyType);
         }
 
-        var properties = CrudlType.Properties
+        var properties = CrudType.Properties
             .Where(p =>
                 !p.IsStateManaged &&
                 !p.IsReadOnly &&
@@ -94,7 +94,7 @@ public class FormGenerator : BaseGenerator
     <text><!-- niets te renderen --></text>
 }}
 else
-{{{(CrudlType.IsStorageFileUrlProperty ? $@"
+{{{(CrudType.IsStorageFileUrlProperty ? $@"
     @if (!string.IsNullOrWhiteSpace(DataSource.Model.StorageFileUrl))
     {{
         <div class=""mb-3 storageFilePreview"">
@@ -120,7 +120,7 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public {ItemDataSource.Name}<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+    public {ItemDataSource.Name}<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 {string.Join("", clients.Select(p => $@"
     [Parameter, EditorRequired]
     public {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType!.KeyProperty.TypeSimpleName}> {p.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }} = null!;"))}
@@ -142,7 +142,7 @@ else
 }}";
     }
 
-    private string GetPropertyMarkup(ICrudlProperty p)
+    private string GetPropertyMarkup(ICrudProperty p)
     {
         string model = "DataSource.Model";
         string id = p.Name.ToCamelCase();

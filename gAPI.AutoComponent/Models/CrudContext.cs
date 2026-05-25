@@ -1,44 +1,44 @@
 ﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Models.CrudlModels;
+using gAPI.AutoComponent.Models.CrudModels;
 using gAPI.AutoComponent.Models.PageModels;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoComponent.Models;
 
-public class CrudlContext
+public class CrudContext
 {
-    public CrudlContext(ServiceContext serviceContext)
+    public CrudContext(ServiceContext serviceContext)
     {
         ServiceContext = serviceContext;
 
-        var crudlMethods = new List<CrudlMethod>();
+        var crudMethods = new List<CrudMethod>();
         var pageMethods = new List<Page>();
         foreach (var @interface in serviceContext.Interfaces)
         {
-            var crudlMethodsOfInterface = @interface.Methods
+            var crudMethodsOfInterface = @interface.Methods
                 .Where(a =>
-                    a.CrudlMethodType != CrudlMethodTypeEnum.NotSet &&
-                    a.CrudlMethodType != CrudlMethodTypeEnum.IsPage);
-            foreach (var crudlMethodOfInterface in crudlMethodsOfInterface)
+                    a.CrudMethodType != CrudMethodTypeEnum.NotSet &&
+                    a.CrudMethodType != CrudMethodTypeEnum.IsPage);
+            foreach (var crudMethodOfInterface in crudMethodsOfInterface)
             {
-                var crudlMethodType = crudlMethodOfInterface.CrudlMethodType;
+                var crudMethodType = crudMethodOfInterface.CrudMethodType;
                 var responseType =
-                    crudlMethodOfInterface.IsDelete ? crudlMethodOfInterface.IsDeleteType! :
-                    crudlMethodOfInterface.IsFileDelete ? crudlMethodOfInterface.IsFileDeleteType! :
-                    crudlMethodOfInterface.TypeDigger.Type;
+                    crudMethodOfInterface.IsDelete ? crudMethodOfInterface.IsDeleteType! :
+                    crudMethodOfInterface.IsFileDelete ? crudMethodOfInterface.IsFileDeleteType! :
+                    crudMethodOfInterface.TypeDigger.Type;
 
-                crudlMethods.Add(new CrudlMethod(
+                crudMethods.Add(new CrudMethod(
                     this,
                     @interface,
-                    crudlMethodOfInterface,
-                    crudlMethodType,
+                    crudMethodOfInterface,
+                    crudMethodType,
                     responseType));
             }
 
             var pageMethodsOfInterface = @interface.Methods
                 .Where(a =>
-                    a.CrudlMethodType == CrudlMethodTypeEnum.IsPage);
+                    a.CrudMethodType == CrudMethodTypeEnum.IsPage);
             foreach (var pageMethodOfInterface in pageMethodsOfInterface)
             {
                 pageMethods.Add(new Page(
@@ -48,11 +48,11 @@ public class CrudlContext
                     pageMethodOfInterface.TypeDigger.Type));
             }
         }
-        AllCrudlMethods = crudlMethods
+        AllCrudMethods = crudMethods
             .ToArray();
-        Crudls = crudlMethods
+        Cruds = crudMethods
             .GroupBy(a => a.Type)
-            .Select(a => new CrudlType(
+            .Select(a => new CrudType(
                 this,
                 a.Key,
                 a.ToArray()))
@@ -63,7 +63,7 @@ public class CrudlContext
     }
 
     public ServiceContext ServiceContext { get; }
-    public CrudlMethod[] AllCrudlMethods { get; }
-    public CrudlType[] Crudls { get; }
+    public CrudMethod[] AllCrudMethods { get; }
+    public CrudType[] Cruds { get; }
     public Page[] Pages { get; }
 }

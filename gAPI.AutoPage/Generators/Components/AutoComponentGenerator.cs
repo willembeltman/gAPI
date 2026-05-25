@@ -1,11 +1,11 @@
-﻿using gAPI.AutoPage.Models.CrudlModels;
+﻿using gAPI.AutoPage.Models.CrudModels;
 using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Components
 {
     public class AutoComponentGenerator : BaseGenerator
     {
-        public AutoComponentGenerator(Generator generator, CrudlMethod method)
+        public AutoComponentGenerator(Generator generator, CrudMethod method)
         {
             Context = generator;
             Generator = new ComponentGenerator(

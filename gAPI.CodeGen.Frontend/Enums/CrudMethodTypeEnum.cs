@@ -1,6 +1,6 @@
 ﻿namespace gAPI.CodeGen.Frontend.Enums;
 
-public enum CrudlMethodTypeEnum
+public enum CrudMethodTypeEnum
 {
     NotSet,
     Create,

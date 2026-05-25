@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace gAPI.AutoPage.Models.ServiceModels;
 
-public class InterfaceMethodArgument : ICrudlMethodArgument
+public class InterfaceMethodArgument : ICrudMethodArgument
 {
     public InterfaceMethodArgument(ServiceContext serviceContext, InterfaceMethod serviceMethod, IParameterSymbol parameterSymbol)
     {

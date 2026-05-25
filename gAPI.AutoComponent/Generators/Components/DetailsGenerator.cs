@@ -6,7 +6,7 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class DetailsGenerator : BaseGenerator
 {
     public DetailsGenerator(
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference itemDataSource,
         IBaseGenerator imports,
         string directory,
@@ -23,7 +23,7 @@ public class DetailsGenerator : BaseGenerator
         FileName = $"{Name}.razor";
     }
 
-    public ICrudlType Dto { get; }
+    public ICrudType Dto { get; }
     public ISharedReference ItemDataSource { get; }
     public IBaseGenerator Imports { get; }
 
@@ -66,7 +66,7 @@ else
 }}";
     }
 
-    private string GetPropertyMarkup(ICrudlProperty p)
+    private string GetPropertyMarkup(ICrudProperty p)
     {
         // Als het nullable is, voeg ? toe
         var nullSafe = p.PropertyType.IsNullable ? "?" : "";

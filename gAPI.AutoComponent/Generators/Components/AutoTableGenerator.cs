@@ -8,7 +8,7 @@ public class AutoTableGenerator : BaseGenerator
 {
     public AutoTableGenerator(
         Generator context,
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         string directory,
@@ -17,7 +17,7 @@ public class AutoTableGenerator : BaseGenerator
         Context = context;
         var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client", "IAuthenticatedHttpClient");
         TableGenerator = new TableListGenerator(
-            crudlType,
+            crudType,
             itemDataSource,
             listDataSource,
             iClientAuthenticatedHttpClient,
@@ -25,7 +25,7 @@ public class AutoTableGenerator : BaseGenerator
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}TableList";
+        Name = $"Auto{crudType.Name}TableList";
         FileName = $"{Name}.g.cs";
 
         Directory = directory;

@@ -4,14 +4,14 @@ using gAPI.CodeGen.Frontend.Generators.Razor;
 using gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 using gAPI.CodeGen.Frontend.Models;
 using gAPI.CodeGen.Frontend.Models.Configs;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators;
 
-public class CrudlGenerator
+public class CrudGenerator
 {
-    public CrudlGenerator(
-        CrudlType crudl,
+    public CrudGenerator(
+        CrudType crud,
         FrontendConfig config,
         SharedReferences sharedReferences,
         ServiceContext serviceContext,
@@ -25,7 +25,7 @@ public class CrudlGenerator
         var @namespace = config.ComponentsNamespace!;
 
         FormGenerator = new FormGenerator(
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 IClientAuthenticatedHttpClient,
@@ -35,13 +35,13 @@ public class CrudlGenerator
                 directoryFullName,
                 @namespace);
         DetailsGenerator = new DetailsGenerator(
-                crudl,
+                crud,
                 ItemDataSource,
                 imports,
                 directoryFullName,
                 @namespace);
         ListGenerator = new ListGenerator(
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 sharedReferences.BaseListResponseT,
@@ -49,7 +49,7 @@ public class CrudlGenerator
                 directoryFullName,
                 @namespace);
         SelectListGenerator = new SelectListGenerator(
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 sharedReferences.BaseListResponseT,
@@ -57,7 +57,7 @@ public class CrudlGenerator
                 directoryFullName,
                 @namespace);
         TableListGenerator = new TableListGenerator(
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 sharedReferences.BaseListResponseT,
@@ -65,13 +65,13 @@ public class CrudlGenerator
                 directoryFullName,
                 @namespace);
         DropDownGenerator = new DropDownGenerator(
-                crudl,
+                crud,
                 ListDataSource,
                 imports,
                 directoryFullName,
                 @namespace);
         GridEditGenerator = new GridEditGenerator(
-                crudl,
+                crud,
                 ListDataSource,
                 imports,
                 directoryFullName,
@@ -81,7 +81,7 @@ public class CrudlGenerator
         @namespace = config.PagesNamespace!;
 
         CreateViewGenerator = new CreateViewGenerator(
-            crudl,
+            crud,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -96,7 +96,7 @@ public class CrudlGenerator
             directory,
             @namespace);
         EditViewGenerator = new EditViewGenerator(
-            crudl,
+            crud,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -111,7 +111,7 @@ public class CrudlGenerator
             directory,
             @namespace);
         DeleteViewGenerator = new DeleteViewGenerator(
-            crudl,
+            crud,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -126,7 +126,7 @@ public class CrudlGenerator
             directory,
             @namespace);
         IndexViewGenerator = new IndexViewGenerator(
-            crudl,
+            crud,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,

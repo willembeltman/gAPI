@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoPage.Enums;
 
-public enum CrudlMethodTypeEnum
+public enum CrudMethodTypeEnum
 {
     NotSet,
     Create,

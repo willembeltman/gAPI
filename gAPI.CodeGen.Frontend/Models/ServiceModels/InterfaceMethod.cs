@@ -158,28 +158,28 @@ public class InterfaceMethod
     public string? IsPageSubmitText { get; }
     public string? IsPageResponseText { get; }
 
-    public CrudlMethodTypeEnum CrudlMethodType
+    public CrudMethodTypeEnum CrudMethodType
     {
         get
         {
             if (IsCreate)
-                return CrudlMethodTypeEnum.Create;
+                return CrudMethodTypeEnum.Create;
             else if (IsRead)
-                return CrudlMethodTypeEnum.Read;
+                return CrudMethodTypeEnum.Read;
             else if (IsUpdate)
-                return CrudlMethodTypeEnum.Update;
+                return CrudMethodTypeEnum.Update;
             else if (IsDelete)
-                return CrudlMethodTypeEnum.Delete;
+                return CrudMethodTypeEnum.Delete;
             else if (IsList)
-                return CrudlMethodTypeEnum.List;
+                return CrudMethodTypeEnum.List;
             else if (IsListBy)
-                return CrudlMethodTypeEnum.ListBy;
+                return CrudMethodTypeEnum.ListBy;
             else if (IsListNotBy)
-                return CrudlMethodTypeEnum.ListNotBy;
+                return CrudMethodTypeEnum.ListNotBy;
             else if (IsPage)
-                return CrudlMethodTypeEnum.Page;
+                return CrudMethodTypeEnum.Page;
             else
-                return CrudlMethodTypeEnum.NotSet;
+                return CrudMethodTypeEnum.NotSet;
         }
     }
 

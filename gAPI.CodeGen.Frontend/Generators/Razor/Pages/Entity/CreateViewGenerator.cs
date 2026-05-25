@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 
 public class CreateViewGenerator : BaseGenerator
 {
     public CreateViewGenerator(
-        CrudlType crudlType,
+        CrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -22,7 +22,7 @@ public class CreateViewGenerator : BaseGenerator
         DirectoryInfo directory,
         string? @namespace)
     {
-        CrudlType = crudlType;
+        CrudType = crudType;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponse = baseResponse;
@@ -36,13 +36,13 @@ public class CreateViewGenerator : BaseGenerator
         Imports = imports;
 
         Directory = directory;
-        Namespace = $"{@namespace}.{crudlType.Name!.ToMultiple()}";
+        Namespace = $"{@namespace}.{crudType.Name!.ToMultiple()}";
         Name = "Create";
 
-        FileName = $"{crudlType.Name!.ToMultiple()}\\{Name}.razor";
+        FileName = $"{crudType.Name!.ToMultiple()}\\{Name}.razor";
     }
 
-    public CrudlType CrudlType { get; }
+    public CrudType CrudType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference BaseResponse { get; }
@@ -57,10 +57,10 @@ public class CreateViewGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudlType.CreateMethod == null || CrudlType.Name == null)
+        if (CrudType.CreateMethod == null || CrudType.Name == null)
             return;
 
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(BaseResponse);
@@ -75,9 +75,9 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
         Imports.Reg(IClientAuthenticatedHttpClient);
-        Imports.Reg(CrudlType.CreateMethod.Interface);
+        Imports.Reg(CrudType.CreateMethod.Interface);
 
-        var clients = CrudlType.ForeignItemProperties
+        var clients = CrudType.ForeignItemProperties
             .Where(p => !p.IsStateManaged && !p.IsReadOnly)
             .ToArray();
 
@@ -87,14 +87,14 @@ public class CreateViewGenerator : BaseGenerator
             Imports.Reg(client.ForeignKeyType!);
         }
 
-        var name = CrudlType.Name;
+        var name = CrudType.Name;
         var namePlural = name.ToMultiple();
         var nameLowerPlural = name.ToLower().ToMultiple();
 
         Code = $@"@page ""/{nameLowerPlural}/create""
 @implements IAsyncDisposable{string.Join("", clients.Select(p => $@"
 @inject {p.ListMethod!.Interface.Name} {p.ListMethod!.Name.ToCamelCase()}"))}
-@inject {CrudlType.CreateMethod.Interface.Name} {CrudlType.CreateMethod.Name.ToCamelCase()}
+@inject {CrudType.CreateMethod.Interface.Name} {CrudType.CreateMethod.Name.ToCamelCase()}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -122,7 +122,7 @@ public class CreateViewGenerator : BaseGenerator
 
 @code {{
     private CancellationTokenSource? Cts;
-    private {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty!.TypeSimpleName}>? {name};{string.Join("", clients.Select(p => $@"
+    private {ItemDataSource.Name}<{name}, {CrudType.KeyProperty!.TypeSimpleName}>? {name};{string.Join("", clients.Select(p => $@"
     private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.ForeignKeyType!.Name.ToMultiple()};"))}
 
     protected override async Task OnInitializedAsync()
@@ -138,15 +138,15 @@ public class CreateViewGenerator : BaseGenerator
         if (await ClientAuthenticatedHttpClient.IsAuthenticatedAsync(Cts.Token) == false)
             return;
 
-        {name} = new {ItemDataSource.Name}<{name}, {CrudlType.KeyProperty.TypeSimpleName}>(
-            GetPrimaryKey: {CrudlType.Name.ToLower()} => {CrudlType.Name.ToLower()}.{CrudlType.KeyProperty.Name},
-            AfterSaveAction: {CrudlType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
-            AfterCancelAction: {CrudlType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
-            Create: {CrudlType.CreateMethod.Name.ToCamelCase()}.Create,
+        {name} = new {ItemDataSource.Name}<{name}, {CrudType.KeyProperty.TypeSimpleName}>(
+            GetPrimaryKey: {CrudType.Name.ToLower()} => {CrudType.Name.ToLower()}.{CrudType.KeyProperty.Name},
+            AfterSaveAction: {CrudType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
+            AfterCancelAction: {CrudType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
+            Create: {CrudType.CreateMethod.Name.ToCamelCase()}.Create,
             Read: null,
             Update: null,
-            Delete: null,{(CrudlType.IsStorageFileUrlProperty ? $@"
-            FileUpdate: {CrudlType.CreateMethod.Name.ToCamelCase()}.FileUpdate,
+            Delete: null,{(CrudType.IsStorageFileUrlProperty ? $@"
+            FileUpdate: {CrudType.CreateMethod.Name.ToCamelCase()}.FileUpdate,
             FileDelete: null" : $@"
             FileUpdate: null,
             FileDelete: null")}

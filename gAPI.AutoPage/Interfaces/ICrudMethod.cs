@@ -2,14 +2,14 @@
 
 namespace gAPI.AutoPage.Interfaces;
 
-public interface ICrudlMethod
+public interface ICrudMethod
 {
     ISharedReference Client { get; }
     ISharedReference Interface { get; }
     ITypeHelper Type { get; }
     ITypeDigger TypeDigger { get; }
-    ICrudlMethodArgument[] Arguments { get; }
-    CrudlMethodTypeEnum CrudlMethodType { get; }
+    ICrudMethodArgument[] Arguments { get; }
+    CrudMethodTypeEnum CrudMethodType { get; }
     bool IsAuthorized { get; }
     bool IsNotAuthorized { get; }
     string? IsPageRoute { get; }

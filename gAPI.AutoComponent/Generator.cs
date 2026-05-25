@@ -14,12 +14,12 @@ public class Generator
     public Generator(
         SharedReferences sharedReferences,
         ServiceContext serviceContext,
-        CrudlContext crudlContext,
+        CrudContext crudContext,
         Microsoft.CodeAnalysis.SourceProductionContext spc)
     {
         SharedReferences = sharedReferences;
         ServiceContext = serviceContext;
-        CrudlContext = crudlContext;
+        CrudContext = crudContext;
         Spc = spc;
     }
 
@@ -123,11 +123,11 @@ public class Generator
         //    RedirectToLogin = _RedirectToLogin;
         //}
 
-        var Forms = CrudlContext.Crudls
+        var Forms = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoFormGenerator(
+            .Select(crud => new AutoFormGenerator(
                 this,
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 SharedReferences.FormFile,
@@ -142,12 +142,12 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(form.Code, Encoding.UTF8));
         }
 
-        var Details = CrudlContext.Crudls
+        var Details = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoDetailsGenerator(
+            .Select(crud => new AutoDetailsGenerator(
                 this,
                 ItemDataSource,
-                crudl))
+                crud))
             .ToArray();
         foreach (var detail in Details)
         {
@@ -156,11 +156,11 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(detail.Code, Encoding.UTF8));
         }
 
-        var Lists = CrudlContext.Crudls
+        var Lists = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoListGenerator(
+            .Select(crud => new AutoListGenerator(
                 this,
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 "",
@@ -173,11 +173,11 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
         }
 
-        var SelectLists = CrudlContext.Crudls
+        var SelectLists = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoSelectListGenerator(
+            .Select(crud => new AutoSelectListGenerator(
                 this,
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 "",
@@ -190,11 +190,11 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
         }
 
-        var Tables = CrudlContext.Crudls
+        var Tables = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoTableGenerator(
+            .Select(crud => new AutoTableGenerator(
                 this,
-                crudl,
+                crud,
                 ItemDataSource,
                 ListDataSource,
                 "",
@@ -207,11 +207,11 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
         }
 
-        var DropDowns = CrudlContext.Crudls
+        var DropDowns = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoDropDownGenerator(
+            .Select(crud => new AutoDropDownGenerator(
                 this,
-                crudl,
+                crud,
                 ListDataSource,
                 "",
                 "gAPI.Generated.Components"))
@@ -223,11 +223,11 @@ public class Generator
             Spc.AddSource(formFieldsViewFullName, SourceText.From(dropDown.Code, Encoding.UTF8));
         }
 
-        var GridEdits = CrudlContext.Crudls
+        var GridEdits = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
-            .Select(crudl => new AutoGridEditGenerator(
+            .Select(crud => new AutoGridEditGenerator(
                 this,
-                crudl,
+                crud,
                 ListDataSource,
                 "",
                 "gAPI.Generated.Components"))
@@ -242,6 +242,6 @@ public class Generator
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public CrudlContext CrudlContext { get; }
+    public CrudContext CrudContext { get; }
     public Microsoft.CodeAnalysis.SourceProductionContext Spc { get; }
 }

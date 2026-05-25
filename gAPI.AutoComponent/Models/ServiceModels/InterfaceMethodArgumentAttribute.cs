@@ -6,7 +6,7 @@ namespace gAPI.AutoComponent.Models.ServiceModels;
 public class InterfaceMethodArgumentAttribute(
     InterfaceMethodArgument parent,
     AttributeData attr,
-    INamedTypeSymbol named) // is attr.AttributeClass!
+    INamedTypeSymbol named)
     : ITypeHelperPropertyAttribute
 {
     TypeHelper? TypeInner { get; set; }
@@ -24,8 +24,21 @@ public class InterfaceMethodArgumentAttribute(
         return syntax?.ToFullString() ?? attr.ToString();
     }
 
+    //public string ToNameString()
+    //{
+    //    return ToString().Substring(Namespace?.Length + 1 ?? 0); // Hier
+    //}
     public string ToNameString()
     {
-        return ToString().Substring(Namespace?.Length + 1 ?? 0);
+        var str = ToString();
+
+        if (Namespace is null)
+            return str;
+
+        var prefix = Namespace + ".";
+
+        return str.StartsWith(prefix)
+            ? str.Substring(prefix.Length)
+            : str;
     }
 }

@@ -16,22 +16,22 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-            //#if DEBUG
-            //            if (!Debugger.IsAttached)
-            //            {
-            //                Debugger.Launch(); // Triggert dialoog om te attachen
-            //            }
-            //#endif 
+//#if DEBUG
+//            if (!Debugger.IsAttached)
+//            {
+//                Debugger.Launch(); // Triggert dialoog om te attachen
+//            }
+//#endif
 
-            try
+            try 
             {
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
                 var sharedReferences = new SharedReferences(compilation, allSymbols);
                 var serviceContext = new ServiceContext(compilation, allSymbols);
-                var crudlContext = new CrudlContext(serviceContext);
-                var generator = new Generator(sharedReferences, serviceContext, crudlContext, spc);
+                var crudContext = new CrudContext(serviceContext);
+                var generator = new Generator(sharedReferences, serviceContext, crudContext, spc);
                 generator.Generate();
-            }
+            } 
             catch (Exception ex)
             {
                 ShowError(ex.ToString(), spc);

@@ -3,30 +3,30 @@ using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 
-namespace gAPI.CodeGen.Frontend.Models.CrudlsModels;
+namespace gAPI.CodeGen.Frontend.Models.CrudsModels;
 
-public class CrudlMethod : ICrudlMethod
+public class CrudMethod : ICrudMethod
 {
-    public CrudlMethod(
-        CrudlContext serviceContext,
+    public CrudMethod(
+        CrudContext serviceContext,
         Interface @interface,
         InterfaceMethod interfaceMethod,
-        CrudlMethodTypeEnum crudlMethodType,
+        CrudMethodTypeEnum crudMethodType,
         Type responeType)
     {
         Context = serviceContext;
         Interface = @interface;
         InterfaceMethod = interfaceMethod;
-        MethodType = crudlMethodType;
+        MethodType = crudMethodType;
         ResponseRealType = responeType;
     }
 
 
 
 
-    ICrudlMethodArgument[] ICrudlMethod.Arguments => Arguments;
+    ICrudMethodArgument[] ICrudMethod.Arguments => Arguments;
 
-    public AutoComponent.Enums.CrudlMethodTypeEnum CrudlMethodType => throw new NotImplementedException();
+    public AutoComponent.Enums.CrudMethodTypeEnum CrudMethodType => throw new NotImplementedException();
 
     public bool IsNotAuthorized => throw new NotImplementedException();
 
@@ -47,11 +47,11 @@ public class CrudlMethod : ICrudlMethod
 
 
 
-    public CrudlContext Context { get; }
+    public CrudContext Context { get; }
     public Interface Interface { get; }
     public InterfaceMethod InterfaceMethod { get; }
-    public CrudlMethodTypeEnum MethodType { get; }
-    public Type ResponseRealType { get; } // Het response type wordt uiteindelijk de Crudl zelf.
+    public CrudMethodTypeEnum MethodType { get; }
+    public Type ResponseRealType { get; } // Het response type wordt uiteindelijk de Crud zelf.
 
     public string Name => InterfaceMethod.Name;
     public InterfaceMethodArgument[] Arguments => InterfaceMethod.Arguments;
@@ -64,13 +64,13 @@ public class CrudlMethod : ICrudlMethod
     public Type? ForeignRealType => InterfaceMethod.IsListByForeignType;
 
 
-    CrudlType? _ResponseType;
-    public CrudlType? ResponseType
+    CrudType? _ResponseType;
+    public CrudType? ResponseType
         => _ResponseType = _ResponseType ?? Context.Types
             .FirstOrDefault(a => a.ResponseType == ResponseRealType);
 
-    CrudlType? _ForeignType;
-    public CrudlType? ForeignType
+    CrudType? _ForeignType;
+    public CrudType? ForeignType
         => _ForeignType = _ForeignType ?? Context.Types
             .FirstOrDefault(a => a.ResponseType == ForeignRealType);
 
@@ -84,12 +84,12 @@ public class CrudlMethod : ICrudlMethod
         }
     }
 
-    //ISharedReference ICrudlMethod.Client => Client;
-    ISharedReference ICrudlMethod.Interface => Interface;
+    //ISharedReference ICrudMethod.Client => Client;
+    ISharedReference ICrudMethod.Interface => Interface;
 
     public ITypeHelper Type => throw new NotImplementedException();
 
-    ITypeDigger ICrudlMethod.TypeDigger => TypeDigger;
+    ITypeDigger ICrudMethod.TypeDigger => TypeDigger;
 
     public override string ToString()
     {

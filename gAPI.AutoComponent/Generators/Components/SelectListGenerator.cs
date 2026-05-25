@@ -7,7 +7,7 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class SelectListGenerator : BaseGenerator
 {
     public SelectListGenerator(
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseListResponse,
@@ -15,7 +15,7 @@ public class SelectListGenerator : BaseGenerator
         string directory,
         string @namespace)
     {
-        CrudlType = dto;
+        CrudType = dto;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseListResponse = baseListResponse;
@@ -28,7 +28,7 @@ public class SelectListGenerator : BaseGenerator
         FileName = $"{Name}.razor";
     }
 
-    public ICrudlType CrudlType { get; }
+    public ICrudType CrudType { get; }
     public IBaseGenerator Imports { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
@@ -36,7 +36,7 @@ public class SelectListGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudlType.ListMethod == null) return;
+        if (CrudType.ListMethod == null) return;
 
         // Imports
         Imports.RegRange(
@@ -48,19 +48,19 @@ public class SelectListGenerator : BaseGenerator
             "System.Collections.Generic"
         ]);
 
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(BaseListResponse);
 
         // Alleen name / foreign-name / storage
-        var orderableProps = CrudlType.Properties
+        var orderableProps = CrudType.Properties
             .Where(p => p.IsName || p.IsForeignName)
             .OrderByDescending(a => a.IsName)
             .ThenByDescending(a => a.IsForeignName)
             .ToArray();
 
-        var storageFileProps = CrudlType.Properties
+        var storageFileProps = CrudType.Properties
             .Where(p => p.IsStorageFileUrlProperty)
             .ToArray();
 
@@ -229,19 +229,19 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public ListDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+    public ListDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 
     [Parameter, EditorRequired]
-    public EventCallback<ItemDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>> OnSelect {{ get; set; }}
+    public EventCallback<ItemDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>> OnSelect {{ get; set; }}
 
-    [Parameter] public string Id {{ get; set; }} = $""{CrudlType.Name.ToLower()}SelectList_{{Guid.NewGuid()}}"";
+    [Parameter] public string Id {{ get; set; }} = $""{CrudType.Name.ToLower()}SelectList_{{Guid.NewGuid()}}"";
     [Parameter] public string SelectText {{ get; set; }} = ""Select"";
     [Parameter] public string EmptyText {{ get; set; }} = ""Order by..."";
     [Parameter] public string AscText {{ get; set; }} = ""▲ asc"";
     [Parameter] public string DescText {{ get; set; }} = ""▼ desc"";
     [Parameter] public string LoadingModeText {{ get; set; }} = ""Loading more..."";
     [Parameter] public string LoadingText {{ get; set; }} = ""Loading, please wait..."";
-    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudlType.Name.ToMultiple()} to select."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple()} to select."";
 
     private string[] HideColumnNames = [];
 
@@ -258,7 +258,7 @@ else
               );
     }}
 
-    private async Task SelectItem(ItemDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}> item)
+    private async Task SelectItem(ItemDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}> item)
     {{
         if (OnSelect.HasDelegate)
             await OnSelect.InvokeAsync(item);

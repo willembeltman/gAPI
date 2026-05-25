@@ -7,20 +7,20 @@ public class AutoGridEditGenerator : BaseGenerator
 {
     public AutoGridEditGenerator(
         Generator context,
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference listDataSource,
         string directory,
         string @namespace)
     {
         Context = context;
         GridEditGenerator = new GridEditGenerator(
-            crudlType,
+            crudType,
             listDataSource,
             this,
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}GridEdit";
+        Name = $"Auto{crudType.Name}GridEdit";
         FileName = $"{Name}.g.cs";
 
         Directory = directory;

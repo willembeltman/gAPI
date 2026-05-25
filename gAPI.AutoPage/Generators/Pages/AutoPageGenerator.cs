@@ -1,12 +1,12 @@
 ﻿using gAPI.AutoPage.Interfaces;
-using gAPI.AutoPage.Models.CrudlModels;
+using gAPI.AutoPage.Models.CrudModels;
 using gAPI.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Pages
 {
     public class AutoPageGenerator : BaseGenerator, IPage
     {
-        public AutoPageGenerator(Generator generator, CrudlMethod method)
+        public AutoPageGenerator(Generator generator, CrudMethod method)
         {
             Context = generator;
             Generator = new PageGenerator(

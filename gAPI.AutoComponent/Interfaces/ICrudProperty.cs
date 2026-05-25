@@ -1,6 +1,6 @@
-﻿namespace gAPI.AutoPage.Interfaces;
+﻿namespace gAPI.AutoComponent.Interfaces;
 
-public interface ICrudlProperty
+public interface ICrudProperty
 {
     string TypeSimpleName { get; }
     string Name { get; }
@@ -18,8 +18,8 @@ public interface ICrudlProperty
     bool IsKey { get; }
     ITypeHelper PropertyType { get; }
     ITypeDigger TypeDigger { get; }
-    ICrudlType? ForeignKeyType { get; }
-    ICrudlMethod? ListByMethod { get; }
-    ICrudlMethod? ListMethod { get; }
-    ICrudlProperty? ForeignKeyNameProperty { get; }
+    ICrudType? ForeignKeyType { get; }
+    ICrudMethod? ListByMethod { get; }
+    ICrudMethod? ListMethod { get; }
+    ICrudProperty? ForeignKeyNameProperty { get; }
 }

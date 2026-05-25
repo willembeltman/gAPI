@@ -8,7 +8,7 @@ public class AutoSelectListGenerator : BaseGenerator
 {
     public AutoSelectListGenerator(
         Generator context,
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         string directory,
@@ -17,7 +17,7 @@ public class AutoSelectListGenerator : BaseGenerator
         Context = context;
         var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client", "IAuthenticatedHttpClient");
         SelectListGenerator = new SelectListGenerator(
-            crudlType,
+            crudType,
             itemDataSource,
             listDataSource,
             iClientAuthenticatedHttpClient,
@@ -25,7 +25,7 @@ public class AutoSelectListGenerator : BaseGenerator
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}SelectList";
+        Name = $"Auto{crudType.Name}SelectList";
         FileName = $"{Name}.g.cs";
 
         Directory = directory;

@@ -1,25 +1,25 @@
-﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.Models.ServiceModels;
+﻿using gAPI.AutoPage.Enums;
+using gAPI.AutoPage.Interfaces;
+using gAPI.AutoPage.Models.ServiceModels;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Models.CrudlModels;
+namespace gAPI.AutoPage.Models.CrudModels;
 
-public class CrudlMethod(
-    CrudlContext serviceContext,
+public class CrudMethod(
+    CrudContext serviceContext,
     Interface @interface,
     InterfaceMethod interfaceMethod,
-    CrudlMethodTypeEnum crudlMethodType,
+    CrudMethodTypeEnum crudMethodType,
     TypeHelper type)
-    : ICrudlMethod
+    : ICrudMethod
 {
-    public CrudlContext Context { get; } = serviceContext;
+    public CrudContext Context { get; } = serviceContext;
     public Interface Interface { get; } = @interface;
     public InterfaceMethod InterfaceMethod { get; } = interfaceMethod;
-    public CrudlMethodTypeEnum CrudlMethodType { get; } = crudlMethodType;
+    public CrudMethodTypeEnum CrudMethodType { get; } = crudMethodType;
     public TypeHelper Type { get; } = type;
 
-    public CrudlType? CrudlType { get; set; }
+    public CrudType? CrudType { get; set; }
 
     public string Name => InterfaceMethod.Name;
     public InterfaceMethodArgument[] Arguments => InterfaceMethod.Arguments;
@@ -43,20 +43,21 @@ public class CrudlMethod(
     public TypeDigger TypeDigger
         => TypeDiggerInner ??= new TypeDigger(Context.ServiceContext, Type.TypeSymbol, IsNullable);
 
-    CrudlType? _ForeignType;
-    public CrudlType ForeignType
-        => _ForeignType ??= Context.Crudls
+    CrudType? _ForeignType;
+    public CrudType ForeignType
+        => _ForeignType ??= Context.Cruds
             .FirstOrDefault(a => a.ResponseType.FullName == IsListByForeignType?.FullName);
 
-    ISharedReference ICrudlMethod.Interface => Interface;
-    ITypeHelper ICrudlMethod.Type => Type;
-    ICrudlMethodArgument[] ICrudlMethod.Arguments => Arguments;
-    ITypeDigger ICrudlMethod.TypeDigger => TypeDigger;
+    ISharedReference ICrudMethod.Interface => Interface;
+    ISharedReference ICrudMethod.Client => Client;
+    ITypeHelper ICrudMethod.Type => Type;
+    ICrudMethodArgument[] ICrudMethod.Arguments => Arguments;
+    ITypeDigger ICrudMethod.TypeDigger => TypeDigger;
 
     public override string ToString()
     {
-        return $"[{CrudlMethodType.ToString().ToUpper()}]" +
+        return $"[{CrudMethodType.ToString().ToUpper()}]" +
             $"{(ForeignType != null ? $"[{ForeignType.ResponseType.Name.ToUpper()}]" : "")}" +
-            $" {CrudlType?.Name} {Name}";
+            $" {CrudType?.Name} {Name}";
     }
 }

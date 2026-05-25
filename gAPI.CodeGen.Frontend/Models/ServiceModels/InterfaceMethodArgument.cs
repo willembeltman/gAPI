@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace gAPI.CodeGen.Frontend.Models.ServiceModels;
 
-public class InterfaceMethodArgument : ICrudlMethodArgument
+public class InterfaceMethodArgument : ICrudMethodArgument
 {
     public InterfaceMethodArgument(ServiceContext dataModel, InterfaceMethod serviceMethod, ParameterInfo parameterInfo)
     {

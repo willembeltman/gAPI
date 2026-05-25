@@ -31,7 +31,7 @@ public class NavMenuAuthenticatedGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.AspNetCore.Components.Web");
 
-        Code = string.Join("\r\n\r\n", Context.Crudls
+        Code = string.Join("\r\n\r\n", Context.Cruds
             .Where(a => a.IsAuthorized == true && a.IsEntryPoint && a.ListMethod != null && a.IsJunction == false)
             .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.Name!.ToMultiple().ToLower()}"">

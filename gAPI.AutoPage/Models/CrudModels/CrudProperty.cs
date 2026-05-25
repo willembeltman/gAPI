@@ -1,20 +1,20 @@
-﻿using gAPI.AutoComponent.Enums;
-using gAPI.AutoComponent.Interfaces;
-using gAPI.AutoComponent.Models.ServiceModels;
+﻿using gAPI.AutoPage.Enums;
+using gAPI.AutoPage.Interfaces;
+using gAPI.AutoPage.Models.ServiceModels;
 using System.Linq;
 
-namespace gAPI.AutoComponent.Models.CrudlModels;
+namespace gAPI.AutoPage.Models.CrudModels;
 
 
-public class CrudlProperty : ICrudlProperty
+public class CrudProperty : ICrudProperty
 {
-    public CrudlProperty(CrudlType parentType, TypeHelperProperty dtoProperty)
+    public CrudProperty(CrudType parentType, TypeHelperProperty dtoProperty)
     {
-        CrudlType = parentType;
+        CrudType = parentType;
         DtoProperty = dtoProperty;
     }
 
-    public CrudlType CrudlType { get; }
+    public CrudType CrudType { get; }
     public TypeHelperProperty DtoProperty { get; }
     public string Name => DtoProperty.Name;
     public bool IsReadOnly => DtoProperty.IsReadOnly;
@@ -33,22 +33,22 @@ public class CrudlProperty : ICrudlProperty
     public string TypeSimpleName => PropertyType.Name;
 
     bool _ListByMethodLoaded;
-    CrudlMethod? _ListByMethod;
+    CrudMethod? _ListByMethod;
     /// <summary>
     /// Zoekt de <c>ListBy</c>-methode op in de service van het huidige dto-type, op basis van een foreign key.
     /// Bijvoorbeeld: <c>User.CurrentCompanyId</c> verwijst naar <c>UserService.LoadByCurrentCompanyId</c>.
     /// Deze methode wordt gebruikt om te bepalen naar welk foreign type de foreign key verwijst.
     /// </summary>
-    public CrudlMethod? ListByMethod
+    public CrudMethod? ListByMethod
     {
         get
         {
             if (_ListByMethodLoaded == false)
             {
                 _ListByMethodLoaded = true;
-                _ListByMethod = CrudlType.Methods
+                _ListByMethod = CrudType.Methods
                     .FirstOrDefault(a =>
-                        a.CrudlMethodType == CrudlMethodTypeEnum.ListBy &&
+                        a.CrudMethodType == CrudMethodTypeEnum.ListBy &&
                         a.ForeignKeyName == DtoProperty.Name);
             }
             return _ListByMethod;
@@ -56,61 +56,61 @@ public class CrudlProperty : ICrudlProperty
     }
 
     bool _ReadMethodLoaded;
-    CrudlMethod? _ReadMethod;
+    CrudMethod? _ReadMethod;
     /// <summary>
     /// Zoekt de <c>Read</c>-methode op in de service van het foreign dto-type.
     /// Deze methode kan worden gebruikt om een individueel object op te halen op basis van de foreign key.
     /// Bijvoorbeeld: <c>User.CurrentCompanyId</c> verwijst naar <c>CompanyService.Read</c>.
-    public CrudlMethod? ForeignKey_ReadMethod
+    public CrudMethod? ForeignKey_ReadMethod
     {
         get
         {
             if (_ReadMethodLoaded == false && ListByMethod != null)
             {
                 _ReadMethodLoaded = true;
-                _ReadMethod = CrudlType.Context.AllCrudlMethods
+                _ReadMethod = CrudType.Context.AllCrudMethods
                     .FirstOrDefault(a =>
-                        a.CrudlMethodType == CrudlMethodTypeEnum.Read &&
-                        a.CrudlType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
+                        a.CrudMethodType == CrudMethodTypeEnum.Read &&
+                        a.CrudType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
             }
             return _ReadMethod;
         }
     }
 
     bool _ListMethodLoaded;
-    CrudlMethod? _ListMethod;
+    CrudMethod? _ListMethod;
     /// <summary>
     /// Zoekt de <c>List</c>-methode op in de service van het foreign type.
     /// Deze methode kan worden gebruikt om alle objecten van het foreign type op te halen.
     /// Bijvoorbeeld: <c>User.CurrentCompanyId</c> verwijst naar <c>CompanyService.List</c>.
     /// </summary>
-    public CrudlMethod? ListMethod
+    public CrudMethod? ListMethod
     {
         get
         {
             if (_ListMethodLoaded == false && ListByMethod != null)
             {
                 _ListMethodLoaded = true;
-                _ListMethod = CrudlType.Context.AllCrudlMethods
+                _ListMethod = CrudType.Context.AllCrudMethods
                     .FirstOrDefault(a =>
-                        a.CrudlMethodType == CrudlMethodTypeEnum.List &&
-                        a.CrudlType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
+                        a.CrudMethodType == CrudMethodTypeEnum.List &&
+                        a.CrudType!.ResponseType.FullName == ListByMethod.IsListByForeignType!.FullName);
             }
             return _ListMethod;
         }
     }
 
-    public CrudlType? ForeignKeyType => ListMethod?.CrudlType;
+    public CrudType? ForeignKeyType => ListMethod?.CrudType;
 
     private bool _ForeignKeyNamePropertyLoaded { get; set; }
-    private CrudlProperty? _ForeignKeyNameProperty { get; set; }
-    public CrudlProperty? ForeignKeyNameProperty
+    private CrudProperty? _ForeignKeyNameProperty { get; set; }
+    public CrudProperty? ForeignKeyNameProperty
     {
         get
         {
             if (_ForeignKeyNamePropertyLoaded == false)
             {
-                _ForeignKeyNameProperty = CrudlType.Properties
+                _ForeignKeyNameProperty = CrudType.Properties
                     .FirstOrDefault(a =>
                         a.DtoProperty.IsForeignName &&
                         a.DtoProperty.IsForeignNameString == Name);
@@ -121,17 +121,17 @@ public class CrudlProperty : ICrudlProperty
 
     public bool IsNullable => PropertyType.IsNullable;
 
-    ICrudlMethod? ICrudlProperty.ListByMethod => ListByMethod;
-    ICrudlType? ICrudlProperty.ForeignKeyType => ForeignKeyType;
-    ICrudlMethod? ICrudlProperty.ListMethod => ListMethod;
-    ICrudlProperty? ICrudlProperty.ForeignKeyNameProperty => ForeignKeyNameProperty;
-    ITypeHelper ICrudlProperty.PropertyType => PropertyType;
-    ITypeDigger ICrudlProperty.TypeDigger => TypeDigger;
+    ICrudMethod? ICrudProperty.ListByMethod => ListByMethod;
+    ICrudType? ICrudProperty.ForeignKeyType => ForeignKeyType;
+    ICrudMethod? ICrudProperty.ListMethod => ListMethod;
+    ICrudProperty? ICrudProperty.ForeignKeyNameProperty => ForeignKeyNameProperty;
+    ITypeHelper ICrudProperty.PropertyType => PropertyType;
+    ITypeDigger ICrudProperty.TypeDigger => TypeDigger;
 
 
     public override string ToString()
     {
-        return $"{(ForeignKey_ReadMethod != null ? $"[READ][{ForeignKey_ReadMethod.CrudlType!.ResponseType.Name.ToUpper()}]" : "")}" +
+        return $"{(ForeignKey_ReadMethod != null ? $"[READ][{ForeignKey_ReadMethod.CrudType!.ResponseType.Name.ToUpper()}]" : "")}" +
             $" {DtoProperty} " +
             $"{(IsReadOnly ? "(ReadOnly)" : "") + (IsKey ? "(Key)" : "")}";
     }

@@ -8,17 +8,17 @@ public class AutoDetailsGenerator : BaseGenerator
     public AutoDetailsGenerator(
         Generator context,
         ISharedReference itemDataSource,
-        ICrudlType crudlType)
+        ICrudType crudType)
     {
         Context = context;
         DetailsGenerator = new DetailsGenerator(
-            crudlType,
+            crudType,
             itemDataSource,
             this,
             "",
             "gAPI.Generated.Components");
 
-        Name = $"Auto{crudlType.Name}Details";
+        Name = $"Auto{crudType.Name}Details";
         FileName = $"{Name}.g.cs"; // ongecompileerde Razor view
 
         Directory = "";

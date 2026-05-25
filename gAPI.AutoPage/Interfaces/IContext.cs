@@ -2,7 +2,7 @@
 
 public interface IContext
 {
-    ICrudlType[] Crudls { get; }
+    ICrudType[] Cruds { get; }
     IPageIndex[] PageIndexes { get; }
     IPage[] RootPages { get; }
     ISharedReferences SharedReferences { get; }

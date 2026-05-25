@@ -8,7 +8,7 @@ public class AutoFormGenerator : BaseGenerator
 {
     public AutoFormGenerator(
         Generator context,
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference formFile,

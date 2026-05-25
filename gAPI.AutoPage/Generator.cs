@@ -17,19 +17,19 @@ public class Generator : IContext
     public Generator(
         SharedReferences sharedReferences,
         ServiceContext serviceContext,
-        CrudlContext crudlContext,
+        CrudContext crudContext,
         SourceProductionContext spc)
     {
         SharedReferences = sharedReferences;
         ServiceContext = serviceContext;
-        CrudlContext = crudlContext;
+        CrudContext = crudContext;
         Spc = spc;
 
-        Components = CrudlContext.ComponentMethods
+        Components = CrudContext.ComponentMethods
             .Select(page => new AutoComponentGenerator(this, page))
             .ToArray();
 
-        var pageMethods = CrudlContext.PageMethods
+        var pageMethods = CrudContext.PageMethods
             .Select(page => new AutoPageGenerator(this, page))
             .ToArray();
 
@@ -87,7 +87,7 @@ public class Generator : IContext
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public CrudlContext CrudlContext { get; }
+    public CrudContext CrudContext { get; }
     public Microsoft.CodeAnalysis.SourceProductionContext Spc { get; }
 
     public AutoComponentGenerator[] Components { get; }
@@ -99,7 +99,7 @@ public class Generator : IContext
     public ItemDataSourceGenerator ItemDataSource { get; }
     public ListDataSourceGenerator ListDataSource { get; }
 
-    ICrudlType[] IContext.Crudls => CrudlContext.Crudls;
+    ICrudType[] IContext.Cruds => CrudContext.Cruds;
     IPageIndex[] IContext.PageIndexes => PageIndexes;
     IPage[] IContext.RootPages => RootPages;
     ISharedReferences IContext.SharedReferences => SharedReferences;

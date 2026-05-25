@@ -1,42 +1,42 @@
 ﻿using gAPI.CodeGen.Frontend.Enums;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 
 namespace gAPI.CodeGen.Frontend.Models;
 
-public class CrudlContext
+public class CrudContext
 {
-    public CrudlContext(ServiceContext serviceContext, SharedReferences sharedReferences)
+    public CrudContext(ServiceContext serviceContext, SharedReferences sharedReferences)
     {
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
 
-        var modelMethods = new List<CrudlMethod>();
+        var modelMethods = new List<CrudMethod>();
         var pageMethods = new List<InterfaceMethod>();
         foreach (var @interface in serviceContext.Interfaces)
         {
             var methods1 = @interface.Methods
                 .Where(a =>
-                    a.CrudlMethodType != CrudlMethodTypeEnum.Page &&
-                    a.CrudlMethodType != CrudlMethodTypeEnum.NotSet);
+                    a.CrudMethodType != CrudMethodTypeEnum.Page &&
+                    a.CrudMethodType != CrudMethodTypeEnum.NotSet);
             foreach (var method in methods1)
             {
-                var crudlMethodType = method.CrudlMethodType;
+                var crudMethodType = method.CrudMethodType;
                 var responseType =
                     method.IsDelete ? method.IsDeleteType :
                     method.IsFileDelete ? method.IsFileDeleteType :
                     method.ResponseTypeDigger.Type;
 
-                modelMethods.Add(new CrudlMethod(
+                modelMethods.Add(new CrudMethod(
                     this,
                     @interface,
                     method,
-                    crudlMethodType,
+                    crudMethodType,
                     responseType!));
             }
             var methods2 = @interface.Methods
                 .Where(a =>
-                    a.CrudlMethodType == CrudlMethodTypeEnum.Page);
+                    a.CrudMethodType == CrudMethodTypeEnum.Page);
             foreach (var method in methods2)
             {
                 pageMethods.Add(method);
@@ -48,7 +48,7 @@ public class CrudlContext
             .ToArray();
         Types = modelMethods
             .GroupBy(a => a.ResponseRealType)
-            .Select(a => new CrudlType(
+            .Select(a => new CrudType(
                 this,
                 a.Key,
                 a.ToArray()))
@@ -57,7 +57,7 @@ public class CrudlContext
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
 
-    public CrudlMethod[] AllMethods { get; }
+    public CrudMethod[] AllMethods { get; }
     public InterfaceMethod[] AllPageMethods { get; }
-    public CrudlType[] Types { get; }
+    public CrudType[] Types { get; }
 }

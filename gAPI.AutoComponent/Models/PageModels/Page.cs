@@ -4,7 +4,7 @@ namespace gAPI.AutoComponent.Models.PageModels;
 
 public class Page
 {
-    public Page(CrudlContext viewsContext, Interface @interface, InterfaceMethod method, TypeHelper responseType)
+    public Page(CrudContext viewsContext, Interface @interface, InterfaceMethod method, TypeHelper responseType)
     {
         ViewsContext = viewsContext;
         Interface = @interface;
@@ -12,7 +12,7 @@ public class Page
         ResponseType = responseType;
     }
 
-    public CrudlContext ViewsContext { get; }
+    public CrudContext ViewsContext { get; }
     public Interface Interface { get; }
     public InterfaceMethod InterfaceMethod { get; }
     public TypeHelper ResponseType { get; }

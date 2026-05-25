@@ -2,7 +2,7 @@
 
 namespace gAPI.AutoPage.Interfaces;
 
-public interface ICrudlType : ISharedReference
+public interface ICrudType : ISharedReference
 {
     bool IsUser { get; }
     bool IsAuthorized { get; }
@@ -10,19 +10,19 @@ public interface ICrudlType : ISharedReference
     bool IsICrudEntity { get; }
     bool IsEntryPoint { get; }
     bool IsJunction { get; }
-    ICrudlProperty KeyProperty { get; }
-    IEnumerable<ICrudlProperty> Properties { get; }
-    IEnumerable<ICrudlProperty> ForeignItemProperties { get; }
-    ICrudlMethod[] Methods { get; }
+    ICrudProperty KeyProperty { get; }
+    IEnumerable<ICrudProperty> Properties { get; }
+    IEnumerable<ICrudProperty> ForeignItemProperties { get; }
+    ICrudMethod[] Methods { get; }
     ITypeHelper ResponseType { get; }
     ITypeDigger ResponseTypeDigger { get; }
-    ICrudlMethod? ReadMethod { get; }
-    ICrudlMethod? CreateMethod { get; }
-    ICrudlMethod? UpdateMethod { get; }
-    ICrudlMethod? DeleteMethod { get; }
-    ICrudlMethod? ListMethod { get; }
-    ICrudlType? JunctionLeftApi { get; }
-    ICrudlType? JunctionRightApi { get; }
+    ICrudMethod? ReadMethod { get; }
+    ICrudMethod? CreateMethod { get; }
+    ICrudMethod? UpdateMethod { get; }
+    ICrudMethod? DeleteMethod { get; }
+    ICrudMethod? ListMethod { get; }
+    ICrudType? JunctionLeftApi { get; }
+    ICrudType? JunctionRightApi { get; }
     string? IsPageRoute { get; }
     string? IsPageTitle { get; }
     string? IsPageSubmitText { get; }

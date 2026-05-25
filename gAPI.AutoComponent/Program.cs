@@ -27,8 +27,8 @@ public class Program : IIncrementalGenerator
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
                 var sharedReferences = new SharedReferences(compilation, allSymbols);
                 var serviceContext = new ServiceContext(compilation, allSymbols);
-                var crudlContext = new CrudlContext(serviceContext);
-                var generator = new Generator(sharedReferences, serviceContext, crudlContext, spc);
+                var crudContext = new CrudContext(serviceContext);
+                var generator = new Generator(sharedReferences, serviceContext, crudContext, spc);
                 generator.Generate();
             }
             catch (Exception ex)
@@ -54,18 +54,18 @@ public class Program : IIncrementalGenerator
     //private static void CreateDebugFile(SourceProductionContext spc, ComponentsGenerator generatedViews)
     //{
     //    var str = "";
-    //    foreach (var crudl in generatedViews.CrudlContext.Crudls)
+    //    foreach (var crud in generatedViews.CrudContext.Cruds)
     //    {
-    //        str += $"// Crudl: {crudl.Name}\r\n";
-    //        foreach (var method in crudl.Methods)
+    //        str += $"// Crud: {crud.Name}\r\n";
+    //        foreach (var method in crud.Methods)
     //        {
-    //            str += $"//    Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+    //            str += $"//    Method: {method.Name} Type: {method.CrudMethodType}\r\n";
     //        }
     //    }
-    //    str += "\r\n// All Crudl Methods:\r\n";
-    //    foreach (var method in generatedViews.CrudlContext.AllCrudlMethods)
+    //    str += "\r\n// All Crud Methods:\r\n";
+    //    foreach (var method in generatedViews.CrudContext.AllCrudMethods)
     //    {
-    //        str += $"// Crudl: {method.Type.Name} Method: {method.Name} Type: {method.CrudlMethodType}\r\n";
+    //        str += $"// Crud: {method.Type.Name} Method: {method.Name} Type: {method.CrudMethodType}\r\n";
     //    }
     //    spc.AddSource("Debug.g.cs", SourceText.From(str, Encoding.UTF8));
     //}

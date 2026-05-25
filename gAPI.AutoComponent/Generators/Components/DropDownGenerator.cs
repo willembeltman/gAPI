@@ -6,24 +6,24 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class DropDownGenerator : BaseGenerator
 {
     public DropDownGenerator(
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference listDataSource,
         IBaseGenerator imports,
         string directory,
         string @namespace)
     {
-        CrudlType = crudlType;
+        CrudType = crudType;
         ListDataSource = listDataSource;
         Imports = imports;
 
         Directory = directory;
         Namespace = @namespace;
 
-        Name = $"{crudlType.Name}DropDown";
+        Name = $"{crudType.Name}DropDown";
         FileName = $"{Name}.razor";
     }
 
-    public ICrudlType CrudlType { get; }
+    public ICrudType CrudType { get; }
     public ISharedReference ListDataSource { get; }
     public IBaseGenerator Imports { get; }
 
@@ -38,7 +38,7 @@ public class DropDownGenerator : BaseGenerator
         ]);
 
         Imports.Reg(ListDataSource);
-        Imports.Reg(CrudlType.Namespace);
+        Imports.Reg(CrudType.Namespace);
 
         Code = $@"@if (DataSource == null || DataSource.Items.Count == 0)
 {{
@@ -88,31 +88,31 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public ListDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }} = default!;
+    public ListDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }} = default!;
 
-    [Parameter] public {CrudlType.KeyProperty.TypeSimpleName} Value {{ get; set; }}
-    [Parameter] public EventCallback<{CrudlType.KeyProperty.TypeSimpleName}> ValueChanged {{ get; set; }}
+    [Parameter] public {CrudType.KeyProperty.TypeSimpleName} Value {{ get; set; }}
+    [Parameter] public EventCallback<{CrudType.KeyProperty.TypeSimpleName}> ValueChanged {{ get; set; }}
     [Parameter] public string? bindtype_Value {{ get; set; }}
-    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudlType.KeyProperty.TypeSimpleName}>>? ValueExpression {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudType.KeyProperty.TypeSimpleName}>>? ValueExpression {{ get; set; }}
 
-    [Parameter] public {CrudlType.KeyProperty.TypeSimpleName}? NullableValue {{ get; set; }}
-    [Parameter] public EventCallback<{CrudlType.KeyProperty.TypeSimpleName}?> NullableValueChanged {{ get; set; }}
+    [Parameter] public {CrudType.KeyProperty.TypeSimpleName}? NullableValue {{ get; set; }}
+    [Parameter] public EventCallback<{CrudType.KeyProperty.TypeSimpleName}?> NullableValueChanged {{ get; set; }}
     [Parameter] public string? bindtype_NullableValue {{ get; set; }}
-    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudlType.KeyProperty.TypeSimpleName}>>? NullableValueExpression {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudType.KeyProperty.TypeSimpleName}>>? NullableValueExpression {{ get; set; }}
 
     [Parameter] public string? ForeignName {{ get; set; }}
     [Parameter] public EventCallback<string?> ForeignNameChanged {{ get; set; }}
     [Parameter] public string? bindtype_ForeignName {{ get; set; }}
     [Parameter] public System.Linq.Expressions.Expression<Func<string?>>? ForeignNameExpression {{ get; set; }}
 
-    [Parameter] public string? Id {{ get; set; }} = $""{CrudlType.Name.ToLower()}Dropdown_{{Guid.NewGuid()}}""; 
+    [Parameter] public string? Id {{ get; set; }} = $""{CrudType.Name.ToLower()}Dropdown_{{Guid.NewGuid()}}""; 
 
-    [Parameter] public string ChooseText {{ get; set; }} = ""-- Choose a {CrudlType.Name.ToLower()} --"";
-    [Parameter] public string LoadingText {{ get; set; }} = ""Loading {CrudlType.Name.ToMultiple().ToLower()}..."";
-    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudlType.Name.ToMultiple().ToLower()} available."";
+    [Parameter] public string ChooseText {{ get; set; }} = ""-- Choose a {CrudType.Name.ToLower()} --"";
+    [Parameter] public string LoadingText {{ get; set; }} = ""Loading {CrudType.Name.ToMultiple().ToLower()}..."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple().ToLower()} available."";
     [Parameter] public string LoadingMoreText {{ get; set; }} = ""Loading more..."";
 
-    private async Task SelectItem(ItemDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? item)
+    private async Task SelectItem(ItemDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? item)
     {{
         if (DataSource == null) return;
 
@@ -124,8 +124,8 @@ else
         }}
         else
         {{
-            Value = item.Model.{CrudlType.KeyProperty.Name};
-            NullableValue = item.Model.{CrudlType.KeyProperty.Name};
+            Value = item.Model.{CrudType.KeyProperty.Name};
+            NullableValue = item.Model.{CrudType.KeyProperty.Name};
             ForeignName = item.Model.ToString();
         }}
 

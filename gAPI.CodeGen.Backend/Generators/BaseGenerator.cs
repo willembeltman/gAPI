@@ -15,7 +15,7 @@ public class BaseGenerator : SharedReference
     private List<string> Namespaces { get; set; } = [];
 
 
-    //public void Reg(CrudlType? dto)
+    //public void Reg(CrudType? dto)
     //{
     //    if (dto?.RealType?.Namespace != null)
     //        Namespaces.Add(dto.RealType.Namespace);

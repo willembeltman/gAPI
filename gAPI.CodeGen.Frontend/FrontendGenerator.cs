@@ -15,7 +15,7 @@ public class FrontendGenerator
         Config = clientConfig;
         SharedReferences = new SharedReferences(clientConfig);
         ServiceContext = new ServiceContext(clientConfig);
-        CrudlContext = new CrudlContext(ServiceContext, SharedReferences);
+        CrudContext = new CrudContext(ServiceContext, SharedReferences);
         Imports = new ImportsGenerator(clientConfig);
 
         //ErrorView = new ErrorViewGenerator(this);
@@ -63,7 +63,7 @@ public class FrontendGenerator
         //    FileName = "ClientAuthenticatedHttpClient.cs"
         //};
 
-        var pages = CrudlContext.AllPageMethods
+        var pages = CrudContext.AllPageMethods
             .Select(pageMethod => new PageGenerator(pageMethod, clientConfig, Imports))
             .ToArray();
 
@@ -75,9 +75,9 @@ public class FrontendGenerator
             .GroupBy(a => a.RoutePath)
             .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
 
-        Crudls = [.. CrudlContext.Types
-            .Select(crudl => new CrudlGenerator(
-                crudl,
+        Cruds = [.. CrudContext.Types
+            .Select(crud => new CrudGenerator(
+                crud,
                 Config,
                 SharedReferences,
                 ServiceContext,
@@ -93,7 +93,7 @@ public class FrontendGenerator
     public FrontendConfig Config { get; }
     public SharedReferences SharedReferences { get; }
     public ServiceContext ServiceContext { get; }
-    public CrudlContext CrudlContext { get; }
+    public CrudContext CrudContext { get; }
 
     //public ErrorViewGenerator ErrorView { get; }
     //public LoaderViewGenerator LoaderView { get; }
@@ -107,7 +107,7 @@ public class FrontendGenerator
     //public IClientAuthenticatedHttpClientGenerator IClientAuthenticatedHttpClient { get; }
     //public ClientAuthenticatedHttpClientGenerator ClientAuthenticatedHttpClient { get; }
 
-    public CrudlGenerator[] Crudls { get; }
+    public CrudGenerator[] Cruds { get; }
     public PageGenerator[] Pages { get; }
     public PageGenerator[] RootPages { get; }
     public IndexGenerator[] PageIndexes { get; }
@@ -125,7 +125,7 @@ public class FrontendGenerator
         foreach (var page in Pages) page.GenerateCode();
         foreach (var page in RootPages) page.GenerateCode();
         foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
-        foreach (var crudl in Crudls) crudl.GenerateCode();
+        foreach (var crud in Cruds) crud.GenerateCode();
 
         //ItemDataSource.GenerateCode();
         //ItemDataSource.Save();

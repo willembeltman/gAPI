@@ -8,7 +8,7 @@ public class AutoListGenerator : BaseGenerator
 {
     public AutoListGenerator(
         Generator context,
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         string directory,
@@ -17,7 +17,7 @@ public class AutoListGenerator : BaseGenerator
         Context = context;
         var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client", "IAuthenticatedHttpClient");
         ListGenerator = new ListGenerator(
-            crudlType,
+            crudType,
             itemDataSource,
             listDataSource,
             iClientAuthenticatedHttpClient,
@@ -25,7 +25,7 @@ public class AutoListGenerator : BaseGenerator
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}List";
+        Name = $"Auto{crudType.Name}List";
         FileName = $"{Name}.g.cs";
 
         Directory = directory;

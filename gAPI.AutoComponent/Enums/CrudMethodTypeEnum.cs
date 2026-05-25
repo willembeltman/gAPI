@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoComponent.Enums;
 
-public enum CrudlMethodTypeEnum
+public enum CrudMethodTypeEnum
 {
     NotSet,
     Create,

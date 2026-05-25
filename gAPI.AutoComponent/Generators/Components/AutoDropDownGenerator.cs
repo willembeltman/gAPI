@@ -7,20 +7,20 @@ public class AutoDropDownGenerator : BaseGenerator
 {
     public AutoDropDownGenerator(
         Generator context,
-        ICrudlType crudlType,
+        ICrudType crudType,
         ISharedReference listDataSource,
         string directory,
         string @namespace)
     {
         Context = context;
         DropDownGenerator = new DropDownGenerator(
-            crudlType,
+            crudType,
             listDataSource,
             this,
             directory,
             @namespace);
 
-        Name = $"Auto{crudlType.Name}DropDown";
+        Name = $"Auto{crudType.Name}DropDown";
         FileName = $"{Name}.g.cs";
 
         Directory = directory;

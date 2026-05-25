@@ -24,8 +24,21 @@ public class InterfaceMethodArgumentAttribute(
         return syntax?.ToFullString() ?? attr.ToString();
     }
 
+    //public string ToNameString()
+    //{
+    //    return ToString().Substring(Namespace?.Length + 1 ?? 0);
+    //}
     public string ToNameString()
     {
-        return ToString().Substring(Namespace?.Length + 1 ?? 0);
+        var str = ToString();
+
+        if (Namespace is null)
+            return str;
+
+        var prefix = Namespace + ".";
+
+        return str.StartsWith(prefix)
+            ? str.Substring(prefix.Length)
+            : str;
     }
 }

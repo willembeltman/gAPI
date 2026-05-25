@@ -10,7 +10,7 @@ public class ComponentGenerator : BaseGenerator
 {
     public ComponentGenerator(
         IContext context,
-        ICrudlMethod method,
+        ICrudMethod method,
         IBaseGenerator imports,
         string directory,
         string @namespace)
@@ -51,7 +51,7 @@ public class ComponentGenerator : BaseGenerator
 
     public IContext Context { get; }
     public IBaseGenerator Imports { get; }
-    public ICrudlMethod Method { get; }
+    public ICrudMethod Method { get; }
     public ISharedReference Interface { get; }
     public ITypeHelper ResponseType { get; }
     public ITypeHelper InnerResponseType { get; }
@@ -234,20 +234,20 @@ public class ComponentGenerator : BaseGenerator
 
         if (prop.IsForeignKeyType != null)
         {
-            var crudl = Context.Crudls.FirstOrDefault(a => a.ResponseTypeDigger?.Type.FullName == prop.IsForeignKeyType.FullName);
-            if (crudl != null)
+            var crud = Context.Cruds.FirstOrDefault(a => a.ResponseTypeDigger?.Type.FullName == prop.IsForeignKeyType.FullName);
+            if (crud != null)
             {
-                var dto = crudl.ResponseTypeDigger;
-                var interfaceMethod = crudl.Methods.FirstOrDefault(a => a.CrudlMethodType == Enums.CrudlMethodTypeEnum.List);
+                var dto = crud.ResponseTypeDigger;
+                var interfaceMethod = crud.Methods.FirstOrDefault(a => a.CrudMethodType == Enums.CrudMethodTypeEnum.List);
                 if (interfaceMethod != null && dto != null)
                 {
-                    var name = crudl.Name.ToNameCase();
+                    var name = crud.Name.ToNameCase();
                     var dropdownName = $"{name}DropDown";
                     var dropdownComponent = Context.SharedReferences.AllComponents
                         .FirstOrDefault(a => a.Name == dropdownName);
                     if (dropdownComponent == null)
                     {
-                        var autoDropDownName = $"{crudl.Name.ToNameCase()}DropDown";
+                        var autoDropDownName = $"{crud.Name.ToNameCase()}DropDown";
                         dropdownComponent = Context.SharedReferences.AllComponents
                             .FirstOrDefault(a => a.Name == autoDropDownName);
                     }
@@ -257,9 +257,9 @@ public class ComponentGenerator : BaseGenerator
                         var dsName = name.ToMultiple();
                         string bindAttr = type.IsNullable ? "bind-NullableValue" : "bind-Value";
                         string bindTypeAttr = type.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
-                        string keyType = crudl.KeyProperty.TypeSimpleName;
+                        string keyType = crud.KeyProperty.TypeSimpleName;
                         bool keyTypeNullable = type.IsNullable;
-                        string keyName = crudl.KeyProperty.Name;
+                        string keyName = crud.KeyProperty.Name;
 
                         var serviceName = interfaceMethod.Interface.Name.ToCamelCase();
                         var interfaceName = interfaceMethod.Interface.Name;

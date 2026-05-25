@@ -7,13 +7,13 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class GridEditGenerator : BaseGenerator
 {
     public GridEditGenerator(
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference listDataSource,
         IBaseGenerator imports,
         string directory,
         string @namespace)
     {
-        CrudlType = dto;
+        CrudType = dto;
         ListDataSource = listDataSource;
         Imports = imports;
 
@@ -24,7 +24,7 @@ public class GridEditGenerator : BaseGenerator
         FileName = $"{Name}.razor";
     }
 
-    public ICrudlType CrudlType { get; }
+    public ICrudType CrudType { get; }
     public ISharedReference ListDataSource { get; }
     public IBaseGenerator Imports { get; }
 
@@ -41,10 +41,10 @@ public class GridEditGenerator : BaseGenerator
             "System.Threading.Tasks"
         ]);
 
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ListDataSource);
 
-        var properties = CrudlType.Properties
+        var properties = CrudType.Properties
             .Where(p => !p.IsKey && !p.IsForeignName && !p.IsStateManaged && !p.IsImmutable && !p.IsReadOnly)
             .ToArray();
         var foreigns = properties
@@ -78,7 +78,7 @@ else
     <div class=""grid-container"" id=""@(Id)""
          style=""width:100%; max-height:250px; overflow:auto;"">
          
-        <div class=""grid-row"">{(CrudlType.IsStorageFileUrlProperty ? @"
+        <div class=""grid-row"">{(CrudType.IsStorageFileUrlProperty ? @"
             <div class=""grid-header"">File</div>" : "")}{string.Join("", properties.Select(p => $@"
             @if (HideColumnNames.Contains(""{p.Name}"") == false)
             {{
@@ -91,7 +91,7 @@ else
         {{
             <EditForm Model=""item.Model"" OnValidSubmit=""() => DataSource.HandleValidSubmit(item)"">
                 <DataAnnotationsValidator />
-                <div class=""grid-row"">{(CrudlType.IsStorageFileUrlProperty ? $@"
+                <div class=""grid-row"">{(CrudType.IsStorageFileUrlProperty ? $@"
                     <div class=""grid-cell"">
                         @if (!string.IsNullOrWhiteSpace(item.Model!.StorageFileUrl))
                         {{
@@ -152,15 +152,15 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public {ListDataSource.Name}<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+    public {ListDataSource.Name}<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 
     {string.Join("\r\n    ", foreigns.Select(f => $@"[Parameter, EditorRequired]
     public {ListDataSource.Name}<{f.ForeignKeyType!.Name}, {f.ForeignKeyType!.KeyProperty!.TypeSimpleName}>? {f.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }}"))}
 
-    [Parameter] public string Id {{ get; set; }} = $""{CrudlType.Name.ToLower()}GridEdit_{{Guid.NewGuid()}}"";
+    [Parameter] public string Id {{ get; set; }} = $""{CrudType.Name.ToLower()}GridEdit_{{Guid.NewGuid()}}"";
     [Parameter] public string LoadingText {{ get; set; }} = ""Loading, please wait..."";
     [Parameter] public string LoadingMoreText {{ get; set; }} = ""Loading more..."";
-    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudlType.Name.ToMultiple()} to display."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple()} to display."";
 
     private string[] HideColumnNames = [];
 
@@ -182,7 +182,7 @@ else
         //RazorCompiler.CompileRazorToComponent(razorCode, Namespace!, Name, Context.ServiceContext.Components);
     }
 
-    private string GetPropertyCellMarkup(ICrudlProperty p)
+    private string GetPropertyCellMarkup(ICrudProperty p)
     {
         var modelPrefix = "item.Model!";
 

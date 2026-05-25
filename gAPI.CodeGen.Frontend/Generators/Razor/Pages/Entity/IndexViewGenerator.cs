@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 
 public class IndexViewGenerator : BaseGenerator
 {
     public IndexViewGenerator(
-        CrudlType crudlType,
+        CrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -22,7 +22,7 @@ public class IndexViewGenerator : BaseGenerator
         DirectoryInfo directory,
         string? @namespace)
     {
-        CrudlType = crudlType;
+        CrudType = crudType;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
@@ -32,12 +32,12 @@ public class IndexViewGenerator : BaseGenerator
         Imports = imports;
 
         Directory = directory;
-        Namespace = $"{@namespace}.{crudlType.Name!.ToMultiple()}";
+        Namespace = $"{@namespace}.{crudType.Name!.ToMultiple()}";
         Name = "Index";
-        FileName = $"{crudlType.Name!.ToMultiple()}\\{Name}.razor";
+        FileName = $"{crudType.Name!.ToMultiple()}\\{Name}.razor";
     }
 
-    public CrudlType CrudlType { get; }
+    public CrudType CrudType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference IClientAuthenticatedHttpClient { get; }
@@ -48,25 +48,25 @@ public class IndexViewGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudlType.ListMethod == null) return;
+        if (CrudType.ListMethod == null) return;
 
         // Imports registreren
         Imports.Reg(ListView);
         Imports.Reg(LoaderView);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg(ListDataSource);
-        Imports.Reg(CrudlType);
-        Imports.Reg(CrudlType.ListMethod.Interface);
+        Imports.Reg(CrudType);
+        Imports.Reg(CrudType.ListMethod.Interface);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
         Imports.Reg("Microsoft.JSInterop");
 
-        var pluralName = CrudlType.Name!.ToMultiple().ToLower();
-        var pluralTitle = CrudlType.Name.ToMultiple();
-        var serviceName = CrudlType.ListMethod.Name.ToCamelCase();
-        var interfaceName = CrudlType.ListMethod.Interface.Name;
-        var entityName = CrudlType.Name;
-        var keyType = CrudlType.KeyProperty.TypeSimpleName;
+        var pluralName = CrudType.Name!.ToMultiple().ToLower();
+        var pluralTitle = CrudType.Name.ToMultiple();
+        var serviceName = CrudType.ListMethod.Name.ToCamelCase();
+        var interfaceName = CrudType.ListMethod.Interface.Name;
+        var entityName = CrudType.Name;
+        var keyType = CrudType.KeyProperty.TypeSimpleName;
 
         Code = $@"@page ""/{pluralName}""
 @implements IAsyncDisposable
@@ -114,7 +114,7 @@ public class IndexViewGenerator : BaseGenerator
         {entityName.ToMultiple()} = new {ListDataSource.Name}<{entityName}, {keyType}>(
             JS,
             StateHasChanged,
-            GetPrimaryKey: {entityName.ToLower()} => {entityName.ToLower()}.{CrudlType.KeyProperty.Name ?? "Id"},
+            GetPrimaryKey: {entityName.ToLower()} => {entityName.ToLower()}.{CrudType.KeyProperty.Name ?? "Id"},
             List: {serviceName}.List,
             SetForeignKey: null,
             AfterSaveAction: null,

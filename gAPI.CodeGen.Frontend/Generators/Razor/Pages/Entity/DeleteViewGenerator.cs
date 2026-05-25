@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 
 public class DeleteViewGenerator : BaseGenerator
 {
     public DeleteViewGenerator(
-        CrudlType crudlType,
+        CrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -22,7 +22,7 @@ public class DeleteViewGenerator : BaseGenerator
         DirectoryInfo directory,
         string? @namespace)
     {
-        CrudlType = crudlType;
+        CrudType = crudType;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponseT = baseResponseT;
@@ -35,13 +35,13 @@ public class DeleteViewGenerator : BaseGenerator
         Imports = imports;
 
         Directory = directory;
-        Namespace = $"{@namespace}.{crudlType.Name!.ToMultiple()}";
+        Namespace = $"{@namespace}.{crudType.Name!.ToMultiple()}";
         Name = "Delete";
 
-        FileName = $"{crudlType.Name!.ToMultiple()}\\{Name}.razor";
+        FileName = $"{crudType.Name!.ToMultiple()}\\{Name}.razor";
     }
 
-    public CrudlType CrudlType { get; }
+    public CrudType CrudType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference DetailsView { get; }
@@ -54,24 +54,24 @@ public class DeleteViewGenerator : BaseGenerator
     public ImportsGenerator Imports { get; }
     public void GenerateCode()
     {
-        if (CrudlType.DeleteMethod == null ||
-            CrudlType.ReadMethod == null ||
-            CrudlType.Name == null)
+        if (CrudType.DeleteMethod == null ||
+            CrudType.ReadMethod == null ||
+            CrudType.Name == null)
             return;
 
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(DetailsView);
         Imports.Reg(BaseResponseT);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg("Microsoft.AspNetCore.Components.Authorization");
 
-        var entityName = CrudlType.Name;
-        var keyType = CrudlType.KeyProperty.TypeSimpleName;
-        var pluralName = CrudlType.Name.ToMultiple().ToLower();
+        var entityName = CrudType.Name;
+        var keyType = CrudType.KeyProperty.TypeSimpleName;
+        var pluralName = CrudType.Name.ToMultiple().ToLower();
 
-        var readName = CrudlType.ReadMethod.Interface.Name.ToCamelCase();
-        var deleteName = CrudlType.DeleteMethod.Interface.Name.ToCamelCase();
+        var readName = CrudType.ReadMethod.Interface.Name.ToCamelCase();
+        var deleteName = CrudType.DeleteMethod.Interface.Name.ToCamelCase();
 
         var idGetter = "id";
         var paramRouteType = $":{keyType}?";
@@ -90,10 +90,10 @@ public class DeleteViewGenerator : BaseGenerator
         Code = $@"@page ""/{pluralName}/delete/{{id{paramRouteType}}}""
 @implements IAsyncDisposable{GetRazorNamespacesCode()}{(readName == deleteName
     ? $@"
-@inject {CrudlType.ReadMethod.Interface.Name} {readName}"
+@inject {CrudType.ReadMethod.Interface.Name} {readName}"
     : $@"
-@inject {CrudlType.ReadMethod.Interface.Name} {readName}
-@inject {CrudlType.DeleteMethod.Interface.Name} {deleteName}")}
+@inject {CrudType.ReadMethod.Interface.Name} {readName}
+@inject {CrudType.DeleteMethod.Interface.Name} {deleteName}")}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -143,7 +143,7 @@ public class DeleteViewGenerator : BaseGenerator
         }}
 
         {entityName} = new {ItemDataSource.Name}<{entityName}, {keyType}>(
-            GetPrimaryKey: item => item.{CrudlType.KeyProperty.Name ?? "Id"},
+            GetPrimaryKey: item => item.{CrudType.KeyProperty.Name ?? "Id"},
             AfterSaveAction: item => NavigationManager.NavigateTo(""/{pluralName}""),
             AfterCancelAction: item => NavigationManager.NavigateTo(""/{pluralName}""),
             Create: null,
@@ -151,7 +151,7 @@ public class DeleteViewGenerator : BaseGenerator
             Update: null,
             Delete: {deleteName}.Delete,
             FileUpdate: null,
-            FileDelete: {(CrudlType.IsStorageFileUrlProperty ? $"{deleteName}.FileDelete" : "null")}
+            FileDelete: {(CrudType.IsStorageFileUrlProperty ? $"{deleteName}.FileDelete" : "null")}
         );
 
         await {entityName}.LoadModelAsync({idGetter});

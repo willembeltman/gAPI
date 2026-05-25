@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
-using gAPI.CodeGen.Frontend.Models.CrudlsModels;
+using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 
 public class EditViewGenerator : BaseGenerator
 {
     public EditViewGenerator(
-        CrudlType crudlType,
+        CrudType crudType,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -22,7 +22,7 @@ public class EditViewGenerator : BaseGenerator
         DirectoryInfo directory,
         string? @namespace)
     {
-        CrudlType = crudlType;
+        CrudType = crudType;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponse = baseResponse;
@@ -36,13 +36,13 @@ public class EditViewGenerator : BaseGenerator
         Imports = imports;
 
         Directory = directory;
-        Namespace = $"{@namespace}.{crudlType.Name!.ToMultiple()}";
+        Namespace = $"{@namespace}.{crudType.Name!.ToMultiple()}";
         Name = "Edit";
 
-        FileName = $"{crudlType.Name!.ToMultiple()}\\{Name}.razor";
+        FileName = $"{crudType.Name!.ToMultiple()}\\{Name}.razor";
     }
 
-    public CrudlType CrudlType { get; }
+    public CrudType CrudType { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference FormView { get; }
@@ -57,12 +57,12 @@ public class EditViewGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudlType.UpdateMethod == null ||
-            CrudlType.ReadMethod == null ||
-            CrudlType.Name == null)
+        if (CrudType.UpdateMethod == null ||
+            CrudType.ReadMethod == null ||
+            CrudType.Name == null)
             return;
 
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(LoaderView);
@@ -74,8 +74,8 @@ public class EditViewGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
 
-        var entityName = CrudlType.Name;
-        var keyType = CrudlType.KeyProperty.TypeSimpleName;
+        var entityName = CrudType.Name;
+        var keyType = CrudType.KeyProperty.TypeSimpleName;
         var idGetter = "id";
         var paramRouteType = $":{keyType}?";
         var paramType = $"{keyType}?";
@@ -89,7 +89,7 @@ public class EditViewGenerator : BaseGenerator
             paramRouteType = "?";
         }
 
-        var clients = CrudlType.ForeignItemProperties
+        var clients = CrudType.ForeignItemProperties
             .Where(p => !p.IsStateManaged && !p.IsReadOnly)
             .ToArray();
         foreach (var p in clients)
@@ -100,7 +100,7 @@ public class EditViewGenerator : BaseGenerator
         Code = $@"@page ""/{entityName.ToLower().ToMultiple()}/edit/{{id{paramRouteType}}}""
 @implements IAsyncDisposable{GetRazorNamespacesCode()}{string.Join("", clients.Select(p => $@"
 @inject {p.ListMethod!.Interface.Name} {p.ListMethod.Name.ToCamelCase()}"))}
-@inject {CrudlType.UpdateMethod.Interface.Name} {CrudlType.UpdateMethod.Name.ToCamelCase()}
+@inject {CrudType.UpdateMethod.Interface.Name} {CrudType.UpdateMethod.Name.ToCamelCase()}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -114,7 +114,7 @@ public class EditViewGenerator : BaseGenerator
             <EditForm Model=""{entityName}!.Model"" OnValidSubmit=""{entityName}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudlType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudlType.ForeignItemProperties
+                <{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
                 .Where(p => p.IsImmutable)
                 .Select(p => p.Name))}""" : "")} />
                 <{ErrorView.Name} Response=""{entityName}.StatusResponse"" />
@@ -151,16 +151,16 @@ public class EditViewGenerator : BaseGenerator
             return;
         }}
 
-        {entityName} = new {ItemDataSource.Name}<{entityName}, {CrudlType.KeyProperty.TypeSimpleName}>(
-            GetPrimaryKey: e => e.{CrudlType.KeyProperty.Name},
+        {entityName} = new {ItemDataSource.Name}<{entityName}, {CrudType.KeyProperty.TypeSimpleName}>(
+            GetPrimaryKey: e => e.{CrudType.KeyProperty.Name},
             AfterSaveAction: e => NavigationManager.NavigateTo(""/{entityName.ToLower().ToMultiple()}""),
             AfterCancelAction: e => NavigationManager.NavigateTo(""/{entityName.ToLower().ToMultiple()}""),
-            Create: {CrudlType.UpdateMethod.Name.ToCamelCase()}.Create,
-            Read: {CrudlType.UpdateMethod.Name.ToCamelCase()}.Read,
-            Update: {CrudlType.UpdateMethod.Name.ToCamelCase()}.Update,
-            Delete: {CrudlType.UpdateMethod.Name.ToCamelCase()}.Delete,
-            FileUpdate: {(CrudlType.IsStorageFileUrlProperty ? $"{CrudlType.UpdateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
-            FileDelete: {(CrudlType.IsStorageFileUrlProperty ? $"{CrudlType.UpdateMethod.Name.ToCamelCase()}.FileDelete" : "null")}
+            Create: {CrudType.UpdateMethod.Name.ToCamelCase()}.Create,
+            Read: {CrudType.UpdateMethod.Name.ToCamelCase()}.Read,
+            Update: {CrudType.UpdateMethod.Name.ToCamelCase()}.Update,
+            Delete: {CrudType.UpdateMethod.Name.ToCamelCase()}.Delete,
+            FileUpdate: {(CrudType.IsStorageFileUrlProperty ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
+            FileDelete: {(CrudType.IsStorageFileUrlProperty ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileDelete" : "null")}
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 

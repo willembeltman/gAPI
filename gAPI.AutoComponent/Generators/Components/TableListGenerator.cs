@@ -7,7 +7,7 @@ namespace gAPI.AutoComponent.Generators.Components;
 public class TableListGenerator : BaseGenerator
 {
     public TableListGenerator(
-        ICrudlType dto,
+        ICrudType dto,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseListResponse,
@@ -15,7 +15,7 @@ public class TableListGenerator : BaseGenerator
         string directory,
         string @namespace)
     {
-        CrudlType = dto;
+        CrudType = dto;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseListResponse = baseListResponse;
@@ -28,7 +28,7 @@ public class TableListGenerator : BaseGenerator
         FileName = $"{Name}.razor";
     }
 
-    public ICrudlType CrudlType { get; }
+    public ICrudType CrudType { get; }
     public IBaseGenerator Imports { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
@@ -36,7 +36,7 @@ public class TableListGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudlType.ListMethod == null) return;
+        if (CrudType.ListMethod == null) return;
 
         // Imports
         Imports.RegRange(
@@ -47,18 +47,18 @@ public class TableListGenerator : BaseGenerator
             "System.Threading.Tasks",
             "System.Collections.Generic"
         ]);
-        Imports.Reg(CrudlType);
+        Imports.Reg(CrudType);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(BaseListResponse);
 
         // Genereer dynamisch de kolommen
 
-        var storageFileProps = CrudlType.Properties
+        var storageFileProps = CrudType.Properties
             .Where(p => p.IsStorageFileUrlProperty)
             .ToArray();
 
-        var orderableProps = CrudlType.Properties
+        var orderableProps = CrudType.Properties
             .Where(p => !p.IsStorageFileUrlProperty)// && !p.IsReadOnly) //p.IsName || p.IsForeignName)
             .OrderByDescending(a => a.IsKey)
             .ThenByDescending(a => a.IsName)
@@ -152,11 +152,11 @@ else
                             <td>
                                 @if (item.Model!.CanUpdate)
                                 {{
-                                    <a class=""btn btn-sm btn-primary"" href=""/{CrudlType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">✏️</a>
+                                    <a class=""btn btn-sm btn-primary"" href=""/{CrudType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">✏️</a>
                                 }}
                                 @if (item.Model!.CanDelete)
                                 {{
-                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudlType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">🗑️</a>
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">🗑️</a>
                                 }}
                             </td>
                         </tr>
@@ -221,11 +221,11 @@ else
                                 <div class=""mt-2"">
                                     @if (item.Model!.CanUpdate)
                                     {{
-                                        <a class=""btn btn-sm btn-primary"" href=""/{CrudlType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">@EditText</a>
+                                        <a class=""btn btn-sm btn-primary"" href=""/{CrudType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">@EditText</a>
                                     }}
                                     @if (item.Model!.CanDelete)
                                     {{
-                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudlType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">@DeleteText</a>
+                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">@DeleteText</a>
                                     }}
                                 </div>
                             </div>
@@ -244,9 +244,9 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public ListDataSource<{CrudlType.Name}, {CrudlType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+    public ListDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 
-    [Parameter] public string Id {{ get; set; }} = $""{CrudlType.Name.ToLower()}TableList_{{Guid.NewGuid()}}"";
+    [Parameter] public string Id {{ get; set; }} = $""{CrudType.Name.ToLower()}TableList_{{Guid.NewGuid()}}"";
     [Parameter] public string EmptyText {{ get; set; }} = ""Order by..."";
     [Parameter] public string AscText {{ get; set; }} = ""▲ asc"";
     [Parameter] public string DescText {{ get; set; }} = ""▼ desc"";
@@ -254,7 +254,7 @@ else
     [Parameter] public string DeleteText {{ get; set; }} = ""🗑️ Delete"";
     [Parameter] public string LoadingText {{ get; set; }} = ""Loading, please wait..."";
     [Parameter] public string LoadingModeText {{ get; set; }} = ""Loading more..."";
-    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudlType.Name.ToMultiple()} to display."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple()} to display."";
     
     private string[] HideColumnNames = [];
 
