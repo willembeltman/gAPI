@@ -111,6 +111,6 @@ public class {Name}(
     }}
 }}
 ";
-        Save(false);
+        Save(Context.Config.OverwriteUseCases);
     }
 }

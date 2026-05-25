@@ -65,14 +65,14 @@ public class MappingGenerator : BaseGenerator
         };
 
         Reg(ApplyOrderByExtension);
-        if (Entity.IsStorageFileUrlProperty)
+        if (Entity.HasIStorageFileInterface)
             Reg(IStorageService);
 
         Code = $@"{GetNamespacesCode()}
 namespace {Namespace};
 
 public class {Name}(
-    gAPI.Core.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.IsStorageFileUrlProperty ? @$", 
+    gAPI.Core.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.HasIStorageFileInterface ? @$", 
     {IStorageService} storageService" : "")}) 
     : gAPI.Core.Interfaces.Mapping<{typeEntity.FullName}, {typeDto.FullName}>
 {{
@@ -145,14 +145,14 @@ a.ForeignEntityNameProperties
     public override async Task ExtendDto(
         {typeDto.FullName} dto,
         CancellationToken ct)
-    {{{(Entity.IsStorageFileUrlProperty ? @$"
+    {{{(Entity.HasIStorageFileInterface ? @$"
         dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync($""{Entity.Name}/{{dto.{Entity.KeyProperty.Name}}}"", ct);" : "")}
         dto.CanUpdate = await useCase.CanUpdateAsync(dto, ct);
         dto.CanDelete = await useCase.CanDeleteAsync(dto, ct);
     }}
 }}";
 
-        Save();
+        Save(Context.Config.OverwriteMappers);
     }
 }
 

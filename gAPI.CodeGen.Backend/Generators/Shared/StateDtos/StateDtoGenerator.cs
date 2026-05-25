@@ -22,7 +22,7 @@ public class StateDtoGenerator : BaseGenerator
             .Concat(stateObject.Properties.Select(a => new StateDtoPropertyGenerator(this, a)))
             .Concat(stateObject.ForeignLists.Select(a => new StateDtoPropertyGenerator(this, a, true)))
             .ToArray();
-        IsStorageFileUrlProperty = stateObject.Entity.IsStorageFileUrlProperty;
+        IsStorageFileUrlProperty = stateObject.Entity.HasIStorageFileInterface;
 
         Name = "State" + stateObject.Entity.Name;
         FileName = $"{Name}.cs";

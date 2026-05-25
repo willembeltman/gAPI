@@ -28,16 +28,18 @@ public class NavMenuAuthenticatedGenerator : BaseGenerator
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.CrudType.Name!.ToMultiple()}
     </NavLink>
 </div>")
-            .Concat(Generator.PageIndexes
-            .Where(a => a.Pages.Any(b => b.IsAuthorized))
-            .Select(a => $@"<div class=""nav-item px-3"">
+            .Concat(
+                Generator.PageIndexes!
+                    .Where(a => a.Pages.Any(b => b.IsAuthorized))
+                    .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.Route}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Title}
     </NavLink>
 </div>"))
-            .Concat(Generator.RootPages
-            .Where(a => a.IsAuthorized)
-            .Select(a => $@"<div class=""nav-item px-3"">
+            .Concat(
+                Generator.RootPages!
+                    .Where(a => a.IsAuthorized)
+                    .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.Route}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Name}
     </NavLink>

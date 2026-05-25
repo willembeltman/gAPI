@@ -159,8 +159,8 @@ public class EditViewGenerator : BaseGenerator
             Read: {CrudType.UpdateMethod.Name.ToCamelCase()}.Read,
             Update: {CrudType.UpdateMethod.Name.ToCamelCase()}.Update,
             Delete: {CrudType.UpdateMethod.Name.ToCamelCase()}.Delete,
-            FileUpdate: {(CrudType.IsStorageFileUrlProperty ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
-            FileDelete: {(CrudType.IsStorageFileUrlProperty ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileDelete" : "null")}
+            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
+            FileDelete: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileDelete" : "null")}
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 

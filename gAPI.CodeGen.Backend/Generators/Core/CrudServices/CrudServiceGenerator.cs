@@ -44,14 +44,8 @@ public class CrudServiceGenerator : BaseGenerator
         Reg(ServiceInterface);
         Reg(BaseResponseT);
         Reg(BaseResponseErrorEnum);
-        //Reg("Microsoft.EntityFrameworkCore");
-        if (Entity.IsStorageFileUrlProperty)
-        {
-            Reg("gAPI.Core.Server.Storage");
-            Reg("Microsoft.AspNetCore.Http");
-        }
-        if (Entity.Properties
-                .Any(p => p.IsStateManaged != null))
+
+        if (Entity.Properties.Any(p => p.IsStateManaged != null))
         {
             Reg(IAuthenticationService);
         }
@@ -149,8 +143,12 @@ public class CrudServiceGenerator : BaseGenerator
                 }));
 
         var fileCode = "";
-        if (Entity.IsStorageFileUrlProperty)
+        var useStorageFile = Entity.HasIStorageFileInterface && !Entity.HasIReadonlyStorageFileInterface;
+        if (useStorageFile)
         {
+            Reg("gAPI.Core.Server.Storage");
+            Reg("Microsoft.AspNetCore.Http");
+
             fileCode += $@"
 
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> FileUpdate({Entity.KeyProperty.TypeSimpleName} {Dto.Name!.ToLower()}{Entity.KeyProperty.Name}, IFormFile? file, CancellationToken ct)
@@ -220,7 +218,7 @@ namespace {Namespace};
 
 public class {Name}(
     {IUseCase.FullName}<{Entity.FullName}, {Dto.Name}, {Entity.KeyProperty.TypeSimpleName}> useCase,
-    {Mapping.FullName}<{Entity.FullName}, {Dto.Name}> mapping{(Entity.IsStorageFileUrlProperty ? @",
+    {Mapping.FullName}<{Entity.FullName}, {Dto.Name}> mapping{(useStorageFile ? @",
     IStorageService storageService" : "")}{(Entity.Properties.Any(a => a.IsStateManaged != null) ? $@",
     IAuthenticationService<{User.FullName}, {StateDto.FullName}> authenticationService" : "")})
     : {ServiceInterface.Name}
@@ -315,7 +313,7 @@ public class {Name}(
 
         if (!await useCase.CanDeleteAsync(dto, ct))
             return new {BaseResponseT.Name}<bool>() {{ Error = {BaseResponseErrorEnum}.ErrorNotAuthorized }};
-" + (Entity.IsStorageFileUrlProperty ? $@"
+" + (useStorageFile ? $@"
         await storageService.DeleteStorageFileAsync(entity, ct);
 " : "") + $@"
         if (!await useCase.RemoveAsync(entity, ct))
@@ -355,6 +353,6 @@ public class {Name}(
     }}{loadBysCode}{fileCode}
 }}";
 
-        Save();
+        Save(Context.Config.OverwriteServices);
     }
 }

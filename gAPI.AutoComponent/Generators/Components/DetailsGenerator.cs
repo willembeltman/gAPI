@@ -34,7 +34,7 @@ public class DetailsGenerator : BaseGenerator
         Imports.Reg(ItemDataSource);
         Imports.Reg("Microsoft.AspNetCore.Components");
 
-        if (Dto.IsStorageFileUrlProperty)
+        if (Dto.HasIStorageFileDtoInterface)
             Imports.Reg("Microsoft.AspNetCore.Components.Forms");
 
         if (Dto.Name == null)
@@ -47,7 +47,7 @@ public class DetailsGenerator : BaseGenerator
         }
 
         var propertyMarkup = string.Join("\r\n", properties.Select(a => GetPropertyMarkup(a)));
-        var storageMarkup = Dto.IsStorageFileUrlProperty ? GetStorageFileView() : "";
+        var storageMarkup = Dto.HasIStorageFileDtoInterface ? GetStorageFileView() : "";
 
         // Volledige Razor view
         Code = GetRazorNamespacesCode() + $@"@if (DataSource?.Model == null)

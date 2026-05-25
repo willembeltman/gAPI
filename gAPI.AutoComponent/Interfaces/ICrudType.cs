@@ -6,7 +6,8 @@ public interface ICrudType : ISharedReference
 {
     bool IsUser { get; }
     bool IsAuthorized { get; }
-    bool IsStorageFileUrlProperty { get; }
+    bool HasIStorageFileDtoInterface { get; }
+    bool HasIReadonlyStorageFileDtoInterface { get; }
     bool IsICrudEntity { get; }
     bool IsEntryPoint { get; }
     bool IsJunction { get; }
@@ -28,4 +29,5 @@ public interface ICrudType : ISharedReference
     string? IsPageSubmitText { get; }
     string? IsPageResponseText { get; }
     bool IsNotAuthorized { get; }
+    bool HasStorageFileUrlProperty { get; }
 }

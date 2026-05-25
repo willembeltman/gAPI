@@ -145,8 +145,8 @@ public class CreateViewGenerator : BaseGenerator
             Create: {CrudType.CreateMethod.Name.ToCamelCase()}.Create,
             Read: null,
             Update: null,
-            Delete: null,{(CrudType.IsStorageFileUrlProperty ? $@"
-            FileUpdate: {CrudType.CreateMethod.Name.ToCamelCase()}.FileUpdate,
+            Delete: null,{(CrudType.HasIStorageFileDtoInterface ? $@"
+            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $@"{CrudType.CreateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
             FileDelete: null" : $@"
             FileUpdate: null,
             FileDelete: null")}

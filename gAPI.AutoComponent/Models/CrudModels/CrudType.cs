@@ -27,12 +27,17 @@ public class CrudType : ICrudType
         Properties = ResponseTypeBase?.GetProperties()
             .Select(p => new CrudProperty(this, p))
             .ToArray() ?? [];
+
+        HasIStorageFileDtoInterface = responseType.TypeSymbol.Interfaces.Any(a => a.ToDisplayString() == "gAPI.Core.Interfaces.IStorageFileDto");
+        HasIReadonlyStorageFileDtoInterface = responseType.TypeSymbol.Interfaces.Any(a => a.ToDisplayString() == "gAPI.Core.Interfaces.IReadonlyStorageFileDto");
     }
 
     public CrudContext Context { get; }
     public TypeHelper ResponseType { get; }
     public CrudMethod[] Methods { get; }
     public CrudProperty[] Properties { get; }
+    public bool HasIStorageFileDtoInterface { get; }
+    public bool HasIReadonlyStorageFileDtoInterface { get; }
 
     public string Name => ResponseTypeBase?.Name ?? string.Empty;
     public string Namespace => ResponseTypeBase?.Namespace ?? string.Empty;
@@ -42,7 +47,7 @@ public class CrudType : ICrudType
     public TypeDigger ResponseTypeDigger => ResponseTypeDiggerInner ??= new TypeDigger(Context.ServiceContext, ResponseType.TypeSymbol);
     public TypeHelper? ResponseTypeBase => ResponseTypeDigger.Type;
 
-    public bool IsStorageFileUrlProperty => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
+    public bool HasStorageFileUrlProperty => Methods.Any(a => a.InterfaceMethod.IsFileDelete || a.InterfaceMethod.IsFileUpdate);
     public bool IsEntryPoint => ResponseTypeBase?.IsEntryPoint == true;
     public bool IsJunction => ResponseTypeBase?.IsJunction == true;
     public bool IsUser => ResponseTypeBase?.IsUser == true;

@@ -29,7 +29,7 @@ public class ItemDataSourceGenerator : BaseGenerator
         Reg(BaseResponseT);
         Reg(BaseResponse);
         Reg(FormFileExtension);
-        Reg("gAPI.Storage");
+        //Reg("gAPI.Storage");
         Reg("Microsoft.AspNetCore.Components.Forms");
         Reg("Microsoft.AspNetCore.Http");
 

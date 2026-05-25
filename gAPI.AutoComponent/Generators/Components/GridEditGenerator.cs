@@ -78,7 +78,7 @@ else
     <div class=""grid-container"" id=""@(Id)""
          style=""width:100%; max-height:250px; overflow:auto;"">
          
-        <div class=""grid-row"">{(CrudType.IsStorageFileUrlProperty ? @"
+        <div class=""grid-row"">{(CrudType.HasIStorageFileDtoInterface ? @"
             <div class=""grid-header"">File</div>" : "")}{string.Join("", properties.Select(p => $@"
             @if (HideColumnNames.Contains(""{p.Name}"") == false)
             {{
@@ -91,7 +91,7 @@ else
         {{
             <EditForm Model=""item.Model"" OnValidSubmit=""() => DataSource.HandleValidSubmit(item)"">
                 <DataAnnotationsValidator />
-                <div class=""grid-row"">{(CrudType.IsStorageFileUrlProperty ? $@"
+                <div class=""grid-row"">{(CrudType.HasIStorageFileDtoInterface ? $@"
                     <div class=""grid-cell"">
                         @if (!string.IsNullOrWhiteSpace(item.Model!.StorageFileUrl))
                         {{
@@ -99,9 +99,9 @@ else
                                 <img src=""@(item.Model!.StorageFileUrl)"" style=""max-width: 100px;"" />
                                 <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""() => DataSource.OnHandleFileRemoved(item)"">❌ Remove</button>
                             </div>
-                        }}
+                        }}{(!CrudType.HasIReadonlyStorageFileDtoInterface ? $@"
                         <div class=""storageFile"">
-                        <InputFile OnChange=""(e) => DataSource.OnHandleFileSelected(item, e)"" key=""item.File.FileInputKey"" />
+                            <InputFile OnChange=""(e) => DataSource.OnHandleFileSelected(item, e)"" key=""item.File.FileInputKey"" />
                             @if (item.File != null)
                             {{
                                 <div class=""storageFileUploadPreview"">
@@ -109,7 +109,7 @@ else
                                     <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""() => DataSource.OnCancelFileSelected(item)"">❌ Remove</button>
                                 </div>
                             }}
-                        </div>
+                        </div>" : "")}
                     </div>" : "")}
                     {string.Join("\r\n                    ", properties.Select(p => GetPropertyCellMarkup(p)))}
                     <div class=""grid-cell"">

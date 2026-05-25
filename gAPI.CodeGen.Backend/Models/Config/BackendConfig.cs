@@ -22,5 +22,10 @@ public record BackendConfig(
     string Core_CrudServicesNamespace,
 
     DirectoryInfo Extensions_Directory,
-    string Extensions_Namespace
+    string Extensions_Namespace,
+
+    bool OverwriteMappers = true,
+    bool OverwriteServices = false, 
+    bool OverwriteServiceInterfaces = false, 
+    bool OverwriteUseCases = false
     );

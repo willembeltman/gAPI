@@ -151,7 +151,7 @@ public class DeleteViewGenerator : BaseGenerator
             Update: null,
             Delete: {deleteName}.Delete,
             FileUpdate: null,
-            FileDelete: {(CrudType.IsStorageFileUrlProperty ? $"{deleteName}.FileDelete" : "null")}
+            FileDelete: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{deleteName}.FileDelete" : "null")}
         );
 
         await {entityName}.LoadModelAsync({idGetter});

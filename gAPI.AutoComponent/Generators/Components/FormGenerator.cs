@@ -56,7 +56,7 @@ public class FormGenerator : BaseGenerator
         Imports.Reg(ListDataSource);
         Imports.Reg(IClientAuthenticatedHttpClient);
 
-        if (CrudType.IsStorageFileUrlProperty)
+        if (CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface)
         {
             Imports.Reg("Microsoft.AspNetCore.Http");
             Imports.Reg(FormFile);
@@ -94,14 +94,14 @@ public class FormGenerator : BaseGenerator
     <text><!-- niets te renderen --></text>
 }}
 else
-{{{(CrudType.IsStorageFileUrlProperty ? $@"
+{{{(CrudType.HasIStorageFileDtoInterface ? $@"
     @if (!string.IsNullOrWhiteSpace(DataSource.Model.StorageFileUrl))
     {{
         <div class=""mb-3 storageFilePreview"">
             <img src=""@(DataSource.Model.StorageFileUrl)"" style=""max-height: 120px;"" />
             <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""DataSource.HandleFileRemoved"">❌ Remove file</button>
         </div>
-    }}
+    }}{(!CrudType.HasIReadonlyStorageFileDtoInterface ? $@"
 
     <div class=""mb-3 storageFile"">
         <label for=""file"" class=""form-label"">Upload file</label>
@@ -114,7 +114,7 @@ else
                 <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""DataSource.CancelFileSelected"">❌ Remove file</button>
             </div>
         }}
-    </div>" : "")}
+    </div>": "")}" : "")}
 {propertySections}
 }}
 

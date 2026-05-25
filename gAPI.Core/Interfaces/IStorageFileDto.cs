@@ -1,4 +1,4 @@
-﻿namespace gAPI.Storage;
+﻿namespace gAPI.Core.Interfaces;
 
 public interface IStorageFileDto
 {

@@ -2,7 +2,9 @@
 using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
+using gAPI.Core.Interfaces;
 using Microsoft.CodeAnalysis;
+using System.Reflection;
 
 namespace gAPI.CodeGen.Frontend.Models.CrudsModels;
 
@@ -22,15 +24,18 @@ public class CrudType : ICrudType
             .Select((p, index) => new CrudProperty(this, p, index))
             .ToArray() ?? Array.Empty<CrudProperty>();
 
-        IsStorageFileUrlProperty = Properties.Any(a => a.IsStorageFileUrlProperty);
+        HasStorageFileUrlProperty = Properties.Any(a => a.IsStorageFileUrlProperty);
+        HasIStorageFileDtoInterface = responseType.GetInterface(typeof(IStorageFileDto).FullName!) != null;
+        HasIReadonlyStorageFileDtoInterface = responseType.GetInterface(typeof(IReadonlyStorageFileDto).FullName!) != null;
     }
 
     public CrudContext CrudContext { get; }
     public Type ResponseType { get; }
     public CrudMethod[] Methods { get; }
-    public bool IsStorageFileUrlProperty { get; }
     public CrudProperty[] Properties { get; }
-
+    public bool HasStorageFileUrlProperty { get; }
+    public bool HasIStorageFileDtoInterface { get; }
+    public bool HasIReadonlyStorageFileDtoInterface { get; }
 
     public string Name => Dto.Name!;
     public string Namespace => Dto.Namespace!;

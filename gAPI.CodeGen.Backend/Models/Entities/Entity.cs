@@ -13,7 +13,8 @@ public class Entity : SharedReference
         Name = type.Name;
         Namespace = type.Namespace;
 
-        IsStorageFileUrlProperty = ReflectionHelper.IsStorageFileUrlProperty(Type);
+        HasIStorageFileInterface = ReflectionHelper.HasIStorageFileInterface(Type);
+        HasIReadonlyStorageFileInterface = ReflectionHelper.HasIReadonlyStorageFileInterface(Type);
 
         IsHidden = type
             .GetCustomAttribute<IsHiddenAttribute>() != null;
@@ -36,7 +37,8 @@ public class Entity : SharedReference
 
     public DbSet DbSet { get; }
     public Type Type { get; }
-    public bool IsStorageFileUrlProperty { get; }
+    public bool HasIStorageFileInterface { get; }
+    public bool HasIReadonlyStorageFileInterface { get; }
     public bool IsHidden { get; }
     public bool IsUser { get; }
     public bool IsEntryPoint { get; }

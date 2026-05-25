@@ -62,10 +62,11 @@ public class DtoGenerator : BaseGenerator
 
         Reg("gAPI.Core.Attributes");
         Reg("gAPI.Core.Interfaces");
-        if (Entity.IsStorageFileUrlProperty)
-        {
-            Reg("gAPI.Storage");
-        }
+
+        //if (Entity.HasIStorageFileInterface)
+        //{
+        //    Reg("gAPI.Storage");
+        //}
 
         propertiesCode += $"\r\nnamespace {Namespace};\r\n";
         propertiesCode += $"\r\n";
@@ -90,7 +91,11 @@ public class DtoGenerator : BaseGenerator
         {
             propertiesCode += $"[IsEntryPoint]\r\n";
         }
-        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.IsStorageFileUrlProperty ? ", IStorageFileDto" : "")}\r\n";
+        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.HasIStorageFileInterface 
+            ?   Entity.HasIReadonlyStorageFileInterface 
+                ? ", IReadonlyStorageFileDto" 
+                : "IStorageFileDto"
+            : "")}\r\n";
         propertiesCode += $"{{\r\n";
 
         foreach (var property in properties)
@@ -225,7 +230,7 @@ public class DtoGenerator : BaseGenerator
             }
         }
 
-        if (Entity.IsStorageFileUrlProperty)
+        if (Entity.HasIStorageFileInterface)
         {
             propertiesCode += $"    [IsReadOnly]\r\n";
             propertiesCode += $"    [IsStorageFileUrlProperty]\r\n";

@@ -42,12 +42,9 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         Reg(BaseResponseT);
         Reg(Dto);
         Reg(Dto.Entity.KeyProperty);
-        if (Entity.IsStorageFileUrlProperty)
-        {
-            Reg("Microsoft.AspNetCore.Http");
-        }
         Reg("gAPI.Core.Attributes");
 
+        var useStorageFile = Entity.HasIStorageFileInterface && !Entity.HasIReadonlyStorageFileInterface;
         var loadBysCode = string.Join("", Entity.Properties
             .Where(a => a.IsNavigationItem)
             .Select(property =>
@@ -65,8 +62,9 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
                 return code;
             }));
 
-        if (Entity.IsStorageFileUrlProperty)
+        if (useStorageFile)
         {
+            Reg("Microsoft.AspNetCore.Http");
             Code = $@"{GetNamespacesCode()}
 namespace {Namespace};
 
@@ -119,7 +117,7 @@ public interface {Name}
     Task<{BaseListResponseT.Name}<{Dto.Name}>> List(int? skip, int? take, string[]? orderby, CancellationToken ct);{loadBysCode}
 }}";
         }
-        Save(false);
+        Save(Context.Config.OverwriteServiceInterfaces);
     }
 
 }

@@ -22,7 +22,7 @@ public class BackendGenerator
         Config = config;
 
         DbContext = new DbContext(config.DbContextType);
-        SharedReferences = new SharedReferences(config);
+        SharedReferences = new SharedReferences();
 
         //// Data.Authentication
         //Ip = new IpGenerator(this);

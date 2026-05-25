@@ -122,11 +122,11 @@ public class BaseGenerator : SharedReference
         }
         var filePath = Path.Combine(Directory.FullName, FileName);
 
-        Console.WriteLine(filePath);
-
         var fileInfo = new FileInfo(filePath);
         if (overwrite || !fileInfo.Exists)
         {
+            Console.WriteLine(filePath);
+
             if (!fileInfo.Directory!.Exists)
             {
                 fileInfo.Directory.Create();
