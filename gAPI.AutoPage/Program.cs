@@ -3,6 +3,7 @@ using gAPI.AutoPage.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -20,7 +21,7 @@ public class Program : IIncrementalGenerator
             //            {
             //                Debugger.Launch(); // Triggert dialoog om te attachen
             //            }
-            //#endif
+            //#endif 
 
             try
             {

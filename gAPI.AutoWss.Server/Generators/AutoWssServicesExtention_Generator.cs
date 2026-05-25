@@ -104,7 +104,7 @@ public class AutoWssServicesExtensionGenerator : _BaseGenerator
                 }
             }
         }
-        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Interfaces.IAccountService"))
+        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountService"))
         {
             Reg(@interface);
             Reg(@interface.Service);

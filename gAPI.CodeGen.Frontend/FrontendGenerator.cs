@@ -24,8 +24,8 @@ public class FrontendGenerator
         RedirectToHome = new RedirectToHomeGenerator(this);
         RedirectToLogin = new RedirectToLoginGenerator(this);
 
-        var directory = Config.HelpersDirectory!.FullName;
-        var @namespace = Config.HelpersNamespace!;
+        //var directory = Config.HelpersDirectory!.FullName;
+        //var @namespace = Config.HelpersNamespace!;
 
         //ItemDataSource = new ItemDataSourceGenerator(
         //    SharedReferences.BaseResponseT,
@@ -45,8 +45,8 @@ public class FrontendGenerator
         //    FileName = "ListDataSource.cs"
         //};
 
-        directory = Config.AuthenticationDirectory!.FullName;
-        @namespace = Config.AuthenticationNamespace!;
+        //directory = Config.AuthenticationDirectory!.FullName;
+        //@namespace = Config.AuthenticationNamespace!;
 
         //IClientAuthenticatedHttpClient = new IClientAuthenticatedHttpClientGenerator(
         //    SharedReferences.State,

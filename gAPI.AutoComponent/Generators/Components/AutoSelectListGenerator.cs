@@ -15,7 +15,7 @@ public class AutoSelectListGenerator : BaseGenerator
         string @namespace)
     {
         Context = context;
-        var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces", "IClientAuthenticatedHttpClient");
+        var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client", "IAuthenticatedHttpClient");
         SelectListGenerator = new SelectListGenerator(
             crudlType,
             itemDataSource,

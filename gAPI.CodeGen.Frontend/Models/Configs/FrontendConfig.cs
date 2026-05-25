@@ -16,11 +16,7 @@ public class FrontendConfig(
     DirectoryInfo? BlazorWebassemblyDirectory,
     string? BlazorWebassemblyServiceNamespace,
     DirectoryInfo? ComponentsDirectory,
-    string? ComponentsNamespace,
-    DirectoryInfo? AuthenticationDirectory,
-    string? AuthenticationNamespace,
-    DirectoryInfo? HelpersDirectory,
-    string? HelpersNamespace
+    string? ComponentsNamespace
     )
 {
     public Assembly[] Assemblies { get; } = AssembliesToSearch;
@@ -43,10 +39,4 @@ public class FrontendConfig(
 
     public DirectoryInfo? ComponentsDirectory { get; } = ComponentsDirectory;
     public string? ComponentsNamespace { get; } = ComponentsNamespace;
-
-    public DirectoryInfo? HelpersDirectory { get; } = HelpersDirectory;
-    public string? HelpersNamespace { get; } = HelpersNamespace;
-
-    public DirectoryInfo? AuthenticationDirectory { get; } = AuthenticationDirectory;
-    public string? AuthenticationNamespace { get; } = AuthenticationNamespace;
 }

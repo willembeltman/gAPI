@@ -72,8 +72,8 @@ public class SharedReferences : ISharedReferences
                 "`[IsStateDtoAttribute]`.");
 
         var StateChangedHandler_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Delegates.StateChangedHandler") ??
-            throw new Exception("gAPI.Delegates.StateChangedHandler was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Delegates.StateChangedHandler") ??
+            throw new Exception("gAPI.Core.Delegates.StateChangedHandler was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
         StateChangedHandler = new SharedReference(StateChangedHandler_Symbol);
 
@@ -118,8 +118,8 @@ public class SharedReferences : ISharedReferences
 
 
         var gAPI_IClientAuthenticatedHttpClient_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Interfaces.IClientAuthenticatedHttpClient")
-            ?? throw new Exception("gAPI.Interfaces.IClientAuthenticatedHttpClient was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient")
+            ?? throw new Exception("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
 
         Gapi_IClientAuthenticatedHttpClient = new SharedReference(gAPI_IClientAuthenticatedHttpClient_Symbol);

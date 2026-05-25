@@ -15,7 +15,7 @@ public class AutoTableGenerator : BaseGenerator
         string @namespace)
     {
         Context = context;
-        var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Interfaces", "IClientAuthenticatedHttpClient");
+        var iClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client", "IAuthenticatedHttpClient");
         TableGenerator = new TableListGenerator(
             crudlType,
             itemDataSource,

@@ -34,7 +34,7 @@
 //        Code = $@"{GetNamespacesCode()}
 //namespace {Namespace};
 
-//public interface {Name} : gAPI.Interfaces.IClientAuthenticatedHttpClient
+//public interface {Name} : gAPI.Core.Client.IAuthenticatedHttpClient
 //{{
 //    event {StateChangedHandler}? OnStateHasChanged;
 //    Task<{State}> GetStateAsync(CancellationToken ct);
