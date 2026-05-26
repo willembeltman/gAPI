@@ -94,7 +94,7 @@ public class DtoGenerator : BaseGenerator
         propertiesCode += $"public class {Name} : ICrudEntity{(Entity.HasIStorageFileInterface 
             ?   Entity.HasIReadonlyStorageFileInterface 
                 ? ", IReadonlyStorageFileDto" 
-                : "IStorageFileDto"
+                : ", IStorageFileDto"
             : "")}\r\n";
         propertiesCode += $"{{\r\n";
 
