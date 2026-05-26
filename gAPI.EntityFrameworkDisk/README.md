@@ -26,7 +26,7 @@ It uses custom serializers, dedicated index files, and an advanced locking syste
 
 ### Advanced Serialization & Comparison
 
-- gAPI.EntityFrameworkDisk.AutoSerializer — Runtime-generated, ultra-fast binary serializers for entities.
+- gAPI.EntityFrameworkDisk.Serializers — Runtime-generated, ultra-fast binary serializers for entities.
 - gAPI.EntityFrameworkDisk.AutoComparer — Runtime-generated comparison modules for high-speed dirty state detection.
 - Both are optimized for minimal overhead, making them suitable for large datasets and high-throughput scenarios.
 

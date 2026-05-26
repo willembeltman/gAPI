@@ -16,7 +16,7 @@ internal static class SerializerFactory<T>
         var writeMethodName = "EntityWrite";
 
         var Code = $@"
-            using gAPI.EntityFrameworkDisk.AutoSerializer.Special;
+            using gAPI.EntityFrameworkDisk.Serializers.Special;
             using System;
             using System.IO;
             using System.Linq;
