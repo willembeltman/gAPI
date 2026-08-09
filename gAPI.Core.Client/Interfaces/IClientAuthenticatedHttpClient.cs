@@ -2,7 +2,7 @@
 using gAPI.Core.Ids;
 using gAPI.Core.Sse;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Client.Interfaces;
 
 public interface IClientAuthenticatedHttpClient : IDisposable
 {
@@ -14,7 +14,7 @@ public interface IClientAuthenticatedHttpClient : IDisposable
     bool ForceReconnect { get; set; }
 
     Task<string> GetStateDataAsync(bool force = false, CancellationToken ct = default);
-    Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
+    Task<bool?> IsAuthenticatedAsync(CancellationToken ct = default);
     Task TryUpdateStateAsync(string? stateData, CancellationToken ct);
     Task TryUpdateStateAsync(ApiResult result, CancellationToken ct);
     Task TryUpdateStateAsync(HttpResponseMessage response, CancellationToken ct);

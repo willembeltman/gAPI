@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Server.Entities;
+﻿using gAPI.Core.Server.Authentication;
+using gAPI.Core.Server.Entities;
 
 namespace gAPI.Core.Server;
 

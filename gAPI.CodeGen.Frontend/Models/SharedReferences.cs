@@ -51,7 +51,7 @@ public class SharedReferences
         BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
         BaseListResponseT = new SharedReference("gAPI.Core.Dtos.BaseListResponseT");
         StateChangedHandler = new SharedReference("gAPI.Core.Delegates.StateChangedHandler");
-        IClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient");
+        IClientAuthenticatedHttpClient = new SharedReference("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient");
         ItemDataSource = new SharedReference("gAPI.Core.Client.ItemDataSource");
         ListDataSource = new SharedReference("gAPI.Core.Client.ListDataSource");
 

@@ -2,7 +2,7 @@
 
 namespace gAPI.Core.ServiceBus.Interfaces;
 
-public interface IRabbitConnectionProvider
+public interface IRabbitServiceBusConnectionProvider
 {
     Task<IConnection> GetConnectionAsync();
 }

@@ -11,7 +11,7 @@ namespace gAPI.Core.Client;
 public class AuthenticatedHttpClient<TStateDto>(
     IStateParser<TStateDto> stateSerializer,
     IHttpClientFactory httpClientFactory,
-    INavigationManager navigation)
+    IUriNavigationManager navigation)
     : AuthenticationStateProvider,
       IAuthenticatedHttpClient<TStateDto>
     where TStateDto : AuthStateDto, new()
@@ -58,10 +58,17 @@ public class AuthenticatedHttpClient<TStateDto>(
         }
     }
 
-    public async Task<bool> IsAuthenticatedAsync(CancellationToken ct)
+    public async Task<bool?> IsAuthenticatedAsync(CancellationToken ct)
     {
-        var state = await GetStateAsync(false, ct);
-        return state.User != null;
+        try
+        {
+            var state = await GetStateAsync(false, ct);
+            return state.User != null;
+        }
+        catch
+        {
+            return null;
+        }
     }
     public async Task<TStateDto> GetStateAsync(bool force = false, CancellationToken ct = default)
     {

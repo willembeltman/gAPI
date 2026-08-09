@@ -1,8 +1,8 @@
-﻿using gAPI.AutoSseServer.Models;
+﻿using gAPI.AutoSse.Server.Models;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoSseServer.Generators;
+namespace gAPI.AutoSse.Server.Generators;
 
 public class ClientService_Generator : BaseGenerator
 {

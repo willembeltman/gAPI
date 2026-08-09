@@ -1,15 +1,15 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace gAPI.Core.Sse;
+namespace gAPI.Core.Client.Sse;
 
 public class SseClient(
     IClientAuthenticatedHttpClient clientAuthenticationService,
-    IClientConnection sseManager,
+    ISseClientConnection sseManager,
     ServiceId serviceId)
     : IDisposable
 {

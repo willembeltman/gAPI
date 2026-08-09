@@ -1,6 +1,6 @@
 ﻿using gAPI.AutoSerializer;
-using gAPI.AutoWssClient.Helpers;
-using gAPI.AutoWssClient.Models;
+using gAPI.AutoWss.Client.Helpers;
+using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoWssClient;
+namespace gAPI.AutoWss.Client;
 
 [Generator]
 public class Program : IIncrementalGenerator
@@ -59,8 +59,8 @@ public class Program : IIncrementalGenerator
     public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
     {
         //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoWssClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoWssClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var sourceCode = $"#error gAPI.AutoWss.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoWss.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
     //public void ShowError(Exception exception)

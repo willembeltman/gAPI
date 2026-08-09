@@ -1,7 +1,7 @@
-﻿using gAPI.AutoSseServer.Helpers;
+﻿using gAPI.AutoSse.Server.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoSseServer.Models;
+namespace gAPI.AutoSse.Server.Models;
 
 public class SharedReferences
 {

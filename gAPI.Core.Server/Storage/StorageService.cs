@@ -97,7 +97,7 @@ public class StorageService : IStorageService
     }
 
     // Delegate alle calls naar de gekozen implementation
-    public Task<GetStorageFileInfoResponse?> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct) =>
+    public Task<GetStorageFileInfoResponse> GetStorageFileInfo(IStorageFile storageFile, CancellationToken ct) =>
         Implementation.GetStorageFileInfo(storageFile, ct);
     public Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct) =>
         Implementation.GetStorageFileInfo(key, ct);

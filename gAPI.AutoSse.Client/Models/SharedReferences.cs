@@ -1,7 +1,7 @@
-﻿using gAPI.AutoSseClient.Helpers;
+﻿using gAPI.AutoSse.Client.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoSseClient.Models;
+namespace gAPI.AutoSse.Client.Models;
 
 public class SharedReferences
 {
@@ -50,16 +50,16 @@ public class SharedReferences
         //IUseCase = new SharedReference("gAPI.Core.Interfaces.IUseCase"); //Find("gAPI.Core.Interfaces.IUseCase", allSymbols);
         //Mapping = new SharedReference("gAPI.Core.Interfaces.Mapping"); //Find("gAPI.Core.Interfaces.Mapping", allSymbols);
         //IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssLoggerFactory", allSymbols);
-        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
-        IClientConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientConnection", allSymbols);
+        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
+        ISseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.ISseClientConnection", allSymbols);
 
         //SseHostCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseHostCollection", allSymbols);
         //WssConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssConnectionCollection", allSymbols);
-        SseManagerCollection = SharedReferenceFinder.Find("gAPI.Core.Collections.SseManagerCollection", allSymbols);
+        SseManagerCollection = SharedReferenceFinder.Find("gAPI.Core.Client.Collections.SseManagerCollection", allSymbols);
 
-        //WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Wss.WssClientConnection", allSymbols);
-        //IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssClientConnection", allSymbols);
-        SseClient = SharedReferenceFinder.Find("gAPI.Core.Sse.SseClient", allSymbols);
+        //WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Wss.WssClientConnection", allSymbols);
+        //IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
+        SseClient = SharedReferenceFinder.Find("gAPI.Core.Client.Sse.SseClient", allSymbols);
     }
 
     //public SharedReference FabricClient { get; }
@@ -102,7 +102,7 @@ public class SharedReferences
     //public SharedReference InvokeResponseDoneDto { get; }
     //public SharedReference FrontendConfig { get;  }
     public SharedReference SseManagerCollection { get; }
-    public SharedReference IClientConnection { get; }
+    public SharedReference ISseClientConnection { get; }
     public SharedReference SseHostId { get; }
     public SharedReference SseManagerId { get; }
     public SharedReference SseClient { get; }

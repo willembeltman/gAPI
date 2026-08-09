@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoWssServer.Models;
+namespace gAPI.AutoWss.Server.Models;
 
 public class Service : SharedReference
 {

@@ -1,10 +1,10 @@
-﻿using gAPI.AutoApiServer.Models;
+﻿using gAPI.AutoApi.Server.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApiServer.Helpers;
+namespace gAPI.AutoApi.Server.Helpers;
 
 public static class SharedReferenceFinder
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoSseClient.Helpers;
+namespace gAPI.AutoSse.Client.Helpers;
 
 // Extensie methode om makkelijker alle types te kunnen doorlopen
 public static class CompilationExtensions

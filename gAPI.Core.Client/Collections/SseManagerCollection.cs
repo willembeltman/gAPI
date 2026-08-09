@@ -1,15 +1,15 @@
 ﻿using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
+using gAPI.Core.Client.Interfaces;
 using System.Collections.Concurrent;
 
-namespace gAPI.Core.Collections;
+namespace gAPI.Core.Client.Collections;
 
 public sealed class SseManagerCollection
 {
     private long _nextId;
-    private readonly ConcurrentDictionary<SseManagerId, IClientConnection> Clients = new();
+    private readonly ConcurrentDictionary<SseManagerId, ISseClientConnection> Clients = new();
 
-    public SseManagerId Add(IClientConnection client)
+    public SseManagerId Add(ISseClientConnection client)
     {
         var id = new SseManagerId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
@@ -21,5 +21,5 @@ public sealed class SseManagerCollection
         return Clients.TryRemove(id, out _);
     }
 
-    public IEnumerable<IClientConnection> All => Clients.Values;
+    public IEnumerable<ISseClientConnection> All => Clients.Values;
 }

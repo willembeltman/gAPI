@@ -1,11 +1,11 @@
-﻿using gAPI.AutoSseClient.Generators;
-using gAPI.AutoSseClient.Models;
+﻿using gAPI.AutoSse.Client.Generators;
+using gAPI.AutoSse.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Text;
 
-namespace gAPI.AutoSseClient;
+namespace gAPI.AutoSse.Client;
 
 public class Generator
 {
@@ -16,7 +16,7 @@ public class Generator
 
         //SseClient = new SseClientGenerator(this);
         SseManager = new ClientConnectionGenerator(this);
-        AutoSseExtension = new AutoSseExtensionGenerator(this);
+        AutoSseExtension = new AddAutoSseExtensionGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -24,7 +24,7 @@ public class Generator
 
     //public SseClientGenerator SseClient { get; }
     public ClientConnectionGenerator SseManager { get; }
-    public AutoSseExtensionGenerator AutoSseExtension { get; }
+    public AddAutoSseExtensionGenerator AutoSseExtension { get; }
 
     public void Generate(SourceProductionContext spc)
     {

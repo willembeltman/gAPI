@@ -1,9 +1,9 @@
-﻿using gAPI.AutoWssClient.Models;
+﻿using gAPI.AutoWss.Client.Models;
 using System.Linq;
 
-namespace gAPI.AutoWssClient.Generators;
+namespace gAPI.AutoWss.Client.Generators;
 
-public class AutoWssExtensionGenerator : BaseGenerator
+public class AutoWssExtensionGenerator : _BaseGenerator
 {
     public AutoWssExtensionGenerator(Generator context)
     {
@@ -12,7 +12,7 @@ public class AutoWssExtensionGenerator : BaseGenerator
         Directory = "";
         Namespace = "gAPI.Generated";
 
-        Name = "AutoWssClientExtension";
+        Name = "AddAutoWssExtension";
         FileName = $"{Name}.g.cs";
     }
 
@@ -48,7 +48,7 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
+    public static IServiceCollection AddAutoWss(this IServiceCollection services, string apiAddress, string wssAddress)
     {{
         // Set up authorization core
         services.AddAuthorizationCore();

@@ -1,7 +1,7 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
-using gAPI.AutoWssClient.Generators;
-using gAPI.AutoWssClient.Models;
+using gAPI.AutoWss.Client.Generators;
+using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoWssClient;
+namespace gAPI.AutoWss.Client;
 
 public class Generator
 {
@@ -116,7 +116,7 @@ public class Generator
         }
     }
 
-    private static void Generate2(SourceProductionContext spc, BaseGenerator generator)
+    private static void Generate2(SourceProductionContext spc, _BaseGenerator generator)
     {
         generator.GenerateCode();
 

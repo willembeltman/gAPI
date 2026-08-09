@@ -2,7 +2,7 @@
 
 **Automatic server-to-client streaming for gAPI backend services.**
 
-`gAPI.AutoSse` is the backend companion to `gAPI.AutoSseClient`.  
+`gAPI.AutoSse` is the backend companion to `gAPI.AutoSse.Client`.  
 It enables your services to stream messages directly to subscribed Blazor clients with zero boilerplate.
 
 ---

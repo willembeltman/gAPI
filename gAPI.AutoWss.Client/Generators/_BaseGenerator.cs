@@ -1,12 +1,12 @@
-﻿using gAPI.AutoWssClient.Models;
+﻿using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWssClient.Generators;
+namespace gAPI.AutoWss.Client.Generators;
 
 
-public abstract class BaseGenerator : SharedReference
+public abstract class _BaseGenerator : SharedReference
 {
     public string Directory { get; protected set; } = string.Empty;
     public string FileName { get; protected set; } = string.Empty;
@@ -47,7 +47,7 @@ public abstract class BaseGenerator : SharedReference
         if (type?.Namespace != null)
             Namespaces.Add(type.Namespace);
     }
-    public void Reg(BaseGenerator generator)
+    public void Reg(_BaseGenerator generator)
     {
         if (generator?.Namespace != null)
             Namespaces.Add(generator.Namespace);

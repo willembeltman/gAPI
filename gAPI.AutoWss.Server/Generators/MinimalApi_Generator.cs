@@ -1,10 +1,10 @@
-﻿using gAPI.AutoWssServer.Helpers;
-using gAPI.AutoWssServer.Models;
+﻿using gAPI.AutoWss.Server.Helpers;
+using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoWssServer.Generators;
+namespace gAPI.AutoWss.Server.Generators;
 
 public class MinimalApi_Generator : _BaseGenerator
 {

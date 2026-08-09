@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace gAPI.AutoWssServer.Helpers;
+namespace gAPI.AutoWss.Server.Helpers;
 
 public static class StringCaseHelper
 {

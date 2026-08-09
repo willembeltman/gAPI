@@ -1,9 +1,9 @@
-﻿using gAPI.AutoApiServer.Helpers;
+﻿using gAPI.AutoApi.Server.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApiServer.Models;
+namespace gAPI.AutoApi.Server.Models;
 
 public class ServiceContext
 {

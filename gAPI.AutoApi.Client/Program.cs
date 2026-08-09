@@ -1,5 +1,5 @@
-﻿using gAPI.AutoApiClient.Helpers;
-using gAPI.AutoApiClient.Models;
+﻿using gAPI.AutoApi.Client.Helpers;
+using gAPI.AutoApi.Client.Models;
 using gAPI.AutoSerializer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoApiClient;
+namespace gAPI.AutoApi.Client;
 
 [Generator]
 public class Program : IIncrementalGenerator
@@ -54,8 +54,8 @@ public class Program : IIncrementalGenerator
     public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
     {
         //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoApiClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoApiClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var sourceCode = $"#error gAPI.AutoApi.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoApi.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
 
@@ -81,7 +81,7 @@ public class Program : IIncrementalGenerator
     //            }
 
     //            var sb = $@"
-    //namespace gAPI.AutoApiClient
+    //namespace gAPI.AutoApi.Client
     //{{
     //    public static class AccessedTypes
     //    {{

@@ -1,7 +1,7 @@
-﻿using gAPI.AutoApiClient.Helpers;
+﻿using gAPI.AutoApi.Client.Helpers;
 using Microsoft.CodeAnalysis;
 
-namespace gAPI.AutoApiClient.Models;
+namespace gAPI.AutoApi.Client.Models;
 
 public class SharedReferences
 {
@@ -47,13 +47,13 @@ public class SharedReferences
         //IUseCase = new SharedReference("gAPI.Core.Interfaces.IUseCase"); //Find("gAPI.Core.Interfaces.IUseCase", allSymbols);
         //Mapping = new SharedReference("gAPI.Core.Interfaces.Mapping"); //Find("gAPI.Core.Interfaces.Mapping", allSymbols);
         //IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssLoggerFactory", allSymbols);
-        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
+        IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
 
         //SseHostCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseHostCollection", allSymbols);
         //WssConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssConnectionCollection", allSymbols);
 
-        //WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Wss.WssClientConnection", allSymbols);
-        //IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssClientConnection", allSymbols);
+        //WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Wss.WssClientConnection", allSymbols);
+        //IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
 
         AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileAttribute", allSymbols);
         AuthClient_ToFormFileExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileExtensionAttribute", allSymbols);

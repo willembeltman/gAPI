@@ -31,11 +31,12 @@ public class TypeHelper : ITypeHelper
         if (nullablePrimitive)
         {
             _Name = GetSimpleCsTypeByName(type.Name);
-            IsDateTime = _Name == "DateTime";
+            IsDateTime = _Name == "DateTime" || 
+                _Name == "DateTimeOffset";
             IsGuid = _Name == "Guid";
-            IsCheckbox = _Name == "bool" || _Name == "bool?";
+            IsCheckbox = _Name == "bool";
             IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
-            UnderlayingTypes = Array.Empty<TypeHelper>();
+            UnderlayingTypes = [];
         }
         else
         {
@@ -74,11 +75,13 @@ public class TypeHelper : ITypeHelper
                     IsEnum = type.IsEnum;
                     IsTask = type.Name.StartsWith("Task");
                     IsVoid = type.Name == "void";
-                    IsDateTime = _Name == "DateTime";
-                    IsCheckbox = _Name == "bool" || _Name == "bool?";
+                    IsDateTime = _Name == "DateTime" ||
+                        _Name == "DateTimeOffset";
+                    IsGuid = _Name == "Guid";
+                    IsCheckbox = _Name == "bool";
                     IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
                     IsGenericType = false;
-                    UnderlayingTypes = Array.Empty<TypeHelper>();
+                    UnderlayingTypes = [];
                 }
             }
         }
@@ -120,7 +123,7 @@ public class TypeHelper : ITypeHelper
             }
 
             if (!IsGenericType)
-                return new[] { Namespace };
+                return [Namespace];
 
             var list = UnderlayingTypes.SelectMany(a => a.Namespaces).ToList();
             list.Insert(0, Namespace);
@@ -130,7 +133,7 @@ public class TypeHelper : ITypeHelper
 
     public string _Name { get; }
     public bool IsEnum { get; }
-    public bool IsDateTime { get; }
+    public bool IsDateTime { get; } 
     public bool IsGuid { get; }
     public bool IsCheckbox { get; }
     public bool IsArray { get; }

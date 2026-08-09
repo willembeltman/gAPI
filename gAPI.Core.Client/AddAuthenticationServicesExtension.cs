@@ -27,7 +27,7 @@ public static class AddAuthenticationServicesExtension
         // Register global client authentication service
         services.AddScoped<AuthenticatedHttpClient<TStateDto>>();
         services.AddScoped<IAuthenticatedHttpClient<TStateDto>>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
-        services.AddScoped<gAPI.Core.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
+        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthenticatedHttpClient<TStateDto>>());
 
         // Set up authorization core

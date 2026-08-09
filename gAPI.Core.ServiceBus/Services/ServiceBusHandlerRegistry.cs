@@ -5,11 +5,11 @@ using System.Text.Json;
 
 namespace gAPI.Core.ServiceBus.Services;
 
-public class HandlerRegistry : IHandlerRegistry
+public class ServiceBusHandlerRegistry : IServiceBusHandlerRegistry
 {
     private readonly Dictionary<string, (Type handlerType, Type messageType)> _handlers;
 
-    public HandlerRegistry()
+    public ServiceBusHandlerRegistry()
     {
         _handlers = new();
 

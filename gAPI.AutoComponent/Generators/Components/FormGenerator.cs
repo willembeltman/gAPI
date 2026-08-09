@@ -86,7 +86,7 @@ public class FormGenerator : BaseGenerator
                 !p.IsKey)
             .ToArray();
 
-        var propertySections = string.Join("\r\n", properties.Select(a => GetPropertyMarkup(a)));
+        var propertySections = string.Join("\r\n", properties.Select(a => GetPropertyCellMarkup(a)));
 
         // Razor file output
         Code = $@"@if (DataSource?.Model == null)
@@ -142,16 +142,15 @@ else
 }}";
     }
 
-    private string GetPropertyMarkup(ICrudProperty p)
+    private string GetPropertyCellMarkup(ICrudProperty p)
     {
-        string model = "DataSource.Model";
+        string modelPrefix = "DataSource.Model";
         string id = p.Name.ToCamelCase();
 
         // Foreign key dropdown
         if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
         {
             var dsName = p.ForeignKeyType.Name.ToMultiple();
-            //string nullablePrefix = p.PropertyType.IsNullable ? "Nullable" : "";
             string bindAttr = p.PropertyType.IsNullable ? "bind-NullableValue" : "bind-Value";
             string bindTypeAttr = p.PropertyType.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
             string valueType = p.TypeSimpleName;
@@ -161,8 +160,8 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.ForeignKeyType.Name}</label>
-            <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{model}.{p.Name}"" {bindTypeAttr}=""{valueType}""
-                @bind-ForeignName=""{model}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?""
+            <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{modelPrefix}.{p.Name}"" {bindTypeAttr}=""{valueType}""
+                @bind-ForeignName=""{modelPrefix}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?""
                 DataSource=""{dsName}"" id=""{id}"" />
         </div>
     }}";
@@ -175,8 +174,30 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.Name}</label>
-            <InputNumber @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+            <InputNumber @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
                 id=""{id}"" class=""form-control"" />
+        </div>
+    }}";
+        }
+
+        if (p.IsGuid)
+        {
+            return $@"
+    @if (!HideColumnNames.Contains(""{p.Name}""))
+    {{
+        <div class=""mb-3"">
+            <label for=""{id}"" class=""form-label"">{p.Name}</label>
+            <input type=""text"" 
+                   id=""{id}"" 
+                   class=""form-control"" 
+                   value=""@({modelPrefix}.{p.Name})"" 
+                   bindtype_Value=""{p.TypeSimpleName}"" test=""{p.Name}""
+                   @onchange=""@((ChangeEventArgs e) => {{ 
+                       if (Guid.TryParse(e.Value?.ToString(), out var parsedGuid)) 
+                       {{ 
+                           {modelPrefix}.{p.Name} = parsedGuid; 
+                       }} 
+                   }})"" />
         </div>
     }}";
         }
@@ -188,7 +209,7 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.Name}</label>
-            <InputDate @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+            <InputDate @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
                 id=""{id}"" class=""form-control"" />
         </div>
     }}";
@@ -201,7 +222,7 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.Name}</label>
-            <InputCheckbox @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+            <InputCheckbox @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
                 id=""{id}"" class=""form-check-input"" />
         </div>
     }}";
@@ -214,7 +235,7 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.Name}</label>
-            <InputSelect @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+            <InputSelect @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
                 id=""{id}"" class=""form-select"">
                 @foreach (var value in Enum.GetValues(typeof({p.TypeDigger.FullName})).Cast<{p.TypeDigger.FullName}>())
                 {{
@@ -231,10 +252,32 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.Name}</label>
-            <InputText @bind-Value=""{model}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
+            <InputText @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
                 id=""{id}"" class=""form-control"" />
         </div>
     }}";
+
+        //        if (p.IsDateTime)
+        //        {
+        //            return $@"
+        //@if (!HideColumnNames.Contains(""{p.Name}""))
+        //{{
+        //    <div class=""mb-3"">
+        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
+        //        <input type=""date"" 
+        //               id=""{id}"" 
+        //               class=""form-control"" 
+        //               value=""@DataSource.Model.{p.Name}.ToString(""yyyy-MM-dd"")"" 
+        //               bindtype_Value=""{p.TypeSimpleName}""
+        //               @onchange=""@((ChangeEventArgs e) => {{ 
+        //                   if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate)) 
+        //                   {{ 
+        //                       DataSource.Model.{p.Name} = parsedDate; 
+        //                   }} 
+        //               }})"" />
+        //    </div>
+        //}}";
+        //        }
     }
 
 }

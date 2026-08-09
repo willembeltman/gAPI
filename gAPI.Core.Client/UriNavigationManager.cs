@@ -4,8 +4,8 @@ namespace gAPI.Core.Client;
 
 public class UriNavigationManager(
     NavigationManager navigation)
-    : INavigationManager
+    : IUriNavigationManager
 {
-    string INavigationManager.GetPathAndQuery()
+    string IUriNavigationManager.GetPathAndQuery()
         => navigation.ToBaseRelativePath(navigation.Uri);
 }

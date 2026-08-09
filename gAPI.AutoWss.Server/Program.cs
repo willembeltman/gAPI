@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoSerializer;
-using gAPI.AutoWssServer.Helpers;
-using gAPI.AutoWssServer.Models;
+using gAPI.AutoWss.Server.Helpers;
+using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoWssServer;
+namespace gAPI.AutoWss.Server;
 
 [Generator]
 public class Program : IIncrementalGenerator

@@ -1,8 +1,8 @@
 ﻿using gAPI.Core.Dtos;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Client.Interfaces;
 
-public interface IClientConnection : IDisposable
+public interface ISseClientConnection : IDisposable
 {
     Task MessageReceivedAsync(SendRequestDto message, CancellationToken ct);
     void SubscribeAsync(object implementation);

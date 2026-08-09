@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace gAPI.Core.ServiceBus.Services;
 
 public class ServiceBusSender(
-    IRabbitConnectionProvider provider)
+    IRabbitServiceBusConnectionProvider provider)
     : IServiceBusSender
 {
     public async Task SendAsync<TMessage>(string busName, TMessage message, CancellationToken ct)

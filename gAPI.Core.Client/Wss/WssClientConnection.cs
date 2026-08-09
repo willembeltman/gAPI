@@ -1,15 +1,17 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
+using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Threading.Channels;
 
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Client.Wss;
 
 public abstract class WssClientConnection : IWssClientConnection
 {

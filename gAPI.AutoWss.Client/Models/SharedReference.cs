@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace gAPI.AutoWssClient.Models;
+namespace gAPI.AutoWss.Client.Models;
 
 public class SharedReference
 {

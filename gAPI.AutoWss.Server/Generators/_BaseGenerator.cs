@@ -1,9 +1,9 @@
-﻿using gAPI.AutoWssServer.Models;
+﻿using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWssServer.Generators;
+namespace gAPI.AutoWss.Server.Generators;
 
 
 public abstract class _BaseGenerator : SharedReference

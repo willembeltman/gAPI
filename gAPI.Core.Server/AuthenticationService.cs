@@ -16,14 +16,14 @@ public class AuthenticationService<TUser, TStateDto>(
     IAuthenticationStateFactory<TUser, TStateDto> factory,
     IStateParser<TStateDto> stateSerializer,
     IHostEnvironment hostEnvironment,
-    WssSessionCache sessionCache)
+    IEnumerable<WssSessionCache> sessionCaches) // optioneel dus.
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
 {
     private AuthenticationHeaders? Headers;
 
-    public StringValues ReceivedClientStateData { get; private set; }
+    public string? ReceivedClientStateData { get; private set; }
 
     private TStateDto? ReceivedClientState;
     private TStateDto? State;
@@ -49,9 +49,20 @@ public class AuthenticationService<TUser, TStateDto>(
         => Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     string? gAPI.Core.Interfaces.IServerAuthenticationService.CookieData
         => Headers?.CookieData;
-    public StringValues SessionData
+    public string? SessionData
         => Headers?.SessionData ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
+    public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
+    {
+        return InitializeAsync(
+            new Microsoft.AspNetCore.Http.PathString("/Handlers/GenerateAutoReplyResponseHandler"),
+            new Microsoft.AspNetCore.Http.QueryString(),
+            System.Net.IPAddress.Loopback,
+            cookieData,
+            sessionData,
+            stateData,
+            ct);
+    }
     public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     {
         if (ipAddress == null)
@@ -115,7 +126,8 @@ public class AuthenticationService<TUser, TStateDto>(
         // Additional forbidden checks can be added here
 
         Initialized = true;
-        sessionCache.AddOrUpdate(headers.SessionId, headers.CookieData);
+        foreach (var sessionCache in sessionCaches)
+            sessionCache.AddOrUpdate(headers.SessionId, headers.CookieData);
 
         Result = new AuthenticationInitializeResult()
         {
@@ -200,7 +212,8 @@ public class AuthenticationService<TUser, TStateDto>(
             return false;
         //throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        sessionCache.Remove(Headers.SessionId);
+        foreach (var sessionCache in sessionCaches)
+            sessionCache.Remove(Headers.SessionId);
         Headers.RemoveCookie();
         await ReInitializeAsync(ct);
 

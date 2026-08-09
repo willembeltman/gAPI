@@ -1,12 +1,12 @@
-﻿using gAPI.AutoSseClient.Helpers;
-using gAPI.AutoSseClient.Models;
+﻿using gAPI.AutoSse.Client.Helpers;
+using gAPI.AutoSse.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoSseClient;
+namespace gAPI.AutoSse.Client;
 
 [Generator]
 public class Program : IIncrementalGenerator
@@ -55,8 +55,8 @@ public class Program : IIncrementalGenerator
     public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
     {
         //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoSseClient: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoSseClient.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var sourceCode = $"#error gAPI.AutoSse.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoSse.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
     //public void ShowError(Exception exception)

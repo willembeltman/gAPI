@@ -20,10 +20,10 @@
     <Node Id="Test3" Category="Analyzer" Label="Test" UseManualLocation="True" />
     <Node Id="Test5" Label="Test" UseManualLocation="True" />
     <Node Id="gAPIAutoApi" Category="Analyzer" Label="gAPI.AutoApi" UseManualLocation="True" />
-    <Node Id="gAPIAutoApiClient" Category="Analyzer" Label="gAPI.AutoApiClient" UseManualLocation="True" />
+    <Node Id="gAPIAutoApi.Client" Category="Analyzer" Label="gAPI.AutoApi.Client" UseManualLocation="True" />
     <Node Id="gAPIAutoComponent" Category="Analyzer" Label="gAPI.AutoComponent" UseManualLocation="True" />
     <Node Id="gAPIAutoWss" Category="Analyzer" Label="gAPI.AutoWss" UseManualLocation="True" />
-    <Node Id="gAPIAutoWssClient" Category="Analyzer" Label="gAPI.AutoWssClient" UseManualLocation="True" />
+    <Node Id="gAPIAutoWss.Client" Category="Analyzer" Label="gAPI.AutoWss.Client" UseManualLocation="True" />
     <Node Id="gAPICodeGenBackend" Category="Generator" Label="gAPI.CodeGen.Backend" UseManualLocation="True" />
     <Node Id="gAPICodeGenFrontend" Category="Generator" Label="gAPI.CodeGen.Frontend" UseManualLocation="True" />
     <Node Id="gAPIStorage" Category="Reference" Label="gAPI.Storage" UseManualLocation="True" />
@@ -32,36 +32,36 @@
   <Links>
     <Link Source="Api" Target="Business" />
     <Link Source="Api" Target="Shared" />
-    <Link Source="Api" Target="gAPIAutoApi" Label="Analyzer" Label/>
+    <Link Source="Api" Target="gAPIAutoApi" Label="Analyzer" />
     <Link Source="BlazorMaui" Target="Razor" />
     <Link Source="BlazorWasm" Target="Razor" />
     <Link Source="Business" Target="Data" />
     <Link Source="Business" Target="PaymentProxy" />
     <Link Source="Business" Target="Shared" />
-    <Link Source="Business" Target="gAPIAutoWss" Label="Analyzer" Label/>
-    <Link Source="Business" Target="gAPICodeGenBackend" Label="Codegen" Label/>
+    <Link Source="Business" Target="gAPIAutoWss" Label="Analyzer" />
+    <Link Source="Business" Target="gAPICodeGenBackend" Label="Codegen" />
     <Link Source="Business" Target="gAPIStorage" />
-    <Link Source="Data" Target="Database" Label="Tcp" Label/>
+    <Link Source="Data" Target="Database" Label="Tcp" />
     <Link Source="Data" Target="Shared" />
     <Link Source="Data" Target="Test2" />
-    <Link Source="PaymentProxy" Target="PaymentProvider" Label="Rest" Label/>
+    <Link Source="PaymentProxy" Target="PaymentProvider" Label="Rest" />
     <Link Source="PaymentProxy" Target="Test" />
     <Link Source="Razor" Target="RazorComponents" />
     <Link Source="Razor" Target="Shared" />
-    <Link Source="Razor" Target="gAPICodeGenFrontend" Label="Codegen" Label/>
+    <Link Source="Razor" Target="gAPICodeGenFrontend" Label="Codegen" />
     <Link Source="RazorClients" Target="Shared" />
-    <Link Source="RazorClients" Target="gAPIAutoApiClient" Label="Analyzer" Label/>
-    <Link Source="RazorClients" Target="gAPIAutoWssClient" Label="Analyzer" Label/>
+    <Link Source="RazorClients" Target="gAPIAutoApi.Client" Label="Analyzer" />
+    <Link Source="RazorClients" Target="gAPIAutoWss.Client" Label="Analyzer" />
     <Link Source="RazorComponents" Target="RazorClients" />
     <Link Source="RazorComponents" Target="Shared" />
-    <Link Source="RazorComponents" Target="gAPIAutoComponent" Label="Analyzer" Label/>
-    <Link Source="Shared" Target="gAPICodeGenBackend" Label="Codegen" Label/>
+    <Link Source="RazorComponents" Target="gAPIAutoComponent" Label="Analyzer" />
+    <Link Source="Shared" Target="gAPICodeGenBackend" Label="Codegen" />
     <Link Source="Storage" Target="gAPIStorageServer" />
     <Link Source="Test5" Target="gAPIAutoApi" />
-    <Link Source="gAPIAutoApiClient" Target="gAPIAutoApi" Label="Rest" Label/>
+    <Link Source="gAPIAutoApi.Client" Target="gAPIAutoApi" Label="Rest" />
     <Link Source="gAPIAutoWss" Target="Test3" />
-    <Link Source="gAPIAutoWss" Target="gAPIAutoWssClient" Label="SignalR" Label/>
-    <Link Source="gAPIStorage" Target="Storage" Label="Rest" Label/>
+    <Link Source="gAPIAutoWss" Target="gAPIAutoWss.Client" Label="SignalR" />
+    <Link Source="gAPIStorage" Target="Storage" Label="Rest" />
     <Link Source="gAPIStorage" Target="Test1" />
   </Links>
   <Categories>

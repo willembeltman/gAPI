@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoSerializer;
-using gAPI.AutoWssClient.Helpers;
-using gAPI.AutoWssClient.Models;
+using gAPI.AutoWss.Client.Helpers;
+using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWssClient.Generators;
+namespace gAPI.AutoWss.Client.Generators;
 
-public class ClientConnectionGenerator : BaseGenerator
+public class ClientConnectionGenerator : _BaseGenerator
 {
     public ClientConnectionGenerator(Generator context)
     {
@@ -36,6 +36,7 @@ public class ClientConnectionGenerator : BaseGenerator
     public SharedReference ApiInvokeResponseDoneDto => Context.SharedReferences.ApiInvokeResponseDoneDto;
     public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
     public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
+    public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -61,6 +62,7 @@ public class ClientConnectionGenerator : BaseGenerator
         Reg(InvokeResponseDto);
         Reg(ApiInvokeResponseDoneDto);
         Reg(InvokeResponseDoneDto);
+        Reg(IWssLoggerFactory);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
             Reg(@interface);
@@ -101,7 +103,7 @@ public class {Name}
         {FrontendConfig} frontendConfig)
         : base(httpClient, frontendConfig)
     {{
-        ___Logger = ((IWssLoggerFactory)this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
+        ___Logger = (({IWssLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
     }}
 

@@ -1,6 +1,6 @@
 ﻿namespace gAPI.Core.Client;
 
-public interface INavigationManager
+public interface IUriNavigationManager
 {
     string GetPathAndQuery();
 }

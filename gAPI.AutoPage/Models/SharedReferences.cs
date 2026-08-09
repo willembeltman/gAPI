@@ -118,8 +118,8 @@ public class SharedReferences : ISharedReferences
 
 
         var gAPI_IClientAuthenticatedHttpClient_Symbol =
-            compilation.GetTypeByMetadataName("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient")
-            ?? throw new Exception("gAPI.Core.Interfaces.IClientAuthenticatedHttpClient was not found. " +
+            compilation.GetTypeByMetadataName("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient")
+            ?? throw new Exception("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient was not found. " +
                 "Please reference the gAPI package on the same project as gAPI.AutoPages references.");
 
         Gapi_IClientAuthenticatedHttpClient = new SharedReference(gAPI_IClientAuthenticatedHttpClient_Symbol);

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace gAPI.AutoApiServer.Generators;
+namespace gAPI.AutoApi.Server.Generators;
 
 
 public class AddAutoApiServicesExtensionGenerator : BaseGenerator

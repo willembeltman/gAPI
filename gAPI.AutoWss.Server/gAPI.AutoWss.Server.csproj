@@ -8,7 +8,7 @@
 		<Version>0.0.1-alpha</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
-		<PackageId>gAPI.AutoApi.FabricR</PackageId>
+		<PackageId>gAPI.AutoWss.Server</PackageId>
 		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET 10.</Description>
 		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -1,5 +1,5 @@
-﻿using gAPI.AutoApiClient.Generators;
-using gAPI.AutoApiClient.Models;
+﻿using gAPI.AutoApi.Client.Generators;
+using gAPI.AutoApi.Client.Models;
 using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using Microsoft.CodeAnalysis.Text;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace gAPI.AutoApiClient;
+namespace gAPI.AutoApi.Client;
 
 public class Generator
 {

@@ -9,14 +9,14 @@
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 
-		<PackageId>gAPI.AutoSseClient</PackageId>
+		<PackageId>gAPI.AutoSse.Client</PackageId>
 
 		<Title>
-			gAPI.AutoSseClient – Automatic SSE/SignalR-like streaming for Blazor components
+			gAPI.AutoSse.Client – Automatic SSE/SignalR-like streaming for Blazor components
 		</Title>
 
 		<Description>
-			gAPI.AutoSseClient is a source-generator and analyzer powered library that enables automatic
+			gAPI.AutoSse.Client is a source-generator and analyzer powered library that enables automatic
 			server-to-client streaming for Blazor components.
 
 			Just define an interface in your shared contracts project, decorate it with [GenerateHub],

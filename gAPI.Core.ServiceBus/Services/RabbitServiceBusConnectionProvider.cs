@@ -4,12 +4,12 @@ using RabbitMQ.Client;
 
 namespace gAPI.Core.ServiceBus.Services;
 
-public class RabbitConnectionProvider : IRabbitConnectionProvider
+public class RabbitServiceBusConnectionProvider : IRabbitServiceBusConnectionProvider
 {
     private readonly IConfiguration _config;
     private IConnection? _connection;
 
-    public RabbitConnectionProvider(IConfiguration config)
+    public RabbitServiceBusConnectionProvider(IConfiguration config)
     {
         _config = config;
     }

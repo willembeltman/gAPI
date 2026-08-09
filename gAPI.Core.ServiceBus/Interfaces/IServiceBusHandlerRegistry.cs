@@ -2,7 +2,7 @@
 
 namespace gAPI.Core.ServiceBus.Interfaces;
 
-public interface IHandlerRegistry
+public interface IServiceBusHandlerRegistry
 {
     Task Handle(ServiceBusMessage message, IServiceProvider sp, CancellationToken ct);
 }

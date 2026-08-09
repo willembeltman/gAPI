@@ -13,6 +13,7 @@ public interface ICrudProperty
     bool IsCheckbox { get; }
     bool IsStorageFileUrlProperty { get; }
     bool IsEnum { get; }
+    bool IsGuid { get; }
     bool IsReadOnly { get; }
     bool IsForeignName { get; }
     bool IsKey { get; }

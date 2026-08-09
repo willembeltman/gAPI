@@ -1,10 +1,10 @@
-﻿using gAPI.AutoApiClient.Models;
+﻿using gAPI.AutoApi.Client.Models;
 using gAPI.AutoSerializer;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApiClient.Generators;
+namespace gAPI.AutoApi.Client.Generators;
 
 public class ApiClientGenerator : BaseGenerator
 {

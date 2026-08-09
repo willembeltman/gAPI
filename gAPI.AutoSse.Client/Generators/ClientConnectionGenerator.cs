@@ -1,7 +1,7 @@
-﻿using gAPI.AutoSseClient.Models;
+﻿using gAPI.AutoSse.Client.Models;
 using System.Linq;
 
-namespace gAPI.AutoSseClient.Generators;
+namespace gAPI.AutoSse.Client.Generators;
 
 public class ClientConnectionGenerator : BaseGenerator
 {
@@ -28,7 +28,7 @@ public class ClientConnectionGenerator : BaseGenerator
     public SharedReference SseServiceId => Context.SharedReferences.ServiceId;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference SseManagerId => Context.SharedReferences.SseManagerId;
-    public SharedReference IClientConnection => Context.SharedReferences.IClientConnection;
+    public SharedReference IClientConnection => Context.SharedReferences.ISseClientConnection;
 
     public override void GenerateCode()
     {

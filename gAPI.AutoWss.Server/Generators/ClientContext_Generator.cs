@@ -1,7 +1,7 @@
-﻿using gAPI.AutoWssServer.Helpers;
+﻿using gAPI.AutoWss.Server.Helpers;
 using System.Linq;
 
-namespace gAPI.AutoWssServer.Generators;
+namespace gAPI.AutoWss.Server.Generators;
 
 public class ClientContext_Generator : _BaseGenerator
 {

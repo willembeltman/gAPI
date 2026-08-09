@@ -1,9 +1,9 @@
-﻿using gAPI.AutoSseServer.Helpers;
+﻿using gAPI.AutoSse.Server.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoSseServer.Models;
+namespace gAPI.AutoSse.Server.Models;
 
 public class ServiceContext
 {

@@ -1,4 +1,4 @@
-﻿namespace gAPI.AutoApiClient.Generators;
+﻿namespace gAPI.AutoApi.Client.Generators;
 
 public class FormFileGenerator : BaseGenerator
 {

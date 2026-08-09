@@ -1,8 +1,8 @@
-# gAPI.AutoSseClient
+# gAPI.AutoSse.Client
 
 **Automatic SSE/SignalR-like streaming for Blazor components.**
 
-`gAPI.AutoSseClient` provides server-to-client streaming capabilities for Blazor applications
+`gAPI.AutoSse.Client` provides server-to-client streaming capabilities for Blazor applications
 via a source generator and analyzer. No boilerplate, no manual wiring — just decorate your interfaces
 and let the generator handle the rest.
 
