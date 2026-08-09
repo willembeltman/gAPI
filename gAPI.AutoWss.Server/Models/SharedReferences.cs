@@ -13,7 +13,7 @@ public class SharedReferences
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
 
         //SseHost = SharedReferenceFinder.Find("gAPI.Core.Server.Sse.SseHost", allSymbols);
-        //WssService = SharedReferenceFinder.Find("gAPI.Sse.WssService", allSymbols);
+        //WssService = SharedReferenceFinder.Find("gAPI.Core.Sse.WssService", allSymbols);
         HubResult = SharedReferenceFinder.Find("gAPI.Core.Sse.HubResult", allSymbols);
         HubResultT = new SharedReference("gAPI.Core.Sse.HubResultT");
         SseEvent = SharedReferenceFinder.Find("gAPI.Core.Sse.SseEvent", allSymbols);
