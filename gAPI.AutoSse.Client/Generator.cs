@@ -15,7 +15,8 @@ public class Generator
         SharedReferences = sharedReferences;
 
         //SseClient = new SseClientGenerator(this);
-        SseManager = new ClientConnectionGenerator(this);
+        ClientConnection = new ClientConnectionGenerator(this);
+        IClientConnection = new IClientConnectionGenerator(this);
         AutoSseExtension = new AddAutoSseExtensionGenerator(this);
     }
 
@@ -23,7 +24,8 @@ public class Generator
     public SharedReferences SharedReferences { get; }
 
     //public SseClientGenerator SseClient { get; }
-    public ClientConnectionGenerator SseManager { get; }
+    public ClientConnectionGenerator ClientConnection { get; }
+    public IClientConnectionGenerator IClientConnection { get; }
     public AddAutoSseExtensionGenerator AutoSseExtension { get; }
 
     public void Generate(SourceProductionContext spc)
@@ -31,8 +33,11 @@ public class Generator
         //SseClient.GenerateCode();
         //spc.AddSource(Path.Combine(SseClient.Directory, SseClient.FileName), SourceText.From(SseClient.Code, Encoding.UTF8));
 
-        SseManager.GenerateCode();
-        spc.AddSource(Path.Combine(SseManager.Directory, SseManager.FileName), SourceText.From(SseManager.Code, Encoding.UTF8));
+        ClientConnection.GenerateCode();
+        spc.AddSource(Path.Combine(ClientConnection.Directory, ClientConnection.FileName), SourceText.From(ClientConnection.Code, Encoding.UTF8));
+
+        IClientConnection.GenerateCode();
+        spc.AddSource(Path.Combine(IClientConnection.Directory, IClientConnection.FileName), SourceText.From(IClientConnection.Code, Encoding.UTF8));
 
         AutoSseExtension.GenerateCode();
         spc.AddSource(Path.Combine(AutoSseExtension.Directory, AutoSseExtension.FileName), SourceText.From(AutoSseExtension.Code, Encoding.UTF8));
