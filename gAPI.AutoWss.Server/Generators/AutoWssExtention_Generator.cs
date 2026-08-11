@@ -143,7 +143,7 @@ public static class {Name}
     {{
         return AddAutoWss(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
     }}
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString)
+    public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
     {{
         services.AddHttpContextAccessor();
         services.AddCors(options =>
