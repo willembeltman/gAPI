@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Navigation;
 
-public class UriNavigationManager(
+public class DefaultNavigationManager(
     NavigationManager navigation)
     : IUriNavigationManager
 {
