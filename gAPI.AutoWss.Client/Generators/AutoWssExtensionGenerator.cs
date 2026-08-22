@@ -1,4 +1,4 @@
-﻿using gAPI.AutoWss.Client.Models;
+using gAPI.AutoWss.Client.Models;
 using System.Linq;
 
 namespace gAPI.AutoWss.Client.Generators;
@@ -26,6 +26,9 @@ public class AutoWssExtensionGenerator : _BaseGenerator
     public override void GenerateCode()
     {
         Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
+        Reg("gAPI.Core.Client.Interfaces");
+        Reg("gAPI.Core.Client");
         Reg(ClientConnection);
         Reg(IClientConnection);
         Reg(IWssLoggerFactory);
@@ -62,6 +65,8 @@ public static class {Name}
         services.AddSingleton(config);
 
         // Connection stuff
+        //services.TryAddScoped<IClientAuthenticatedHttpClient, EmptyClientAuthenticatedHttpClient>();
+        services.AddAuthenticationServices(apiAddress);
         services.AddScoped<{ClientConnection}>();
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());

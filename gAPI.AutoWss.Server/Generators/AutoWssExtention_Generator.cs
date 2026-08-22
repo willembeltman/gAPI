@@ -1,4 +1,4 @@
-﻿using gAPI.AutoWss.Server.Models;
+using gAPI.AutoWss.Server.Models;
 using System.Linq;
 
 namespace gAPI.AutoWss.Server.Generators;
@@ -128,6 +128,9 @@ public class AutoWssExtensionGenerator : _BaseGenerator
                 throw new System.Exception($"Service of {Name} not implemented");
         }
 
+        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
+        Reg("gAPI.Core.Server");
+        Reg("gAPI.Core.Server.Authentication");
         Reg(AutoWssExtensionAttribute);
         Reg(AddAutoWssServicesExtension);
 
@@ -146,6 +149,7 @@ public static class {Name}
     public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
     {{
         services.AddHttpContextAccessor();
+        services.TryAddScoped<{IServerAuthenticationService}, EmptyServerAuthenticationService>();
         services.AddCors(options =>
         {{
             options.AddPolicy(""AllowSpecificOrigin"", policy =>
@@ -195,6 +199,7 @@ public static class {Name}
         app.UseRouting();
 
         app.MapWss();
+        app.MapStateEndpoint();
 
 {(string.Join("", Context.MinimalApis.Select(Interface => $@"
         app.Map{Interface.Interface.CleanName}Endpoints();")))}
@@ -214,12 +219,13 @@ public static class {Name}
             HttpContext httpContext,
             CancellationToken ct) =>
         {{
-            if (!httpContext.WebSockets.IsWebSocketRequest || 
-                !sessionCache.TryGet(new {SessionId}(sessionId), out var cookieData))
+            if (!httpContext.WebSockets.IsWebSocketRequest)
             {{
                 httpContext.Response.StatusCode = 400;
                 return;
             }}
+
+            sessionCache.TryGet(new {SessionId}(sessionId), out var cookieData);
 
             try
             {{

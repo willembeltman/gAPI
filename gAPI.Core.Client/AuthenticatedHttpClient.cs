@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Delegates;
+using gAPI.Core.Delegates;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
@@ -48,7 +48,13 @@ public class AuthenticatedHttpClient<TStateDto>(
 
             await TryUpdateStateAsync(response, ct);
 
-            return State ?? throw new InvalidOperationException("State fetch failed");
+            if (State == null)
+            {
+                State = new TStateDto();
+                OldState = stateSerializer.CreateCopy(State);
+            }
+
+            return State;
         }
         finally
         {

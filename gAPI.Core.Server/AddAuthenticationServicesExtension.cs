@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
@@ -16,6 +16,12 @@ namespace gAPI.Core.Server;
 
 public static partial class AddAuthenticationServicesExtension
 {
+    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services)
+    {
+        services.AddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
+        return services;
+    }
+
     public static IServiceCollection AddAuthenticationServices<TUser, TStateDto>(this IServiceCollection services)
         where TUser : AuthUser, new()
         where TStateDto : AuthStateDto, new()
@@ -50,14 +56,12 @@ public static partial class AddAuthenticationServicesExtension
         return services;
     }
 
-    public static WebApplication MapStateEndpoint_ForNoMiddleware<TUser, TStateDto>(this WebApplication app)
-        where TUser : AuthUser, new()
-        where TStateDto : AuthStateDto, new()
+    public static WebApplication MapStateEndpoint(this WebApplication app)
     {
         app.MapGet("/__state", async (
             CancellationToken ct,
             HttpContext ctx,
-            [FromHeader(Name = "X-SessionId")] string sessionId,
+            [FromHeader(Name = "X-SessionId")] string? sessionId,
             [FromHeader(Name = "X-StateData")] string? stateData,
             [FromServices] IServerAuthenticationService authenticationService,
             [FromServices] IHostEnvironment hostEnvironment) =>
@@ -86,8 +90,8 @@ public static partial class AddAuthenticationServicesExtension
                 queryString,
                 forwardedIp,
                 ctx.Request.Cookies["AuthenticationToken"],
-                new StringValues(sessionId),
-                new StringValues(stateData),
+                sessionId != null ? new StringValues(sessionId) : StringValues.Empty,
+                stateData != null ? new StringValues(stateData) : StringValues.Empty,
                 ct);
             if (initializeResult.Forbidden == true) return Results.Forbid();
 
@@ -109,5 +113,12 @@ public static partial class AddAuthenticationServicesExtension
         }).AllowAnonymous();
 
         return app;
+    }
+
+    public static WebApplication MapStateEndpoint_ForNoMiddleware<TUser, TStateDto>(this WebApplication app)
+        where TUser : AuthUser, new()
+        where TStateDto : AuthStateDto, new()
+    {
+        return MapStateEndpoint(app);
     }
 }

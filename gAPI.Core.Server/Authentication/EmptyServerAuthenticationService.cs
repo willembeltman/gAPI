@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Ids;
+using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System.Net;
@@ -9,17 +9,25 @@ namespace gAPI.Core.Server.Authentication;
 public class EmptyServerAuthenticationService
     : IServerAuthenticationService
 {
-    public UserId UserId { get; set; }
+    public UserId UserId { get; set; } = new UserId();
 
-    public SessionId SessionId { get; set; }
+    public SessionId SessionId { get; set; } = SessionId.New();
 
-    public string? SessionData { get; set; }
+    public string? SessionData
+    {
+        get => SessionId.ToString();
+        set
+        {
+            if (SessionId.TryParse(value, out var parsed))
+                SessionId = parsed;
+        }
+    }
 
     public string? CookieData { get; set; }
 
     public bool UpdateCookie { get; set; }
 
-    public bool Initialized { get; set; }
+    public bool Initialized { get; set; } = true;
 
     public AuthenticationInitializeResult Result { get; set; } = new();
 
@@ -50,11 +58,17 @@ public class EmptyServerAuthenticationService
 
     public async Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     {
+        if (SessionId.TryParse(sessionData, out var parsed))
+            SessionId = parsed;
+        Initialized = true;
         return new AuthenticationInitializeResult();
     }
 
     public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     {
+        if (SessionId.TryParse(sessionData, out var parsed))
+            SessionId = parsed;
+        Initialized = true;
         return new AuthenticationInitializeResult();
     }
 

@@ -290,7 +290,7 @@ public abstract class WssConnection : ISignalRInvoker
         PendingRequests[invokeRequest.RequestId] = channel;
 
         using var activityCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        var timeout = TimeSpan.FromSeconds(10);
+        var timeout = TimeSpan.FromSeconds(30);
         var activity = new SemaphoreSlim(0, 1);
 
         _ = Task.Run(async () =>
