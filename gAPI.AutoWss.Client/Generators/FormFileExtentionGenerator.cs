@@ -46,7 +46,7 @@ public static class IsFormFileExtension
         if (browserFile.Size > int.MaxValue)
             throw new Exception(""File too big (4gb???!)"");
         var size = Convert.ToInt32(browserFile.Size);
-        using var source = browserFile.OpenReadStream(5 * 1024 * 1024);
+        using var source = browserFile.OpenReadStream(8 * 1024 * 1024);
         using var ms = new MemoryStream(size);
         await source.CopyToAsync(ms);
         return new FormFile(browserFile, ms.ToArray());

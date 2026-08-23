@@ -28,7 +28,7 @@ public class FabricClientSender(
     public async Task Send_Subscribe_ToFabricAsync(ISseHost sseHost, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_Subscribe_ToFabricAsync({sseHost})", sseHost);
+            Logger.LogTrace("Send_Subscribe_ToFabricAsync({sseHost})", sseHost);
         var request = new SubscribeDto()
         {
             ServiceId = sseHost.ServiceId,
@@ -44,7 +44,7 @@ public class FabricClientSender(
     public async Task Send_Unsubscribe_ToFabricAsync(ISseHost sseHost, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_Unsubscribe_ToFabricAsync({sseHost})", sseHost);
+            Logger.LogTrace("Send_Unsubscribe_ToFabricAsync({sseHost})", sseHost);
         var request = new UnsubscribeDto()
         {
             ServiceId = sseHost.ServiceId,
@@ -61,7 +61,7 @@ public class FabricClientSender(
     public async Task Send_SendRequest_ToFabricAsync(SendRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_SendRequest_ToFabricAsync({request})", request);
+            Logger.LogTrace("Send_SendRequest_ToFabricAsync({request})", request);
         await EnqueueAsync(writer =>
         {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequest);
@@ -71,7 +71,7 @@ public class FabricClientSender(
     public async Task Send_InvokeRequest_ToFabricAsync(InvokeRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_InvokeRequest_ToFabricAsync({request})", request);
+            Logger.LogTrace("Send_InvokeRequest_ToFabricAsync({request})", request);
         await EnqueueAsync(writer =>
         {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequest);
@@ -81,7 +81,7 @@ public class FabricClientSender(
     public async Task Send_InvokeResponse_ToFabricAsync(InvokeResponseDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_InvokeResponse_ToFabricAsync({response})", response);
+            Logger.LogTrace("Send_InvokeResponse_ToFabricAsync({response})", response);
 
         await EnqueueAsync(writer =>
         {
@@ -92,7 +92,7 @@ public class FabricClientSender(
     public async Task Send_InvokeResponseDone_ToFabricAsync(RequestId requestId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_InvokeResponseDone_ToFabricAsync({requestId})", requestId);
+            Logger.LogTrace("Send_InvokeResponseDone_ToFabricAsync({requestId})", requestId);
 
         await EnqueueAsync(writer =>
         {

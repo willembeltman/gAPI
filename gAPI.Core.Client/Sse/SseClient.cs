@@ -33,7 +33,7 @@ public class SseClient(
                 using var streamReader = new StreamReader(stream);
 
                 var buffer = new StringBuilder();
-                var chunk = new char[1024];
+                var chunk = new char[64 * 1024];
 
                 while (!Cts.IsCancellationRequested)
                 {

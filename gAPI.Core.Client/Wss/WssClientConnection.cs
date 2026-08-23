@@ -28,6 +28,8 @@ public abstract class WssClientConnection : IWssClientConnection
     private readonly ILogger Logger;
     private readonly SemaphoreSlim InitLock = new(1, 1);
     private readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
+    private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
+    private byte[] SendBuffer = new byte[10 * 1024 * 1024];
     private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
 
     private Task? InitializeTask;
@@ -156,7 +158,6 @@ public abstract class WssClientConnection : IWssClientConnection
     private async Task ReceiverKernel(WebSocket socket, CancellationTokenSource cts)
     {
         var ct = cts.Token;
-        var buffer = new byte[1024 * 64];
 
         try
         {
@@ -168,7 +169,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 do
                 {
                     result = await socket.ReceiveAsync(
-                        new ArraySegment<byte>(buffer, totalBytes, buffer.Length - totalBytes),
+                        new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
                         ct);
 
                     if (result.MessageType == WebSocketMessageType.Close)
@@ -183,7 +184,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 } while (!result.EndOfMessage);
 
                 // 🎯 Direct span gebruiken
-                var span = new ReadOnlySpan<byte>(buffer, 0, totalBytes);
+                var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
                 int offset = 0;
 
                 var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
@@ -236,7 +237,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_Subscribe_ToServerAsync({subscribe})", subscribe);
+            Logger.LogTrace("Send_Subscribe_ToServerAsync({subscribe})", subscribe);
 
         Subscriptions[subscribe.ToString()] = subscribe;
 
@@ -254,7 +255,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Send_Unsubscribe_ToServerAsync({unsubscribe})", unsubscribe);
+            Logger.LogTrace("Send_Unsubscribe_ToServerAsync({unsubscribe})", unsubscribe);
 
         Subscriptions.Remove(unsubscribe.ToString(), out _);
 
@@ -270,7 +271,7 @@ public abstract class WssClientConnection : IWssClientConnection
     private async Task Send_Initialize_ToServerAsync(string sessionId, string stateData, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendRequestAsync({sessionId}, {stateData})", sessionId, stateData);
+            Logger.LogTrace("SendRequestAsync({sessionId}, {stateData})", sessionId, stateData);
 
         var initialize = new InitializeDto()
         {
@@ -292,7 +293,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendRequestAsync({sendRequest})", sendRequest);
+            Logger.LogTrace("SendRequestAsync({sendRequest})", sendRequest);
 
         await EnqueueAsync(writer =>
         {
@@ -308,7 +309,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " InvokeRequestAsync({invokeRequest})", invokeRequest);
+            Logger.LogTrace("InvokeRequestAsync({invokeRequest})", invokeRequest);
 
         await EnqueueAsync(writer =>
         {
@@ -324,7 +325,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " InvokeResponseAsync({invokeResponse})", invokeResponse);
+            Logger.LogTrace("InvokeResponseAsync({invokeResponse})", invokeResponse);
 
         await EnqueueAsync(writer =>
         {
@@ -340,7 +341,7 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " InvokeResponseDoneAsync({invokeResponseDone})", invokeResponseDone);
+            Logger.LogTrace("InvokeResponseDoneAsync({invokeResponseDone})", invokeResponseDone);
 
         await EnqueueAsync(writer =>
         {
@@ -375,29 +376,19 @@ public abstract class WssClientConnection : IWssClientConnection
 
     private async Task SendKernel(WebSocket socket, CancellationToken ct)
     {
-        var pool = ArrayPool<byte>.Shared;
-
         await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
         {
-            var buffer = pool.Rent(64 * 1024); // kies een max message size
-            try
-            {
-                var span = buffer.AsSpan();
+            var span = SendBuffer.AsSpan();
 
-                // 🚀 direct serializen in pooled buffer
-                var offset = item(span);
+            // 🚀 direct serializen in pooled buffer
+            var offset = item(span);
 
-                // 🚀 direct versturen zonder kopie
-                await socket.SendAsync(
-                    new ArraySegment<byte>(buffer, 0, offset),
-                    WebSocketMessageType.Binary,
-                    true,
-                    ct);
-            }
-            finally
-            {
-                pool.Return(buffer);
-            }
+            // 🚀 direct versturen zonder kopie
+            await socket.SendAsync(
+                new ArraySegment<byte>(SendBuffer, 0, offset),
+                WebSocketMessageType.Binary,
+                true,
+                ct);
         }
     }
 

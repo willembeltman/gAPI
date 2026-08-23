@@ -77,7 +77,7 @@ public class FabricClientReceiver(
     public async Task Receive_SendRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Receive_SendRequest_FromFabricAsync({message})", message);
+            Logger.LogTrace("Receive_SendRequest_FromFabricAsync({message})", message);
 
         var sseHosts = GetHosts(message.ServiceId, message.UserId, message.SessionId);
         foreach (var sseHost in sseHosts)
@@ -94,7 +94,7 @@ public class FabricClientReceiver(
     public async Task Receive_InvokeRequest_FromFabricAsync(InvokeRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Receive_InvokeRequest_FromFabricAsync({message})", message);
+            Logger.LogTrace("Receive_InvokeRequest_FromFabricAsync({message})", message);
 
         var sseHosts = GetHosts(message.ServiceId, message.UserId, message.SessionId);
         foreach (var sseHost in sseHosts)
@@ -115,14 +115,14 @@ public class FabricClientReceiver(
     public async Task Receive_InvokeResponse_FromFabricAsync(InvokeResponseDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Receive_InvokeResponse_FromFabricAsync({response})", response);
+            Logger.LogTrace("Receive_InvokeResponse_FromFabricAsync({response})", response);
 
         await fabricClient.Receive_InvokeResponse_FromFabricAsync(response);
     }
     private async Task Receive_InvokeResponseDone_FromFabricAsync(RequestId requestId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Receive_InvokeResponseDone_FromFabricAsync({requestId})", requestId);
+            Logger.LogTrace("Receive_InvokeResponseDone_FromFabricAsync({requestId})", requestId);
 
         await fabricClient.Receive_InvokeResponseDone_FromFabricAsync(requestId);
     }

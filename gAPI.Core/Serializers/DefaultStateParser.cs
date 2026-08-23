@@ -41,7 +41,7 @@ public class DefaultStateParser(ILoggerFactory loggerFactory) : IStateParser<Aut
         if (value == null)
             value = new AuthStateDto();
 
-        byte[] Buffer = new byte[1024 * 64];
+        byte[] Buffer = new byte[64 * 1024];
         var span = new Span<byte>(Buffer, 0, Buffer.Length);
         var offset = 0;
         span.Write(ref offset, value);

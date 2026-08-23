@@ -49,7 +49,7 @@ public class WssServiceSubscription
     public Task InitializeAsync(CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " InitializeAsync()");
+            Logger.LogTrace("InitializeAsync()");
 
         return FabricClient.SubscribeAsync(this, ct);
     }
@@ -58,7 +58,7 @@ public class WssServiceSubscription
     public Task SendAsync(SendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendAsync({message})", message);
+            Logger.LogTrace("SendAsync({message})", message);
 
         return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
     }
@@ -66,7 +66,7 @@ public class WssServiceSubscription
     public IAsyncEnumerable<InvokeResponseDto> InvokeAsync(InvokeRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " InvokeAsync({request})", request);
+            Logger.LogTrace("InvokeAsync({request})", request);
 
         return Connection.Send_InvokeRequest_ToClientAsync(this, request, ct);
     }
@@ -75,7 +75,7 @@ public class WssServiceSubscription
     public async ValueTask DisposeAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " DisposeAsync()");
+            Logger.LogTrace("DisposeAsync()");
 
         if (Interlocked.Exchange(ref Disposed, 1) == 0)
         {
