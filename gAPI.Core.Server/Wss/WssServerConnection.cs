@@ -18,11 +18,11 @@ using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Wss;
 
-public abstract class WssConnection : ISignalRInvoker
+public abstract class WssServerConnection : ISignalRInvoker
 {
     readonly ILoggerFactory LoggerFactory;
     readonly ILogger Logger;
-    readonly WssConnectionCollection Connections;
+    readonly WssServerConnectionCollection Connections;
     readonly IServerAuthenticationService AuthenticationService;
     readonly FabricClient FabricClient;
     readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> Services;
@@ -38,15 +38,15 @@ public abstract class WssConnection : ISignalRInvoker
 
     public ConnectionId ConnectionId { get; }
 
-    public WssConnection(
+    public WssServerConnection(
         IServerAuthenticationService authenticationService,
         SseHostCollection sseHostCollection,
-        WssConnectionCollection connections,
+        WssServerConnectionCollection connections,
         FabricClient fabricClient,
         ILoggerFactory loggerFactory)
     {
         LoggerFactory = loggerFactory;
-        Logger = loggerFactory.CreateLogger<WssConnection>();
+        Logger = loggerFactory.CreateLogger<WssServerConnection>();
         SseHostCollection = sseHostCollection;
         Connections = connections;
         AuthenticationService = authenticationService;
@@ -81,7 +81,7 @@ public abstract class WssConnection : ISignalRInvoker
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Unexpected error in WssConnection");
+            Logger.LogError(ex, "Unexpected error in WssServerConnection");
             throw;
         }
     }

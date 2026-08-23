@@ -27,7 +27,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
-    public SharedReference WssConnectionCollection => Context.SharedReferences.WssConnectionCollection;
+    public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
     public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
@@ -41,7 +41,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ClientContext);
         Reg(FabricClient);
         Reg(ServerConfig);
-        Reg(WssConnectionCollection);
+        Reg(WssServerConnectionCollection);
         Reg(SseHostCollection);
         Reg(IServerAuthenticationService);
         Reg(WssSessionCache);
@@ -147,7 +147,7 @@ public static class {Name}
         services.AddScoped<{WssHub}>();
         services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-        var connectionCollection = new {WssConnectionCollection}();
+        var connectionCollection = new {WssServerConnectionCollection}();
         services.AddSingleton(connectionCollection);
 
         var sseHostCollection = new {SseHostCollection}();

@@ -45,7 +45,7 @@ public class SharedReferences
         Mapping = new SharedReference("gAPI.Core.Interfaces.Mapping");
 
         SseHostCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseHostCollection", allSymbols);
-        WssConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssConnectionCollection", allSymbols);
+        WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
         WssSessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssSessionCache", allSymbols);
         ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
 
@@ -82,7 +82,7 @@ public class SharedReferences
     public SharedReference SubscribeDto { get; }
     public SharedReference UnsubscribeDto { get; }
     public SharedReference ApiSendRequestDto { get; }
-    public SharedReference WssConnectionCollection { get; }
+    public SharedReference WssServerConnectionCollection { get; }
     public SharedReference ApiInvokeRequestDto { get; }
     public SharedReference ApiInvokeResponseDto { get; }
     public SharedReference WssSessionCache { get; }

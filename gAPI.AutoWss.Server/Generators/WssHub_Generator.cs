@@ -36,7 +36,7 @@ public class WssHub_Generator : _BaseGenerator
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
-    public SharedReference WssConnectionCollection => Context.SharedReferences.WssConnectionCollection;
+    public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ApiSendRequestDto => Context.SharedReferences.ApiSendRequestDto;
     public SharedReference ApiInvokeRequestDto => Context.SharedReferences.ApiInvokeRequestDto;
@@ -84,7 +84,7 @@ public class WssHub_Generator : _BaseGenerator
 namespace {Namespace};
 
 [{WssHubAttribute}]
-public class {Name} : WssConnection
+public class {Name} : WssServerConnection
 {{
     readonly ILogger ___logger;
     readonly {IServerAuthenticationService} ___authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
@@ -94,7 +94,7 @@ public class {Name} : WssConnection
     public {Name}(
         {IServerAuthenticationService} authenticationService,
         {SseHostCollection} sseHostCollection,
-        {WssConnectionCollection} connections,
+        {WssServerConnectionCollection} connections,
         {FabricClient} fabricClient,{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         {@interface} {@interface.CleanName.ToCamelCase()},")))}
         ILoggerFactory loggerFactory) 
