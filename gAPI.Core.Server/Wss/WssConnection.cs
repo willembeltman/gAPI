@@ -55,6 +55,7 @@ public abstract class WssConnection : ISignalRInvoker
         Services = new();
         PendingRequests = new();
     }
+
     public async Task RunAsync(
         WebSocket socket,
         PathString path,
