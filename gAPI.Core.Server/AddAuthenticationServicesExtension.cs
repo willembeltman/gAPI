@@ -114,11 +114,4 @@ public static partial class AddAuthenticationServicesExtension
 
         return app;
     }
-
-    public static WebApplication MapStateEndpoint_ForNoMiddleware<TUser, TStateDto>(this WebApplication app)
-        where TUser : AuthUser, new()
-        where TStateDto : AuthStateDto, new()
-    {
-        return MapStateEndpoint(app);
-    }
 }
