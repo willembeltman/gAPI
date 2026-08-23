@@ -49,10 +49,8 @@ public class SharedReferences
         WssSessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssSessionCache", allSymbols);
         ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
 
-        AutoWssExtensionAttribute = SharedReferenceFinder.Find("gAPI.Core.AttributesSource.AutoWssExtensionAttribute", allSymbols);
         WssHubAttribute = SharedReferenceFinder.Find("gAPI.Core.AttributesSource.WssHubAttribute", allSymbols);
 
-        AutoWssExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.AttributesSource.AutoWssExtensionAttribute", allSymbols);
         WssHub = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.AttributesSource.WssHubAttribute", allSymbols);
     }
 
@@ -90,11 +88,6 @@ public class SharedReferences
     public SharedReference WssSessionCache { get; }
     public SharedReference ServerAuthenticationAccessor { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
-    public SharedReference AutoWssExtensionAttribute { get; }
     public SharedReference WssHubAttribute { get; }
-
-
-
-    public SharedReference? AutoWssExtension { get; }
     public SharedReference? WssHub { get; }
 }

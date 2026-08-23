@@ -32,7 +32,7 @@ public class Generator
         MinimalApis = ServiceContext.MinimalApiInterfaces.Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContentSerializers)).ToArray();
         IClientConnection = new IClientConnectionGenerator(this);
         ClientConnection = new ClientConnectionGenerator(this);
-        AddAutoWssExtension = new AutoWssExtensionGenerator(this);
+        AddAutoWssExtension = new AddAutoWssClientExtensionGenerator(this);
         FormFile = new FormFileGenerator(this);
         FormFileExtension = new FormFileExtensionGenerator(this);
     }
@@ -46,7 +46,7 @@ public class Generator
     public MinimalClientGenerator[] MinimalApis { get; }
     public IClientConnectionGenerator IClientConnection { get; }
     public ClientConnectionGenerator ClientConnection { get; }
-    public AutoWssExtensionGenerator AddAutoWssExtension { get; }
+    public AddAutoWssClientExtensionGenerator AddAutoWssExtension { get; }
     public FormFileGenerator FormFile { get; }
     public FormFileExtensionGenerator FormFileExtension { get; }
 

@@ -3,31 +3,21 @@ using System.Linq;
 
 namespace gAPI.AutoWss.Server.Generators;
 
-public class AutoWssExtensionGenerator : _BaseGenerator
+public class AddAutoWssServerExtensionGenerator : _BaseGenerator
 {
-    public AutoWssExtensionGenerator(
+    public AddAutoWssServerExtensionGenerator(
         Generator context)
     {
         Context = context;
 
-        if (AutoWssExtension != null)
-        {
-            Name = AutoWssExtension.Name;
-            Namespace = AutoWssExtension.Namespace;
-        }
-        else
-        {
-            Name = "AutoWssExtension";
-            Namespace = "gAPI.Generated";
-        }
+        Name = "AddAutoWssServerExtension";
+        Namespace = "gAPI.Generated";
 
         Directory = "";
         FileName = $"{Name}.g.cs";
     }
 
     public Generator Context { get; }
-    public SharedReference? AutoWssExtension => Context.SharedReferences.AutoWssExtension;
-
 
     public WssHub_Generator WssHub => Context.WssHub;
     public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
@@ -42,16 +32,10 @@ public class AutoWssExtensionGenerator : _BaseGenerator
     public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
     public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
-    public SharedReference AutoWssExtensionAttribute => Context.SharedReferences.AutoWssExtensionAttribute;
     public SharedReference AddAutoWssServicesExtension => Context.AddAutoWssServicesExtension;
 
     public override void GenerateCode()
     {
-        if (AutoWssExtension != null)
-        {
-            return;
-        }
-
         Reg(WssHub);
         Reg(IClientContext);
         Reg(ClientContext);
@@ -131,7 +115,6 @@ public class AutoWssExtensionGenerator : _BaseGenerator
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("gAPI.Core.Server");
         Reg("gAPI.Core.Server.Authentication");
-        Reg(AutoWssExtensionAttribute);
         Reg(AddAutoWssServicesExtension);
 
         Code = $@"{GetNamespacesCode()}
@@ -139,14 +122,13 @@ public class AutoWssExtensionGenerator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
-[{AutoWssExtensionAttribute}]
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, {ServerConfig} serverConfig)
+    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, {ServerConfig} serverConfig)
     {{
-        return AddAutoWss(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        return AddAutoWssServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
     }}
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
+    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
     {{
         services.AddHttpContextAccessor();
         services.TryAddScoped<{IServerAuthenticationService}, EmptyServerAuthenticationService>();
@@ -183,7 +165,7 @@ public static class {Name}
             }}
         }});
 
-        services.AddAutoWssServices();
+        services.AddAutoWssServerServices();
 
         return services;
     }}

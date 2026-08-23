@@ -28,7 +28,7 @@ public class Generator
         WssHub = new WssHub_Generator(this);
         IClientContext = new IClientContext_Generator(this);
         ClientContext = new ClientContext_Generator(this);
-        AddAutoWssExtension = new AutoWssExtensionGenerator(this);
+        AddAutoWssExtension = new AddAutoWssServerExtensionGenerator(this);
 
         MinimalApis = serviceContext.MinimalApiInterfaces
             .Select(a => new MinimalApi_Generator(this, a))
@@ -46,7 +46,7 @@ public class Generator
             .Select(iclientHandler => new ClientServiceContext_Generator(this, iclientHandler))
             .ToArray();
 
-        AddAutoWssServicesExtension = new AutoWssServicesExtensionGenerator(this);
+        AddAutoWssServicesExtension = new AddAutoWssServerServicesExtensionGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -57,8 +57,8 @@ public class Generator
     public WssHub_Generator WssHub { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
-    public AutoWssExtensionGenerator AddAutoWssExtension { get; }
-    public AutoWssServicesExtensionGenerator AddAutoWssServicesExtension { get; }
+    public AddAutoWssServerExtensionGenerator AddAutoWssExtension { get; }
+    public AddAutoWssServerServicesExtensionGenerator AddAutoWssServicesExtension { get; }
     public MinimalApi_Generator[] MinimalApis { get; }
     public ClientService_Generator[] ClientHandlers { get; }
     public IClientServiceContext_Generator[] IClientHandlerContexts { get; }
