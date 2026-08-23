@@ -23,10 +23,15 @@ public class AutoWssExtensionGenerator : _BaseGenerator
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
 
+    public SharedReference IUriNavigationManager => Context.SharedReferences.IUriNavigationManager;
+    public SharedReference DefaultNavigationManager => Context.SharedReferences.DefaultNavigationManager;
+    public SharedReference StaticNavigationManager => Context.SharedReferences.StaticNavigationManager;
+
     public override void GenerateCode()
     {
         Reg("Microsoft.Extensions.DependencyInjection");
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
+        Reg("Microsoft.AspNetCore.Components");
         Reg("gAPI.Core.Client.Interfaces");
         Reg("gAPI.Core.Client");
         Reg(ClientConnection);
@@ -34,6 +39,9 @@ public class AutoWssExtensionGenerator : _BaseGenerator
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
         Reg(FrontendConfig);
+        Reg(IUriNavigationManager);
+        Reg(DefaultNavigationManager);
+        Reg(StaticNavigationManager);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -70,6 +78,19 @@ public static class {Name}
         services.AddScoped<{ClientConnection}>();
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
+
+        services.AddScoped<{IUriNavigationManager}>(sp =>
+        {{
+            var navigationManager = sp.GetService<NavigationManager>();
+            if (navigationManager != null )
+            {{
+                return new {DefaultNavigationManager}(navigationManager);
+            }}
+            else
+            {{
+                return new {StaticNavigationManager}();
+            }}
+        }});
 
         // Api clients{string.Join("", Context.Apis.Select(api => $@"
         services.AddScoped<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}

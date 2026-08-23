@@ -28,6 +28,9 @@ public class SharedReferences
         IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
         AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileAttribute", allSymbols);
         AuthClient_ToFormFileExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileExtensionAttribute", allSymbols);
+        IUriNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.IUriNavigationManager", allSymbols);
+        DefaultNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.DefaultNavigationManager", allSymbols);
+        StaticNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.StaticNavigationManager", allSymbols);
     }
 
     public SharedReference ServiceId { get; }
@@ -51,4 +54,7 @@ public class SharedReferences
     public SharedReference ApiInvokeResponseDoneDto { get; }
     public SharedReference InvokeResponseDoneDto { get; }
     public SharedReference FrontendConfig { get; }
+    public SharedReference IUriNavigationManager { get; }
+    public SharedReference DefaultNavigationManager { get; }
+    public SharedReference StaticNavigationManager { get; }
 }
