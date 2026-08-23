@@ -1,10 +1,13 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 
 namespace gAPI.Core.Client.Interfaces;
 
 public interface IWssClientConnection : IWssLoggerFactory
 {
+    SessionId SessionId { get; }
+
     bool Initialized { get; }
     bool IsConnected { get; }
 

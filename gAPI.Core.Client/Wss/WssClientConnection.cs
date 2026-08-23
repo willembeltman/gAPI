@@ -25,6 +25,23 @@ public abstract class WssClientConnection : IWssClientConnection
         Logger = ((IWssLoggerFactory)this).CreateLogger<WssClientConnection>();
     }
 
+    private readonly ILogger Logger;
+    private readonly SemaphoreSlim InitLock = new(1, 1);
+    private readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
+    private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
+
+    private Task? InitializeTask;
+    private ClientWebSocket? Ws;
+
+    protected readonly IClientAuthenticatedHttpClient HttpClient;
+    protected CancellationTokenSource? Cts;
+
+    public bool Initialized { get; private set; }
+    public FrontendConfig FrontendConfig { get; }
+
+    public bool IsConnected => Ws?.State == WebSocketState.Open;
+    public SessionId SessionId => HttpClient.SessionId;
+
     private void HttpClient_OnStateHasChanged()
     {
         if (HttpClient.ForceReconnect)
@@ -33,25 +50,6 @@ public abstract class WssClientConnection : IWssClientConnection
             _ = ForceReconnectAsync(new());
         }
     }
-
-    protected readonly IClientAuthenticatedHttpClient HttpClient;
-
-    public bool Initialized { get; private set; }
-
-    readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
-
-    public FrontendConfig FrontendConfig { get; }
-
-    readonly ILogger Logger;
-    readonly SemaphoreSlim InitLock = new(1, 1);
-
-    readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
-
-    protected CancellationTokenSource? Cts;
-    Task? InitializeTask;
-    ClientWebSocket? Ws;
-
-    public bool IsConnected => Ws?.State == WebSocketState.Open;
 
     public async Task TryConnectAsync(CancellationToken ct)
     {
@@ -409,7 +407,6 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         // no-op
     }
-
 
     public void Dispose()
     {
