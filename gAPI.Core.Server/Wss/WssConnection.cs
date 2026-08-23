@@ -53,13 +53,13 @@ public abstract class WssConnection : ISignalRInvoker
         PendingRequests = new();
     }
     public async Task RunAsync(
-    WebSocket socket,
-    PathString path,
-    QueryString queryString,
-    IPAddress? ipAddress,
-    string sessionId,
-    string? cookieData,
-    CancellationToken ct)
+        WebSocket socket,
+        PathString path,
+        QueryString queryString,
+        IPAddress? ipAddress,
+        string sessionId,
+        string? cookieData,
+        CancellationToken ct)
     {
         try
         {
