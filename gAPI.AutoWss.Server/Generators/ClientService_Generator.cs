@@ -14,7 +14,7 @@ public class ClientService_Generator : _BaseGenerator
         Interface = @interface;
 
         Directory = "";
-        Namespace = @interface.Namespace;
+        Namespace = "gAPI.Generated";
 
         Name = Interface.CleanName;
         FileName = $"{Name}.g.cs";
@@ -101,7 +101,7 @@ public class {Name}(
         {arg.ParameterType.Name} {arg.Name}"))})
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {method.Name}({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+            ___Logger.LogTrace(""{method.Name}({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
 
         var serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
         var payload = {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"
@@ -118,7 +118,7 @@ public class {Name}(
         {(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {method.Name}({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+            ___Logger.LogTrace(""{method.Name}({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
 
         var serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
         var payload = {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"

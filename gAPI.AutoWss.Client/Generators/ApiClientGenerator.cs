@@ -14,7 +14,7 @@ public class ApiClientGenerator : _BaseGenerator
         Interface = @interface;
 
         Directory = "";
-        Namespace = @interface.Namespace;
+        Namespace = "gAPI.Generated";
 
         Name = @interface.CleanName;
         FileName = $"{Name}.g.cs";
@@ -98,7 +98,7 @@ public sealed class {Name}(
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
+            ___Logger.LogTrace(""{method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
         }}
 {(ct == null ? $@"
         var ___activityCts = ___Cts;" : $@"
@@ -130,7 +130,7 @@ public sealed class {Name}(
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
+            ___Logger.LogTrace(""{method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
         }}
 
         var ___requestId = {RequestId}.New();
@@ -208,7 +208,7 @@ public sealed class {Name}(
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
+            ___Logger.LogTrace(""{method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
         }}
 
         var ___requestId = {RequestId}.New();
@@ -279,7 +279,7 @@ public sealed class {Name}(
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" ReceiveResponseAsync({{invokeResponse}})"", invokeResponse);
+            ___Logger.LogTrace(""ReceiveResponseAsync({{invokeResponse}})"", invokeResponse);
         }}
 
         if (___PendingRequests.TryGetValue(invokeResponse.RequestId, out var ___channel))
@@ -289,7 +289,7 @@ public sealed class {Name}(
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
         {{
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" ReceiveResponseDoneAsync({{invokeResponseDone}})"", invokeResponseDone);
+            ___Logger.LogTrace(""ReceiveResponseDoneAsync({{invokeResponseDone}})"", invokeResponseDone);
         }}
 
         if (___PendingRequests.TryRemove(invokeResponseDone.RequestId, out var ___channel))

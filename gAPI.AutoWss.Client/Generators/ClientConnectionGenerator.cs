@@ -164,7 +164,7 @@ public class {Name}
         if (implementation is {hub} {hub.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" UnsubscribeAsync({{serviceId}})"", ""{hub}"");
+                ___Logger.LogTrace(""UnsubscribeAsync({{serviceId}})"", ""{hub}"");
 
             await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
@@ -188,7 +188,7 @@ public class {Name}
     protected override async Task Received_SendRequest_FromServerAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" Received_SendRequest_FromServerAsync({{___sendRequest}})"", ___sendRequest);
+            ___Logger.LogTrace(""Received_SendRequest_FromServerAsync({{___sendRequest}})"", ___sendRequest);
 {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
         switch (___sendRequest.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
@@ -219,7 +219,7 @@ public class {Name}
     protected override async Task Received_InvokeRequest_FromServerAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" Received_InvokeRequest_FromServerAsync({{___invokeRequest}})"", ___invokeRequest);
+            ___Logger.LogTrace(""Received_InvokeRequest_FromServerAsync({{___invokeRequest}})"", ___invokeRequest);
 {(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(@interface => $@"
@@ -276,7 +276,7 @@ public class {Name}
     protected override Task Received_InvokeResponse_FromServerAsync({ApiInvokeResponseDto} ___invokeResponse, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" Received_InvokeResponse_FromServerAsync({{___invokeResponse}})"", ___invokeResponse);
+            ___Logger.LogTrace(""Received_InvokeResponse_FromServerAsync({{___invokeResponse}})"", ___invokeResponse);
 {(Context.ServiceContext.ApiInterfaces.Any() ? $@"
         switch (___invokeResponse.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.ApiInterfaces.Select(api => $@"
@@ -288,7 +288,7 @@ public class {Name}
     protected override Task Received_InvokeResponseDone_FromServerAsync({ApiInvokeResponseDoneDto} ___invokeResponseDone, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" Received_InvokeResponseDone_FromServerAsync({{___invokeResponseDone}})"", ___invokeResponseDone);
+            ___Logger.LogTrace(""Received_InvokeResponseDone_FromServerAsync({{___invokeResponseDone}})"", ___invokeResponseDone);
 {(Context.ServiceContext.ApiInterfaces.Any() ? $@"
         switch (___invokeResponseDone.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.ApiInterfaces.Select(api => $@"

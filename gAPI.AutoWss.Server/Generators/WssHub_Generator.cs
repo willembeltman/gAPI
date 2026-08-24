@@ -153,7 +153,7 @@ public class {Name} : WssServerConnection
         CancellationToken ___ct)
     {{
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {@interface}_{method}({{___sendRequest}})"", ___sendRequest);
+            ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
 
         await {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
             ___ct" : $@"
@@ -166,7 +166,7 @@ public class {Name} : WssServerConnection
         CancellationToken ___ct)
     {{
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
 
         var response = await {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
             ___ct" : $@"
@@ -198,7 +198,7 @@ public class {Name} : WssServerConnection
         CancellationToken ___ct)
     {{
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" {@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
 
         var responses = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
             ___ct" : $@"
