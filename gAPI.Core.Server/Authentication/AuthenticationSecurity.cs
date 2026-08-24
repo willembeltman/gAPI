@@ -1,15 +1,17 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationSecurity<TUser, TStateDto>(
     IAuthenticationService<TUser, TStateDto> authentication,
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
     TimeProvider timeProvider,
     ServerConfig config)
-    : gAPI.Core.Interfaces.IAuthenticationSecurity
+    : IAuthenticationSecurity
     where TUser : AuthUser
 {
     public async Task<bool> BeforeLoginAsync(CancellationToken ct)

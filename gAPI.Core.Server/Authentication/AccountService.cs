@@ -3,9 +3,10 @@ using gAPI.Core.Enums;
 using gAPI.Core.Extensions;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public class AccountService<TUser, TStateDto>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using gAPI.Core.Client.Interfaces;
+using Microsoft.AspNetCore.Components;
 
 namespace gAPI.Core.Client.Navigation;
 

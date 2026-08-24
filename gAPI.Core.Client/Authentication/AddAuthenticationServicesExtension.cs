@@ -1,10 +1,12 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Client.Razor;
+using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Authentication;
 
 public static class AddAuthenticationServicesExtension
 {

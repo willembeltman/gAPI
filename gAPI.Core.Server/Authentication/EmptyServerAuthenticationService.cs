@@ -56,17 +56,17 @@ public class EmptyServerAuthenticationService
         return new AuthenticationInitializeResult();
     }
 
-    public async Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
+    public async Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
     {
-        if (SessionId.TryParse(sessionData, out var parsed))
+        if (SessionId.TryParse(sessionId, out var parsed))
             SessionId = parsed;
         Initialized = true;
         return new AuthenticationInitializeResult();
     }
 
-    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
+    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
     {
-        if (SessionId.TryParse(sessionData, out var parsed))
+        if (SessionId.TryParse(sessionId, out var parsed))
             SessionId = parsed;
         Initialized = true;
         return new AuthenticationInitializeResult();

@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IAuthenticationStateFactory<TUser, TStateDto>
     where TUser : AuthUser

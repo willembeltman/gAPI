@@ -1,10 +1,10 @@
 ﻿using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IAuthenticationService<TUser, TStateDto>
-    : gAPI.Core.Interfaces.IServerAuthenticationService
+    : Core.Interfaces.IServerAuthenticationService
     where TUser : AuthUser
 {
     TStateDto? ClientState { get; }

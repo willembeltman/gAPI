@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 
 #nullable enable
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Razor;
 
 [IsFormFile]
 public class FormFile : IFormFile

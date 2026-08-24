@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Razor;
 
 /// <summary>
 /// Handler to ensure cookie credentials are automatically sent over with each request.

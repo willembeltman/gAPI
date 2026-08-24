@@ -1,7 +1,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using System.Net;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public static partial class AddAuthenticationServicesExtension
 {

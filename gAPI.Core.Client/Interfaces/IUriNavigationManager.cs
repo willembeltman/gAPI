@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Client;
+﻿namespace gAPI.Core.Client.Interfaces;
 
 public interface IUriNavigationManager
 {

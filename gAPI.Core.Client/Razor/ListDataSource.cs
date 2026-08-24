@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
 using System.Runtime.CompilerServices;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Razor;
 
 public class ListDataSource<T, TKey>(
     IJSRuntime JS,

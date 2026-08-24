@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server;
+﻿namespace gAPI.Core.Server.Authentication;
 
 public sealed class RequestIds
 {

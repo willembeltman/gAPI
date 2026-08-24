@@ -1,9 +1,10 @@
 ﻿using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationHandler<TUser, TStateDto>
     : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>

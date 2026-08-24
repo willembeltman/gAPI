@@ -1,13 +1,13 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Server.Mappings;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Data;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationStateFactory<TUser, TStateDto>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,

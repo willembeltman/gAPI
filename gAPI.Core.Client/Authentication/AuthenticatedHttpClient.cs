@@ -1,3 +1,4 @@
+using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Delegates;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
@@ -6,7 +7,7 @@ using gAPI.Core.Sse;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Authentication;
 
 public class AuthenticatedHttpClient<TStateDto>(
     IStateParser<TStateDto> stateSerializer,

@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Server.Entities;
 
-namespace gAPI.Core.Server;
+namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationState<TUser>
     where TUser : AuthUser

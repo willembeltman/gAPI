@@ -3,7 +3,7 @@ using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 
-namespace gAPI.Core.Client;
+namespace gAPI.Core.Client.Razor;
 
 public class ItemDataSource<T, TKey>(
     Func<T, TKey?> GetPrimaryKey,

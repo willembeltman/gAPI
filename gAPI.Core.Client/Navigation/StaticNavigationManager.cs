@@ -1,4 +1,6 @@
-﻿namespace gAPI.Core.Client.Navigation;
+﻿using gAPI.Core.Client.Interfaces;
+
+namespace gAPI.Core.Client.Navigation;
 
 public class StaticNavigationManager : IUriNavigationManager
 {
