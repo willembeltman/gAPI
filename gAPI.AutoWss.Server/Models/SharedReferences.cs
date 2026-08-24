@@ -48,15 +48,10 @@ public class SharedReferences
         WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
         WssSessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssSessionCache", allSymbols);
         ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
-
-        WssHubAttribute = SharedReferenceFinder.Find("gAPI.Core.AttributesSource.WssHubAttribute", allSymbols);
-
-        WssHub = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.AttributesSource.WssHubAttribute", allSymbols);
     }
 
     public SharedReference FabricClient { get; }
     public SharedReference SseHostCollection { get; }
-    //public SharedReference SseHost { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }
@@ -88,6 +83,4 @@ public class SharedReferences
     public SharedReference WssSessionCache { get; }
     public SharedReference ServerAuthenticationAccessor { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
-    public SharedReference WssHubAttribute { get; }
-    public SharedReference? WssHub { get; }
 }

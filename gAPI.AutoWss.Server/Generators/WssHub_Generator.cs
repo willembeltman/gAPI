@@ -13,16 +13,8 @@ public class WssHub_Generator : _BaseGenerator
     {
         Context = context;
 
-        if (WssHub != null)
-        {
-            Name = WssHub.Name;
-            Namespace = WssHub.Namespace;
-        }
-        else
-        {
-            Namespace = "gAPI.Generated";
-            Name = "WssHub";
-        }
+        Namespace = "gAPI.Generated";
+        Name = "WssHub";
 
         Directory = "";
         FileName = $"{Name}.g.cs";
@@ -31,8 +23,6 @@ public class WssHub_Generator : _BaseGenerator
     }
 
     public Generator Context { get; }
-    public SharedReference? WssHub => Context.SharedReferences.WssHub;
-    public SharedReference WssHubAttribute => Context.SharedReferences.WssHubAttribute;
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
@@ -73,7 +63,6 @@ public class WssHub_Generator : _BaseGenerator
                 }
             }
         }
-        Reg(WssHubAttribute);
 
         var functions = string.Empty;
         var functionNames = new HashSet<string>();
@@ -83,7 +72,6 @@ public class WssHub_Generator : _BaseGenerator
 
 namespace {Namespace};
 
-[{WssHubAttribute}]
 public class {Name} : WssServerConnection
 {{
     readonly ILogger ___logger;
