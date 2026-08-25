@@ -225,7 +225,7 @@ public abstract class WssServerConnection : ISignalRInvoker
             Logger.LogTrace("Receive_SendRequest_FromClientAsync({sendRequest})", sendRequest);
 
         if (sendRequest.StateData != null)
-            await AuthenticationService.UpdateStateAsync(sendRequest.StateData, ct);
+            await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
 
         await SendRequestAsync(sendRequest, ct);
     }
@@ -235,7 +235,7 @@ public abstract class WssServerConnection : ISignalRInvoker
             Logger.LogTrace("Receive_InvokeRequest_FromClientAsync({invokeRequest})", invokeRequest);
 
         if (invokeRequest.StateData != null)
-            await AuthenticationService.UpdateStateAsync(invokeRequest.StateData, ct);
+            await AuthenticationService.UpdateStateDataAsync(invokeRequest.StateData, ct);
 
         await InvokeRequestAsync(invokeRequest, ct);
     }

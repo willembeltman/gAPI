@@ -46,7 +46,7 @@ public class EmptyServerAuthenticationService
         return null;
     }
 
-    public async Task<AuthenticationInitializeResult> UpdateStateAsync(string? stateData, CancellationToken ct)
+    public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
         return new AuthenticationInitializeResult();
     }

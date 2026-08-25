@@ -136,7 +136,7 @@ public class AuthenticationService<TUser, TStateDto>(
         return Result;
     }
 
-    public async Task<AuthenticationInitializeResult> UpdateStateAsync(string? stateData, CancellationToken ct)
+    public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
         if (AuthenticationState == null || Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
