@@ -274,7 +274,7 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequest_ToClientAsync({sendRequest})", sendRequest);
 
-        sendRequest.StateData = AuthenticationService.IsStateChanged() ? await AuthenticationService.GetStateDataAsync(ct) : null;
+        sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {
@@ -316,8 +316,8 @@ public abstract class WssServerConnection : ISignalRInvoker
             });
 
         invokeRequest.StateData =
-            AuthenticationService.IsStateChanged()
-                ? await AuthenticationService.GetStateDataAsync(ct)
+            AuthenticationService.IsStateDataChanged()
+                ? AuthenticationService.GetStateData()
                 : null;
 
         await EnqueueAsync(writer =>
@@ -354,141 +354,12 @@ public abstract class WssServerConnection : ISignalRInvoker
         }
     }
 
-    //public async IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("Send_InvokeRequest_ToClientAsync({invokeRequest})", invokeRequest);
-
-    //    var channel = Channel.CreateUnbounded<InvokeResponseDto>();
-    //    PendingRequests[invokeRequest.RequestId] = channel;
-
-    //    using var activityCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-    //    var timeout = TimeSpan.FromSeconds(30);
-    //    var activity = new SemaphoreSlim(0, 1);
-
-    //    _ = Task.Run(async () =>
-    //    {
-    //        try
-    //        {
-    //            while (!activityCts.IsCancellationRequested)
-    //            {
-    //                if (!await activity.WaitAsync(timeout, activityCts.Token))
-    //                    throw new TimeoutException("Client did not ACK");
-    //            }
-    //        }
-    //        catch (OperationCanceledException) when (activityCts.IsCancellationRequested)
-    //        {
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            Logger.LogError(
-    //                "Send_InvokeRequest_ToClientAsync => Exception: {ex}",
-    //                ex);
-
-    //            if (PendingRequests.TryRemove(invokeRequest.RequestId, out var pending))
-    //                pending.Writer.TryComplete(ex);
-    //        }
-    //    }, activityCts.Token);
-
-    //    invokeRequest.StateData =
-    //        AuthenticationService.IsStateChanged()
-    //            ? await AuthenticationService.GetStateDataAsync(ct)
-    //            : null;
-
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        var offset = 0;
-    //        writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequest);
-    //        writer.Write(ref offset, invokeRequest);
-    //        return offset;
-    //    }, ct);
-
-    //    try
-    //    {
-    //        await foreach (var response in channel.Reader.ReadAllAsync(activityCts.Token))
-    //        {
-    //            activity.TryRelease();
-    //            yield return response;
-    //        }
-    //    }
-    //    finally
-    //    {
-    //        activityCts.Cancel();
-    //        activity.TryRelease();
-
-    //        if (PendingRequests.TryRemove(invokeRequest.RequestId, out var pending))
-    //            pending.Writer.TryComplete();
-
-    //        activity.Dispose();
-    //    }
-    //}
-
-    //public async IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("Send_InvokeRequest_ToClientAsync({invokeRequest})", invokeRequest);
-
-    //    var channel = Channel.CreateUnbounded<InvokeResponseDto>();
-    //    PendingRequests[invokeRequest.RequestId] = channel;
-
-    //    using var activityCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-    //    var timeout = TimeSpan.FromSeconds(30);
-    //    var activity = new SemaphoreSlim(0, 1);
-
-    //    _ = Task.Run(async () =>
-    //    {
-    //        try
-    //        {
-    //            while (!activityCts.IsCancellationRequested)
-    //            {
-    //                if (!await activity.WaitAsync(timeout))
-    //                    throw new TimeoutException("Client did not ACK");
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            Logger.LogError("Send_InvokeRequest_ToClientAsync => Exception: {ex}", ex);
-    //            if (PendingRequests.TryRemove(invokeRequest.RequestId, out var pending))
-    //                pending.Writer.TryComplete(ex);
-    //        }
-    //    }, ct);
-
-    //    invokeRequest.StateData = AuthenticationService.IsStateChanged() ? await AuthenticationService.GetStateDataAsync(ct) : null;
-
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        var offset = 0;
-    //        writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequest);
-    //        writer.Write(ref offset, invokeRequest);
-    //        return offset;
-    //    }, ct);
-
-    //    try
-    //    {
-    //        await foreach (var response in channel.Reader.ReadAllAsync(activityCts.Token))
-    //        {
-    //            if (activity.CurrentCount > 0)
-    //                activity.Release();
-    //            yield return response;
-    //        }
-    //    }
-    //    finally
-    //    {
-    //        activityCts.Cancel();
-    //        if (activity.CurrentCount > 0)
-    //            activity.Release();
-
-    //        if (PendingRequests.TryRemove(invokeRequest.RequestId, out var pending))
-    //            pending.Writer.TryComplete();
-    //    }
-    //}
-
     public async Task Send_InvokeResponse_ToClientAsync(ApiInvokeResponseDto invokeResponseDto, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeResponse_ToClientAsync({invokeResponseDto})", invokeResponseDto);
 
-        invokeResponseDto.StateData = AuthenticationService.IsStateChanged() ? await AuthenticationService.GetStateDataAsync(ct) : null;
+        invokeResponseDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {
@@ -503,7 +374,7 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeResponseDone_ToClientAsync({invokeResponseDoneDto})", invokeResponseDoneDto);
 
-        invokeResponseDoneDto.StateData = AuthenticationService.IsStateChanged() ? await AuthenticationService.GetStateDataAsync(ct) : null;
+        invokeResponseDoneDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {

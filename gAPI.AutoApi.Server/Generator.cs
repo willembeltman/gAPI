@@ -16,22 +16,22 @@ public class Generator
         SharedReferences = sharedReferences;
 
         Apis = serviceContext.ApiInterfaces
-            .Select(service => new ControllerGenerator(this, service))
+            .Select(service => new Controller_Generator(this, service))
             .ToArray();
         MinimalApis = serviceContext.MinimalApiInterfaces
-            .Select(service => new MinimalApiGenerator(this, service))
+            .Select(service => new MinimalApi_Generator(this, service))
             .ToArray();
 
-        AddAutoApiServices = new AddAutoApiServicesExtensionGenerator(this);
-        AddAutoApi = new AddAutoApiExtensionGenerator(this);
+        AddAutoApiServices = new AddAutoApiServicesExtension_Generator(this);
+        AddAutoApi = new AddAutoApiExtension_Generator(this);
     }
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public ControllerGenerator[] Apis { get; }
-    public MinimalApiGenerator[] MinimalApis { get; }
-    public AddAutoApiServicesExtensionGenerator AddAutoApiServices { get; }
-    public AddAutoApiExtensionGenerator AddAutoApi { get; }
+    public Controller_Generator[] Apis { get; }
+    public MinimalApi_Generator[] MinimalApis { get; }
+    public AddAutoApiServicesExtension_Generator AddAutoApiServices { get; }
+    public AddAutoApiExtension_Generator AddAutoApi { get; }
 
     public void Generate(SourceProductionContext spc)
     {

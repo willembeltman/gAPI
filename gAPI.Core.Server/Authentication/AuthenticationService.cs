@@ -23,14 +23,12 @@ public class AuthenticationService<TUser, TStateDto>(
 {
     private AuthenticationHeaders? Headers;
 
-    public string? ReceivedClientStateData { get; private set; }
-
     private TStateDto? ReceivedClientState;
-    private TStateDto? State;
     private TStateDto? OldState;
+    private TStateDto? State;
     private AuthenticationState<TUser>? AuthenticationState { get; set; }
-    private AuthenticationInitializeResult? Result;
 
+    private AuthenticationInitializeResult? Result;
     public bool Initialized { get; private set; }
 
     AuthenticationInitializeResult IServerAuthenticationService.Result
@@ -45,17 +43,11 @@ public class AuthenticationService<TUser, TStateDto>(
         => Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     UserId IServerAuthenticationService.UserId
         => new(AuthenticationState?.User?.Id.ToString());
-    bool IServerAuthenticationService.UpdateCookie
-        => Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    string? IServerAuthenticationService.CookieData
-        => Headers?.CookieData;
-    public string? SessionData
-        => Headers?.SessionData ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
     public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     {
         return InitializeAsync(
-            new Microsoft.AspNetCore.Http.PathString("/Handlers/GenerateAutoReplyResponseHandler"),
+            new Microsoft.AspNetCore.Http.PathString("/"),
             new Microsoft.AspNetCore.Http.QueryString(),
             System.Net.IPAddress.Loopback,
             cookieData,
@@ -94,20 +86,19 @@ public class AuthenticationService<TUser, TStateDto>(
         }
         var sessionId = new SessionId(sessionData);
 
-        Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, sessionId);
-        return await Make(Headers, stateData, ct);
+        Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
+        return await Make(Headers, ct);
     }
     public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
     {
         if (AuthenticationState == null || Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        return await Make(Headers, ReceivedClientStateData, ct);
+        return await Make(Headers, ct);
     }
-    private async Task<AuthenticationInitializeResult> Make(AuthenticationHeaders headers, StringValues stateData, CancellationToken ct)
+    private async Task<AuthenticationInitializeResult> Make(AuthenticationHeaders headers, CancellationToken ct)
     {
-        ReceivedClientStateData = stateData;
-        if (stateSerializer.TryParse(stateData, out var recievedClientState))
+        if (stateSerializer.TryParse(headers.StateData, out var recievedClientState))
         {
             ReceivedClientState = recievedClientState;
         }
@@ -136,6 +127,21 @@ public class AuthenticationService<TUser, TStateDto>(
         return Result;
     }
 
+    public bool IsStateDataChanged()
+    {
+        if (stateSerializer.IsDifferent(OldState, State))
+        {
+            OldState = stateSerializer.CreateCopy(State);
+            return true;
+        }
+        return false;
+    }
+    public string? GetStateData()
+    {
+        if (State == null || Headers == null)
+            throw new Exception("Initialize the ServerAuthenticationService first please");
+        return stateSerializer.ToStringBase64(State);
+    }
     public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
         if (AuthenticationState == null || Headers == null)
@@ -144,16 +150,25 @@ public class AuthenticationService<TUser, TStateDto>(
         if (stateData == null)
             return Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        return await Make(Headers, stateData, ct);
+        Headers.StateData = stateData;
+
+        return await Make(Headers, ct);
     }
-    public bool IsStateChanged()
+    
+
+    //bool IServerAuthenticationService.UpdateCookie
+    //    => Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    //string? IServerAuthenticationService.CookieData
+    //    => Headers?.CookieData;
+    public bool IsCookieDataChanged()
     {
-        if (stateSerializer.IsDifferent(OldState, State))
-        {
-            OldState = stateSerializer.CreateCopy(State);
-            return true;
-        }
-        return false;
+        return Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    }
+    public string? GetCookieData()
+    {
+        if (State == null || Headers == null)
+            throw new Exception("Initialize the ServerAuthenticationService first please");
+        return Headers?.CookieData;
     }
 
     public async Task<ClaimsPrincipal> GetClaimsPrincipalAsync(CancellationToken ct)
@@ -175,13 +190,6 @@ public class AuthenticationService<TUser, TStateDto>(
         var user = new ClaimsPrincipal(identity);
         return user;
     }
-    public async Task<string?> GetStateDataAsync(CancellationToken ct)
-    {
-        if (State == null || Headers == null)
-            throw new Exception("Initialize the ServerAuthenticationService first please");
-        return stateSerializer.ToStringBase64(State);
-    }
-
     public async Task<bool> AuthenticateUserAsync(string userId, CancellationToken ct)
     {
         if (AuthenticationState == null || Headers == null)

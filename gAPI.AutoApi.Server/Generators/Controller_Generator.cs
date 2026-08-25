@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators;
 
-public class ControllerGenerator : BaseGenerator
+public class Controller_Generator : BaseGenerator
 {
-    public ControllerGenerator(Generator context, Interface @interface)
+    public Controller_Generator(Generator context, Interface @interface)
     {
         Context = context;
         Interface = @interface;

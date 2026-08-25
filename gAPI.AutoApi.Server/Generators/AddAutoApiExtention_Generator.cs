@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators;
 
-public class AddAutoApiExtensionGenerator : BaseGenerator
+public class AddAutoApiExtension_Generator : BaseGenerator
 {
-    public AddAutoApiExtensionGenerator(Generator context)
+    public AddAutoApiExtension_Generator(Generator context)
     {
         Context = context;
 
@@ -20,7 +20,7 @@ public class AddAutoApiExtensionGenerator : BaseGenerator
     public Generator Context { get; }
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public AddAutoApiServicesExtensionGenerator AddAutoApiServices => Context.AddAutoApiServices;
+    public AddAutoApiServicesExtension_Generator AddAutoApiServices => Context.AddAutoApiServices;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;

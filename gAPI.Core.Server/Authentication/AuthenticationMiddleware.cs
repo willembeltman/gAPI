@@ -62,23 +62,25 @@ public class AuthenticationMiddleware<TUser, TStateDto>
                 return;
 
             var sessionId = authentication.SessionId.ToStringValues();
-            var stateData = await authentication.GetStateDataAsync(ctx.RequestAborted);
+            var stateData = authentication.GetStateData();
+            var cookieUpdate = authentication.IsCookieDataChanged();
+            var cookieData = authentication.GetCookieData();
 
             ctx.Response.Headers["X-SessionId"] = sessionId;
             ctx.Response.Headers["X-StateData"] = stateData;
 
-            if (!authentication.UpdateCookie)
+            if (!cookieUpdate)
                 return;
 
             if (ctx.Request.Cookies.TryGetValue("AuthenticationToken", out var _))
                 ctx.Response.Cookies.Delete("AuthenticationToken");
 
-            if (authentication.CookieData == null)
+            if (cookieData == null)
                 return;
 
             ctx.Response.Cookies.Append(
                 "AuthenticationToken",
-                authentication.CookieData,
+                cookieData,
                 new CookieOptions
                 {
                     SameSite = hostEnvironment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,

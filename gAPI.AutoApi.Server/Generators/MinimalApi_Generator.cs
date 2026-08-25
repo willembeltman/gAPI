@@ -6,9 +6,9 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators;
 
-public class MinimalApiGenerator : BaseGenerator
+public class MinimalApi_Generator : BaseGenerator
 {
-    public MinimalApiGenerator(Generator context, Interface @interface)
+    public MinimalApi_Generator(Generator context, Interface @interface)
     {
         Context = context;
         Interface = @interface;
@@ -244,13 +244,13 @@ public static class {Name}
     }}
     private static async Task SetupResponse({IServerAuthenticationService} ___authentication, IHostEnvironment ___hostEnvironment, HttpContext ___httpContext, TimeProvider ___dateTime, CancellationToken ___ct)
     {{
-        ___httpContext.Response.Headers[""X-SessionId""] = ___authentication.SessionData;
-        ___httpContext.Response.Headers[""X-StateData""] = await ___authentication.GetStateDataAsync(___ct);
-        if (___authentication.UpdateCookie && ___authentication.CookieData != null)
+        ___httpContext.Response.Headers[""X-SessionId""] = ___authentication.SessionId.ToStringValues();
+        ___httpContext.Response.Headers[""X-StateData""] = ___authentication.GetStateData();
+        if (___authentication.IsCookieDataChanged() && ___authentication.GetCookieData() != null)
         {{
             ___httpContext.Response.Cookies.Append(
                 ""AuthenticationToken"",
-                ___authentication.CookieData,
+                ___authentication.GetCookieData(),
                 new CookieOptions
                 {{
                     SameSite = ___hostEnvironment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,

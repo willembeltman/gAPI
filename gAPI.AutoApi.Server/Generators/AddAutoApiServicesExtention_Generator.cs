@@ -3,9 +3,9 @@
 namespace gAPI.AutoApi.Server.Generators;
 
 
-public class AddAutoApiServicesExtensionGenerator : BaseGenerator
+public class AddAutoApiServicesExtension_Generator : BaseGenerator
 {
-    public AddAutoApiServicesExtensionGenerator(Generator context)
+    public AddAutoApiServicesExtension_Generator(Generator context)
     {
         Context = context;
 

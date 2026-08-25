@@ -13,25 +13,49 @@ public class EmptyServerAuthenticationService
 
     public SessionId SessionId { get; set; } = SessionId.New();
 
-    public string? SessionData
-    {
-        get => SessionId.ToString();
-        set
-        {
-            if (SessionId.TryParse(value, out var parsed))
-                SessionId = parsed;
-        }
-    }
-
-    public string? CookieData { get; set; }
-
-    public bool UpdateCookie { get; set; }
-
     public bool Initialized { get; set; } = true;
 
     public AuthenticationInitializeResult Result { get; set; } = new();
 
+    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
+    {
+        if (SessionId.TryParse(sessionId, out var parsed))
+            SessionId = parsed;
+        Initialized = true;
+        return new AuthenticationInitializeResult();
+    }
+    public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
+    {
+        return new AuthenticationInitializeResult();
+    }
+
+    public bool IsStateDataChanged()
+    {
+        return false;
+    }
+    public string? GetStateData()
+    {
+        return null;
+    }
+    public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
+    {
+        return new AuthenticationInitializeResult();
+    }
+
+    public bool IsCookieDataChanged()
+    {
+        return false;
+    }
+    public string? GetCookieData()
+    {
+        return null;
+    }
+
     public async Task<bool> AuthenticateUserAsync(string userId, CancellationToken ct)
+    {
+        return false;
+    }
+    public async Task<bool> LogoffAsync(CancellationToken ct)
     {
         return false;
     }
@@ -41,44 +65,4 @@ public class EmptyServerAuthenticationService
         return new ClaimsPrincipal();
     }
 
-    public async Task<string?> GetStateDataAsync(CancellationToken ct)
-    {
-        return null;
-    }
-
-    public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
-    {
-        return new AuthenticationInitializeResult();
-    }
-
-    public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
-    {
-        return new AuthenticationInitializeResult();
-    }
-
-    public async Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
-    {
-        if (SessionId.TryParse(sessionId, out var parsed))
-            SessionId = parsed;
-        Initialized = true;
-        return new AuthenticationInitializeResult();
-    }
-
-    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
-    {
-        if (SessionId.TryParse(sessionId, out var parsed))
-            SessionId = parsed;
-        Initialized = true;
-        return new AuthenticationInitializeResult();
-    }
-
-    public bool IsStateChanged()
-    {
-        return false;
-    }
-
-    public async Task<bool> LogoffAsync(CancellationToken ct)
-    {
-        return false;
-    }
 }

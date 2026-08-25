@@ -1,4 +1,5 @@
 using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
@@ -95,13 +96,16 @@ public static partial class AddAuthenticationServicesExtension
                 ct);
             if (initializeResult.Forbidden == true) return Results.Forbid();
 
-            ctx.Response.Headers["X-SessionId"] = authenticationService.SessionData;
-            ctx.Response.Headers["X-StateData"] = await authenticationService.GetStateDataAsync(ct);
-            if (authenticationService.UpdateCookie && authenticationService.CookieData != null)
+            var initializedStateData = authenticationService.GetStateData();
+            var cookieData = authenticationService.GetCookieData();
+
+            ctx.Response.Headers["X-SessionId"] = new StringValues(authenticationService.SessionId.Value);
+            ctx.Response.Headers["X-StateData"] = initializedStateData;
+            if (authenticationService.IsCookieDataChanged() && cookieData != null)
             {
                 ctx.Response.Cookies.Append(
                     "AuthenticationToken",
-                    authenticationService.CookieData,
+                    cookieData,
                     new CookieOptions
                     {
                         SameSite = hostEnvironment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,

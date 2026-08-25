@@ -12,13 +12,12 @@ public class AuthenticationHeaders
     public QueryString Query { get; }
     public IPAddress IpAdress { get; }
     public SessionId SessionId { get; set; }
-    public StringValues SessionData => new StringValues(SessionId.Value);
+    public string? StateData { get; set; }
     public string? CookieData { get; private set; }
+    public string? CookieHash { get; private set; }
     public bool UpdateCookie { get; private set; }
     public DateTimeOffset? CookieExpires { get; private set; } = DateTimeOffset.UtcNow.AddDays(7);
 
-    public string? CookieHash
-        => CookieData != null ? StringHelper.HashString(CookieData) : null;
     public string EncodedPath
         => WebUtility.UrlEncode(Path) ?? throw new Exception("Please initialize first");
 
@@ -27,21 +26,25 @@ public class AuthenticationHeaders
         QueryString query,
         IPAddress ipAdress,
         string? cookieData,
+        string? stateData,
         SessionId sessionId)
     {
         Path = path;
         Query = query;
         IpAdress = ipAdress;
         SessionId = sessionId;
+        StateData = stateData;
         CookieData = cookieData;
+        CookieHash = CookieData != null ? StringHelper.HashString(CookieData) : null;
     }
 
     public string CreateNewCookie()
     {
         CookieData = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
         CookieExpires = DateTimeOffset.UtcNow.AddDays(7);
+        CookieHash = StringHelper.HashString(CookieData);
         UpdateCookie = true;
-        return StringHelper.HashString(CookieData);
+        return CookieHash;
     }
 
     public void RemoveCookie()
