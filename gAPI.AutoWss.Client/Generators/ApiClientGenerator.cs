@@ -111,7 +111,7 @@ public sealed class {Name}(
             ServiceId = ___ServiceId,
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
-            StateData = ___httpClient.IsStateChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
             BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
     }}";
@@ -172,7 +172,7 @@ public sealed class {Name}(
             ServiceId = ___ServiceId,
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
-            StateData = ___httpClient.IsStateChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
             BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
 
@@ -251,7 +251,7 @@ public sealed class {Name}(
             ServiceId = ___ServiceId,
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
-            StateData = ___httpClient.IsStateChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
             BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
 

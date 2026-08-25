@@ -171,7 +171,7 @@ public class AuthenticatedHttpClient<TStateDto>(
 
         OnStateHasChanged?.Invoke();
     }
-    public bool IsStateChanged()
+    public bool IsStateDataChanged()
     {
         if (stateSerializer.IsDifferent(OldState, State) == true)
         {

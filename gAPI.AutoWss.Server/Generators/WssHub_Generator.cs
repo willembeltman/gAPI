@@ -165,8 +165,8 @@ public class {Name} : WssServerConnection
                 RequestId = ___invokeRequest.RequestId,
                 ServiceId = ___invokeRequest.ServiceId,
                 MethodId = ___invokeRequest.MethodId,
-                SessionData = ___authenticationService.SessionData,
-                StateData = ___authenticationService.IsStateChanged() ? await ___authenticationService.GetStateDataAsync(___ct) : null,
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
                 BinaryData = {@interface}_{method}_Serializer(response)
             }}, ___ct);
 
@@ -175,8 +175,8 @@ public class {Name} : WssServerConnection
                 RequestId = ___invokeRequest.RequestId,
                 ServiceId = ___invokeRequest.ServiceId,
                 MethodId = ___invokeRequest.MethodId,
-                SessionData = ___authenticationService.SessionData,
-                StateData = ___authenticationService.IsStateChanged() ? await ___authenticationService.GetStateDataAsync(___ct) : null
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null
             }}, ___ct);
     }}")))))}
 {(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method => $@"
@@ -199,8 +199,8 @@ public class {Name} : WssServerConnection
                     RequestId = ___invokeRequest.RequestId,
                     ServiceId = ___invokeRequest.ServiceId,
                     MethodId = ___invokeRequest.MethodId,
-                    SessionData = ___authenticationService.SessionData,
-                    StateData = ___authenticationService.IsStateChanged() ? await ___authenticationService.GetStateDataAsync(___ct) : null,
+                    SessionData = ___authenticationService.SessionId.ToStringValues(),
+                    StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
                     BinaryData = {@interface}_{method}_Serializer(response)
                 }}, ___ct);
         }}
@@ -210,8 +210,8 @@ public class {Name} : WssServerConnection
                 RequestId = ___invokeRequest.RequestId,
                 ServiceId = ___invokeRequest.ServiceId,
                 MethodId = ___invokeRequest.MethodId,
-                SessionData = ___authenticationService.SessionData,
-                StateData = ___authenticationService.IsStateChanged() ? await ___authenticationService.GetStateDataAsync(___ct) : null
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null
             }}, ___ct);
     }}")))))}{functions}
 

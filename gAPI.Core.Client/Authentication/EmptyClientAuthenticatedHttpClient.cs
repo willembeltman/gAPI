@@ -40,7 +40,7 @@
 //        return false;
 //    }
 
-//    public bool IsStateChanged()
+//    public bool IsStateDataChanged()
 //    {
 //        return false;
 //    }

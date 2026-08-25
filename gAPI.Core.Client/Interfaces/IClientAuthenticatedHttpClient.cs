@@ -18,7 +18,7 @@ public interface IClientAuthenticatedHttpClient : IDisposable
     Task TryUpdateStateAsync(string? stateData, CancellationToken ct);
     Task TryUpdateStateAsync(ApiResult result, CancellationToken ct);
     Task TryUpdateStateAsync(HttpResponseMessage response, CancellationToken ct);
-    bool IsStateChanged();
+    bool IsStateDataChanged();
 
     Task<Stream> GetStreamAsync(string url, CancellationToken ct);
     Task<HttpResponseMessage> GetAsync(string path, CancellationToken ct);
