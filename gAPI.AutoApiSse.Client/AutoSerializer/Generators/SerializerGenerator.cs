@@ -45,7 +45,7 @@ public class SerializerGenerator
         Typehash = Helper.ComputeFNV1a32(TypeSymbolName);
 
         // --- VersionHash: hash van schema (properties + nested types) ---
-        SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.Name} {a.Property.Name}")));
+        SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.ToDisplayString()} {a.Property.Name}")));
 
         PropertyHelper = new GeneratePropertyHelper([..customSerializers], [], [], Reg, NeededSerializers);
     }
