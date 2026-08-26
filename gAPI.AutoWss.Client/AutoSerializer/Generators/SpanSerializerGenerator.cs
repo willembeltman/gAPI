@@ -32,7 +32,7 @@ public class SpanSerializerGenerator
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}SpanSerializer";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"SpanSerializers/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"

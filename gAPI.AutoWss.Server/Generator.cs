@@ -1,6 +1,8 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using gAPI.AutoWss.Server.Generators;
+using gAPI.AutoWss.Server.Generators.Endpoints;
+using gAPI.AutoWss.Server.Generators.Startup;
 using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -29,6 +31,8 @@ public class Generator
         IClientContext = new IClientContext_Generator(this);
         ClientContext = new ClientContext_Generator(this);
         AddAutoWssExtension = new AddAutoWssServerExtensionGenerator(this);
+        MapAutoWssExtension = new MapAutoWssServerExtensionGenerator(this);
+        MapWssEndpointExtension = new WssEndpointExtensionGenerator(this);
 
         MinimalApis = serviceContext.MinimalApiInterfaces
             .Select(a => new MinimalApi_Generator(this, a))
@@ -45,8 +49,6 @@ public class Generator
         ClientContexts = IClientHandlerContexts
             .Select(iclientHandler => new ClientServiceContext_Generator(this, iclientHandler))
             .ToArray();
-
-        AddAutoWssServicesExtension = new AddAutoWssServerServicesExtensionGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -58,7 +60,8 @@ public class Generator
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
     public AddAutoWssServerExtensionGenerator AddAutoWssExtension { get; }
-    public AddAutoWssServerServicesExtensionGenerator AddAutoWssServicesExtension { get; }
+    public MapAutoWssServerExtensionGenerator MapAutoWssExtension { get; }
+    public WssEndpointExtensionGenerator MapWssEndpointExtension { get; }
     public MinimalApi_Generator[] MinimalApis { get; }
     public ClientService_Generator[] ClientHandlers { get; }
     public IClientServiceContext_Generator[] IClientHandlerContexts { get; }
@@ -70,7 +73,8 @@ public class Generator
         GenerateItem(spc, IClientContext);
         GenerateItem(spc, ClientContext);
         GenerateItem(spc, AddAutoWssExtension);
-        GenerateItem(spc, AddAutoWssServicesExtension);
+        GenerateItem(spc, MapAutoWssExtension);
+        GenerateItem(spc, MapWssEndpointExtension);
 
         foreach (var item in MinimalApis)
             GenerateItem(spc, item);

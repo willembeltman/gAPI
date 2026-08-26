@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoWss.Server.Generators;
+namespace gAPI.AutoWss.Server.Generators.Endpoints;
 
 public class MinimalApi_Generator : _BaseGenerator
 {
@@ -17,7 +17,7 @@ public class MinimalApi_Generator : _BaseGenerator
         Namespace = Interface.Namespace;
 
         Name = $"{Interface.CleanName}EndpointsExtensions";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Endpoints/{Name}.g.cs";
     }
 
     public Generator Context { get; }
