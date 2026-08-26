@@ -20,10 +20,13 @@ public class SharedReference
     {
         Name = a.Name;
         Namespace = a.ContainingNamespace.ToDisplayString();
+        _NamedTypeSymbol = a;
     }
 
     public virtual string Name { get; protected set; } = string.Empty;
     public virtual string? Namespace { get; protected set; }
+    public INamedTypeSymbol? _NamedTypeSymbol { get; }
+
     public virtual string FullName => $"{Namespace}.{Name}";
 
     public override string ToString()

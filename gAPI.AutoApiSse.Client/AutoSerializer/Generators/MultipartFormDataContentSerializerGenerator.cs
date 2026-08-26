@@ -21,14 +21,14 @@ public class MultipartFormDataContentSerializerGenerator
     public string FileName { get; }
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
 
-    public MultipartFormDataContentSerializerGenerator(INamedTypeSymbol typeSymbol, CustomObjectMethod[] customMultipartFormDataContentSerializers)
+    public MultipartFormDataContentSerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customMultipartFormDataContentSerializers)
     {
         TypeSymbol = typeSymbol;
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}MultipartFormDataContentSerializer";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
@@ -37,7 +37,7 @@ public class MultipartFormDataContentSerializerGenerator
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
 
-        PropertyHelper = new GeneratePropertyHelper([], [], customMultipartFormDataContentSerializers, Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [], [..customMultipartFormDataContentSerializers], Reg, NeededSerializers);
     }
 
     public string Generate()

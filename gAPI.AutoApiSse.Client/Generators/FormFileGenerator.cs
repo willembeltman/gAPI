@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoApiSse.Client.Generators;
 
-public class FormFileGenerator : BaseGenerator
+public class FormFileGenerator : _BaseGenerator
 {
     public FormFileGenerator(Generator context)
     {

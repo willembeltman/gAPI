@@ -1,9 +1,9 @@
 ﻿using gAPI.AutoApiSse.Client.Models;
 using System.Linq;
 
-namespace gAPI.AutoApiSse.Client.Generators;
+namespace gAPI.AutoApiSse.Client.Generators.Sse;
 
-public class ClientConnectionGenerator : BaseGenerator
+public class ClientConnectionGenerator : _BaseGenerator
 {
     public ClientConnectionGenerator(
         Generator context)
@@ -14,7 +14,7 @@ public class ClientConnectionGenerator : BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "ClientConnection";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Sse/{Name}.g.cs";
     }
 
     public Generator Context { get; }

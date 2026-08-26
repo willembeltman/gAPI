@@ -1,4 +1,8 @@
 ﻿using gAPI.AutoApiSse.Client.Generators;
+using gAPI.AutoApiSse.Client.Generators.Authentication;
+using gAPI.AutoApiSse.Client.Generators.Clients;
+using gAPI.AutoApiSse.Client.Generators.Sse;
+using gAPI.AutoApiSse.Client.Generators.Startup;
 using gAPI.AutoApiSse.Client.Models;
 using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
@@ -32,6 +36,13 @@ public class Generator
 
         ClientConnection = new ClientConnectionGenerator(this);
         IClientConnection = new IClientConnectionGenerator(this);
+
+        ClientConnection = new ClientConnectionGenerator(this);
+        IClientConnection = new IClientConnectionGenerator(this);
+
+        StateParser = new StateParserGenerator(this);
+        IAuthenticatedHttpClient = new IAuthenticatedHttpClientGenerator(this);
+        AuthenticatedHttpClient = new AuthenticatedHttpClientGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -45,6 +56,10 @@ public class Generator
 
     public ClientConnectionGenerator ClientConnection { get; }
     public IClientConnectionGenerator IClientConnection { get; }
+
+    public StateParserGenerator StateParser { get; }
+    public IAuthenticatedHttpClientGenerator IAuthenticatedHttpClient { get; }
+    public AuthenticatedHttpClientGenerator AuthenticatedHttpClient { get; }
 
     public void Generate(SourceProductionContext spc)
     {
@@ -99,5 +114,23 @@ public class Generator
         IClientConnection.GenerateCode();
         spc.AddSource(Path.Combine(IClientConnection.Directory, IClientConnection.FileName), SourceText.From(IClientConnection.Code, Encoding.UTF8));
 
+        GenerateItem(spc, StateParser);
+
+        if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)
+        {
+            GenerateItem(spc, IAuthenticatedHttpClient);
+            GenerateItem(spc, AuthenticatedHttpClient);
+        }
+    }
+
+    private static void GenerateItem(SourceProductionContext spc, _BaseGenerator generator)
+    {
+        generator.GenerateCode();
+
+        if (!string.IsNullOrEmpty(generator.Code))
+        {
+            var signalRHubFullName = Path.Combine(generator.Directory, generator.FileName);
+            spc.AddSource(signalRHubFullName, SourceText.From(generator.Code, Encoding.UTF8));
+        }
     }
 }

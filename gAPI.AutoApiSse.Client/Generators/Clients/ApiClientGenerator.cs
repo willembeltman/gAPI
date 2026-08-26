@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApiSse.Client.Generators;
+namespace gAPI.AutoApiSse.Client.Generators.Clients;
 
-public class ApiClientGenerator : BaseGenerator
+public class ApiClientGenerator : _BaseGenerator
 {
     public ApiClientGenerator(Generator context, Interface @interface, CustomObjectMethod[] customMultipartFormDataContentSerializers)
     {
@@ -17,7 +17,7 @@ public class ApiClientGenerator : BaseGenerator
         Namespace = @interface.Namespace;
 
         Name = Interface.CleanName;
-        FileName = $"{Name}.g.cs";
+        FileName = $"Clients/{Name}.g.cs";
 
         TypeSymbol = @interface.NamedTypeSymbol;
 
