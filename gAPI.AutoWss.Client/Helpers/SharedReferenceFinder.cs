@@ -67,7 +67,6 @@ public static class SharedReferenceFinder
 
         return null;
     }
-
     public static SharedReference? TryFindByBaseType(INamedTypeSymbol targetBaseType, IEnumerable<INamedTypeSymbol> allSymbols)
     {
         return allSymbols
@@ -75,7 +74,6 @@ public static class SharedReferenceFinder
              .Select(classSymbol => new SharedReference(classSymbol))
              .FirstOrDefault();
     }
-
     private static bool InheritsFrom(INamedTypeSymbol type, INamedTypeSymbol targetBaseType)
     {
         var current = type.BaseType;
@@ -91,6 +89,31 @@ public static class SharedReferenceFinder
         }
 
         return false;
+    }
+    public static SharedReference? TryFindByInterface(SharedReference targetInterface, IEnumerable<INamedTypeSymbol> allSymbols)
+    {
+        foreach (var symbol in allSymbols)
+        {
+            if (IsExactType(symbol, targetInterface.FullName))
+                return TryFindByInterface(symbol, allSymbols);
+        }
+
+        return null;
+    }
+
+    public static SharedReference? TryFindByInterface(INamedTypeSymbol targetInterface, IEnumerable<INamedTypeSymbol> allSymbols)
+    {
+        return allSymbols
+             .Where(t => t.TypeKind == TypeKind.Class && ImplementsInterface(t, targetInterface))
+             .Select(classSymbol => new SharedReference(classSymbol))
+             .FirstOrDefault();
+    }
+
+    private static bool ImplementsInterface(INamedTypeSymbol type, INamedTypeSymbol targetInterface)
+    {
+        // AllInterfaces bevat álle interfaces die dit type implementeert, 
+        // inclusief interfaces die door basisklassen of andere interfaces worden overgeërfd.
+        return type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, targetInterface));
     }
 
 }

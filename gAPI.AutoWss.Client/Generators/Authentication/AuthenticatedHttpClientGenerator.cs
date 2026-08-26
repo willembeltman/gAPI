@@ -124,7 +124,7 @@ public class {Name}(
         var state = await GetStateAsync(force, ct);
         return stateSerializer.ToStringValuesBase64(state).ToString();
     }}
-    private async Task<State> FetchStateAsync(CancellationToken ct)
+    private async Task<{State}> FetchStateAsync(CancellationToken ct)
     {{
         try
         {{
@@ -301,7 +301,7 @@ public class {Name}(
             return CreateAnonymousAuthenticationState();
         }}
     }}
-    private static AuthenticationState GetAuthenticationState(State state)
+    private static AuthenticationState GetAuthenticationState({State} state)
     {{
         return state.User != null
             ? CreateAuthenticationStateFromState(state)
@@ -312,7 +312,7 @@ public class {Name}(
         var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
         return new AuthenticationState(anonymous);
     }}
-    private static AuthenticationState CreateAuthenticationStateFromState(State state)
+    private static AuthenticationState CreateAuthenticationStateFromState({State} state)
     {{
         var claims = new[]
         {{

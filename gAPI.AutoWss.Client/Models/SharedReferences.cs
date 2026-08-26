@@ -35,10 +35,12 @@ public class SharedReferences
         StaticNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.StaticNavigationManager", allSymbols);
 
         WithCookiesHandler = SharedReferenceFinder.Find("gAPI.Core.Client.Razor.WithCookiesHandler", allSymbols);
-
+        DefaultStateParser = SharedReferenceFinder.Find("gAPI.Core.Serializers.DefaultStateParser", allSymbols);
+       
 
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
+        IClientAuthenticatedHttpClientImplementation = SharedReferenceFinder.TryFindByInterface(IClientAuthenticatedHttpClient, allSymbols);
 
         StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
     }
@@ -73,4 +75,6 @@ public class SharedReferences
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference StateChangedHandler { get; }
+    public SharedReference DefaultStateParser { get; }
+    public SharedReference? IClientAuthenticatedHttpClientImplementation { get; }
 }

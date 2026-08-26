@@ -16,9 +16,6 @@ public class StateParserGenerator : _BaseGenerator
 
         Name = "StateParser";
         FileName = $"Authentication/{Name}.g.cs";
-
-        if (StateDto != null)
-            NeededState_ListForBeingLazy.Add(StateDto._NamedTypeSymbol!);
     }
 
     public Generator Context { get; }
@@ -31,6 +28,9 @@ public class StateParserGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
+        if (StateDto != null)
+            NeededState_ListForBeingLazy.Add(StateDto._NamedTypeSymbol!);
+
         Reg(State);
         Reg("Microsoft.Extensions.Primitives");
         

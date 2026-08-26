@@ -73,10 +73,14 @@ public class Generator
         GenerateItem(spc, AddAutoWssExtension);
         GenerateItem(spc, FormFile);
         GenerateItem(spc, FormFileExtension);
-        GenerateItem(spc, StateParser);
-        GenerateItem(spc, IAuthenticatedHttpClient);
-        GenerateItem(spc, AuthenticatedHttpClient);
 
+        GenerateItem(spc, StateParser);
+
+        if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)
+        {
+            GenerateItem(spc, IAuthenticatedHttpClient);
+            GenerateItem(spc, AuthenticatedHttpClient);
+        }
 
         GenerateSpanSerializers(spc);
         GenerateMultipartSerializers(spc);
