@@ -44,6 +44,7 @@ public abstract class WssClientConnection : IWssClientConnection
     public bool IsConnected => Ws?.State == WebSocketState.Open;
     public SessionId SessionId => HttpClient.SessionId;
 
+    // TODO uitzoeken of dit naar behoren werkt.
     private void HttpClient_OnStateHasChanged()
     {
         if (HttpClient.ForceReconnect)
@@ -193,25 +194,25 @@ public abstract class WssClientConnection : IWssClientConnection
                 {
                     case WssServerToClientMessageEnum.SendRequest:
                         var sendRequest = span.ReadSendRequestDto(ref offset);
-                        await HttpClient.TryUpdateStateAsync(sendRequest.StateData, ct);
+                        await HttpClient.UpdateStateDataAsync(sendRequest.StateData, ct);
                         await Received_SendRequest_FromServerAsync(sendRequest, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeRequest:
                         var invokeRequest = span.ReadInvokeRequestDto(ref offset);
-                        await HttpClient.TryUpdateStateAsync(invokeRequest.StateData, ct);
+                        await HttpClient.UpdateStateDataAsync(invokeRequest.StateData, ct);
                         _ = Task.Run(async () => { await Received_InvokeRequest_FromServerAsync(invokeRequest, ct); }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeResponse:
                         var invokeResponse = span.ReadApiInvokeResponseDto(ref offset);
-                        await HttpClient.TryUpdateStateAsync(invokeResponse.StateData, ct);
+                        await HttpClient.UpdateStateDataAsync(invokeResponse.StateData, ct);
                         await Received_InvokeResponse_FromServerAsync(invokeResponse, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeResponseDone:
                         var invokeResponseDone = span.ReadApiInvokeResponseDoneDto(ref offset);
-                        await HttpClient.TryUpdateStateAsync(invokeResponseDone.StateData, ct);
+                        await HttpClient.UpdateStateDataAsync(invokeResponseDone.StateData, ct);
                         await Received_InvokeResponseDone_FromServerAsync(invokeResponseDone, ct);
                         break;
                 }

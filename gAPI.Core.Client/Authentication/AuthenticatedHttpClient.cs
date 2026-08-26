@@ -25,6 +25,7 @@ public class AuthenticatedHttpClient<TStateDto>(
     private TStateDto? OldState { get; set; }
     private TStateDto? State;
     private DateTime StateLastUpdate;
+    private Task<TStateDto>? StateFetchTask;
 
     public event StateChangedHandler? OnStateHasChanged;
 
@@ -38,7 +39,55 @@ public class AuthenticatedHttpClient<TStateDto>(
         set => State?.ForceReconnect = value;
     }
 
-    private Task<TStateDto>? StateFetchTask;
+    public async Task<bool?> IsAuthenticatedAsync(CancellationToken ct)
+    {
+        try
+        {
+            var state = await GetStateAsync(false, ct);
+            return state.User != null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<TStateDto> GetStateAsync(bool force = false, CancellationToken ct = default)
+    {
+        await StateLock.WaitAsync(ct);
+        try
+        {
+            if (force == false &&
+                State != null &&
+                DateTime.UtcNow - StateLastUpdate <= TimeSpan.FromMinutes(15))
+            {
+                return State;
+            }
+
+            StateFetchTask ??= FetchStateAsync(ct);
+        }
+        finally
+        {
+            StateLock.Release();
+        }
+
+        return await StateFetchTask;
+    }
+
+    public bool IsStateDataChanged()
+    {
+        if (stateSerializer.IsDifferent(OldState, State) == true)
+        {
+            OldState = stateSerializer.CreateCopy(State);
+            return true;
+        }
+        return false;
+    }
+    public async Task<string> GetStateDataAsync(bool force = false, CancellationToken ct = default)
+    {
+        var state = await GetStateAsync(force, ct);
+        return stateSerializer.ToStringValuesBase64(state).ToString();
+    }
     private async Task<TStateDto> FetchStateAsync(CancellationToken ct)
     {
         try
@@ -65,45 +114,7 @@ public class AuthenticatedHttpClient<TStateDto>(
         }
     }
 
-    public async Task<bool?> IsAuthenticatedAsync(CancellationToken ct)
-    {
-        try
-        {
-            var state = await GetStateAsync(false, ct);
-            return state.User != null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-    public async Task<TStateDto> GetStateAsync(bool force = false, CancellationToken ct = default)
-    {
-        await StateLock.WaitAsync(ct);
-        try
-        {
-            if (force == false &&
-                State != null &&
-                DateTime.UtcNow - StateLastUpdate <= TimeSpan.FromMinutes(15))
-            {
-                return State;
-            }
-
-            StateFetchTask ??= FetchStateAsync(ct);
-        }
-        finally
-        {
-            StateLock.Release();
-        }
-
-        return await StateFetchTask;
-    }
-    public async Task<string> GetStateDataAsync(bool force = false, CancellationToken ct = default)
-    {
-        var state = await GetStateAsync(force, ct);
-        return stateSerializer.ToStringValuesBase64(state).ToString();
-    }
-    public async Task TryUpdateStateAsync(HttpResponseMessage response, CancellationToken ct)
+    private async Task TryUpdateStateAsync(HttpResponseMessage response, CancellationToken ct)
     {
         await StateLock.WaitAsync(ct);
         try
@@ -117,7 +128,7 @@ public class AuthenticatedHttpClient<TStateDto>(
             if (response.Headers.TryGetValues("X-StateData", out var stateValues) &&
                 stateSerializer.TryParse(stateValues, out var newState))
             {
-                await UpdateStateInternal(newState);
+                await UpdateStateDataInternal(newState);
             }
         }
         finally
@@ -125,37 +136,36 @@ public class AuthenticatedHttpClient<TStateDto>(
             StateLock.Release();
         }
     }
-    public async Task TryUpdateStateAsync(ApiResult result, CancellationToken ct)
-    {
-        await StateLock.WaitAsync(ct);
-        try
-        {
-            if (SessionId.TryParse(result.SessionData, out var sessionId))
-                SessionId = sessionId;
+    //public async Task TryUpdateStateAsync(ApiResult result, CancellationToken ct)
+    //{
+    //    await StateLock.WaitAsync(ct);
+    //    try
+    //    {
+    //        if (SessionId.TryParse(result.SessionData, out var sessionId))
+    //            SessionId = sessionId;
 
-            if (stateSerializer.TryParse(result.StateData, out var state))
-                await UpdateStateInternal(state);
-        }
-        finally
-        {
-            StateLock.Release();
-        }
-    }
-    public async Task TryUpdateStateAsync(string? stateData, CancellationToken ct)
+    //        if (stateSerializer.TryParse(result.StateData, out var state))
+    //            await UpdateStateInternal(state);
+    //    }
+    //    finally
+    //    {
+    //        StateLock.Release();
+    //    }
+    //}
+    public async Task UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
-        if (stateData == null) return;
         await StateLock.WaitAsync(ct);
         try
         {
             if (stateSerializer.TryParse(stateData, out var state))
-                await UpdateStateInternal(state);
+                await UpdateStateDataInternal(state);
         }
         finally
         {
             StateLock.Release();
         }
     }
-    private async Task UpdateStateInternal(TStateDto value)
+    private async Task UpdateStateDataInternal(TStateDto value)
     {
         bool isDifferent = stateSerializer.IsDifferent(value, State);
 
@@ -170,15 +180,6 @@ public class AuthenticatedHttpClient<TStateDto>(
             Task.FromResult(GetAuthenticationState(value)));
 
         OnStateHasChanged?.Invoke();
-    }
-    public bool IsStateDataChanged()
-    {
-        if (stateSerializer.IsDifferent(OldState, State) == true)
-        {
-            OldState = stateSerializer.CreateCopy(State);
-            return true;
-        }
-        return false;
     }
 
     public async Task<Stream> GetStreamAsync(string url, CancellationToken ct)
