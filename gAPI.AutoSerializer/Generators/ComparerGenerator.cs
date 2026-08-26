@@ -22,15 +22,15 @@ public class ComparerGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededComparers { get; private set; } = new();
 
-    public ComparerGenerator(INamedTypeSymbol typeSymbol, CustomObjectMethod[] customComparers)
+    public ComparerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
     {
         TypeSymbol = typeSymbol;
-        CustomComparers = customComparers;
+        CustomComparers = [..customComparers];
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}Comparer";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
