@@ -26,7 +26,7 @@ public class GeneratePropertyHelper(
             return isNullable
                 ? $@"
 {indent}___writer.Write({propName} != null);
-{indent}if ({propName} != null) 
+{indent}if ({propName} != null)
 {indent}   ___writer.Write({propName}{(isNullableT ? ".Value" : "")});"
                 : $@"
 {indent}___writer.Write({propName});";
@@ -55,7 +55,7 @@ public class GeneratePropertyHelper(
             case "string?":
                 return $@"
 {indent}___writer.Write({propName} != null); 
-{indent}if ({propName} != null) 
+{indent}if ({propName} != null)
 {indent}    ___writer.Write({propName});";
             case "bool":
             case "int":
@@ -117,6 +117,26 @@ public class GeneratePropertyHelper(
 {indent}___writer.Write({propName}.Length);
 {indent}foreach(var item{itemNumber} in {propName})
 {indent}{{{GenerateBinaryWriterWriteCode(array.ElementType, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
+{indent}}}";
+        }
+
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            var itemNumber = ++ItemNumber;
+            return isNullable
+                ? $@"
+{indent}___writer.Write({propName} != null);
+{indent}if ({propName} != null)
+{indent}{{
+{indent}    ___writer.Write({propName}.Count);
+{indent}    foreach (var item{itemNumber} in {propName})
+{indent}    {{{GenerateBinaryWriterWriteCode(listElement, $"item{itemNumber}", $"{indent}        ", fromGeneric)}
+{indent}    }}
+{indent}}}"
+                : $@"
+{indent}___writer.Write({propName}.Count);
+{indent}foreach (var item{itemNumber} in {propName})
+{indent}{{{GenerateBinaryWriterWriteCode(listElement, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
 {indent}}}";
         }
 
@@ -184,6 +204,11 @@ public class GeneratePropertyHelper(
                 return start + $@"___reader.ReadBytes(___reader.ReadInt32())";
 
             return start + $@"[.. Enumerable.Range(0, ___reader.ReadInt32()).Select(item => {GenerateBinaryReaderReadCode(array.ElementType, fromGeneric)})]";
+        }
+
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            return start + $@"Enumerable.Range(0, ___reader.ReadInt32()).Select(item => {GenerateBinaryReaderReadCode(listElement, fromGeneric)}).ToList()";
         }
 
         var name = Helper.GetName(underlyingType);
@@ -260,7 +285,7 @@ public class GeneratePropertyHelper(
                 return isNullable
                     ? $@"
 {indent}PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, {propName} != null);
-{indent}if ({propName} != null) 
+{indent}if ({propName} != null)
 {indent}{{
 {indent}    PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, {propName});
 {indent}}}"
@@ -283,6 +308,26 @@ public class GeneratePropertyHelper(
 {indent}PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, {propName}.Length);
 {indent}foreach(var item{itemNumber} in {propName})
 {indent}{{{GenerateSpanWriteCode(array.ElementType, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
+{indent}}}";
+        }
+
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            var itemNumber = ++ItemNumber;
+            return isNullable
+                ? $@"
+{indent}PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, {propName} != null);
+{indent}if ({propName} != null) 
+{indent}{{
+{indent}    PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, {propName}.Count);
+{indent}    foreach(var item{itemNumber} in {propName})
+{indent}    {{{GenerateSpanWriteCode(listElement, $"item{itemNumber}", $"{indent}        ", fromGeneric)}
+{indent}    }}
+{indent}}}"
+                : $@"
+{indent}PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, {propName}.Count);
+{indent}foreach(var item{itemNumber} in {propName})
+{indent}{{{GenerateSpanWriteCode(listElement, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
 {indent}}}";
         }
 
@@ -374,6 +419,31 @@ public class GeneratePropertyHelper(
             return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
         }
 
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            Reg(listElement.ContainingNamespace.ToDisplayString());
+
+            var functionName = $"BuildList{Helper.GetName(listElement)}";
+            if (!functionNames.Contains(functionName))
+            {
+                functionNames.Add(functionName);
+                functions += $@"
+
+    static List<{listElement.ToDisplayString()}> {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int count)
+    {{
+        var list = new List<{listElement.ToDisplayString()}>(count);
+        for (int i = 0; i < count; i++)
+        {{
+            var item = {GenerateSpanReadCode(listElement, fromGeneric, ref functions, functionNames)};
+            list.Add(item);
+        }}
+        return list;
+    }}";
+            }
+
+            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
+        }
+
         var name = Helper.GetName(underlyingType);
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
         NeededSerializers.Add((underlyingType as INamedTypeSymbol)!);
@@ -454,7 +524,7 @@ public class GeneratePropertyHelper(
                 return isNullable
                     ? $@"
 {indent}PrimitivesSpanSerializer.LengthBoolean(ref ___offset, {propName} != null);
-{indent}if ({propName} != null) 
+{indent}if ({propName} != null)
 {indent}{{
 {indent}    PrimitivesSpanSerializer.LengthByteArray(ref ___offset, {propName});
 {indent}}}"
@@ -477,6 +547,26 @@ public class GeneratePropertyHelper(
 {indent}PrimitivesSpanSerializer.LengthInt32(ref ___offset, {propName}.Length);
 {indent}foreach(var item{itemNumber} in {propName})
 {indent}{{{GenerateLengthCode(array.ElementType, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
+{indent}}}";
+        }
+
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            var itemNumber = ++ItemNumber;
+            return isNullable
+                ? $@"
+{indent}PrimitivesSpanSerializer.LengthBoolean(ref ___offset, {propName} != null);
+{indent}if ({propName} != null) 
+{indent}{{
+{indent}    PrimitivesSpanSerializer.LengthInt32(ref ___offset, {propName}.Count);
+{indent}    foreach(var item{itemNumber} in {propName})
+{indent}    {{{GenerateLengthCode(listElement, $"item{itemNumber}", $"{indent}        ", fromGeneric)}
+{indent}    }}
+{indent}}}"
+                : $@"
+{indent}PrimitivesSpanSerializer.LengthInt32(ref ___offset, {propName}.Count);
+{indent}foreach(var item{itemNumber} in {propName})
+{indent}{{{GenerateLengthCode(listElement, $"item{itemNumber}", $"{indent}    ", fromGeneric)}
 {indent}}}";
         }
 
@@ -602,6 +692,25 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        if (TryGetListElement(underlyingType, out var listElement))
+        {
+            var itemNumber = ++ItemNumber;
+            return isNullable
+                ? $@"
+{indent}if ({propName} != null)
+{indent}{{
+{indent}    foreach (var item{itemNumber} in {propName})
+{indent}    {{
+{GenerateMultipartFormDataContentWriteCode(listElement, $"item{itemNumber}", fieldName, indent + "        ", fromGeneric)}
+{indent}    }}
+{indent}}}"
+                : $@"
+{indent}foreach (var item{itemNumber} in {propName})
+{indent}{{
+{GenerateMultipartFormDataContentWriteCode(listElement, $"item{itemNumber}", fieldName, indent + "    ", fromGeneric)}
+{indent}}}";
+        }
+
         // NESTED OBJECT
         if (underlyingType is INamedTypeSymbol named)
             NeededSerializers.Add(named);
@@ -614,5 +723,19 @@ public class GeneratePropertyHelper(
 {indent}    {Helper.GetName(underlyingType)}MultipartFormDataContentSerializer.Write(___content, {name}, {propName}{(isNullableT ? ".Value" : "")});"
             : $@"
 {indent}{Helper.GetName(underlyingType)}MultipartFormDataContentSerializer.Write(___content, {name}, {propName});";
+    }
+
+    private static bool TryGetListElement(ITypeSymbol type, out ITypeSymbol element)
+    {
+        if (type is INamedTypeSymbol named &&
+            named.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.List<T>" &&
+            named.TypeArguments.Length == 1)
+        {
+            element = named.TypeArguments[0];
+            return true;
+        }
+
+        element = null!;
+        return false;
     }
 }

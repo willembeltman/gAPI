@@ -25,7 +25,7 @@ public class ComparerGenerator
     public ComparerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
     {
         TypeSymbol = typeSymbol;
-        CustomComparers = [..customComparers];
+        CustomComparers = [.. customComparers];
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}Comparer";
@@ -163,6 +163,37 @@ public static class {Name}
 {indent}{{
 {indent}    var item{itemNumber} = {propName}[i{itemNumber}];
 {indent}    var otherItem{itemNumber} = {otherPropName}[i{itemNumber}];{GenerateComparerProp(array.ElementType, $"item{itemNumber}", $"otherItem{itemNumber}", $"{indent}    ", generic)}
+{indent}}}";
+        }
+
+        if (underlyingType is INamedTypeSymbol list &&
+            list.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.List<T>" &&
+            list.TypeArguments.Length == 1)
+        {
+            var itemNumber = ++ItemNumber;
+            var elementType = list.TypeArguments[0];
+            return isNullable
+                ? $@"
+{indent}if ({propName} is null)
+{indent}{{
+{indent}    if ({otherPropName} is not null) return true;
+{indent}}}
+{indent}else
+{indent}{{
+{indent}    if ({otherPropName} is null) return true;
+{indent}    if ({propName}.Count != {otherPropName}.Count) return true;
+{indent}    for (int i{itemNumber} = 0; i{itemNumber} < {propName}.Count; i{itemNumber}++)
+{indent}    {{
+{indent}        var item{itemNumber} = {propName}[i{itemNumber}];
+{indent}        var otherItem{itemNumber} = {otherPropName}[i{itemNumber}];{GenerateComparerProp(elementType, $"item{itemNumber}", $"otherItem{itemNumber}", $"{indent}        ", generic)}
+{indent}    }}
+{indent}}}"
+                : $@"
+{indent}if ({propName}.Count != {otherPropName}.Count) return true;
+{indent}for (int i{itemNumber} = 0; i{itemNumber} < {propName}.Count; i{itemNumber}++)
+{indent}{{
+{indent}    var item{itemNumber} = {propName}[i{itemNumber}];
+{indent}    var otherItem{itemNumber} = {otherPropName}[i{itemNumber}];{GenerateComparerProp(elementType, $"item{itemNumber}", $"otherItem{itemNumber}", $"{indent}    ", generic)}
 {indent}}}";
         }
 

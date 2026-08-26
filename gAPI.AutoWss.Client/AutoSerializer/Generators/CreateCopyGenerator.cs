@@ -150,6 +150,17 @@ public static class {Name}
                 : $"{source}.Select({item} => {elementCopy}).ToArray()";
         }
 
+        if (underlyingType is INamedTypeSymbol list &&
+            list.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.List<T>" &&
+            list.TypeArguments.Length == 1)
+        {
+            var item = $"item{++ItemNumber}";
+            var elementCopy = GenerateCopyCode(list.TypeArguments[0], item, generic);
+            return isNullable
+                ? $"{source} == null ? null : {source}.Select({item} => {elementCopy}).ToList()"
+                : $"{source}.Select({item} => {elementCopy}).ToList()";
+        }
+
         if (underlyingType.IsRecord || underlyingType.TypeKind == TypeKind.Struct)
             return source;
 

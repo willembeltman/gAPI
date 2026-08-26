@@ -48,6 +48,12 @@ public class FindAndCreateGenaratorsRecursive
                 if (array.ElementType.Name == "Byte") continue; // Byte array doet de serializer al goed, dus skip
                 propType = array.ElementType;
             }
+            else if (propType is INamedTypeSymbol list &&
+                     list.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.List<T>" &&
+                     list.TypeArguments.Length == 1)
+            {
+                propType = list.TypeArguments[0];
+            }
 
             if (skipRecord && (propType.IsRecord || propType.TypeKind == TypeKind.Struct))
                 continue;
