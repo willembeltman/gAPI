@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators;
+namespace gAPI.AutoWss.Client.Generators.Clients;
 
 public class MinimalClientGenerator : _BaseGenerator
 {
@@ -20,7 +20,7 @@ public class MinimalClientGenerator : _BaseGenerator
         Namespace = @interface.Namespace;
 
         Name = Interface.CleanName;
-        FileName = $"{Name}.g.cs";
+        FileName = $"Clients/{Name}.g.cs";
 
         TypeSymbol = @interface.NamedTypeSymbol;
         WriteMethodName = "Write";
@@ -35,7 +35,7 @@ public class MinimalClientGenerator : _BaseGenerator
 
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
 
-    public List<INamedTypeSymbol> NeededSerializers { get; } = [];
+    public List<INamedTypeSymbol> NeededMultipartFormSerializerTypes { get; } = [];
     public INamedTypeSymbol TypeSymbol { get; }
     public string WriteMethodName { get; }
     public bool IsRecord { get; }
@@ -209,7 +209,7 @@ public class {Name}(
 
         // NESTED OBJECT
         if (underlyingType is INamedTypeSymbol named)
-            NeededSerializers.Add(named);
+            NeededMultipartFormSerializerTypes.Add(named);
 
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
 

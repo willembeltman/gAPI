@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators;
+namespace gAPI.AutoWss.Client.Generators.Clients;
 
 public class ApiClientGenerator : _BaseGenerator
 {
@@ -17,9 +17,9 @@ public class ApiClientGenerator : _BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = @interface.CleanName;
-        FileName = $"{Name}.g.cs";
+        FileName = $"Clients/{Name}.g.cs";
 
-        PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [..Context.CustomSpanSerializers], [], Reg, NeededSpanSerializerTypes);
     }
 
     public Generator Context { get; }
@@ -34,7 +34,7 @@ public class ApiClientGenerator : _BaseGenerator
     public SharedReference ApiInvokeRequestDto => Context.SharedReferences.ApiInvokeRequestDto;
     public SharedReference ApiInvokeResponseDoneDto => Context.SharedReferences.ApiInvokeResponseDoneDto;
 
-    public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
+    public List<INamedTypeSymbol> NeededSpanSerializerTypes { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
 
     public override void GenerateCode()

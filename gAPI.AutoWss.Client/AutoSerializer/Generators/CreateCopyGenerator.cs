@@ -22,15 +22,15 @@ public class CreateCopyGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededCreateCopys { get; private set; } = new();
 
-    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, CustomObjectMethod[] customCreateCopys)
+    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
     {
         TypeSymbol = typeSymbol;
-        CustomCreateCopys = customCreateCopys;
+        CustomCreateCopys = [.. customCreateCopys];
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}CreateCopy";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"

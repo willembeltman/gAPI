@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators;
+namespace gAPI.AutoWss.Client.Generators.Wss;
 
 public class ClientConnectionGenerator : _BaseGenerator
 {
@@ -17,9 +17,9 @@ public class ClientConnectionGenerator : _BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "ClientConnection";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Wss/{Name}.g.cs";
 
-        PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [..Context.CustomSpanSerializers], [], Reg, NeededSpanSerializers);
     }
 
     public Generator Context { get; }
@@ -38,7 +38,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
 
-    public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
+    public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
 
     public override void GenerateCode()
@@ -277,11 +277,11 @@ public class {Name}
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""Received_InvokeResponse_FromServerAsync({{___invokeResponse}})"", ___invokeResponse);
-{(Context.ServiceContext.ApiInterfaces.Any() ? $@"
+{(Context.Apis.Any() ? $@"
         switch (___invokeResponse.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.ApiInterfaces.Select(api => $@"
+        {{{string.Join("", Context.Apis.Select(api => $@"
             case ""{api}"":
-                return {api.CleanName}.ReceiveResponseAsync(___invokeResponse);"))}
+                return {api.Name}.ReceiveResponseAsync(___invokeResponse);"))}
         }}" : "")}
         throw new Exception($""Service \""{{___invokeResponse.ServiceId.Value}}\"" / Method \""{{___invokeResponse.MethodId.Value}}\"" not found"");
     }}
@@ -289,14 +289,15 @@ public class {Name}
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""Received_InvokeResponseDone_FromServerAsync({{___invokeResponseDone}})"", ___invokeResponseDone);
-{(Context.ServiceContext.ApiInterfaces.Any() ? $@"
+{(Context.Apis.Any() ? $@"
         switch (___invokeResponseDone.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.ApiInterfaces.Select(api => $@"
+        {{{string.Join("", Context.Apis.Select(api => $@"
             case ""{api}"":
-                return {api.CleanName}.ReceiveResponseDoneAsync(___invokeResponseDone);"))}
+                return {api.Name}.ReceiveResponseDoneAsync(___invokeResponseDone);"))}
         }}" : "")}
         throw new Exception($""Service \""{{___invokeResponseDone.ServiceId.Value}}\"" / Method \""{{___invokeResponseDone.MethodId.Value}}\"" not found"");
-    }}{string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => string.Join("", Interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
+    }}
+{string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => string.Join("", Interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
 {
     var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
     return $@"

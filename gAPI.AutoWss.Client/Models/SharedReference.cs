@@ -11,20 +11,19 @@ public class SharedReference
         Name = fullName.Split('.').Last();
         Namespace = fullName.Substring(0, fullName.Length - Name.Length - 1);
     }
-    public SharedReference(string @namespace, string name)
-    {
-        Namespace = @namespace;
-        Name = name;
-    }
     public SharedReference(INamedTypeSymbol a)
     {
         Name = a.Name;
         Namespace = a.ContainingNamespace.ToDisplayString();
+        _NamedTypeSymbol = a;
     }
 
     public virtual string Name { get; protected set; } = string.Empty;
     public virtual string? Namespace { get; protected set; }
     public virtual string FullName => $"{Namespace}.{Name}";
+
+    // Wordt gebruikt in de state
+    public virtual INamedTypeSymbol? _NamedTypeSymbol { get; }
 
     public override string ToString()
     {

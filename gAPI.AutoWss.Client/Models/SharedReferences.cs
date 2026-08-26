@@ -9,6 +9,8 @@ public class SharedReferences
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
+        SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
+        UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
         BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
@@ -31,9 +33,20 @@ public class SharedReferences
         IUriNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IUriNavigationManager", allSymbols);
         DefaultNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.DefaultNavigationManager", allSymbols);
         StaticNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.StaticNavigationManager", allSymbols);
+
+        WithCookiesHandler = SharedReferenceFinder.Find("gAPI.Core.Client.Razor.WithCookiesHandler", allSymbols);
+
+
+        AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
+        StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
+
+        StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
     }
 
     public SharedReference ServiceId { get; }
+    public SharedReference RequestId { get; }
+    public SharedReference SessionId { get; }
+    public SharedReference UserId { get; }
     public SharedReference BaseResponse { get; }
     public SharedReference BaseResponseT { get; }
     public SharedReference InvokeRequestDto { get; }
@@ -47,7 +60,6 @@ public class SharedReferences
     public SharedReference WssClientConnection { get; }
     public SharedReference IWssLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }
-    public SharedReference RequestId { get; }
     public SharedReference IWssClientConnection { get; }
     public SharedReference? AuthClient_FormFile { get; }
     public SharedReference? AuthClient_ToFormFileExtension { get; }
@@ -57,4 +69,8 @@ public class SharedReferences
     public SharedReference IUriNavigationManager { get; }
     public SharedReference DefaultNavigationManager { get; }
     public SharedReference StaticNavigationManager { get; }
+    public SharedReference WithCookiesHandler { get; }
+    public SharedReference AuthStateDto { get; }
+    public SharedReference? StateDto { get; }
+    public SharedReference StateChangedHandler { get; }
 }
