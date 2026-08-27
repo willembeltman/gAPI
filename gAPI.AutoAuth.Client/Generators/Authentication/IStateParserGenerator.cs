@@ -1,9 +1,9 @@
-using gAPI.AutoWss.Client.Models;
+using gAPI.AutoAuth.Client.Models;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators.Authentication;
+namespace gAPI.AutoAuth.Client.Generators.Authentication;
 
 public class IStateParserGenerator : _BaseGenerator
 {
@@ -25,7 +25,7 @@ public class IStateParserGenerator : _BaseGenerator
 
     public SharedReference State => StateDto ?? AuthStateDto;
 
-    public List<INamedTypeSymbol> NeededState_ListForBeingLazy { get; private set; } = new();
+    public List<INamedTypeSymbol> NeededState_ListForBeingLazy { get; private set; } = [];
 
     public override void GenerateCode()
     {
@@ -43,11 +43,6 @@ namespace {Namespace};
 
 public interface {Name} : {IStateParserT}<{State}>
 {{
-    bool TryParse(string? value, out {State} state);
-    StringValues ToStringValuesBase64({State} value);
-    string? ToStringBase64({State}? value);
-    bool IsDifferent({State}? value1, {State}? value2);
-    {State}? CreateCopy({State}? value);
 }}";
     }
 }

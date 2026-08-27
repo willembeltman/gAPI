@@ -1,9 +1,9 @@
-using gAPI.AutoWss.Client.Models;
+using gAPI.AutoAuth.Client.Models;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators.Authentication;
+namespace gAPI.AutoAuth.Client.Generators.Authentication;
 
 public class StateParserGenerator : _BaseGenerator
 {

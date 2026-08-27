@@ -23,15 +23,6 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
 
-    public SharedReference IUriNavigationManager => Context.SharedReferences.IUriNavigationManager;
-    public SharedReference DefaultNavigationManager => Context.SharedReferences.DefaultNavigationManager;
-    public SharedReference StaticNavigationManager => Context.SharedReferences.StaticNavigationManager;
-    public SharedReference WithCookiesHandler => Context.SharedReferences.WithCookiesHandler;
-
-    public SharedReference? IClientAuthenticatedHttpClientImplementation => Context.SharedReferences.IClientAuthenticatedHttpClientImplementation;
-    public SharedReference AuthenticatedHttpClient => Context.AuthenticatedHttpClient;
-    public SharedReference IAuthenticatedHttpClient => Context.IAuthenticatedHttpClient;
-
     public override void GenerateCode()
     {
         Reg("Microsoft.Extensions.DependencyInjection");
@@ -45,14 +36,6 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
         Reg(FrontendConfig);
-        Reg(IUriNavigationManager);
-        Reg(DefaultNavigationManager);
-        Reg(StaticNavigationManager);
-        Reg(WithCookiesHandler);
-        Reg(AuthenticatedHttpClient);
-        Reg(IAuthenticatedHttpClient);
-        if (IClientAuthenticatedHttpClientImplementation != null)
-            Reg(IClientAuthenticatedHttpClientImplementation);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -74,15 +57,16 @@ public static class {Name}
 {{
     public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
     {{
-        // Set up authorization core
-        services.AddAuthorizationCore();
-
         // Set up configuration
         var config = new {FrontendConfig}()
         {{
             ApiBackendUrl = apiAddress,
             WssBackendUrl = wssAddress
         }};
+        return AddAutoWssClient(services, config);
+    }}
+    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, {FrontendConfig} config)
+    {{
         services.AddSingleton(config);
 
         // Connection stuff
@@ -90,46 +74,11 @@ public static class {Name}
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         
-        // Het kan helaas niet anders
-        services.AddScoped<{IUriNavigationManager}>(sp =>
-        {{
-            var navigationManager = sp.GetService<NavigationManager>();
-            if (navigationManager != null)
-            {{
-                return new {DefaultNavigationManager}(navigationManager);
-            }}
-            else
-            {{
-                return new {StaticNavigationManager}();
-            }}
-        }});
-
         // Api clients{string.Join("", Context.Apis.Select(api => $@"
         services.AddScoped<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}
         
         // Minimal api clients{string.Join("", Context.MinimalApis.Select(api => $@"
         services.AddScoped<{api.Interface}, {api}>();"))}
-
-        // Register the cookie handler
-        services.AddScoped<{WithCookiesHandler}>();
-
-        // Configure named client for WebAssembly with cookies
-        services
-            .AddHttpClient(""WithCookies"", opt => opt.BaseAddress = new Uri(apiAddress))
-            .AddHttpMessageHandler<{WithCookiesHandler}>();
-{(IClientAuthenticatedHttpClientImplementation == null ? $@"
-        // Register global client authentication service
-        services.AddScoped<{AuthenticatedHttpClient}>();
-        services.AddScoped<{IAuthenticatedHttpClient}>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-" : $@"
-        // Register global client authentication service
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
-")}
-        // Set up authorization core
-        services.AddAuthorizationCore();
 
         return services;
     }}

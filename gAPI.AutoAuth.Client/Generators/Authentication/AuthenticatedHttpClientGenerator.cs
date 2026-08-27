@@ -1,7 +1,7 @@
-using gAPI.AutoWss.Client.Models;
+using gAPI.AutoAuth.Client.Models;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators.Authentication;
+namespace gAPI.AutoAuth.Client.Generators.Authentication;
 
 public class AuthenticatedHttpClientGenerator : _BaseGenerator
 {
