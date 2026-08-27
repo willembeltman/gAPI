@@ -1,11 +1,15 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using gAPI.AutoWss.Server.Generators;
+using gAPI.AutoWss.Server.Generators.Authentication;
+using gAPI.AutoWss.Server.Generators.Hubs;
 using gAPI.AutoWss.Server.Generators.Endpoints;
 using gAPI.AutoWss.Server.Generators.Startup;
+using gAPI.AutoWss.Server.Generators.Wss;
 using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,15 +21,17 @@ public class Generator
     public Generator(
         ServiceContext serviceContext,
         SharedReferences sharedReferences,
-        CustomObject[] customSerializers,
         CustomObject[] customSpanSerializers,
-        CustomObjectMethod[] customComparers)
+        CustomObjectMethod[] customComparers,
+        CustomObjectMethod[] customCreateCopys,
+        CustomObjectMethod[] customMultipartFormDataContents)
     {
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
-        CustomSerializers = customSerializers;
         CustomSpanSerializers = customSpanSerializers;
         CustomComparers = customComparers;
+        CustomCreateCopys = customCreateCopys;
+        CustomMultipartFormDataContents = customMultipartFormDataContents;
 
         WssHub = new WssHub_Generator(this);
         IClientContext = new IClientContext_Generator(this);
@@ -49,13 +55,20 @@ public class Generator
         ClientContexts = IClientHandlerContexts
             .Select(iclientHandler => new ClientServiceContext_Generator(this, iclientHandler))
             .ToArray();
+
+
+        StateParser = new StateParserGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public CustomObject[] CustomSerializers { get; }
+
     public CustomObject[] CustomSpanSerializers { get; }
     public CustomObjectMethod[] CustomComparers { get; }
+    public CustomObjectMethod[] CustomCreateCopys { get; }
+    public CustomObjectMethod[] CustomMultipartFormDataContents { get; }
+
+
     public WssHub_Generator WssHub { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
@@ -66,6 +79,7 @@ public class Generator
     public ClientService_Generator[] ClientHandlers { get; }
     public IClientServiceContext_Generator[] IClientHandlerContexts { get; }
     public ClientServiceContext_Generator[] ClientContexts { get; }
+    public StateParserGenerator StateParser { get; }
 
     public void Generate(SourceProductionContext spc)
     {
@@ -85,11 +99,28 @@ public class Generator
         foreach (var item in ClientContexts)
             GenerateItem(spc, item);
 
+        GenerateItem(spc, StateParser);
+
+        GenerateSpanSerializers(spc);
+        GenerateCreateCopys(spc);
+        GenerateComparers(spc);
+    }
+
+    private void GenerateSpanSerializers(SourceProductionContext spc)
+    {
+        var generatedItems = new HashSet<string>();
+
         foreach (var api in ClientHandlers)
         {
-            var items = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(api.NeededSerializers.ToArray(), CustomSpanSerializers.Select(a => a.Type));
-            foreach (var item in items)
+            var apiSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+                api.NeededSerializers.ToArray(),
+                CustomSpanSerializers.Select(a => a.Type));
+            foreach (var item in apiSpanSerializers)
             {
+                var name = item.ToDisplayString();
+                if (generatedItems.Contains(name)) continue;
+                generatedItems.Add(name);
+
                 var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
                 serializerGenerator.Namespace = api.Namespace!;
                 var code = serializerGenerator.Generate();
@@ -99,11 +130,76 @@ public class Generator
             }
         }
 
-        var items2 = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(WssHub.NeededSerializers.ToArray(), CustomSpanSerializers.Select(a => a.Type));
-        foreach (var item in items2)
+        var WssHubSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+            WssHub.NeededSerializers.ToArray(), 
+            CustomSpanSerializers.Select(a => a.Type));
+        foreach (var item in WssHubSpanSerializers)
         {
+            var name = item.ToDisplayString();
+            if (generatedItems.Contains(name)) continue;
+            generatedItems.Add(name);
+
             var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
             serializerGenerator.Namespace = WssHub.Namespace!;
+            var code = serializerGenerator.Generate();
+            spc.AddSource(
+                serializerGenerator.FileName,
+                SourceText.From(code, Encoding.UTF8));
+        }
+
+        var stateParserSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+            StateParser.NeededState_ListForBeingLazy.ToArray(),
+            CustomSpanSerializers.Select(a => a.Type));
+        foreach (var item in stateParserSpanSerializers)
+        {
+            var name = item.ToDisplayString();
+            if (generatedItems.Contains(name)) continue;
+            generatedItems.Add(name);
+
+            var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
+            serializerGenerator.Namespace = StateParser.Namespace!;
+            var code = serializerGenerator.Generate();
+            spc.AddSource(
+                serializerGenerator.FileName,
+                SourceText.From(code, Encoding.UTF8));
+        }
+    }
+    private void GenerateCreateCopys(SourceProductionContext spc)
+    {
+        var generatedItems = new HashSet<string>();
+
+        var stateParserSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+            StateParser.NeededState_ListForBeingLazy.ToArray(),
+            CustomCreateCopys.Select(a => a.Type));
+        foreach (var item in stateParserSpanSerializers)
+        {
+            var name = item.ToDisplayString();
+            if (generatedItems.Contains(name)) continue;
+            generatedItems.Add(name);
+
+            var serializerGenerator = new CreateCopyGenerator(item, CustomCreateCopys);
+            serializerGenerator.Namespace = StateParser.Namespace!;
+            var code = serializerGenerator.Generate();
+            spc.AddSource(
+                serializerGenerator.FileName,
+                SourceText.From(code, Encoding.UTF8));
+        }
+    }
+    private void GenerateComparers(SourceProductionContext spc)
+    {
+        var generatedItems = new HashSet<string>();
+
+        var stateParserSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+            StateParser.NeededState_ListForBeingLazy.ToArray(),
+            CustomComparers.Select(a => a.Type));
+        foreach (var item in stateParserSpanSerializers)
+        {
+            var name = item.ToDisplayString();
+            if (generatedItems.Contains(name)) continue;
+            generatedItems.Add(name);
+
+            var serializerGenerator = new ComparerGenerator(item, CustomComparers);
+            serializerGenerator.Namespace = StateParser.Namespace!;
             var code = serializerGenerator.Generate();
             spc.AddSource(
                 serializerGenerator.FileName,

@@ -1,6 +1,7 @@
-﻿using gAPI.AutoWss.Server.Models;
+﻿using gAPI.AutoWss.Server.Generators.Wss;
+using gAPI.AutoWss.Server.Models;
 
-namespace gAPI.AutoWss.Server.Generators;
+namespace gAPI.AutoWss.Server.Generators.Hubs;
 
 public class IClientServiceContext_Generator : _BaseGenerator
 {
@@ -15,7 +16,7 @@ public class IClientServiceContext_Generator : _BaseGenerator
         Namespace = clientHandler.Namespace;
 
         Name = "I" + ClientHandler.Interface.CleanName + "Context";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs/{Name}.g.cs";
     }
 
     public Generator Context { get; }

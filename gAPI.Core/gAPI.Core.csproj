@@ -21,7 +21,17 @@
 		<IncludeSource>false</IncludeSource>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Title>gAPI commen library</Title>
+		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
+
+	<!-- VOEG DIT TOE OM DE 426 ERRORS TE FIXEN: -->
+	<ItemGroup>
+		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

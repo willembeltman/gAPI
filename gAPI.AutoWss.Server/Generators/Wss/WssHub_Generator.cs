@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Server.Generators;
+namespace gAPI.AutoWss.Server.Generators.Wss;
 
 public class WssHub_Generator : _BaseGenerator
 {
@@ -17,7 +17,7 @@ public class WssHub_Generator : _BaseGenerator
         Name = "WssHub";
 
         Directory = "";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Wss/{Name}.g.cs";
 
         PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
     }

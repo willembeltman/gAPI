@@ -8,7 +8,6 @@ using gAPI.AutoWss.Client.Generators.Wss;
 using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,10 +27,10 @@ public class Generator
     {
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
-        CustomSpanSerializers = customSpanSerializers.ToList();
-        CustomComparers = customComparers.ToList();
-        CustomCreateCopys = customCreateCopys.ToList();
-        CustomMultipartFormDataContents = customMultipartFormDataContents.ToList();
+        CustomSpanSerializers = customSpanSerializers;
+        CustomComparers = customComparers;
+        CustomCreateCopys = customCreateCopys;
+        CustomMultipartFormDataContents = customMultipartFormDataContents;
 
         Apis = ServiceContext.ApiInterfaces.Select(a => new ApiClientGenerator(this, a)).ToArray();
         MinimalApis = ServiceContext.MinimalApiInterfaces.Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContents)).ToArray();
@@ -47,10 +46,10 @@ public class Generator
     }
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public List<CustomObject> CustomSpanSerializers { get; }
-    public List<CustomObjectMethod> CustomComparers { get; }
-    public List<CustomObjectMethod> CustomCreateCopys { get; }
-    public List<CustomObjectMethod> CustomMultipartFormDataContents { get; }
+    public CustomObject[] CustomSpanSerializers { get; }
+    public CustomObjectMethod[] CustomComparers { get; }
+    public CustomObjectMethod[] CustomCreateCopys { get; }
+    public CustomObjectMethod[] CustomMultipartFormDataContents { get; }
     public ApiClientGenerator[] Apis { get; }
     public MinimalClientGenerator[] MinimalApis { get; }
     public IClientConnectionGenerator IClientConnection { get; }

@@ -48,6 +48,11 @@ public class SharedReferences
         WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
         WssSessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssSessionCache", allSymbols);
         ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
+
+        AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
+        StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
+        IServerAuthenticationServiceImplementation = SharedReferenceFinder.TryFindByInterface(IServerAuthenticationService, allSymbols);
+
     }
 
     public SharedReference FabricClient { get; }
@@ -82,5 +87,8 @@ public class SharedReferences
     public SharedReference ApiInvokeResponseDto { get; }
     public SharedReference WssSessionCache { get; }
     public SharedReference ServerAuthenticationAccessor { get; }
+    public SharedReference AuthStateDto { get; }
+    public SharedReference? StateDto { get; }
+    public SharedReference? IServerAuthenticationServiceImplementation { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
 }

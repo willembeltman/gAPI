@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Server.Generators;
+namespace gAPI.AutoWss.Server.Generators.Hubs;
 
 public class ClientService_Generator : _BaseGenerator
 {
@@ -17,7 +17,7 @@ public class ClientService_Generator : _BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = Interface.CleanName;
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs/{Name}.g.cs";
 
         PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
     }

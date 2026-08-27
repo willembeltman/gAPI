@@ -28,13 +28,13 @@ public class Program : IIncrementalGenerator
             {
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
 
+                var sharedReferences = new SharedReferences(allSymbols);
+                var serviceContext = new ServiceContext(allSymbols);
+                var serviceModelErrors = serviceContext.CheckForErrors();
                 var customSpanSerializers = FindCustomSerializer.GetAllCustomSpanSerializers(allSymbols);
                 var customComparers = FindCustomSerializer.GetAllCustomComparers(allSymbols);
                 var customCreateCopys = FindCustomSerializer.GetAllCustomCreateCopys(allSymbols);
                 var customMultipartFormDataContents = FindCustomSerializer.GetAllCustomMultipartFormDataContents(allSymbols);
-                var sharedReferences = new SharedReferences(allSymbols);
-                var serviceContext = new ServiceContext(allSymbols);
-                var serviceModelErrors = serviceContext.CheckForErrors();
                 var generator = new Generator(serviceContext, sharedReferences, customSpanSerializers, customComparers, customCreateCopys, customMultipartFormDataContents);
                 generator.Generate(spc);
 

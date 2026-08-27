@@ -1,6 +1,6 @@
 ﻿using gAPI.AutoWss.Server.Models;
 
-namespace gAPI.AutoWss.Server.Generators;
+namespace gAPI.AutoWss.Server.Generators.Hubs;
 
 public class ClientServiceContext_Generator : _BaseGenerator
 {
@@ -15,7 +15,7 @@ public class ClientServiceContext_Generator : _BaseGenerator
         Name = Client.Interface.CleanName + "Context";
 
         Directory = "";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs/{Name}.g.cs";
     }
 
     public Generator Context { get; }
