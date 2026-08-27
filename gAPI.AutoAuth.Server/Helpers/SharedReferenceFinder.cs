@@ -57,39 +57,39 @@ public static class SharedReferenceFinder
             genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
             miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
-    public static SharedReference? TryFindByBaseType(SharedReference targetBaseType, IEnumerable<INamedTypeSymbol> allSymbols)
-    {
-        foreach (var symbol in allSymbols)
-        {
-            if (IsExactType(symbol, targetBaseType.FullName))
-                return TryFindByBaseType(symbol, allSymbols);
-        }
+    //public static SharedReference? TryFindByBaseType(SharedReference targetBaseType, IEnumerable<INamedTypeSymbol> allSymbols)
+    //{
+    //    foreach (var symbol in allSymbols)
+    //    {
+    //        if (IsExactType(symbol, targetBaseType.FullName))
+    //            return TryFindByBaseType(symbol, allSymbols);
+    //    }
 
-        return null;
-    }
-    public static SharedReference? TryFindByBaseType(INamedTypeSymbol targetBaseType, IEnumerable<INamedTypeSymbol> allSymbols)
-    {
-        return allSymbols
-             .Where(t => t.TypeKind == TypeKind.Class && InheritsFrom(t, targetBaseType))
-             .Select(classSymbol => new SharedReference(classSymbol))
-             .FirstOrDefault();
-    }
-    private static bool InheritsFrom(INamedTypeSymbol type, INamedTypeSymbol targetBaseType)
-    {
-        var current = type.BaseType;
+    //    return null;
+    //}
+    //public static SharedReference? TryFindByBaseType(INamedTypeSymbol targetBaseType, IEnumerable<INamedTypeSymbol> allSymbols)
+    //{
+    //    return allSymbols
+    //         .Where(t => t.TypeKind == TypeKind.Class && InheritsFrom(t, targetBaseType))
+    //         .Select(classSymbol => new SharedReference(classSymbol))
+    //         .FirstOrDefault();
+    //}
+    //private static bool InheritsFrom(INamedTypeSymbol type, INamedTypeSymbol targetBaseType)
+    //{
+    //    var current = type.BaseType;
 
-        while (current != null)
-        {
-            // Gebruik SymbolEqualityComparer voor een betrouwbare vergelijking in Roslyn
-            if (SymbolEqualityComparer.Default.Equals(current, targetBaseType))
-            {
-                return true;
-            }
-            current = current.BaseType;
-        }
+    //    while (current != null)
+    //    {
+    //        // Gebruik SymbolEqualityComparer voor een betrouwbare vergelijking in Roslyn
+    //        if (SymbolEqualityComparer.Default.Equals(current, targetBaseType))
+    //        {
+    //            return true;
+    //        }
+    //        current = current.BaseType;
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
     public static SharedReference? TryFindByInterface(SharedReference targetInterface, IEnumerable<INamedTypeSymbol> allSymbols)
     {
         foreach (var symbol in allSymbols)
@@ -116,4 +116,23 @@ public static class SharedReferenceFinder
         return type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, targetInterface));
     }
 
+    public static SharedReference? TryFindByBaseTypeNameStart(string baseTypeName, INamedTypeSymbol[] allSymbols)
+    {
+        foreach (var symbol in allSymbols)
+        {
+            var baseType = symbol.BaseType;
+
+            while (baseType != null)
+            {
+                if (baseType.ToDisplayString().StartsWith(baseTypeName))
+                {
+                    return new SharedReference(symbol);
+                }
+
+                baseType = baseType.BaseType;
+            }
+        }
+
+        return null;
+    }
 }

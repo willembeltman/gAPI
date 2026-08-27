@@ -1,5 +1,7 @@
 ﻿using gAPI.AutoAuth.Server.Helpers;
 using Microsoft.CodeAnalysis;
+using System;
+using System.Collections.Generic;
 
 namespace gAPI.AutoAuth.Server.Models;
 
@@ -68,24 +70,26 @@ public class SharedReferences
         IAccountService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAccountService", allSymbols);
         IAuthenticationCheckT = new("gAPI.Core.Server.Interfaces.IAuthenticationCheck");
         AuthenticationServiceT = new("gAPI.Core.Server.Authentication.AuthenticationService");
-        AuthenticationStateMappingT = new("gAPI.Core.Server.Authentication.AuthenticationStateMapping");
         IAuthenticationServiceT = new("gAPI.Core.Server.Interfaces.IAuthenticationService");
 
-
-        AuthenticationDbContext = new("gAPI.Core.Server.Entities.AuthenticationDbContext");
-        DbContext = SharedReferenceFinder.TryFindByBaseType(AuthenticationDbContext, allSymbols);
-
         AuthUser = SharedReferenceFinder.Find("gAPI.Core.Server.Entities.AuthUser", allSymbols);
-        User = SharedReferenceFinder.TryFindByBaseType(AuthUser, allSymbols);
+        User = SharedReferenceFinder.TryFindByBaseTypeNameStart("gAPI.Core.Server.Entities.AuthUser", allSymbols);
 
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
-        StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
+        StateDto = SharedReferenceFinder.TryFindByBaseTypeNameStart("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         IStateMappingT = new("gAPI.Core.Server.Interfaces.IStateMapping");
 
         IStateParserT = new("gAPI.Core.Interfaces.IStateParser");
         IServerAuthenticationServiceImplementation = SharedReferenceFinder.TryFindByInterface(IServerAuthenticationService, allSymbols);
 
+        AuthenticationDbContextT = SharedReferenceFinder.Find("gAPI.Core.Server.Entities.AuthenticationDbContext<TUser>", allSymbols);
+        CustomDbContext = SharedReferenceFinder.TryFindByBaseTypeNameStart("gAPI.Core.Server.Entities.AuthenticationDbContext", allSymbols);
+
+        AuthenticationStateMappingT = new("gAPI.Core.Server.Authentication.AuthenticationStateMapping");
+        CustomStateMapping = SharedReferenceFinder.TryFindByBaseTypeNameStart("gAPI.Core.Server.Authentication.AuthenticationStateMapping", allSymbols);
+
     }
+
 
     public SharedReference FabricClient { get; }
     public SharedReference SseHostCollection { get; }
@@ -132,8 +136,8 @@ public class SharedReferences
     public SharedReference ApiInvokeResponseDoneDto { get; }
     public SharedReference IAccountService { get; }
 
-    public SharedReference AuthenticationDbContext { get; }
-    public SharedReference? DbContext { get; }
+    public SharedReference AuthenticationDbContextT { get; }
+    public SharedReference? CustomDbContext { get; }
 
     public SharedReference IStateMappingT { get; }
     public SharedReference AuthStateDto { get; }
@@ -150,5 +154,6 @@ public class SharedReferences
     public SharedReference AuthStateUserDto { get; }
     public SharedReference AuthenticationServiceT { get; }
     public SharedReference AuthenticationStateMappingT { get; }
+    public SharedReference? CustomStateMapping { get; }
     public SharedReference IAuthenticationServiceT { get; }
 }

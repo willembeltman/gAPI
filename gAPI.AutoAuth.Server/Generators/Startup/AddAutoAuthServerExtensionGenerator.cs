@@ -27,11 +27,18 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
     public SharedReference? UserEntity => Context.SharedReferences.User;
     public SharedReference User => UserEntity ?? AuthUserEntity;
 
-    public SharedReference AuthenticationDbContext => Context.SharedReferences.AuthenticationDbContext;
-    public SharedReference? DbContext => Context.SharedReferences.DbContext;
+    public SharedReference AuthenticationDbContextT => Context.SharedReferences.AuthenticationDbContextT;
+    public SharedReference? CustomDbContext => Context.SharedReferences.CustomDbContext;
     public string ApplicationDbContext =>
-        DbContext?.FullName
-        ?? $"{AuthenticationDbContext.FullName}<{User}>";
+        CustomDbContext?.FullName
+        ?? $"{AuthenticationDbContextT.FullName}<{User}>";
+
+
+    public SharedReference AuthenticationStateMappingT => Context.SharedReferences.AuthenticationStateMappingT;
+    public SharedReference? CustomStateMapping => Context.SharedReferences.CustomStateMapping;
+    public string StateMapping =>
+        CustomStateMapping?.Name
+        ?? $"{AuthenticationStateMappingT}<{User}, {State}>";
 
 
     public SharedReference AuthenticationStateFactoryT => Context.SharedReferences.AuthenticationStateFactoryT;
@@ -43,7 +50,6 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
     public SharedReference AccountServiceT => Context.SharedReferences.AccountServiceT;
     public SharedReference IStateMappingT => Context.SharedReferences.IStateMappingT;
     public SharedReference AuthenticationService => Context.AuthenticationService;
-    public SharedReference AuthenticationStateMappingT => Context.SharedReferences.AuthenticationStateMappingT;
     public SharedReference AuthenticationServiceT => Context.SharedReferences.AuthenticationServiceT;
 
     public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
@@ -68,6 +74,8 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
         Reg(IServerAuthenticationService);
         Reg(EmptyServerAuthenticationService);
         Reg(IStateMappingT);
+        if (CustomStateMapping != null)
+            Reg(CustomStateMapping);
 
         Reg(State);
         Reg(User);
@@ -81,8 +89,7 @@ namespace {Namespace};
 public static class {Name}
 {{
     public static IServiceCollection AddAutoAuthServer(this IServiceCollection services)
-    {{{(DbContext == null ? $@"
-        
+    {{{(CustomDbContext == null ? $@"
         services.AddScoped<{IServerAuthenticationService}, {EmptyServerAuthenticationService}>();
 " : "")}
         services.AddScoped<{ServerAuthenticationAccessor}>();
@@ -131,7 +138,7 @@ public static class {Name}
         services.AddScoped<{IAuthenticationStateFactoryT}<{User}>, {AuthenticationStateFactoryT}<{User}>>();
         services.AddScoped<{IUserTokenFactoryT}<{User}>, {UserTokenFactoryT}<{User}>>();
         services.AddScoped<{IAccountService}, {AccountServiceT}<{User}, {State}>>();
-        services.AddScoped<{IStateMappingT}<{User}, {State}>, {AuthenticationStateMappingT}<{User}, {State}>>();
+        services.AddScoped<{IStateMappingT}<{User}, {State}>, {StateMapping}>();
         return services;
     }}
 }}
