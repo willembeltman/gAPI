@@ -1,23 +1,21 @@
-﻿using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Interfaces;
+﻿using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 
 namespace gAPI.Core.Server.Authentication;
 
-public class AuthenticationHandler<TUser, TStateDto>
+public class AuthenticationHandler
     : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
-    where TUser : AuthUser
 {
-    private readonly IAuthenticationService<TUser, TStateDto> Authentication;
+    private readonly IServerAuthenticationService Authentication;
 
     public AuthenticationHandler(
         IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
         TimeProvider timeProvider,
-        IAuthenticationService<TUser, TStateDto> auth)
+        IServerAuthenticationService auth)
         : base(options, logger, encoder)
     {
         Authentication = auth;

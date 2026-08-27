@@ -18,7 +18,5 @@ public static class AuthStateUserDtoMultipartFormDataContentSerializer
         GuidSerializer.Write(___content, "Id", value.Id);
         ___content.Add(new StringContent(value.UserName), "UserName");
         ___content.Add(new StringContent(value.Email), "Email");
-        if (value.StorageFileUrl != null)
-            ___content.Add(new StringContent(value.StorageFileUrl), "StorageFileUrl");
     }
 }

@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Server.Entities;
 
-namespace gAPI.Core.Server.Mappings;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IStateMapping<TUser, TStateDto>
         where TUser : AuthUser

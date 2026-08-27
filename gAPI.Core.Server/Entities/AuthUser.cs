@@ -7,7 +7,7 @@ namespace gAPI.Core.Server.Entities;
 [IsAuthorized]
 [IsUser]
 [IsEntryPoint]
-public class AuthUser : IStorageFile
+public class AuthUser 
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -31,7 +31,4 @@ public class AuthUser : IStorageFile
     public string Email { get; set; } = string.Empty;
     [StringLength(32)]
     public string PhoneNumber { get; set; } = string.Empty;
-
-    [IsState]
-    string IStorageFile.Id => Id.ToString();
 }

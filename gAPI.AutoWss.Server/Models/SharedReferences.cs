@@ -51,6 +51,7 @@ public class SharedReferences
 
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
+        IStateParserT = new SharedReference("gAPI.Core.Interfaces.IStateParser");
         IServerAuthenticationServiceImplementation = SharedReferenceFinder.TryFindByInterface(IServerAuthenticationService, allSymbols);
 
     }
@@ -89,6 +90,7 @@ public class SharedReferences
     public SharedReference ServerAuthenticationAccessor { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
+    public SharedReference IStateParserT { get; }
     public SharedReference? IServerAuthenticationServiceImplementation { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
 }

@@ -14,7 +14,6 @@ public static class AuthStateUserDtoCreateCopy
         copy.Id = value.Id;
         copy.UserName = value.UserName;
         copy.Email = value.Email;
-        copy.StorageFileUrl = value.StorageFileUrl;
         return copy;
     }
 }

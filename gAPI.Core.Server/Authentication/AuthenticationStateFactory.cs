@@ -1,42 +1,35 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
-using gAPI.Core.Server.Mappings;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
 
-public class AuthenticationStateFactory<TUser, TStateDto>(
+public class AuthenticationStateFactory<TUser>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
-    IStateMapping<TUser, TStateDto> stateMapping,
     ServerConfig config,
-    TimeProvider dateTime,
-    ILoggerFactory loggerFactory)
-    : IAuthenticationStateFactory<TUser, TStateDto>
+    TimeProvider dateTime)
+    : IAuthenticationStateFactory<TUser>
     where TUser : AuthUser
-    where TStateDto : AuthStateDto, new()
 {
-    private readonly ILogger Logger = loggerFactory.CreateLogger<AuthenticationStateFactory<TUser, TStateDto>>();
+    //public async Task<UserToken<TUser>> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
+    //{
+    //    var db = await dbFactory.CreateDbContextAsync(ct);
+    //    // Add new token hash to database
+    //    var dbToken = new UserToken<TUser>()
+    //    {
+    //        UserId = Guid.Parse(userId),
+    //        TokenHash = cookieHash
+    //    };
+    //    await db.Tokens.AddAsync(dbToken, ct);
+    //    await db.SaveChangesAsync(ct);
+    //    return dbToken;
+    //}
 
-    public async Task SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
-    {
-        var db = await dbFactory.CreateDbContextAsync(ct);
-        // Add new token hash to database
-        var dbToken = new UserToken<TUser>()
-        {
-            UserId = Guid.Parse(userId),
-            TokenHash = cookieHash
-        };
-        await db.Tokens.AddAsync(dbToken, ct);
-        await db.SaveChangesAsync(ct);
-    }
-
-    public async Task<(TStateDto, AuthenticationState<TUser>)> CreateAuthenticationStateAsync(
+    public async Task<AuthenticationState<TUser>> CreateAuthenticationStateAsync(
         AuthenticationHeaders headers,
-        TStateDto? receivedClientState, // <-- IMPORTANT: DO NOT TRUST THIS STATE
         CancellationToken ct)
     {
         var db = await dbFactory.CreateDbContextAsync(ct);
@@ -91,19 +84,12 @@ public class AuthenticationStateFactory<TUser, TStateDto>(
 
         _ = Task.Run(async () => await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct));
 
-        var state = await stateMapping.ToDtoAsync(
-            dbUser,
-            dbToken,
-            dbIp,
-            receivedClientState,
-            ct);
-
         var authState = new AuthenticationState<TUser>(
             dbUser,
             dbToken,
             dbIp);
 
-        return (state, authState);
+        return authState;
     }
 
     public async Task<RequestIds> DoTheRest(

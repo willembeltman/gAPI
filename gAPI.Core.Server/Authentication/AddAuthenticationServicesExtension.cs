@@ -7,14 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace gAPI.Core.Server.Authentication;
 
-public static partial class AddAuthenticationServicesExtension
+public static class AddAuthenticationServicesExtension
 {
-    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services)
-    {
-        services.AddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
-        return services;
-    }
-
     public static IServiceCollection AddAuthenticationServices<TUser, TStateDto>(this IServiceCollection services)
         where TUser : AuthUser, new()
         where TStateDto : AuthStateDto, new()
@@ -42,8 +36,9 @@ public static partial class AddAuthenticationServicesExtension
             return (accessor.Current as IServerAuthenticationService)!;
         });
         services.AddAuthentication("gAPI")
-                .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler<TUser, TStateDto>>("gAPI", _ => { });
-        services.AddScoped<IAuthenticationStateFactory<TUser, TStateDto>, AuthenticationStateFactory<TUser, TStateDto>>();
+                .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("gAPI", _ => { });
+        services.AddScoped<IAuthenticationStateFactory<TUser>, AuthenticationStateFactory<TUser>>();
+        services.AddScoped<IUserTokenFactory<TUser>, UserTokenFactory<TUser>>();
         services.AddScoped<IAuthenticationSecurity, AuthenticationSecurity<TUser, TStateDto>>();
 
         return services;

@@ -11,7 +11,7 @@ public static class AuthStateUserDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xCD8DF364;
-    public const uint SchemaHash = 0x42513F9E;
+    public const uint SchemaHash = 0x23E4A364;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, AuthStateUserDto value)
@@ -23,9 +23,6 @@ public static class AuthStateUserDtoSerializer
         ___writer.Write(value.Id);
         ___writer.Write(value.UserName);
         ___writer.Write(value.Email);
-        ___writer.Write(value.StorageFileUrl != null); 
-        if (value.StorageFileUrl != null)
-            ___writer.Write(value.StorageFileUrl);
     }
 
     [IsSerializerRead]
@@ -42,7 +39,6 @@ public static class AuthStateUserDtoSerializer
         value.Id = ___reader.ReadGuid();
         value.UserName = ___reader.ReadString();
         value.Email = ___reader.ReadString();
-        value.StorageFileUrl = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
         return value;
     }
 }

@@ -13,7 +13,7 @@ public static class AuthStateUserDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xCD8DF364;
-    public const uint SchemaHash = 0x42513F9E;
+    public const uint SchemaHash = 0x23E4A364;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, AuthStateUserDto value)
@@ -25,9 +25,6 @@ public static class AuthStateUserDtoSpanSerializer
         GuidSerializer.WriteGuid(ref ___span, ref ___offset, value.Id);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.UserName);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.Email);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StorageFileUrl != null);
-        if (value.StorageFileUrl != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StorageFileUrl);
     }
 
     [IsSpanSerializerRead]
@@ -44,7 +41,6 @@ public static class AuthStateUserDtoSpanSerializer
         value.Id = GuidSerializer.ReadGuid(___span, ref ___offset);
         value.UserName = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         value.Email = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        value.StorageFileUrl = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         return value;
     }
 
@@ -55,9 +51,6 @@ public static class AuthStateUserDtoSpanSerializer
         GuidSerializer.GetMessageLength(ref ___offset, value.Id);
         PrimitivesSpanSerializer.LengthString(ref ___offset, value.UserName);
         PrimitivesSpanSerializer.LengthString(ref ___offset, value.Email);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StorageFileUrl != null);
-        if (value.StorageFileUrl != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StorageFileUrl);
         return ___offset;
     }
 }

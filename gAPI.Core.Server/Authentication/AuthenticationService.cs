@@ -4,45 +4,48 @@ using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Primitives;
 using System.Net;
 using System.Security.Claims;
 
 namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationService<TUser, TStateDto>(
-    IAuthenticationStateFactory<TUser, TStateDto> factory,
-    IStateParser<TStateDto> stateSerializer,
+    IAuthenticationStateFactory<TUser> authenticationStateFactory,
+    IUserTokenFactory<TUser> userTokenFactory,
+    IStateMapping<TUser, TStateDto> stateMapping,
+    IStateParser<TStateDto> stateParser,
     IHostEnvironment hostEnvironment,
+    IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks, // optioneel dus.
     IEnumerable<WssSessionCache> sessionCaches) // optioneel dus.
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
 {
-    private AuthenticationHeaders? Headers;
+    private AuthenticationHeaders? _Headers;
+    private TStateDto? _ReceivedClientState;
+    private TStateDto? _OldState;
+    private TStateDto? _State;
+    private AuthenticationState<TUser>? _AuthenticationState { get; set; }
 
-    private TStateDto? ReceivedClientState;
-    private TStateDto? OldState;
-    private TStateDto? State;
-    private AuthenticationState<TUser>? AuthenticationState { get; set; }
+    private AuthenticationInitializeResult? _Result;
 
-    private AuthenticationInitializeResult? Result;
     public bool Initialized { get; private set; }
 
-    AuthenticationInitializeResult IServerAuthenticationService.Result
-        => Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    TStateDto? IAuthenticationService<TUser, TStateDto>.ClientState
-        => ReceivedClientState;
-    TStateDto IAuthenticationService<TUser, TStateDto>.State
-        => State ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    AuthenticationState<TUser> IAuthenticationService<TUser, TStateDto>.AuthenticationState
-        => AuthenticationState ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    SessionId IServerAuthenticationService.SessionId
-        => Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    UserId IServerAuthenticationService.UserId
-        => new(AuthenticationState?.User?.Id.ToString());
+    public AuthenticationInitializeResult Result
+        => _Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    public TStateDto? ClientState
+        => _ReceivedClientState;
+    public TStateDto State
+        => _State ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    public AuthenticationState<TUser> AuthenticationState
+        => _AuthenticationState ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    public SessionId SessionId
+        => _Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+    public UserId UserId
+        => new(_AuthenticationState?.User?.Id.ToString());
 
     public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     {
@@ -59,131 +62,137 @@ public class AuthenticationService<TUser, TStateDto>(
     {
         if (ipAddress == null)
         {
-            Result = new AuthenticationInitializeResult()
+            _Result = new AuthenticationInitializeResult()
             {
                 Forbidden = true,
                 ForbiddenReason = "No IP address found."
             };
-            return Result;
+            return _Result;
         }
 
         if (hostEnvironment.IsDevelopment() &&
             (path.ToString().StartsWith("/scalar", StringComparison.CurrentCultureIgnoreCase) ||
             path.ToString().StartsWith("/openapi", StringComparison.CurrentCultureIgnoreCase)))
         {
-            Result = new AuthenticationInitializeResult();
-            return Result;
+            _Result = new AuthenticationInitializeResult();
+            return _Result;
         }
 
         if (sessionData == null)
         {
-            Result = new AuthenticationInitializeResult()
+            _Result = new AuthenticationInitializeResult()
             {
                 Forbidden = true,
                 ForbiddenReason = "No session data found."
             };
-            return Result;
+            return _Result;
         }
         var sessionId = new SessionId(sessionData);
 
-        Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
-        return await Make(Headers, ct);
+        _Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
+        return await Make(_Headers, ct);
     }
     public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
     {
-        if (AuthenticationState == null || Headers == null)
+        if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        return await Make(Headers, ct);
+        return await Make(_Headers, ct);
     }
     private async Task<AuthenticationInitializeResult> Make(AuthenticationHeaders headers, CancellationToken ct)
     {
-        if (stateSerializer.TryParse(headers.StateData, out var recievedClientState))
+        if (stateParser.TryParse(headers.StateData, out var recievedClientState))
         {
-            ReceivedClientState = recievedClientState;
+            _ReceivedClientState = recievedClientState;
         }
-        (State, AuthenticationState) = await factory.CreateAuthenticationStateAsync(headers, ReceivedClientState, ct);
-        OldState = stateSerializer.CreateCopy(State);
 
-        if (AuthenticationState.User?.LockedOut == true)
+        _AuthenticationState = await authenticationStateFactory.CreateAuthenticationStateAsync(headers, ct);
+        _State = await stateMapping.ToDtoAsync(_AuthenticationState.User, _AuthenticationState.Token, _AuthenticationState.Ip, _ReceivedClientState, ct);
+        _OldState = stateParser.CreateCopy(_State);
+
+        // Check lockout
+        if (_AuthenticationState.User?.LockedOut == true)
         {
-            Result = new AuthenticationInitializeResult()
+            _Result = new AuthenticationInitializeResult()
             {
                 Forbidden = true,
                 ForbiddenReason = "User is locked out"
             };
-            return Result;
+            return _Result;
         }
-        // Additional forbidden checks can be added here
+
+        // Additional forbidden checks
+        foreach (var check in authenticationChecks)
+        {
+            if (!check.IsValid(headers, _ReceivedClientState, _State, _AuthenticationState, out AuthenticationInitializeResult notValidResult))
+            {
+                return notValidResult;
+            }
+        }
 
         Initialized = true;
         foreach (var sessionCache in sessionCaches)
             sessionCache.AddOrUpdate(headers.SessionId, headers.CookieData);
 
-        Result = new AuthenticationInitializeResult()
+        _Result = new AuthenticationInitializeResult()
         {
-            Authenticated = AuthenticationState.User != null,
+            Authenticated = _AuthenticationState.User != null,
         };
-        return Result;
+        return _Result;
     }
 
     public bool IsStateDataChanged()
     {
-        if (stateSerializer.IsDifferent(OldState, State))
+        if (stateParser.IsDifferent(_OldState, _State))
         {
-            OldState = stateSerializer.CreateCopy(State);
+            _OldState = stateParser.CreateCopy(_State);
             return true;
         }
         return false;
     }
     public string? GetStateData()
     {
-        if (State == null || Headers == null)
+        if (_State == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
-        return stateSerializer.ToStringBase64(State);
+        return stateParser.ToStringBase64(_State);
     }
     public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
-        if (AuthenticationState == null || Headers == null)
+        if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
         if (stateData == null)
-            return Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+            return _Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        Headers.StateData = stateData;
+        _Headers.StateData = stateData;
 
-        return await Make(Headers, ct);
+        return await Make(_Headers, ct);
     }
-    
 
-    //bool IServerAuthenticationService.UpdateCookie
-    //    => Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    //string? IServerAuthenticationService.CookieData
-    //    => Headers?.CookieData;
     public bool IsCookieDataChanged()
     {
-        return Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
+        return _Headers?.UpdateCookie ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     }
     public string? GetCookieData()
     {
-        if (State == null || Headers == null)
+        if (_State == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
-        return Headers?.CookieData;
+        return _Headers?.CookieData;
     }
 
     public async Task<ClaimsPrincipal> GetClaimsPrincipalAsync(CancellationToken ct)
     {
-        if (AuthenticationState == null || Headers == null)
+        if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        if (AuthenticationState.User == null)
+        if (_AuthenticationState.User == null)
             throw new Exception("User is not authenticated");
 
         Claim[] claims =
         [
-            new Claim(ClaimTypes.NameIdentifier, AuthenticationState.User.Id.ToString()),
-            new Claim(ClaimTypes.Name, AuthenticationState.User.Email),
-            new Claim("UserId", AuthenticationState.User.Id.ToString())
+            new Claim(ClaimTypes.NameIdentifier, _AuthenticationState.User.Id.ToString()),
+            new Claim(ClaimTypes.Name, _AuthenticationState.User.Email),
+            new Claim("UserId", _AuthenticationState.User.Id.ToString())
         ];
 
         var identity = new ClaimsIdentity(claims, authenticationType: "Cookie");
@@ -192,7 +201,7 @@ public class AuthenticationService<TUser, TStateDto>(
     }
     public async Task<bool> AuthenticateUserAsync(string userId, CancellationToken ct)
     {
-        if (AuthenticationState == null || Headers == null)
+        if (_AuthenticationState == null || _Headers == null)
             return false;
         //throw new Exception("Initialize the ServerAuthenticationService first please");
 
@@ -201,10 +210,10 @@ public class AuthenticationService<TUser, TStateDto>(
         //throw new Exception("UserId not valid user seems to not be selected");
 
         // Sets cookie data in Headers, and gets new cookie hash
-        var cookieHash = Headers.CreateNewCookie();
+        var cookieHash = _Headers.CreateNewCookie();
 
         // Save token
-        await factory.SaveTokenAsync(userId, cookieHash, ct);
+        await userTokenFactory.SaveTokenAsync(userId, cookieHash, ct);
 
         // Re-initialize using old header, with new cookie data
         var initResult = await ReInitializeAsync(ct);
@@ -216,16 +225,16 @@ public class AuthenticationService<TUser, TStateDto>(
     }
     public async Task<bool> LogoffAsync(CancellationToken ct)
     {
-        if (AuthenticationState == null || Headers == null)
+        if (_AuthenticationState == null || _Headers == null)
             return false;
         //throw new Exception("Initialize the ServerAuthenticationService first please");
 
         foreach (var sessionCache in sessionCaches)
-            sessionCache.Remove(Headers.SessionId);
-        Headers.RemoveCookie();
+            sessionCache.Remove(_Headers.SessionId);
+        _Headers.RemoveCookie();
         await ReInitializeAsync(ct);
 
-        return AuthenticationState == null || AuthenticationState.User == null;
+        return _AuthenticationState == null || _AuthenticationState.User == null;
     }
 
 }

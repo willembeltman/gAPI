@@ -20,6 +20,7 @@ public class StateParserGenerator : _BaseGenerator
 
     public Generator Context { get; }
     public SharedReference AuthStateDto => Context.SharedReferences.AuthStateDto;
+    public SharedReference IStateParser => Context.IStateParser;
     public SharedReference? StateDto => Context.SharedReferences.StateDto;
 
     public SharedReference State => StateDto ?? AuthStateDto;
@@ -32,6 +33,7 @@ public class StateParserGenerator : _BaseGenerator
             NeededState_ListForBeingLazy.Add(StateDto._NamedTypeSymbol!);
 
         Reg(State);
+        Reg(IStateParser);
         Reg("Microsoft.Extensions.Primitives");
         
         Code = $@"{GetNamespacesCode()}
@@ -39,7 +41,7 @@ public class StateParserGenerator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
-public class {Name}
+public class {Name} : {IStateParser}
 {{
     public bool TryParse(string? value, out {State} state)
     {{

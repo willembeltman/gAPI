@@ -40,6 +40,7 @@ public class Generator
         FormFile = new FormFileGenerator(this);
         FormFileExtension = new FormFileExtensionGenerator(this);
 
+        IStateParser = new IStateParserGenerator(this);
         StateParser = new StateParserGenerator(this);
         IAuthenticatedHttpClient = new IAuthenticatedHttpClientGenerator(this);
         AuthenticatedHttpClient = new AuthenticatedHttpClientGenerator(this);
@@ -57,6 +58,7 @@ public class Generator
     public AddAutoWssClientExtensionGenerator AddAutoWssExtension { get; }
     public FormFileGenerator FormFile { get; }
     public FormFileExtensionGenerator FormFileExtension { get; }
+    public IStateParserGenerator IStateParser { get; }
     public StateParserGenerator StateParser { get; }
     public IAuthenticatedHttpClientGenerator IAuthenticatedHttpClient { get; }
     public AuthenticatedHttpClientGenerator AuthenticatedHttpClient { get; }
@@ -73,6 +75,7 @@ public class Generator
         GenerateItem(spc, FormFile);
         GenerateItem(spc, FormFileExtension);
 
+        GenerateItem(spc, IStateParser);
         GenerateItem(spc, StateParser);
 
         if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)

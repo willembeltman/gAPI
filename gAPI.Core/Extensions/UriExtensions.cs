@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Extensions;
 
-namespace gAPI.Core.Extentions;
+namespace gAPI.Core.Extensions;
 
 public static class UriExtensions
 {

@@ -35,7 +35,7 @@ public class SharedReferences
         StaticNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.StaticNavigationManager", allSymbols);
         WithCookiesHandler = SharedReferenceFinder.Find("gAPI.Core.Client.Razor.WithCookiesHandler", allSymbols);
         StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
-
+        IStateParserT = new SharedReference("gAPI.Core.Interfaces.IStateParser");
 
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
@@ -70,6 +70,7 @@ public class SharedReferences
     public SharedReference DefaultNavigationManager { get; }
     public SharedReference StaticNavigationManager { get; }
     public SharedReference WithCookiesHandler { get; }
+    public SharedReference IStateParserT { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference StateChangedHandler { get; }

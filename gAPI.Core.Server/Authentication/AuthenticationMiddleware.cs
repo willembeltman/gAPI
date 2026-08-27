@@ -1,13 +1,11 @@
-﻿using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Interfaces;
+﻿using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using System.Net;
 
 namespace gAPI.Core.Server.Authentication;
 
-public class AuthenticationMiddleware<TUser, TStateDto>
-    where TUser : AuthUser
+public class AuthenticationMiddleware
 {
     private readonly RequestDelegate _next;
 
@@ -15,7 +13,7 @@ public class AuthenticationMiddleware<TUser, TStateDto>
 
     public async Task Invoke(
         HttpContext ctx,
-        IAuthenticationService<TUser, TStateDto> authentication,
+        IServerAuthenticationService authentication,
         IHostEnvironment hostEnvironment)
     {
         IPAddress? forwardedIp = ctx.Connection.RemoteIpAddress;

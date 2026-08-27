@@ -14,7 +14,6 @@ public static class AuthStateUserDtoComparer
         if (value.Id.IsDifferent(otherValue.Id)) return true;
         if (value.UserName != otherValue.UserName) return true;
         if (value.Email != otherValue.Email) return true;
-        if (value.StorageFileUrl != otherValue.StorageFileUrl) return true;
         return false;
     }
 }
