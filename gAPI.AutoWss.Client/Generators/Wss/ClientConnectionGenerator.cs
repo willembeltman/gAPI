@@ -35,7 +35,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
     public SharedReference ApiInvokeResponseDoneDto => Context.SharedReferences.ApiInvokeResponseDoneDto;
     public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
-    public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
+    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = new();
@@ -87,7 +87,7 @@ public class ClientConnectionGenerator : _BaseGenerator
                 }
             }
         }
-        Reg(FrontendConfig);
+        Reg(ClientConfig);
         var functions = string.Empty;
         var functionNames = new HashSet<string>();
         Code = @$"
@@ -100,7 +100,7 @@ public class {Name}
 {{
     public {Name}(
         {IClientAuthenticatedHttpClient} httpClient, 
-        {FrontendConfig} frontendConfig)
+        {ClientConfig} frontendConfig)
         : base(httpClient, frontendConfig)
     {{
         ___Logger = (({IWssLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"

@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace gAPI.Core.Server.Authentication;
 
-public class EmptyServerAuthenticationService
+public class EmptyServerAuthenticationService<TStateDto>
     : IServerAuthenticationService
 {
     public UserId UserId { get; set; } = new UserId();

@@ -19,7 +19,7 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
     public Generator Context { get; }
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
-    public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
+    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
 
     public SharedReference IUriNavigationManager => Context.SharedReferences.IUriNavigationManager;
     public SharedReference DefaultNavigationManager => Context.SharedReferences.DefaultNavigationManager;
@@ -32,15 +32,17 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
-        Reg("Microsoft.Extensions.DependencyInjection");
-        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("Microsoft.AspNetCore.Components");
         Reg("Microsoft.AspNetCore.Components.Authorization");
-        Reg("gAPI.Core.Client.Interfaces");
+        Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
+        Reg("Microsoft.Extensions.Configuration");
         Reg("gAPI.Core.Client");
+        Reg("gAPI.Core.Client.Interfaces");
+        Reg("gAPI.Core.Client.Extensions");
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
-        Reg(FrontendConfig);
+        Reg(ClientConfig);
         Reg(IUriNavigationManager);
         Reg(DefaultNavigationManager);
         Reg(StaticNavigationManager);
@@ -57,7 +59,14 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, {FrontendConfig} config)
+    public static IServiceCollection AddAutoAuthClient(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
+    {{
+        var clientConfig = configuration.CreateClientConfig();
+        return AddAutoAuthClient(services, clientConfig);
+    }}
+    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, {ClientConfig} config)
     {{
         return AddAutoAuthClient(services, config.ApiBackendUrl);
     }}

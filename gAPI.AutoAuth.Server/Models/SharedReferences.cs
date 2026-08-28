@@ -49,7 +49,7 @@ public class SharedReferences
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
         IAuthenticationSecurity = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAuthenticationSecurity", allSymbols);
         AuthenticationHandler = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHandler", allSymbols);
-        EmptyServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.EmptyServerAuthenticationService", allSymbols);
+        EmptyServerAuthenticationServiceT = new("gAPI.Core.Server.Authentication.EmptyServerAuthenticationService");
         
         ISseHost = SharedReferenceFinder.Find("gAPI.Core.Interfaces.ISseHost", allSymbols);
         IUseCase = new("gAPI.Core.Interfaces.IUseCase");
@@ -105,7 +105,7 @@ public class SharedReferences
     public SharedReference InvokeRequestDto { get; }
     public SharedReference InvokeResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
-    public SharedReference EmptyServerAuthenticationService { get; }
+    public SharedReference EmptyServerAuthenticationServiceT { get; }
     public SharedReference IAuthenticationSecurity { get; }
     public SharedReference AuthenticationHandler { get; }
     public SharedReference ISseHost { get; }

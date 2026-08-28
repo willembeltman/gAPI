@@ -23,7 +23,7 @@ public class SharedReferences
         ApiInvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiInvokeResponseDto", allSymbols);
         ApiInvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ApiInvokeResponseDoneDto", allSymbols);
         InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
-        FrontendConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.FrontendConfig", allSymbols);
+        ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ClientConfig", allSymbols);
         IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Wss.WssClientConnection", allSymbols);
@@ -65,7 +65,7 @@ public class SharedReferences
     public SharedReference? AuthClient_ToFormFileExtension { get; }
     public SharedReference ApiInvokeResponseDoneDto { get; }
     public SharedReference InvokeResponseDoneDto { get; }
-    public SharedReference FrontendConfig { get; }
+    public SharedReference ClientConfig { get; }
     public SharedReference IUriNavigationManager { get; }
     public SharedReference DefaultNavigationManager { get; }
     public SharedReference StaticNavigationManager { get; }

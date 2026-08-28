@@ -21,21 +21,23 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
-    public SharedReference FrontendConfig => Context.SharedReferences.FrontendConfig;
+    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
 
     public override void GenerateCode()
     {
-        Reg("Microsoft.Extensions.DependencyInjection");
-        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("Microsoft.AspNetCore.Components");
         Reg("Microsoft.AspNetCore.Components.Authorization");
-        Reg("gAPI.Core.Client.Interfaces");
+        Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
+        Reg("Microsoft.Extensions.Configuration");
         Reg("gAPI.Core.Client");
+        Reg("gAPI.Core.Client.Interfaces");
+        Reg("gAPI.Core.Client.Extensions");
         Reg(ClientConnection);
         Reg(IClientConnection);
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
-        Reg(FrontendConfig);
+        Reg(ClientConfig);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -55,17 +57,26 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
     {{
-        // Set up configuration
-        var config = new {FrontendConfig}()
-        {{
-            ApiBackendUrl = apiAddress,
-            WssBackendUrl = wssAddress
-        }};
+        var clientConfig = configuration.CreateClientConfig();
+        return AddAutoWssClient(services, clientConfig);
+    }}
+
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services, 
+        string apiAddress, 
+        string wssAddress)
+    {{
+        var config = new {ClientConfig}(apiAddress, wssAddress);
         return AddAutoWssClient(services, config);
     }}
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, {FrontendConfig} config)
+
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services, 
+        {ClientConfig} config)
     {{
         services.AddSingleton(config);
 

@@ -30,7 +30,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
     public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
@@ -44,7 +43,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServerConfig);
         Reg(WssServerConnectionCollection);
         Reg(SseHostCollection);
-        Reg(IServerAuthenticationService);
         Reg(WssSessionCache);
         Reg(ServerAuthenticationAccessor);
         Reg(SessionId);
@@ -56,6 +54,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg("Microsoft.AspNetCore.Http");
         Reg("Microsoft.Extensions.DependencyInjection");
         Reg("Microsoft.Extensions.Logging");
+        Reg("gAPI.Core.Server.Extensions");
 
         foreach (var mini in Context.MinimalApis)
         {
@@ -123,26 +122,45 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, {ServerConfig} serverConfig)
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
     {{
-        return AddAutoWssServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        var serverConfig = configuration.CreateServerConfig();
+        return AddAutoWssServer(services, serverConfig);
     }}
-    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
+
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services, 
+        {ServerConfig} serverConfig)
+    {{
+        return AddAutoWssServer(
+            services, 
+            serverConfig.FrontendUrl,
+            serverConfig.FabricConnectionString);
+    }}
+
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services, 
+        string frontendUrl = null, 
+        string? fabricConnectionString = null)
     {{
         services.AddHttpContextAccessor();
-        services.TryAddScoped<{IServerAuthenticationService}, EmptyServerAuthenticationService>();
-        services.AddCors(options =>
+        if (frontendUrl != null)
         {{
-            options.AddPolicy(""AllowSpecificOrigin"", policy =>
+            services.AddCors(options =>
             {{
-                policy
-                    .WithOrigins(frontendUrl)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials()
-                    .WithExposedHeaders(""X-SessionId"", ""X-StateData"");
+                options.AddPolicy(""AllowSpecificOrigin"", policy =>
+                {{
+                    policy
+                        .WithOrigins(frontendUrl)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .WithExposedHeaders(""X-SessionId"", ""X-StateData"");
+                }});
             }});
-        }});
+        }}
         services.AddScoped<{WssHub}>();
         services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
