@@ -24,14 +24,14 @@ public sealed class FabricClient : IAsyncDisposable
     private bool IsDisconnecting;
     private WssSessionCache LocalSessionCache;
 
-    public FabricClient(ILoggerFactory loggerFactory)
+    private FabricClient(WssSessionCache sessionCache, ILoggerFactory loggerFactory)
     {
+        LocalSessionCache = sessionCache;
         Logger = loggerFactory.CreateLogger<FabricClient>();
         Sender = new FabricClientSender(this, loggerFactory);
         Receiver = new FabricClientReceiver(this, loggerFactory);
-        LocalSessionCache = new WssSessionCache();
     }
-    public FabricClient(ILoggerFactory loggerFactory, string? fabricConnectionString) : this(loggerFactory)
+    public FabricClient(WssSessionCache sessionCache, ILoggerFactory loggerFactory, string? fabricConnectionString) : this(sessionCache, loggerFactory)
     {
         if (!string.IsNullOrEmpty(fabricConnectionString))
         {
@@ -54,11 +54,11 @@ public sealed class FabricClient : IAsyncDisposable
             _ = Task.Run(ConnectAsync);
         }
     }
-    public FabricClient(string host, int port, ILoggerFactory loggerFactory) : this(loggerFactory)
-    {
-        Host = host;
-        Port = port;
-    }
+    //public FabricClient(string host, int port, WssSessionCache sessionCache, ILoggerFactory loggerFactory) : this(sessionCache, loggerFactory)
+    //{
+    //    Host = host;
+    //    Port = port;
+    //}
 
     public Channel<Action<BinaryWriter>> SendQueue { get; } = Channel.CreateUnbounded<Action<BinaryWriter>>();
     public ConcurrentDictionary<ServiceId, ConcurrentDictionary<SseHostId, ISseHost>> Services { get; } = new();
