@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +10,8 @@ public static class AddStorageExtension
         this IServiceCollection services,
         ServerConfig serverConfig)
     {
-        services.AddStorage(serverConfig.StorageConnectionString);
+        if (serverConfig.StorageConnectionString != null)
+            services.AddStorage(serverConfig.StorageConnectionString);
         return services;
     }
     public static IServiceCollection AddStorage(

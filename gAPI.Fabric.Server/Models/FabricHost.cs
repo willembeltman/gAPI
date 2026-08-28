@@ -77,7 +77,7 @@ public sealed class FabricHost
     }
 
 
-    public async Task SendGetSessionCookieDataResponseAsync(GetSessionCookieDataResponseDto getSessionCookieDataResponse, IActor? actor)
+    public async Task SendGetSessionCookieDataResponseAsync(SendGetSessionCookieDataResponseDto getSessionCookieDataResponse, IActor? actor)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) SendGetSessionCookieDataResponseAsync({{getSessionCookieDataResponse}})", getSessionCookieDataResponse);
@@ -136,7 +136,7 @@ public sealed class FabricHost
     //        writer.Write(dto);
     //    });
     //}
-    public async Task ActivateWssConnectionAsync(GetSessionCookieDataResponseDto activate, IActor? actor)
+    public async Task ActivateWssConnectionAsync(SendGetSessionCookieDataResponseDto activate, IActor? actor)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
@@ -251,7 +251,7 @@ public sealed class FabricHost
                         break;
                     case FabricClientToHostMessageEnum.ClearSession:
                         {
-                            var clearSession = reader.ReadClearSessionDto();
+                            var clearSession = reader.ReadSendClearSessionDto();
                             //if (Logger.IsEnabled(LogLevel.Trace))
                             //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) ClearSession({{clearSession}})", clearSession);
                             var receiveSize = counter.BytesRead - previous;
@@ -260,7 +260,7 @@ public sealed class FabricHost
                         break;
                     case FabricClientToHostMessageEnum.GetSessionCookieData:
                         {
-                            var getSessionCookieData = reader.ReadGetSessionCookieDataDto();
+                            var getSessionCookieData = reader.ReadSendGetSessionCookieDataDto();
                             //if (Logger.IsEnabled(LogLevel.Trace))
                             //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) GetSessionCookieData({{getSessionCookieData}})", getSessionCookieData);
                             var receiveSize = counter.BytesRead - previous;

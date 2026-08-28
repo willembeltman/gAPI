@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Dtos;
+﻿namespace gAPI.Core.Client.Config;
 
 public record ClientConfig(
     string ApiBackendUrl, 

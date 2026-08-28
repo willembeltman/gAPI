@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Client.Interfaces;
+﻿using gAPI.Core.Client.Config;
+using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;

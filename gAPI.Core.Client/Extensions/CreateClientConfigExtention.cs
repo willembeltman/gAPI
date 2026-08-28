@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Client.Config;
 using Microsoft.Extensions.Configuration;
 
 namespace gAPI.Core.Client.Extensions;

@@ -7,14 +7,14 @@ using gAPI.Core.Attributes;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class ClearSessionDtoSerializer
+public static class SendGetSessionCookieDataDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0xDDD3B0DB;
+    public const uint TypeId = 0xABA3435E;
     public const uint SchemaHash = 0x0E921B3D;
 
     [IsSerializerWrite]
-    public static void Write(this BinaryWriter ___writer, ClearSessionDto value)
+    public static void Write(this BinaryWriter ___writer, SendGetSessionCookieDataDto value)
     {
         ___writer.Write(Magic); // Magic string `GA` => it's a gAPI stream
         ___writer.Write(TypeId); // Type identifier
@@ -24,7 +24,7 @@ public static class ClearSessionDtoSerializer
     }
 
     [IsSerializerRead]
-    public static ClearSessionDto ReadClearSessionDto(this BinaryReader ___reader)
+    public static SendGetSessionCookieDataDto ReadSendGetSessionCookieDataDto(this BinaryReader ___reader)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -33,6 +33,6 @@ public static class ClearSessionDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new ClearSessionDto(SessionIdSerializer.ReadSessionId(___reader));
+        return new SendGetSessionCookieDataDto(SessionIdSerializer.ReadSessionId(___reader));
     }
 }

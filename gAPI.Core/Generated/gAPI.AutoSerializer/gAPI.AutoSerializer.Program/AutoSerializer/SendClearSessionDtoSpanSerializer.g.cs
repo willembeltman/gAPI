@@ -10,14 +10,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class ClearSessionDtoSpanSerializer
+public static class SendClearSessionDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0xDDD3B0DB;
+    public const uint TypeId = 0x2658E411;
     public const uint SchemaHash = 0x0E921B3D;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, ClearSessionDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, SendClearSessionDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -27,7 +27,7 @@ public static class ClearSessionDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static ClearSessionDto ReadClearSessionDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static SendClearSessionDto ReadSendClearSessionDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -36,11 +36,11 @@ public static class ClearSessionDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new ClearSessionDto(SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
+        return new SendClearSessionDto(SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, ClearSessionDto value)
+    public static int Length(ref int ___offset, SendClearSessionDto value)
     {
         ___offset += 10;
         SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);

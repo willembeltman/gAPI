@@ -5,10 +5,10 @@ using gAPI.Core.Attributes;
 
 namespace gAPI.Core.Dtos;
 
-public static class ClearSessionDtoComparer
+public static class SendClearSessionDtoComparer
 {
     [IsComparer]
-    public static bool IsDifferent(this ClearSessionDto value, ClearSessionDto otherValue)
+    public static bool IsDifferent(this SendClearSessionDto value, SendClearSessionDto otherValue)
     {
         if (value.SessionId != otherValue.SessionId) return true;
         return false;

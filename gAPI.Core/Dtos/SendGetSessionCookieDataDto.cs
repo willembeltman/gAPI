@@ -4,6 +4,4 @@ using gAPI.Core.Ids;
 namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
-public record GetSessionCookieDataResponseDto(
-    SessionId SessionId, 
-    string? CookieData);
+public record SendGetSessionCookieDataDto(SessionId SessionId);

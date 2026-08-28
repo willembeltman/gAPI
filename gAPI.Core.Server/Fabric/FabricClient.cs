@@ -190,7 +190,7 @@ public sealed class FabricClient : IAsyncDisposable
             return;
         }
 
-        var clearSessionDto = new ClearSessionDto(sessionId);
+        var clearSessionDto = new SendClearSessionDto(sessionId);
         await Sender.Send_ClearSession_ToFabricAsync(clearSessionDto, ct);
     }
     public async Task<string?> GetSessionCookieData(string sessionIdString, CancellationToken ct)
@@ -211,7 +211,7 @@ public sealed class FabricClient : IAsyncDisposable
 
         try
         {
-            var getSessionDto = new GetSessionCookieDataDto(sessionId);
+            var getSessionDto = new SendGetSessionCookieDataDto(sessionId);
             await Sender.Send_GetSession_ToFabricAsync(getSessionDto, ct);
 
             // Maak een time-out van 30 seconden aan
@@ -236,7 +236,7 @@ public sealed class FabricClient : IAsyncDisposable
             PendingGetSessionRequests.TryRemove(sessionId, out _);
         }
     }
-    public async Task Receive_GetSessionResponse_FromFabricAsync(GetSessionCookieDataResponseDto getSessionResponse)
+    public async Task Receive_GetSessionResponse_FromFabricAsync(SendGetSessionCookieDataResponseDto getSessionResponse)
     {
         // Zoek de wachtende taak op en zet het resultaat zodra het antwoord binnen is
         if (PendingGetSessionRequests.TryRemove(getSessionResponse.SessionId, out var tcs))

@@ -51,9 +51,9 @@ public abstract class WssServerConnection : ISignalRInvoker
         Connections = connections;
         AuthenticationService = authenticationService;
         FabricClient = fabricClient;
-        ConnectionId = connections.AddConnection(this);
         Services = new();
         PendingRequests = new();
+        ConnectionId = connections.AddConnection(this);
     }
 
     public async Task RunAsync(

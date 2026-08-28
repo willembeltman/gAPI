@@ -35,7 +35,7 @@ public class FabricClientSender(
             writer.Write(updateSessionDto);
         }, ct);
     }
-    public async Task Send_ClearSession_ToFabricAsync(ClearSessionDto clearSessionDto, CancellationToken ct)
+    public async Task Send_ClearSession_ToFabricAsync(SendClearSessionDto clearSessionDto, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_ClearSession_ToFabricAsync({clearSessionDto})", clearSessionDto);
@@ -45,7 +45,7 @@ public class FabricClientSender(
             writer.Write(clearSessionDto);
         }, ct);
     }
-    public async Task Send_GetSession_ToFabricAsync(GetSessionCookieDataDto getSessionDto, CancellationToken ct)
+    public async Task Send_GetSession_ToFabricAsync(SendGetSessionCookieDataDto getSessionDto, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_GetSession_ToFabricAsync({getSessionDto})", getSessionDto);

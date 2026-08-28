@@ -59,25 +59,29 @@ public static class {Name}
 {{
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services,
-        IConfigurationManager configuration)
+        IConfigurationManager configuration,
+        TimeProvider? dateTime = null)
     {{
-        var clientConfig = configuration.CreateClientConfig();
-        return AddAutoWssClient(services, clientConfig);
+        var config = configuration.CreateClientConfig();
+        return AddAutoWssClient(services, config, dateTime);
     }}
 
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services, 
         string apiAddress, 
-        string wssAddress)
+        string wssAddress,
+        TimeProvider? dateTime = null)
     {{
         var config = new {ClientConfig}(apiAddress, wssAddress);
-        return AddAutoWssClient(services, config);
+        return AddAutoWssClient(services, config, dateTime);
     }}
 
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services, 
-        {ClientConfig} config)
+        {ClientConfig} config,
+        TimeProvider? dateTime = null)
     {{
+        services.AddSingleton(dateTime ?? TimeProvider.System);
         services.AddSingleton(config);
 
         // Connection stuff

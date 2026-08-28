@@ -41,17 +41,17 @@ public class FabricManager
         SessionCache.AddOrUpdate(updateSession.SessionId, updateSession.CookieData);
     }
 
-    public async Task ClearSessionAsync(FabricHost fabricHost, ClearSessionDto clearSession, long receiveSize, CancellationToken token)
+    public async Task ClearSessionAsync(FabricHost fabricHost, SendClearSessionDto clearSession, long receiveSize, CancellationToken token)
     {
         SessionCache.Remove(clearSession.SessionId);
     }
 
-    public async Task GetSessionCookieDataAsync(FabricHost fabricHost, GetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
+    public async Task GetSessionCookieDataAsync(FabricHost fabricHost, SendGetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
     {
         var sessionId = getSessionCookieData.SessionId;
         string? cookieData = null;
         SessionCache.TryGet(sessionId, out cookieData);
-        var getSessionCookieDataResponse = new GetSessionCookieDataResponseDto(sessionId, cookieData);
+        var getSessionCookieDataResponse = new SendGetSessionCookieDataResponseDto(sessionId, cookieData);
         await fabricHost.SendGetSessionCookieDataResponseAsync(getSessionCookieDataResponse, null); // todo dat actor spul
     }
 

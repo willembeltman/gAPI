@@ -10,14 +10,12 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class GetSessionCookieDataResponseDtoMultipartFormDataContentSerializer
+public static class SendClearSessionDtoMultipartFormDataContentSerializer
 {
 
     [IsMultipartFormDataContentSerializer]
-    public static void Write(this MultipartFormDataContent ___content, string ___name, GetSessionCookieDataResponseDto value)
+    public static void Write(this MultipartFormDataContent ___content, string ___name, SendClearSessionDto value)
     {
         SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId);
-        if (value.CookieData != null)
-            ___content.Add(new StringContent(value.CookieData), "CookieData");
     }
 }

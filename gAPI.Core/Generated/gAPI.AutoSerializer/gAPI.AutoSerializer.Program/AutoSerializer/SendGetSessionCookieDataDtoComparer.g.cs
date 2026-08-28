@@ -5,10 +5,10 @@ using gAPI.Core.Attributes;
 
 namespace gAPI.Core.Dtos;
 
-public static class GetSessionCookieDataDtoComparer
+public static class SendGetSessionCookieDataDtoComparer
 {
     [IsComparer]
-    public static bool IsDifferent(this GetSessionCookieDataDto value, GetSessionCookieDataDto otherValue)
+    public static bool IsDifferent(this SendGetSessionCookieDataDto value, SendGetSessionCookieDataDto otherValue)
     {
         if (value.SessionId != otherValue.SessionId) return true;
         return false;

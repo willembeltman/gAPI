@@ -53,7 +53,7 @@ public class FabricClientReceiver(
                         await Receive_InvokeResponseDone_FromFabricAsync(requestId, ct);
                         break;
                     case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
-                        var activate = fabricClient.BinaryReader.ReadGetSessionCookieDataResponseDto();
+                        var activate = fabricClient.BinaryReader.ReadSendGetSessionCookieDataResponseDto();
                         await Receive_GetSessionResponse_FromFabricAsync(activate, ct);
                         break;
                     //case FabricHostToClientMessageEnum.Log:
@@ -143,7 +143,7 @@ public class FabricClientReceiver(
     //            .ToArray()
     //    );
     //}
-    private async Task Receive_GetSessionResponse_FromFabricAsync(GetSessionCookieDataResponseDto getSessionResponse, CancellationToken ct)
+    private async Task Receive_GetSessionResponse_FromFabricAsync(SendGetSessionCookieDataResponseDto getSessionResponse, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_GetSessionResponse_FromFabricAsync({getSessionResponse})", getSessionResponse);

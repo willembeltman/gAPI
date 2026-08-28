@@ -1,8 +1,10 @@
-﻿namespace gAPI.Core.Server.Helpers;
+﻿using gAPI.Core.Server.Config;
+
+namespace gAPI.Core.Server.Helpers;
 
 public static class StartupHelper
 {
-    public static void ShowApiStarted(gAPI.Core.Dtos.ServerConfig serverConfig, bool isDevelopment = false)
+    public static void ShowApiStarted(ServerConfig serverConfig, bool isDevelopment = false)
     {
         Console.WriteLine("##################################");
         Console.WriteLine("##                              ##");
