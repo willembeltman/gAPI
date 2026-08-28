@@ -1,9 +1,12 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Collections;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
@@ -19,12 +22,14 @@ public sealed class FabricClient : IAsyncDisposable
     private bool FirstTime;
     private bool IsConnecting;
     private bool IsDisconnecting;
+    private WssSessionCache LocalSessionCache;
 
     public FabricClient(ILoggerFactory loggerFactory)
     {
         Logger = loggerFactory.CreateLogger<FabricClient>();
         Sender = new FabricClientSender(this, loggerFactory);
         Receiver = new FabricClientReceiver(this, loggerFactory);
+        LocalSessionCache = new WssSessionCache();
     }
     public FabricClient(ILoggerFactory loggerFactory, string? fabricConnectionString) : this(loggerFactory)
     {
@@ -58,6 +63,7 @@ public sealed class FabricClient : IAsyncDisposable
     public Channel<Action<BinaryWriter>> SendQueue { get; } = Channel.CreateUnbounded<Action<BinaryWriter>>();
     public ConcurrentDictionary<ServiceId, ConcurrentDictionary<SseHostId, ISseHost>> Services { get; } = new();
     public ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingRequests { get; } = new();
+    public ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = new();
 
     private readonly CancellationTokenSource SenderCts = new();
     public FabricClientSender Sender { get; private set; }
@@ -160,6 +166,82 @@ public sealed class FabricClient : IAsyncDisposable
         finally
         {
             IsDisconnecting = false;
+        }
+    }
+
+    public async Task UpdateSession(SessionId sessionId, string? cookieData, CancellationToken ct)
+    {
+        // Todo, niet deze call doen als het om AutoApi gaat
+
+        if (Host == null)
+        {
+            LocalSessionCache.AddOrUpdate(sessionId, cookieData);
+            return;
+        }
+
+        var updateSessionDto = new UpdateSessionDto(sessionId, cookieData);
+        await Sender.Send_UpdateSession_ToFabricAsync(updateSessionDto, ct);
+    }
+    public async Task ClearSession(SessionId sessionId, CancellationToken ct)
+    {
+        if (Host == null)
+        {
+            LocalSessionCache.Remove(sessionId);
+            return;
+        }
+
+        var clearSessionDto = new ClearSessionDto(sessionId);
+        await Sender.Send_ClearSession_ToFabricAsync(clearSessionDto, ct);
+    }
+    public async Task<string?> GetSessionCookieData(string sessionIdString, CancellationToken ct)
+    {
+        var sessionId = new SessionId(sessionIdString);
+
+        // als er geen fabric is
+        if (Host == null)
+        {
+            if (LocalSessionCache.TryGet(sessionId, out var cookieData))
+                return cookieData;
+            return null;
+        }
+
+        // Maak een TaskCompletionSource aan voor deze specifieke sessie
+        var tcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        PendingGetSessionRequests[sessionId] = tcs;
+
+        try
+        {
+            var getSessionDto = new GetSessionCookieDataDto(sessionId);
+            await Sender.Send_GetSession_ToFabricAsync(getSessionDto, ct);
+
+            // Maak een time-out van 30 seconden aan
+            using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            // Koppel de time-out aan de meegegeven CancellationToken van de gebruiker
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, ctsTimeout.Token);
+
+            // Wacht tot óf de TaskCompletionSource klaar is, óf de time-out/cancel afgaat
+            using (linkedCts.Token.Register(() => tcs.TrySetCanceled(linkedCts.Token)))
+            {
+                return await tcs.Task;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Log hier eventueel dat er een time-out of annulering heeft plaatsgevonden
+            return null;
+        }
+        finally
+        {
+            // Zorg dat we de sessie altijd netjes opruimen uit de dictionary
+            PendingGetSessionRequests.TryRemove(sessionId, out _);
+        }
+    }
+    public async Task Receive_GetSessionResponse_FromFabricAsync(GetSessionCookieDataResponseDto getSessionResponse)
+    {
+        // Zoek de wachtende taak op en zet het resultaat zodra het antwoord binnen is
+        if (PendingGetSessionRequests.TryRemove(getSessionResponse.SessionId, out var tcs))
+        {
+            tcs.TrySetResult(getSessionResponse.CookieData);
         }
     }
 
@@ -366,6 +448,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
         }
     }
+
 
     public async ValueTask DisposeAsync()
     {

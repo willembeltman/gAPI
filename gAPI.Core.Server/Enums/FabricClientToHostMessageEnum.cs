@@ -7,5 +7,8 @@ public enum FabricClientToHostMessageEnum
     SendRequest,
     InvokeRequest,
     InvokeResponse,
-    InvokeResponseDone
+    InvokeResponseDone,
+    UpdateSession,
+    ClearSession,
+    GetSessionCookieData
 }

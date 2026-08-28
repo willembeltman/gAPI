@@ -128,7 +128,7 @@ public static class {Name}
         app.UseWebSockets();
         app.MapGet(""/fabricr"", async (
             [FromQuery] string sessionId,
-            [FromServices] {WssSessionCache} sessionCache,
+            [FromServices] {FabricClient} fabricClient,
             [FromServices] {WssHub} hub,
             [FromServices] ILoggerFactory loggerFactory,
             HttpContext httpContext,
@@ -140,10 +140,9 @@ public static class {Name}
                 return;
             }}
 
-            sessionCache.TryGet(new {SessionId}(sessionId), out var cookieData);
-
             try
             {{
+                var cookieData = await fabricClient.GetSessionCookieData(sessionId, ct);
                 var forwardedIpHeader = httpContext.Request.Headers[""X-Forwarded-For""];
                 IPAddress? forwardedIp = null;
                 if (forwardedIpHeader.Any())

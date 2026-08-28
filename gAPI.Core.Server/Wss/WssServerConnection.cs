@@ -133,7 +133,7 @@ public abstract class WssServerConnection : ISignalRInvoker
                     {
                         case WssClientToServerMessageEnum.Initialize:
                             var initialize = span.ReadInitializeDto(ref offset);
-                            await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, ct);
+                            await Receive_Initialize_FromClientAsync(path, queryString, ipAddress, sessionId, cookieData, initialize, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Subscribe:
@@ -182,6 +182,11 @@ public abstract class WssServerConnection : ISignalRInvoker
         {
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
         }
+    }
+
+    private async Task Receive_Initialize_FromClientAsync(PathString path, QueryString queryString, IPAddress? ipAddress, string sessionId, string? cookieData, InitializeDto initialize, CancellationToken ct)
+    {
+        await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, false, ct);
     }
 
     private async Task Receive_Subscribe_FromClientAsync(SubscribeDto subscribe, CancellationToken ct)

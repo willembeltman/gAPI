@@ -89,7 +89,12 @@ public abstract class WssClientConnection : IWssClientConnection
             _ = Task.Run(async () => { await ReceiverKernel(Ws, Cts); }, Cts.Token);
             _ = Task.Run(async () => { await SendKernel(Ws, Cts.Token); }, Cts.Token);
 
-            await Send_Initialize_ToServerAsync(sessionId, stateData, Cts.Token);
+            var initialize = new InitializeDto()
+            {
+                SessionId = sessionId,
+                StateData = stateData,
+            };
+            await Send_Initialize_ToServerAsync(initialize, Cts.Token);
 
             Initialized = true;
         }
@@ -269,16 +274,10 @@ public abstract class WssClientConnection : IWssClientConnection
         }, ct);
     }
 
-    private async Task Send_Initialize_ToServerAsync(string sessionId, string stateData, CancellationToken ct)
+    private async Task Send_Initialize_ToServerAsync(InitializeDto initialize, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("SendRequestAsync({sessionId}, {stateData})", sessionId, stateData);
-
-        var initialize = new InitializeDto()
-        {
-            SessionId = sessionId,
-            StateData = stateData,
-        };
+            Logger.LogTrace("SendRequestAsync({initialize})", initialize);
 
         await EnqueueAsync(writer =>
         {

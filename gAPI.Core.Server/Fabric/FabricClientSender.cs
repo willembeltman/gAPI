@@ -25,6 +25,37 @@ public class FabricClientSender(
         }
     }
 
+    public async Task Send_UpdateSession_ToFabricAsync(UpdateSessionDto updateSessionDto, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_UpdateSession_ToFabricAsync({updateSessionDto})", updateSessionDto);
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.UpdateSession);
+            writer.Write(updateSessionDto);
+        }, ct);
+    }
+    public async Task Send_ClearSession_ToFabricAsync(ClearSessionDto clearSessionDto, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_ClearSession_ToFabricAsync({clearSessionDto})", clearSessionDto);
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.ClearSession);
+            writer.Write(clearSessionDto);
+        }, ct);
+    }
+    public async Task Send_GetSession_ToFabricAsync(GetSessionCookieDataDto getSessionDto, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_GetSession_ToFabricAsync({getSessionDto})", getSessionDto);
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.GetSessionCookieData);
+            writer.Write(getSessionDto);
+        }, ct);
+    }
+
     public async Task Send_Subscribe_ToFabricAsync(ISseHost sseHost, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

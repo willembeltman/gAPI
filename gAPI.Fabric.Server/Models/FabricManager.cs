@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
@@ -8,14 +9,16 @@ namespace gAPI.Fabric.Server.Models;
 
 public class FabricManager
 {
+    public readonly WssSessionCache SessionCache;
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
-    public readonly ConcurrentDictionary<RequestId, InvokeRequestState> Requests = new();
-    private readonly IConsole console;
+    public readonly ConcurrentDictionary<RequestId, InvokeRequestState> InvokeRequests = new();
+    public readonly IConsole Console;
 
-    public FabricManager(IConsole Console)
+    public FabricManager(IConsole console)
     {
-        console = Console;
+        Console = console;
+        SessionCache = new WssSessionCache();
         Connections = new(this);
         Services = new(this);
     }
@@ -27,12 +30,29 @@ public class FabricManager
         // FabricHost abonneert zichzelf op connections
         var fabricHost = new FabricHost(
             this,
-            tcpClient,
-            Connections,
-            console);
+            tcpClient);
         fabricHost.Start();
 
         OnUpdate?.Invoke(this, new EventArgs());
+    }
+
+    public async Task UpdateSessionAsync(FabricHost fabricHost, UpdateSessionDto updateSession, long receiveSize, CancellationToken token)
+    {
+        SessionCache.AddOrUpdate(updateSession.SessionId, updateSession.CookieData);
+    }
+
+    public async Task ClearSessionAsync(FabricHost fabricHost, ClearSessionDto clearSession, long receiveSize, CancellationToken token)
+    {
+        SessionCache.Remove(clearSession.SessionId);
+    }
+
+    public async Task GetSessionCookieDataAsync(FabricHost fabricHost, GetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
+    {
+        var sessionId = getSessionCookieData.SessionId;
+        string? cookieData = null;
+        SessionCache.TryGet(sessionId, out cookieData);
+        var getSessionCookieDataResponse = new GetSessionCookieDataResponseDto(sessionId, cookieData);
+        await fabricHost.SendGetSessionCookieDataResponseAsync(getSessionCookieDataResponse, null); // todo dat actor spul
     }
 
     public async Task SubscribeAsync(FabricHost caller, SubscribeDto subscribe, long receiveSize, CancellationToken ct)
@@ -77,7 +97,7 @@ public class FabricManager
             PendingHosts = [.. fabricHosts.Select(h => h.Id)]
         };
 
-        if (!Requests.TryAdd(invokeRequest.RequestId, state))
+        if (!InvokeRequests.TryAdd(invokeRequest.RequestId, state))
             return;
 
         _ = StartTimeoutAsync(state, TimeSpan.FromSeconds(10));
@@ -87,7 +107,7 @@ public class FabricManager
     }
     public async Task InvokeResponseAsync(FabricHost caller, InvokeResponseDto invokeResponse, long receiveSize, CancellationToken ct)
     {
-        if (!Requests.TryGetValue(invokeResponse.RequestId, out var state))
+        if (!InvokeRequests.TryGetValue(invokeResponse.RequestId, out var state))
             return; // timeout / already completed
         state.Actor?.EnqueueReceive(receiveSize);
         // DIRECT doorsluizen
@@ -95,7 +115,7 @@ public class FabricManager
     }
     public async Task InvokeResponseDoneAsync(FabricHost fabricHost, RequestId requestId, long receiveSize, CancellationToken ct)
     {
-        if (!Requests.TryGetValue(requestId, out var state))
+        if (!InvokeRequests.TryGetValue(requestId, out var state))
             return;
 
         state.Actor?.EnqueueReceive(receiveSize);
@@ -129,7 +149,7 @@ public class FabricManager
             return;
 
         state.TimeoutCts.Cancel();
-        Requests.TryRemove(state.RequestId, out _);
+        InvokeRequests.TryRemove(state.RequestId, out _);
 
         await state.Caller.InvokeResponseDoneAsync(state.RequestId, state.Actor);
     }
@@ -151,4 +171,5 @@ public class FabricManager
     {
         OnUpdate?.Invoke(obj, new EventArgs());
     }
+
 }

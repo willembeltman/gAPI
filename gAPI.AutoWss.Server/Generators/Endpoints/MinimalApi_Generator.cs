@@ -240,6 +240,7 @@ public static class {Name}
             ___httpContext.Request.Cookies[""AuthenticationToken""],
             new StringValues(___sessionId),
             new StringValues(___stateData),
+            true,
             ___ct);
     }}
     private static async Task SetupResponse({IServerAuthenticationService} ___authentication, IHostEnvironment ___hostEnvironment, HttpContext ___httpContext, TimeProvider ___dateTime, CancellationToken ___ct)

@@ -3,8 +3,8 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Entities;
+using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using System.Net;
@@ -18,8 +18,8 @@ public class AuthenticationService<TUser, TStateDto>(
     IStateMapping<TUser, TStateDto> stateMapping,
     IStateParser<TStateDto> stateParser,
     IHostEnvironment hostEnvironment,
-    IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks, // optioneel dus.
-    IEnumerable<WssSessionCache> sessionCaches) // optioneel dus.
+    FabricClient fabricClient,
+    IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks) // optioneel.
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
@@ -47,18 +47,26 @@ public class AuthenticationService<TUser, TStateDto>(
     public UserId UserId
         => new(_AuthenticationState?.User?.Id.ToString());
 
-    public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
-    {
-        return InitializeAsync(
-            new Microsoft.AspNetCore.Http.PathString("/"),
-            new Microsoft.AspNetCore.Http.QueryString(),
-            System.Net.IPAddress.Loopback,
-            cookieData,
-            sessionData,
-            stateData,
-            ct);
-    }
-    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
+    //public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
+    //{
+    //    return InitializeAsync(
+    //        new Microsoft.AspNetCore.Http.PathString("/"),
+    //        new Microsoft.AspNetCore.Http.QueryString(),
+    //        System.Net.IPAddress.Loopback,
+    //        cookieData,
+    //        sessionData,
+    //        stateData,
+    //        ct);
+    //}
+    public async Task<AuthenticationInitializeResult> InitializeAsync(
+        PathString path,
+        QueryString query,
+        IPAddress? ipAddress, 
+        string? cookieData, 
+        string? sessionData,
+        string? stateData,
+        bool updateSession,
+        CancellationToken ct)
     {
         if (ipAddress == null)
         {
@@ -90,16 +98,19 @@ public class AuthenticationService<TUser, TStateDto>(
         var sessionId = new SessionId(sessionData);
 
         _Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
-        return await Make(_Headers, ct);
+        return await Make(_Headers, updateSession, ct);
     }
     public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
     {
         if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        return await Make(_Headers, ct);
+        return await Make(_Headers, true, ct);
     }
-    private async Task<AuthenticationInitializeResult> Make(AuthenticationHeaders headers, CancellationToken ct)
+    private async Task<AuthenticationInitializeResult> Make(
+        AuthenticationHeaders headers,
+        bool updateSession,
+        CancellationToken ct)
     {
         if (stateParser.TryParse(headers.StateData, out var recievedClientState))
         {
@@ -131,8 +142,8 @@ public class AuthenticationService<TUser, TStateDto>(
         }
 
         Initialized = true;
-        foreach (var sessionCache in sessionCaches)
-            sessionCache.AddOrUpdate(headers.SessionId, headers.CookieData);
+        if (updateSession)
+            await fabricClient.UpdateSession(headers.SessionId, headers.CookieData, ct);
 
         _Result = new AuthenticationInitializeResult()
         {
@@ -166,7 +177,7 @@ public class AuthenticationService<TUser, TStateDto>(
 
         _Headers.StateData = stateData;
 
-        return await Make(_Headers, ct);
+        return await Make(_Headers, true, ct);
     }
 
     public bool IsCookieDataChanged()
@@ -229,8 +240,8 @@ public class AuthenticationService<TUser, TStateDto>(
             return false;
         //throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        foreach (var sessionCache in sessionCaches)
-            sessionCache.Remove(_Headers.SessionId);
+        await fabricClient.ClearSession(_Headers.SessionId, ct);
+
         _Headers.RemoveCookie();
         await ReInitializeAsync(ct);
 

@@ -17,7 +17,15 @@ public class EmptyServerAuthenticationService<TStateDto>
 
     public AuthenticationInitializeResult Result { get; set; } = new();
 
-    public async Task<AuthenticationInitializeResult> InitializeAsync(PathString path, QueryString query, IPAddress? ipAddress, string? cookieId, string? sessionId, string? stateData, CancellationToken ct)
+    public async Task<AuthenticationInitializeResult> InitializeAsync(
+        PathString path, 
+        QueryString query,
+        IPAddress? ipAddress,
+        string? cookieId,
+        string? sessionId, 
+        string? stateData,
+        bool updateSession,
+        CancellationToken ct)
     {
         if (SessionId.TryParse(sessionId, out var parsed))
             SessionId = parsed;

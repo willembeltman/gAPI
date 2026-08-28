@@ -52,11 +52,15 @@ public class FabricClientReceiver(
                         //_ = Task.Run(async () => { await Receive_InvokeResponseDone_FromFabricAsync(requestId, ct); }, ct);
                         await Receive_InvokeResponseDone_FromFabricAsync(requestId, ct);
                         break;
-                    case FabricHostToClientMessageEnum.Log:
-                        var log = fabricClient.BinaryReader.ReadWssLoggerLogDto();
-                        //_ = Task.Run(async () => { await Receive_Log_FromFabricAsync(log, ct); }, ct);
-                        await Receive_Log_FromFabricAsync(log, ct);
+                    case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
+                        var activate = fabricClient.BinaryReader.ReadGetSessionCookieDataResponseDto();
+                        await Receive_GetSessionResponse_FromFabricAsync(activate, ct);
                         break;
+                    //case FabricHostToClientMessageEnum.Log:
+                        //    var log = fabricClient.BinaryReader.ReadWssLoggerLogDto();
+                        //    //_ = Task.Run(async () => { await Receive_Log_FromFabricAsync(log, ct); }, ct);
+                        //    await Receive_Log_FromFabricAsync(log, ct);
+                        //    break;
                 }
             }
         }
@@ -126,18 +130,25 @@ public class FabricClientReceiver(
 
         await fabricClient.Receive_InvokeResponseDone_FromFabricAsync(requestId);
     }
-    private async Task Receive_Log_FromFabricAsync(WssLoggerLogDto log, CancellationToken ct)
+    //private async Task Receive_Log_FromFabricAsync(WssLoggerLogDto log, CancellationToken ct)
+    //{
+    //    if (log.Category == null)
+    //        return;
+    //    var logger = loggerFactory.CreateLogger(log.Category);
+    //    logger.Log(
+    //        log.Level,
+    //        log.Message,
+    //        log.Data?
+    //            .Select(a => new KeyValuePair<string, string?>(a.Key, a.Value))
+    //            .ToArray()
+    //    );
+    //}
+    private async Task Receive_GetSessionResponse_FromFabricAsync(GetSessionCookieDataResponseDto getSessionResponse, CancellationToken ct)
     {
-        if (log.Category == null)
-            return;
-        var logger = loggerFactory.CreateLogger(log.Category);
-        logger.Log(
-            log.Level,
-            log.Message,
-            log.Data?
-                .Select(a => new KeyValuePair<string, string?>(a.Key, a.Value))
-                .ToArray()
-        );
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Receive_GetSessionResponse_FromFabricAsync({getSessionResponse})", getSessionResponse);
+
+        await fabricClient.Receive_GetSessionResponse_FromFabricAsync(getSessionResponse);
     }
 
     private IEnumerable<ISseHost> GetHosts(ServiceId serviceId, UserId? userId, SessionId? sessionId)

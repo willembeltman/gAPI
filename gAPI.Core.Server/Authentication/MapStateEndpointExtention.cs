@@ -5,10 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
 namespace gAPI.Core.Server.Authentication;
 
@@ -50,6 +47,7 @@ public static class MapStateEndpointExtention
                 ctx.Request.Cookies["AuthenticationToken"],
                 sessionId != null ? new StringValues(sessionId) : StringValues.Empty,
                 stateData != null ? new StringValues(stateData) : StringValues.Empty,
+                true,
                 ct);
             if (initializeResult.Forbidden == true) return Results.Forbid();
 

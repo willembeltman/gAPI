@@ -42,6 +42,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
     public SharedReference IUserTokenFactoryT => Context.SharedReferences.IUserTokenFactoryT;
     public SharedReference IAuthenticationCheckT => Context.SharedReferences.IAuthenticationCheckT;
     public SharedReference IStateParserT => Context.SharedReferences.IStateParserT;
+    public SharedReference FabricClient => Context.SharedReferences.FabricClient;
 
     public override void GenerateCode()
     {
@@ -59,6 +60,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
         Reg(AuthenticationHeaders);
         Reg(IStateParserT);
         Reg(IAuthenticationService);
+        Reg(FabricClient);
         Reg("Microsoft.Extensions.Primitives");
         Reg("System.Security.Claims");
 
@@ -73,16 +75,16 @@ public class {Name}(
     {IStateMappingT}<{User}, {State}> stateMapping,
     {IStateParserT}<{State}> stateSerializer,
     IHostEnvironment hostEnvironment,
-    IEnumerable<{IAuthenticationCheckT}<{User}, {State}>> authenticationChecks,
-    IEnumerable<{WssSessionCache}> sessionCaches) 
+    {FabricClient} fabricClient,
+    IEnumerable<{IAuthenticationCheckT}<{User}, {State}>> authenticationChecks) 
     : {AuthenticationServiceT}<{User}, {State}>(
         authenticationStateFactory,
         userTokenFactory,
         stateMapping,
         stateSerializer,
         hostEnvironment,
-        authenticationChecks,
-        sessionCaches)
+        fabricClient,
+        authenticationChecks)
     , {IAuthenticationService}
 {{
 }}";

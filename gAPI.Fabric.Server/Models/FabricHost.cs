@@ -15,19 +15,19 @@ using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Models;
 
-public sealed class FabricHost : IWssLoggerFactory
+public sealed class FabricHost
 {
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
-    private readonly FabricHostCollection Connections;
-    private readonly IConsole Console;
+    private FabricHostCollection Connections => Manager.Connections;
+    private IConsole Console => Manager.Console;
     private readonly CancellationTokenSource Cts;
     private readonly NetworkStream Stream;
     private readonly Channel<(Action<BinaryWriter> write, IActor? actor)> SendQueue;
 
 
     public FabricHostId Id { get; }
-    public ILogger<FabricHost> Logger { get; }
+    //public ILogger<FabricHost> Logger { get; }
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
@@ -59,19 +59,15 @@ public sealed class FabricHost : IWssLoggerFactory
 
     public FabricHost(
         FabricManager manager,
-        TcpClient tcpClient,
-        FabricHostCollection connections,
-        IConsole console)
+        TcpClient tcpClient)
     {
         Manager = manager;
         TcpClient = tcpClient;
-        Connections = connections;
-        Console = console;
         Cts = new CancellationTokenSource();
         Stream = tcpClient.GetStream();
         SendQueue = Channel.CreateUnbounded<(Action<BinaryWriter> write, IActor? actor)>();
         Id = Connections.AddConnection(this);
-        Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
+        //Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
     }
 
     public void Start()
@@ -80,10 +76,22 @@ public sealed class FabricHost : IWssLoggerFactory
         _ = Task.Run(SendLoop);
     }
 
+
+    public async Task SendGetSessionCookieDataResponseAsync(GetSessionCookieDataResponseDto getSessionCookieDataResponse, IActor? actor)
+    {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) SendGetSessionCookieDataResponseAsync({{getSessionCookieDataResponse}})", getSessionCookieDataResponse);
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.GetSessionCookieDataResponse);
+            writer.Write(getSessionCookieDataResponse);
+        }, actor);
+    }
+
     public async Task SendRequestAsync(SendRequestDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) SendRequestAsync({{message}})", message);
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) SendRequestAsync({{message}})", message);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequest);
@@ -92,8 +100,8 @@ public sealed class FabricHost : IWssLoggerFactory
     }
     public async Task InvokeRequestAsync(InvokeRequestDto request, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeRequestAsync({{request}})", request);
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeRequestAsync({{request}})", request);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequest);
@@ -102,8 +110,8 @@ public sealed class FabricHost : IWssLoggerFactory
     }
     public async Task InvokeResponseAsync(InvokeResponseDto response, IActor? actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseAsync({{response}})", response);
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseAsync({{response}})", response);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeResponse);
@@ -112,21 +120,31 @@ public sealed class FabricHost : IWssLoggerFactory
     }
     public async Task InvokeResponseDoneAsync(RequestId requestId, IActor? actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeResponseDone);
             writer.Write(requestId);
         }, actor);
     }
-    public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct = default)
+    //public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct = default)
+    //{
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
+    //        writer.Write(dto);
+    //    });
+    //}
+    public async Task ActivateWssConnectionAsync(GetSessionCookieDataResponseDto activate, IActor? actor)
     {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
         await Enqueue(writer =>
         {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
-            writer.Write(dto);
-        });
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.GetSessionCookieDataResponse);
+            writer.Write(activate);
+        }, actor);
     }
 
     private async Task SendLoop()
@@ -171,8 +189,8 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.Subscribe:
                         {
                             var subscribe = reader.ReadSubscribeDto();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) Subscribe({{subscribe}})", subscribe);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) Subscribe({{subscribe}})", subscribe);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.SubscribeAsync(this, subscribe, receiveSize, Cts.Token);
                         }
@@ -180,8 +198,8 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.Unsubscribe:
                         {
                             var unsubscribe = reader.ReadUnsubscribeDto();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) Unsubscribe({{unsubscribe}})", unsubscribe);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) Unsubscribe({{unsubscribe}})", unsubscribe);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.UnsubscribeAsync(this, unsubscribe, receiveSize, Cts.Token);
                         }
@@ -189,8 +207,8 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.SendRequest:
                         {
                             var sendRequest = reader.ReadSendRequestDto();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) SendRequest({{sendRequest}})", sendRequest);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) SendRequest({{sendRequest}})", sendRequest);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.SendRequestAsync(this, sendRequest, receiveSize, Cts.Token);
                         }
@@ -198,8 +216,8 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.InvokeRequest:
                         {
                             var invokeRequest = reader.ReadInvokeRequestDto();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) InvokeRequest({{invokeRequest}})", invokeRequest);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) InvokeRequest({{invokeRequest}})", invokeRequest);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.InvokeRequestAsync(this, invokeRequest, receiveSize, Cts.Token);
                         }
@@ -207,8 +225,8 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.InvokeResponse:
                         {
                             var invokeResponse = reader.ReadInvokeResponseDto();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) InvokeResponse({{invokeResponse}})", invokeResponse);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) InvokeResponse({{invokeResponse}})", invokeResponse);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.InvokeResponseAsync(this, invokeResponse, receiveSize, Cts.Token);
                         }
@@ -216,10 +234,37 @@ public sealed class FabricHost : IWssLoggerFactory
                     case FabricClientToHostMessageEnum.InvokeResponseDone:
                         {
                             var requestId = reader.ReadRequestId();
-                            if (Logger.IsEnabled(LogLevel.Trace))
-                                Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) InvokeResponseDone({{requestId}})", requestId);
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) InvokeResponseDone({{requestId}})", requestId);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.InvokeResponseDoneAsync(this, requestId, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.UpdateSession:
+                        {
+                            var updateSession = reader.ReadUpdateSessionDto();
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) UpdateSession({{updateSession}})", updateSession);
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.UpdateSessionAsync(this, updateSession, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.ClearSession:
+                        {
+                            var clearSession = reader.ReadClearSessionDto();
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) ClearSession({{clearSession}})", clearSession);
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.ClearSessionAsync(this, clearSession, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.GetSessionCookieData:
+                        {
+                            var getSessionCookieData = reader.ReadGetSessionCookieDataDto();
+                            //if (Logger.IsEnabled(LogLevel.Trace))
+                            //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Receive({Id}) GetSessionCookieData({{getSessionCookieData}})", getSessionCookieData);
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.GetSessionCookieDataAsync(this, getSessionCookieData, receiveSize, Cts.Token);
                         }
                         break;
                 }
@@ -243,12 +288,12 @@ public sealed class FabricHost : IWssLoggerFactory
         Console.WriteLine();
     }
 
-    public ILogger CreateLogger(string categoryName)
-        => new WssLogger(categoryName, this);
-    public void AddProvider(ILoggerProvider provider)
-    {
-        // no-op
-    }
+    //public ILogger CreateLogger(string categoryName)
+    //    => new WssLogger(categoryName, this);
+    //public void AddProvider(ILoggerProvider provider)
+    //{
+    //    // no-op
+    //}
     public void Dispose()
     {
         Cts.Dispose();
@@ -257,4 +302,5 @@ public sealed class FabricHost : IWssLoggerFactory
         Stream.Dispose();
         TcpClient.Dispose();
     }
+
 }

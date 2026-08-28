@@ -42,6 +42,7 @@ public class AuthenticationMiddleware
             ctx.Request.Cookies["AuthenticationToken"],
             ctx.Request.Headers["X-SessionId"],
             ctx.Request.Headers["X-StateData"],
+            false,
             ctx.RequestAborted);
 
         if (initResult.Forbidden)

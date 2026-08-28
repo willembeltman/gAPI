@@ -6,5 +6,5 @@ public enum FabricHostToClientMessageEnum
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
-    Log,
+    GetSessionCookieDataResponse,
 }
