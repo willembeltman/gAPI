@@ -12,15 +12,17 @@ namespace gAPI.AutoApi.Client;
 [Generator]
 public class Program : IIncrementalGenerator
 {
+    public SourceProductionContext CurrentSpc { get; private set; }
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
             //#if DEBUG
-            //            if (!Debugger.IsAttached)
-            //            {
-            //                Debugger.Launch(); // Triggert dialoog om te attachen
-            //            }
+            //                if (!Debugger.IsAttached)
+            //                {
+            //                    Debugger.Launch(); // Triggert dialoog om te attachen
+            //                }
             //#endif
 
             try
@@ -43,6 +45,7 @@ public class Program : IIncrementalGenerator
                 ShowError(ex.ToString(), spc);
                 //throw;
             }
+
         });
     }
 
@@ -54,12 +57,29 @@ public class Program : IIncrementalGenerator
     public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
     {
         //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoApi.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoApi.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var sourceCode = $"#error gAPI.AutoApiSse.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoSse.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
+    //public void ShowError(Exception exception)
+    //{
+    //    ShowError(exception.Message);
+    //}
 
-    //        private static void CreateAccessFile(SourceProductionContext spc, DataModel dataModel)
+    //public void ShowError(string errorMessage)
+    //{
+    //    //throw new Exception(errorMessage); // Helps while debugging
+    //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //public void ShowWarning(string warningMessage)
+    //{
+    //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
     //        {
     //            var sbEnums = new StringBuilder();
     //            var sbDtos = new StringBuilder();
@@ -73,19 +93,25 @@ public class Program : IIncrementalGenerator
     //            {
     //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
     //            }
-
     //            var sbInterfaces = new StringBuilder();
+    //            var sbServices = new StringBuilder();
+
     //            foreach (var @enum in dataModel.Interfaces)
     //            {
     //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
     //            }
 
+    //            foreach (var dto in dataModel.ClientHandlers)
+    //            {
+    //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+    //            }
+
     //            var sb = $@"
-    //namespace gAPI.AutoApi.Client
+    //namespace GeneratorTypes
     //{{
-    //    public static class AccessedTypes
+    //    public static class AllControllers
     //    {{
-    //        public static void ConsoleListAll()
+    //        public static void ListAll()
     //        {{
     //            System.Console.WriteLine(""Enums:"");
     //{sbEnums}
@@ -93,11 +119,13 @@ public class Program : IIncrementalGenerator
     //{sbDtos}
     //            System.Console.WriteLine(""Interfaces:"");
     //{sbInterfaces}
+    //            System.Console.WriteLine(""Services:"");
+    //{sbServices}
     //        }}
     //    }}
     //}}";
 
 
-    //            spc.AddSource("AccessedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     //        }
 }

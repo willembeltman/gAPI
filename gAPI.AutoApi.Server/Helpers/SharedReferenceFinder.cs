@@ -65,3 +65,4 @@ public static class SharedReferenceFinder
             miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
 }
+

@@ -38,9 +38,10 @@ public class Program : IIncrementalGenerator
             }
             catch (Exception ex)
             {
-                ShowError(ex, spc);
+                ShowError(ex.ToString(), spc);
                 //throw;
             }
+
         });
     }
 
@@ -52,7 +53,75 @@ public class Program : IIncrementalGenerator
     public void ShowError(string errorMessage, SourceProductionContext CurrentSpc)
     {
         //throw new Exception(errorMessage); // Helps while debugging
-        var sourceCode = $"#error gAPI.AutoApi: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoApi.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        var sourceCode = $"#error gAPI.AutoApiSse: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
+        CurrentSpc.AddSource("Gapi_Error.AutoSse.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
+
+    //public void ShowError(Exception exception)
+    //{
+    //    ShowError(exception.Message);
+    //}
+
+    //public void ShowError(string errorMessage)
+    //{
+    //    //throw new Exception(errorMessage); // Helps while debugging
+    //    var sourceCode = $"#error {errorMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Error.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //public void ShowWarning(string warningMessage)
+    //{
+    //    var sourceCode = $"#warning {warningMessage.Replace("\r", "\\r").Replace("\n", "\\n")}";
+    //    CurrentSpc.AddSource("Gapi_Warning.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+    //}
+
+    //        private static void CreateAccessFile(SourceProductionContext spc, ServiceContext dataModel)
+    //        {
+    //            var sbEnums = new StringBuilder();
+    //            var sbDtos = new StringBuilder();
+
+    //            foreach (var @enum in dataModel.Enums)
+    //            {
+    //                sbEnums.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
+    //            }
+
+    //            foreach (var dto in dataModel.Dtos)
+    //            {
+    //                sbDtos.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+    //            }
+    //            var sbInterfaces = new StringBuilder();
+    //            var sbServices = new StringBuilder();
+
+    //            foreach (var @enum in dataModel.Interfaces)
+    //            {
+    //                sbInterfaces.AppendLine($"            System.Console.WriteLine(@\"{@enum.FullName}\");");
+    //            }
+
+    //            foreach (var dto in dataModel.ClientHandlers)
+    //            {
+    //                sbServices.AppendLine($"            System.Console.WriteLine(@\"{dto.FullName}\");");
+    //            }
+
+    //            var sb = $@"
+    //namespace GeneratorTypes
+    //{{
+    //    public static class AllControllers
+    //    {{
+    //        public static void ListAll()
+    //        {{
+    //            System.Console.WriteLine(""Enums:"");
+    //{sbEnums}
+    //            System.Console.WriteLine(""Dtos:"");
+    //{sbDtos}
+    //            System.Console.WriteLine(""Interfaces:"");
+    //{sbInterfaces}
+    //            System.Console.WriteLine(""Services:"");
+    //{sbServices}
+    //        }}
+    //    }}
+    //}}";
+
+
+    //            spc.AddSource("GeneratedTypes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    //        }
 }

@@ -22,15 +22,15 @@ public class CreateCopyGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededCreateCopys { get; private set; } = new();
 
-    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, CustomObjectMethod[] customCreateCopys)
+    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
     {
         TypeSymbol = typeSymbol;
-        CustomCreateCopys = customCreateCopys;
+        CustomCreateCopys = [.. customCreateCopys];
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}CreateCopy";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
@@ -148,6 +148,17 @@ public static class {Name}
             return isNullable
                 ? $@"{source} == null ? null : {source}.Select({item} => {elementCopy}).ToArray()"
                 : $"{source}.Select({item} => {elementCopy}).ToArray()";
+        }
+
+        if (underlyingType is INamedTypeSymbol list &&
+            list.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.List<T>" &&
+            list.TypeArguments.Length == 1)
+        {
+            var item = $"item{++ItemNumber}";
+            var elementCopy = GenerateCopyCode(list.TypeArguments[0], item, generic);
+            return isNullable
+                ? $"{source} == null ? null : {source}.Select({item} => {elementCopy}).ToList()"
+                : $"{source}.Select({item} => {elementCopy}).ToList()";
         }
 
         if (underlyingType.IsRecord || underlyingType.TypeKind == TypeKind.Struct)

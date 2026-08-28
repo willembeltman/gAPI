@@ -1,7 +1,12 @@
 ﻿using gAPI.AutoApi.Client.Generators;
+using gAPI.AutoApi.Client.Generators.Authentication;
+using gAPI.AutoApi.Client.Generators.Clients;
+using gAPI.AutoApi.Client.Generators.Sse;
+using gAPI.AutoApi.Client.Generators.Startup;
 using gAPI.AutoApi.Client.Models;
 using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.IO;
@@ -13,12 +18,12 @@ namespace gAPI.AutoApi.Client;
 public class Generator
 {
     public Generator(
-        ServiceContext serviceContext,
+        ServiceContext serviceContext, 
         SharedReferences sharedReferences,
         CustomObjectMethod[] customMultipartFormDataContentSerializers)
     {
-        SharedReferences = sharedReferences;
         ServiceContext = serviceContext;
+        SharedReferences = sharedReferences;
         CustomMultipartFormDataContentSerializers = customMultipartFormDataContentSerializers;
 
         FormFile = new FormFileGenerator(this);
@@ -27,19 +32,36 @@ public class Generator
             .Concat(ServiceContext.MinimalApiInterfaces)
             .Select(service => new ApiClientGenerator(this, service, customMultipartFormDataContentSerializers))
             .ToArray();
-        AddAutoClientServices = new AutoApiClientExtensionGenerator(this);
+        AddAutoClientServices = new AddAutoApiSseClientExtensionGenerator(this);
+
+        ClientConnection = new ClientConnectionGenerator(this);
+        IClientConnection = new IClientConnectionGenerator(this);
+
+        ClientConnection = new ClientConnectionGenerator(this);
+        IClientConnection = new IClientConnectionGenerator(this);
+
+        StateParser = new StateParserGenerator(this);
+        IAuthenticatedHttpClient = new IAuthenticatedHttpClientGenerator(this);
+        AuthenticatedHttpClient = new AuthenticatedHttpClientGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
-    public CustomObjectMethod[] CustomMultipartFormDataContentSerializers { get; }
     public SharedReferences SharedReferences { get; }
+    public CustomObjectMethod[] CustomMultipartFormDataContentSerializers { get; }
 
-    public ApiClientGenerator[] Clients { get; }
-    public AutoApiClientExtensionGenerator AddAutoClientServices { get; }
     public FormFileGenerator FormFile { get; }
     public FormFileExtensionGenerator IsFormFileExtension { get; }
+    public ApiClientGenerator[] Clients { get; }
+    public AddAutoApiSseClientExtensionGenerator AddAutoClientServices { get; }
 
-    public void Generate(Microsoft.CodeAnalysis.SourceProductionContext spc)
+    public ClientConnectionGenerator ClientConnection { get; }
+    public IClientConnectionGenerator IClientConnection { get; }
+
+    public StateParserGenerator StateParser { get; }
+    public IAuthenticatedHttpClientGenerator IAuthenticatedHttpClient { get; }
+    public AuthenticatedHttpClientGenerator AuthenticatedHttpClient { get; }
+
+    public void Generate(SourceProductionContext spc)
     {
         FormFile.GenerateCode();
         if (!string.IsNullOrEmpty(FormFile.Code))
@@ -54,14 +76,6 @@ public class Generator
             var toFormFileExtensionFullName = Path.Combine(IsFormFileExtension.Directory, IsFormFileExtension.FileName);
             spc.AddSource(toFormFileExtensionFullName, SourceText.From(IsFormFileExtension.Code, Encoding.UTF8));
         }
-
-        //ItemDataSource.GenerateCode();
-        //var itemDataSourceFullName = Path.Combine(Config.Helpers_Destination.Directory, ItemDataSource.FileName);
-        //spc.AddSource(itemDataSourceFullName, SourceText.From(ItemDataSource.Code, Encoding.UTF8));
-
-        //ListDataSource.GenerateCode();
-        //var listDataSourceFullName = Path.Combine(Config.Helpers_Destination.Directory, ListDataSource.FileName);
-        //spc.AddSource(listDataSourceFullName, SourceText.From(ListDataSource.Code, Encoding.UTF8));
 
         foreach (var client in Clients)
         {
@@ -91,6 +105,32 @@ public class Generator
                         SourceText.From(code, Encoding.UTF8));
                 }
             }
+        }
+
+
+        ClientConnection.GenerateCode();
+        spc.AddSource(Path.Combine(ClientConnection.Directory, ClientConnection.FileName), SourceText.From(ClientConnection.Code, Encoding.UTF8));
+
+        IClientConnection.GenerateCode();
+        spc.AddSource(Path.Combine(IClientConnection.Directory, IClientConnection.FileName), SourceText.From(IClientConnection.Code, Encoding.UTF8));
+
+        GenerateItem(spc, StateParser);
+
+        if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)
+        {
+            GenerateItem(spc, IAuthenticatedHttpClient);
+            GenerateItem(spc, AuthenticatedHttpClient);
+        }
+    }
+
+    private static void GenerateItem(SourceProductionContext spc, _BaseGenerator generator)
+    {
+        generator.GenerateCode();
+
+        if (!string.IsNullOrEmpty(generator.Code))
+        {
+            var signalRHubFullName = Path.Combine(generator.Directory, generator.FileName);
+            spc.AddSource(signalRHubFullName, SourceText.From(generator.Code, Encoding.UTF8));
         }
     }
 }

@@ -25,14 +25,14 @@ public class SpanSerializerGenerator
     public string FileName { get; }
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
 
-    public SpanSerializerGenerator(INamedTypeSymbol typeSymbol, CustomObject[] customSpanSerializers)
+    public SpanSerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObject> customSpanSerializers)
     {
         TypeSymbol = typeSymbol;
 
         var name = Helper.GetName(typeSymbol);
         Name = $"{name}SpanSerializer";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
-        FileName = $"{Name}.g.cs";
+        FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
@@ -47,9 +47,9 @@ public class SpanSerializerGenerator
         Typehash = Helper.ComputeFNV1a32(TypeSymbolName);
 
         // --- VersionHash: hash van schema (properties + nested types) ---
-        SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.Name} {a.Property.Name}")));
+        SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.ToDisplayString()} {a.Property.Name}")));
 
-        PropertyHelper = new GeneratePropertyHelper([], customSpanSerializers, [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [..customSpanSerializers], [], Reg, NeededSerializers);
     }
 
     public string Generate()

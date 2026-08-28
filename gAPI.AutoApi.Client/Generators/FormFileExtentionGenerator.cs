@@ -1,6 +1,6 @@
 ﻿namespace gAPI.AutoApi.Client.Generators;
 
-public class FormFileExtensionGenerator : BaseGenerator
+public class FormFileExtensionGenerator : _BaseGenerator
 {
     public FormFileExtensionGenerator(Generator context)
     {

@@ -8,17 +8,31 @@ public class SharedReferences
     public SharedReferences(INamedTypeSymbol[] allSymbols)
     {
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
+        AuthServer_Middleware = SharedReferenceFinder.TryFindStart("gAPI.Core.Server.AuthenticationMiddleware", allSymbols);
+
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
+        SseHost = SharedReferenceFinder.Find("gAPI.Core.Sse.SseHost", allSymbols);
+        ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
+        ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
+        UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
+        SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerConfig", allSymbols);
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
         SseHostCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseHostCollection", allSymbols);
-        AuthServer_Middleware = SharedReferenceFinder.TryFindStart("gAPI.Core.Server.AuthenticationMiddleware", allSymbols);
+        WssSessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssSessionCache", allSymbols);
     }
+
+    public SharedReference AuthenticationInitializeResult { get; }
+    public SharedReference? AuthServer_Middleware { get; }
 
     public SharedReference FabricClient { get; }
     public SharedReference SseHostCollection { get; }
+    public SharedReference SseHost { get; }
+    public SharedReference ServiceId { get; }
+    public SharedReference ServiceMethodId { get; }
+    public SharedReference UserId { get; }
+    public SharedReference SessionId { get; }
     public SharedReference IServerAuthenticationService { get; }
-    public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference ServerConfig { get; }
-    public SharedReference? AuthServer_Middleware { get; }
+    public SharedReference WssSessionCache { get; }
 }
