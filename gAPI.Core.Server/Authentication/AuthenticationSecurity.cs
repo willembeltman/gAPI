@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,14 @@ public class AuthenticationSecurity<TUser, TStateDto>(
     IAuthenticationService<TUser, TStateDto> authentication,
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
     TimeProvider timeProvider,
-    ServerConfig config)
+    int LoginMaxAttempt = 5,
+    long LoginMaxAttemptTimeout = 15,
+    int RegisterMaxAttempt = 5,
+    long RegisterMaxAttemptTimeout = 24 * 7 * 52, // 8736
+    int ForgetPasswordMaxAttempt = 5,
+    long ForgetPasswordMaxAttemptTimeout = 24,
+    int ChangePasswordMaxAttempt = 5,
+    long ChangePasswordMaxAttemptTimeout = 24)
     : IAuthenticationSecurity
     where TUser : AuthUser
 {
@@ -47,8 +53,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.LoginAttempts = v,
             ip => ip.LoginLockedOutDate,
             (ip, v) => ip.LoginLockedOutDate = v,
-            maxAttempts: config.LoginMaxAttempt,
-            lockoutDuration: TimeSpan.FromMinutes(config.LoginMaxAttemptTimeout),
+            maxAttempts: LoginMaxAttempt,
+            lockoutDuration: TimeSpan.FromMinutes(LoginMaxAttemptTimeout),
             success: true,
             ct: ct);
     public async Task<bool> AfterUnSuccesfullLoginAsync(CancellationToken ct)
@@ -58,8 +64,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.LoginAttempts = v,
             ip => ip.LoginLockedOutDate,
             (ip, v) => ip.LoginLockedOutDate = v,
-            maxAttempts: config.LoginMaxAttempt,
-            lockoutDuration: TimeSpan.FromMinutes(config.LoginMaxAttemptTimeout),
+            maxAttempts: LoginMaxAttempt,
+            lockoutDuration: TimeSpan.FromMinutes(LoginMaxAttemptTimeout),
             success: false,
             ct: ct);
     public async Task<bool> BeforeRegisterAsync(CancellationToken ct)
@@ -69,8 +75,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.RegisterCount = v,
             ip => ip.RegisterLockedOutDate,
             (ip, v) => ip.RegisterLockedOutDate = v,
-            maxAttempts: config.RegisterMaxAttempt,
-            lockoutDuration: TimeSpan.FromHours(config.RegisterMaxAttemptTimeout),
+            maxAttempts: RegisterMaxAttempt,
+            lockoutDuration: TimeSpan.FromHours(RegisterMaxAttemptTimeout),
             success: false,
             ct: ct);
     public async Task<bool> BeforeForgetPasswordAsync(CancellationToken ct)
@@ -80,8 +86,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.ForgetPasswordAttempts = v,
             ip => ip.ForgetPasswordLockedOutDate,
             (ip, v) => ip.ForgetPasswordLockedOutDate = v,
-            maxAttempts: config.ForgetPasswordMaxAttempt,
-            lockoutDuration: TimeSpan.FromHours(config.ForgetPasswordMaxAttemptTimeout),
+            maxAttempts: ForgetPasswordMaxAttempt,
+            lockoutDuration: TimeSpan.FromHours(ForgetPasswordMaxAttemptTimeout),
             success: false,
             ct: ct);
     public async Task<bool> AfterSuccesfullChangePasswordAsync(CancellationToken ct)
@@ -91,8 +97,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.ChangePasswordAttempts = v,
             ip => ip.ChangePasswordLockedOutDate,
             (ip, v) => ip.ChangePasswordLockedOutDate = v,
-            maxAttempts: config.ChangePasswordMaxAttempt,
-            lockoutDuration: TimeSpan.FromMinutes(config.ChangePasswordMaxAttemptTimeout),
+            maxAttempts: ChangePasswordMaxAttempt,
+            lockoutDuration: TimeSpan.FromMinutes(ChangePasswordMaxAttemptTimeout),
             success: true,
             ct: ct);
     public async Task<bool> AfterUnSuccesfullChangePasswordAsync(CancellationToken ct)
@@ -102,8 +108,8 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             (ip, v) => ip.ChangePasswordAttempts = v,
             ip => ip.ChangePasswordLockedOutDate,
             (ip, v) => ip.ChangePasswordLockedOutDate = v,
-            maxAttempts: config.ChangePasswordMaxAttempt,
-            lockoutDuration: TimeSpan.FromMinutes(config.ChangePasswordMaxAttemptTimeout),
+            maxAttempts: ChangePasswordMaxAttempt,
+            lockoutDuration: TimeSpan.FromMinutes(ChangePasswordMaxAttemptTimeout),
             success: false,
             ct: ct);
 

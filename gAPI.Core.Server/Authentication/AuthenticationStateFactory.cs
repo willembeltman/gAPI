@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Server.Config;
-using gAPI.Core.Server.Entities;
+﻿using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -9,32 +8,20 @@ namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationStateFactory<TUser>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
-    ServerConfig config,
-    TimeProvider dateTime)
+    TimeProvider dateTime,
+    double ShortHoursAgo,
+    double LongHoursAgo,
+    bool UseMemoryDatabase)
     : IAuthenticationStateFactory<TUser>
     where TUser : AuthUser
 {
-    //public async Task<UserToken<TUser>> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
-    //{
-    //    var db = await dbFactory.CreateDbContextAsync(ct);
-    //    // Add new token hash to database
-    //    var dbToken = new UserToken<TUser>()
-    //    {
-    //        UserId = Guid.Parse(userId),
-    //        TokenHash = cookieHash
-    //    };
-    //    await db.Tokens.AddAsync(dbToken, ct);
-    //    await db.SaveChangesAsync(ct);
-    //    return dbToken;
-    //}
-
     public async Task<AuthenticationState<TUser>> CreateAuthenticationStateAsync(
         AuthenticationHeaders headers,
         CancellationToken ct)
     {
         var db = await dbFactory.CreateDbContextAsync(ct);
-        var shortago = dateTime.GetUtcNow().AddHours(config.ShortHoursAgo);
-        var longago = dateTime.GetUtcNow().AddHours(config.LongHoursAgo);
+        var shortago = dateTime.GetUtcNow().AddHours(ShortHoursAgo);
+        var longago = dateTime.GetUtcNow().AddHours(LongHoursAgo);
 
         UserToken<TUser>? dbToken = null;
         TUser? dbUser = null;
@@ -98,7 +85,7 @@ public class AuthenticationStateFactory<TUser>(
         TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
         CancellationToken ct)
     {
-        if (config.UseMemoryDatabase)
+        if (UseMemoryDatabase)
         {
             return await DoTheRest_EFCore(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
         }

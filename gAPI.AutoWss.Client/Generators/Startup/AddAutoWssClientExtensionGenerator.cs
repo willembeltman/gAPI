@@ -22,6 +22,7 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
+    public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
 
     public override void GenerateCode()
     {
@@ -68,24 +69,22 @@ public static class {Name}
 
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services, 
-        string apiAddress, 
-        string wssAddress,
-        TimeProvider? dateTime = null)
-    {{
-        var config = new {ClientConfig}(apiAddress, wssAddress);
-        return AddAutoWssClient(services, config, dateTime);
-    }}
-
-    public static IServiceCollection AddAutoWssClient(
-        this IServiceCollection services, 
         {ClientConfig} config,
         TimeProvider? dateTime = null)
     {{
+        return AddAutoWssClient(services, config.WssBackendUrl, dateTime);
+    }}
+
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services,
+        string wssBackendUrl,
+        TimeProvider? dateTime = null)
+    {{
         services.AddSingleton(dateTime ?? TimeProvider.System);
-        services.AddSingleton(config);
 
         // Connection stuff
-        services.AddScoped<{ClientConnection}>();
+        services.AddScoped<{ClientConnection}>(sp => 
+            new {ClientConnection}(sp.GetRequiredService<{IClientAuthenticatedHttpClient}>(), wssBackendUrl));
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         

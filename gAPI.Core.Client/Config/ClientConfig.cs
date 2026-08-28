@@ -2,4 +2,4 @@
 
 public record ClientConfig(
     string ApiBackendUrl, 
-    string WssBackendUrl);
+    string? WssBackendUrl);

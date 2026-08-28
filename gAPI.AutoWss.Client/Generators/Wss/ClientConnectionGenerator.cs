@@ -87,7 +87,6 @@ public class ClientConnectionGenerator : _BaseGenerator
                 }
             }
         }
-        Reg(ClientConfig);
         var functions = string.Empty;
         var functionNames = new HashSet<string>();
         Code = @$"
@@ -99,9 +98,9 @@ public class {Name}
     : {WssClientConnection}, {IClientConnection}
 {{
     public {Name}(
-        {IClientAuthenticatedHttpClient} httpClient, 
-        {ClientConfig} frontendConfig)
-        : base(httpClient, frontendConfig)
+        {IClientAuthenticatedHttpClient} httpClient,
+        string wssBackendUrl)
+        : base(httpClient, wssBackendUrl)
     {{
         ___Logger = (({IWssLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}

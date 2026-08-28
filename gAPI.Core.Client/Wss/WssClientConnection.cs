@@ -18,11 +18,11 @@ public abstract class WssClientConnection : IWssClientConnection
 {
     public WssClientConnection(
         IClientAuthenticatedHttpClient httpClient,
-        ClientConfig frontendConfig)
+        string wssBackendUrl)
     {
         HttpClient = httpClient;
         HttpClient.OnStateHasChanged += HttpClient_OnStateHasChanged;
-        ClientConfig = frontendConfig;
+        WssBackendUrl = wssBackendUrl;
         Logger = ((IWssLoggerFactory)this).CreateLogger<WssClientConnection>();
     }
 
@@ -33,6 +33,7 @@ public abstract class WssClientConnection : IWssClientConnection
     private byte[] SendBuffer = new byte[10 * 1024 * 1024];
     private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
 
+    private readonly string WssBackendUrl;
     private Task? InitializeTask;
     private ClientWebSocket? Ws;
 
@@ -40,7 +41,6 @@ public abstract class WssClientConnection : IWssClientConnection
     protected CancellationTokenSource? Cts;
 
     public bool Initialized { get; private set; }
-    public ClientConfig ClientConfig { get; }
 
     public bool IsConnected => Ws?.State == WebSocketState.Open;
     public SessionId SessionId => HttpClient.SessionId;
@@ -57,16 +57,13 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public async Task TryConnectAsync(CancellationToken ct)
     {
-        if (ClientConfig.WssBackendUrl == null)
-            throw new Exception("Cannot get base url from IClientAuthenticatedHttpClient");
-
         await InitLock.WaitAsync(ct);
         try
         {
             if (IsConnected)
                 return;
 
-            InitializeTask ??= ConnectAsync(ClientConfig.WssBackendUrl, ct);
+            InitializeTask ??= ConnectAsync(WssBackendUrl, ct);
         }
         finally
         {
