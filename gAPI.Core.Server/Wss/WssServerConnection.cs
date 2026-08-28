@@ -213,7 +213,7 @@ public abstract class WssServerConnection : ISignalRInvoker
         await subscription.InitializeAsync(ct);
         Services[subscribe.ServiceId] = subscription;
     }
-    private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto unsubscribe, CancellationToken token)
+    private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto unsubscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_Unsubscribe_FromClientAsync({unsubscribe})", unsubscribe);
@@ -229,8 +229,8 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_SendRequest_FromClientAsync({sendRequest})", sendRequest);
 
-        if (sendRequest.StateData != null)
-            await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
+        //if (sendRequest.StateData != null)
+        await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
 
         await SendRequestAsync(sendRequest, ct);
     }
@@ -239,13 +239,13 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_InvokeRequest_FromClientAsync({invokeRequest})", invokeRequest);
 
-        if (invokeRequest.StateData != null)
-            await AuthenticationService.UpdateStateDataAsync(invokeRequest.StateData, ct);
+        //if (invokeRequest.StateData != null)
+        await AuthenticationService.UpdateStateDataAsync(invokeRequest.StateData, ct);
 
         await InvokeRequestAsync(invokeRequest, ct);
     }
 
-    private async Task Receive_InvokeResponse_FromClientAsync(InvokeResponseDto invokeResponse, CancellationToken token)
+    private async Task Receive_InvokeResponse_FromClientAsync(InvokeResponseDto invokeResponse, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_InvokeResponse_FromClientAsync({invokeResponse})", invokeResponse);
@@ -253,7 +253,7 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (PendingRequests.TryGetValue(invokeResponse.RequestId, out var channel))
             channel.Writer.TryWrite(invokeResponse);
     }
-    private async Task Receive_InvokeResponseDone_FromClientAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken token)
+    private async Task Receive_InvokeResponseDone_FromClientAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_InvokeResponseDone_FromClientAsync({invokeResponseDone})", invokeResponseDone);

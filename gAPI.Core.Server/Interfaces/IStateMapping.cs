@@ -10,7 +10,7 @@ public interface IStateMapping<TUser, TStateDto>
     Task<TStateDto> ToDtoAsync(
         TUser? dbUser,
         UserToken<TUser>? dbToken,
-        Ip<TUser> dbIp,
+        Ip<TUser>? dbIp,
         TStateDto? receivedClientState, // <-- IMPORTANT: DO NOT TRUST THIS STATE
         CancellationToken ct);
 }

@@ -31,7 +31,7 @@ public class AuthenticationService<TUser, TStateDto>(
 
     private AuthenticationInitializeResult? _Result;
 
-    public bool Initialized { get; private set; }
+    public bool Initialized => _Result != null;
 
     public AuthenticationInitializeResult Result
         => _Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
@@ -99,7 +99,7 @@ public class AuthenticationService<TUser, TStateDto>(
         _Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
         return await Make(_Headers, updateSession, ct);
     }
-    public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
+    private async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
     {
         if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
@@ -140,7 +140,6 @@ public class AuthenticationService<TUser, TStateDto>(
             }
         }
 
-        Initialized = true;
         if (updateSession)
             await fabricClient.UpdateSession(headers.SessionId, headers.CookieData, ct);
 

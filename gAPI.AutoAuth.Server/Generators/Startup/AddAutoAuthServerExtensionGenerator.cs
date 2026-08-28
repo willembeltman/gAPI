@@ -58,7 +58,10 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
     public SharedReference IAuthenticationSecurity => Context.SharedReferences.IAuthenticationSecurity;
     public SharedReference AuthenticationHandler => Context.SharedReferences.AuthenticationHandler;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public SharedReference EmptyServerAuthenticationService => Context.SharedReferences.EmptyServerAuthenticationServiceT;
+    public SharedReference NoDbServerAuthenticationService => Context.SharedReferences.NoDbServerAuthenticationServiceT;
+    public SharedReference IStateParser => Context.IStateParser;
+    public SharedReference StateParser => Context.StateParser;
+    public SharedReference IStateParserT => Context.SharedReferences.IStateParserT;
 
     public override void GenerateCode()
     {
@@ -73,10 +76,13 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
         Reg(IAuthenticationSecurity);
         Reg(AuthenticationHandler);
         Reg(IServerAuthenticationService);
-        Reg(EmptyServerAuthenticationService);
+        Reg(NoDbServerAuthenticationService);
         Reg(IStateMappingT);
         Reg(AuthenticationDbContextT);
         Reg(ServerConfig);
+        Reg(IStateParserT);
+        Reg(IStateParser);
+        Reg(StateParser);
         if (CustomStateMapping != null)
             Reg(CustomStateMapping);
 
@@ -136,7 +142,7 @@ public static class {Name}
     {{
         if (dbConnectionString == null)
         {{
-            services.AddScoped<{IServerAuthenticationService}, {EmptyServerAuthenticationService}<{State}>>();
+            services.AddScoped<{IServerAuthenticationService}, {NoDbServerAuthenticationService}<{User}, {State}>>();
 
             // Todo State ellende
         }}
@@ -269,6 +275,13 @@ public static class {Name}
             }});"
     )}
         }}
+
+        // Register StateParser
+        services.AddScoped<{StateParser}>();
+        services.AddScoped<{IStateParser}>(sp => sp.GetRequiredService<{StateParser}>());
+        services.AddScoped<{IStateParserT}<{State}>>(sp => sp.GetRequiredService<{StateParser}>());
+
+        // Register StateMapper
         services.AddScoped<{IStateMappingT}<{User}, {State}>, {StateMapping}>();
         return services;
     }}

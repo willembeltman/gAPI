@@ -17,6 +17,11 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
     }
 
     public Generator Context { get; }
+
+    public SharedReference AuthStateDto => Context.SharedReferences.AuthStateDto;
+    public SharedReference? StateDto => Context.SharedReferences.StateDto;
+    public SharedReference State => StateDto ?? AuthStateDto;
+
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
@@ -30,6 +35,11 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
     public SharedReference AuthenticatedHttpClient => Context.AuthenticatedHttpClient;
     public SharedReference IAuthenticatedHttpClient => Context.IAuthenticatedHttpClient;
 
+
+    public SharedReference IStateParser => Context.IStateParser;
+    public SharedReference StateParser => Context.StateParser;
+    public SharedReference IStateParserT => Context.SharedReferences.IStateParserT;
+
     public override void GenerateCode()
     {
         Reg("Microsoft.AspNetCore.Components");
@@ -40,6 +50,7 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
         Reg("gAPI.Core.Client");
         Reg("gAPI.Core.Client.Interfaces");
         Reg("gAPI.Core.Client.Extensions");
+        Reg(State);
         Reg(IWssLoggerFactory);
         Reg(IWssClientConnection);
         Reg(ClientConfig);
@@ -49,6 +60,9 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
         Reg(WithCookiesHandler);
         Reg(AuthenticatedHttpClient);
         Reg(IAuthenticatedHttpClient);
+        Reg(IStateParserT);
+        Reg(IStateParser);
+        Reg(StateParser);
         if (IClientAuthenticatedHttpClientImplementation != null)
             Reg(IClientAuthenticatedHttpClientImplementation);
 
@@ -110,6 +124,11 @@ public static class {Name}
         services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
 ")}
+        // Register StateParser
+        services.AddScoped<{StateParser}>();
+        services.AddScoped<{IStateParser}>(sp => sp.GetRequiredService<{StateParser}>());
+        services.AddScoped<{IStateParserT}<{State}>>(sp => sp.GetRequiredService<{StateParser}>());
+
         // Set up authorization core
         services.AddAuthorizationCore();
 

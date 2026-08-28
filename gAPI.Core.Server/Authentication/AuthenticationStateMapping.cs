@@ -12,7 +12,7 @@ public class AuthenticationStateMapping<TUser, TStateDto>
     public virtual async Task<TStateDto> ToDtoAsync(
         TUser? dbUser, 
         UserToken<TUser>? dbToken, 
-        Ip<TUser> dbIp,
+        Ip<TUser>? dbIp,
         TStateDto? receivedClientState, 
         CancellationToken ct)
     {

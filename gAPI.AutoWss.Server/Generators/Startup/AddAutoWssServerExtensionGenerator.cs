@@ -182,12 +182,12 @@ public static class {Name}
         var sseHostCollection = new {SseHostCollection}();
         services.AddSingleton(sseHostCollection);
 
+        var sessionCache = new {WssSessionCache}();
+        services.AddSingleton(sessionCache);
+
         if (fabricConnectionString == null)
         {{
-            var sessionCache = new {WssSessionCache}();
-            services.AddSingleton(sessionCache);
-
-            // Session cleaner
+            // Session cleaner, niet nodig als de fabric wordt gebruikt.
             _ = Task.Run(async () =>
             {{
                 while (true)
