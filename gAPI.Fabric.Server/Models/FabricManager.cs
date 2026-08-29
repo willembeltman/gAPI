@@ -128,8 +128,6 @@ public class FabricManager
                 await target.InvokeArgumentResponseAsync(response, state.Actor);
         }
 
-        if (response.IsCompleted)
-            CompleteArgumentedRequest(state);
     }
 
     public async Task SendArgumentedRequestDoneAsync(FabricHost target, SendArgumentedRequestDoneDto done, long receiveSize, CancellationToken ct)

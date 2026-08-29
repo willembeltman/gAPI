@@ -32,6 +32,9 @@ public abstract class WssClientConnection : IWssClientConnection
     private readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
     private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
+    private readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingArgumentedRequests = [];
+    private readonly ConcurrentDictionary<RequestId, Channel<ApiInvokeResponseDto>> PendingInvokeRequests = [];
+    private readonly ConcurrentDictionary<RequestId, ResettableTimeout> InvokeTimeouts = [];
     private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
     private byte[] SendBuffer = new byte[10 * 1024 * 1024];
     private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
@@ -77,36 +80,51 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     private async Task ConnectAsync(string baseUri, CancellationToken ct)
     {
-        try
+        while (true)
         {
-            var stateData = await HttpClient.GetStateDataAsync(false, ct);
-            var sessionId = HttpClient.SessionId.Value;
-
-            Cts = new();
-            Ws = new ClientWebSocket();
-            var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
-            await Ws.ConnectAsync(url, ct); // baseUri = {https://localhost:7117/}
-
-            _ = Task.Run(async () => { await ReceiverKernel(Ws, Cts); }, Cts.Token);
-            _ = Task.Run(async () => { await SendKernel(Ws, Cts.Token); }, Cts.Token);
-
-            var initialize = new InitializeDto()
+            try
             {
-                SessionId = sessionId,
-                StateData = stateData,
-            };
-            await Send_Initialize_ToServerAsync(initialize, Cts.Token);
+                var stateData = await HttpClient.GetStateDataAsync(false, ct);
+                var sessionId = HttpClient.SessionId.Value;
 
-            Initialized = true;
-        }
-        catch (Exception ex) // ex = {"net_webstatus_ConnectFailure"}
-        {
-            Logger.LogError("ConnectAsync => Exception: {ex}", ex);
+                Cts = new();
+                Ws = new ClientWebSocket();
+                var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
+                await Ws.ConnectAsync(url, ct);
 
-            await InitLock.WaitAsync(ct);
-            InitializeTask = null;
-            InitLock.Release();
-            throw;
+                _ = Task.Run(async () => { await ReceiverKernel(Ws, Cts); }, Cts.Token);
+                _ = Task.Run(async () => { await SendKernel(Ws, Cts.Token); }, Cts.Token);
+
+                var initialize = new InitializeDto()
+                {
+                    SessionId = sessionId,
+                    StateData = stateData,
+                };
+                await Send_Initialize_ToServerAsync(initialize, Cts.Token);
+
+                Initialized = true;
+                return;
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Initialized = false;
+                Logger.LogWarning("ConnectAsync => connection failed, retrying: {ex}", ex.Message);
+
+                try
+                {
+                    Cts?.Cancel();
+                    Ws?.Dispose();
+                }
+                catch
+                {
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+            }
         }
     }
 
@@ -214,6 +232,12 @@ public abstract class WssClientConnection : IWssClientConnection
                         }, ct);
                         break;
 
+                    case WssServerToClientMessageEnum.SendArgumentedRequestDone:
+                        var sendArgumentedRequestDone = span.ReadSendArgumentedRequestDoneDto(ref offset);
+                        if (PendingArgumentedRequests.TryRemove(sendArgumentedRequestDone.RequestId, out var completion))
+                            completion.TrySetResult(true);
+                        break;
+
                     case WssServerToClientMessageEnum.InvokeRequest:
                         var invokeRequest = span.ReadInvokeRequestDto(ref offset);
                         await HttpClient.UpdateStateDataAsync(invokeRequest.StateData, ct);
@@ -265,6 +289,85 @@ public abstract class WssClientConnection : IWssClientConnection
     protected abstract Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
     protected abstract Task Received_InvokeResponse_FromServerAsync(ApiInvokeResponseDto invokeResponse, CancellationToken ct);
     protected abstract Task Received_InvokeResponseDone_FromServerAsync(ApiInvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
+
+    public void NotifyInvokeResponse(RequestId requestId)
+    {
+        if (InvokeTimeouts.TryGetValue(requestId, out var timeout))
+            timeout.Reset();
+    }
+
+    public void NotifyInvokeResponseDone(RequestId requestId)
+    {
+        UnregisterInvokeRequest(requestId);
+    }
+
+    public void RegisterInvokeRequest(RequestId requestId, Channel<ApiInvokeResponseDto> channel)
+    {
+        PendingInvokeRequests[requestId] = channel;
+        InvokeTimeouts[requestId] = new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
+        {
+            if (PendingInvokeRequests.TryRemove(requestId, out var pending))
+                pending.Writer.TryComplete(new TimeoutException("Invoke request timed out."));
+            if (InvokeTimeouts.TryRemove(requestId, out var timeout))
+                timeout.Dispose();
+        });
+    }
+
+    public void UnregisterInvokeRequest(RequestId requestId)
+    {
+        PendingInvokeRequests.TryRemove(requestId, out _);
+        if (InvokeTimeouts.TryRemove(requestId, out var timeout))
+            timeout.Dispose();
+    }
+
+    public async Task<T> InvokeAsync<T>(ApiInvokeRequestDto request, Func<byte[], T> deserialize, CancellationToken ct)
+    {
+        var channel = Channel.CreateUnbounded<ApiInvokeResponseDto>();
+        PendingInvokeRequests[request.RequestId] = channel;
+        using var timeout = CreateInvokeTimeout(request.RequestId, channel);
+
+        try
+        {
+            await Send_InvokeRequest_ToServerAsync(request, ct);
+            T result = default!;
+            await foreach (var response in channel.Reader.ReadAllAsync(ct))
+                result = deserialize(response.BinaryData);
+            return result;
+        }
+        finally
+        {
+            PendingInvokeRequests.TryRemove(request.RequestId, out _);
+            channel.Writer.TryComplete();
+        }
+    }
+
+    public async IAsyncEnumerable<T> InvokeStreamingAsync<T>(ApiInvokeRequestDto request, Func<byte[], T> deserialize, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        var channel = Channel.CreateUnbounded<ApiInvokeResponseDto>();
+        PendingInvokeRequests[request.RequestId] = channel;
+        using var timeout = CreateInvokeTimeout(request.RequestId, channel);
+
+        try
+        {
+            await Send_InvokeRequest_ToServerAsync(request, ct);
+            await foreach (var response in channel.Reader.ReadAllAsync(ct))
+                yield return deserialize(response.BinaryData);
+        }
+        finally
+        {
+            PendingInvokeRequests.TryRemove(request.RequestId, out _);
+            channel.Writer.TryComplete();
+        }
+    }
+
+    private ResettableTimeout CreateInvokeTimeout(RequestId requestId, Channel<ApiInvokeResponseDto> channel)
+    {
+        return new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
+        {
+            if (PendingInvokeRequests.TryRemove(requestId, out _))
+                channel.Writer.TryComplete(new TimeoutException("Invoke request timed out."));
+        });
+    }
 
     private async Task Send_Initialize_ToServerAsync(InitializeDto initialize, CancellationToken ct)
     {
@@ -338,6 +441,10 @@ public abstract class WssClientConnection : IWssClientConnection
         if (!Initialized)
             return;
 
+        var completion = PendingArgumentedRequests.GetOrAdd(
+            sendRequest.RequestId,
+            _ => new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously));
+
         await EnqueueAsync(writer =>
         {
             var offset = 0;
@@ -345,6 +452,15 @@ public abstract class WssClientConnection : IWssClientConnection
             writer.Write(ref offset, sendRequest);
             return offset;
         }, ct);
+
+        try
+        {
+            await completion.Task.WaitAsync(TimeSpan.FromSeconds(30), ct);
+        }
+        finally
+        {
+            PendingArgumentedRequests.TryRemove(sendRequest.RequestId, out _);
+        }
     }
 
     public async Task Send_SendArgumentedRequestDone_ToServerAsync(RequestId requestId, CancellationToken ct)

@@ -4,9 +4,10 @@ public enum WssServerToClientMessageEnum
 {
     SendRequest,
     SendArgumentedRequest,
-    InvokeRequest,
+    SendArgumentedRequestDone,
     InvokeArgumentRequest,
     InvokeArgumentResponse,
+    InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
 }

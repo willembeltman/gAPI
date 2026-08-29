@@ -286,7 +286,14 @@ public abstract class WssServerConnection : ISignalRInvoker
             Logger.LogTrace("Receive_SendArgumentedRequest_FromClientAsync({sendRequest})", sendRequest);
 
         await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
-        await SendArgumentedRequestAsync(sendRequest, ct);
+        try
+        {
+            await SendArgumentedRequestAsync(sendRequest, ct);
+        }
+        finally
+        {
+            await Send_SendArgumentedRequestDone_ToClientAsync(sendRequest.RequestId, ct);
+        }
     }
 
     private async Task Receive_SendArgumentedRequestDone_FromClientAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
@@ -342,7 +349,8 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequest_ToClientAsync({sendRequest})", sendRequest);
 
-        sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
+        // Wordt al in de gegenereerde code gedaan
+        //sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {
@@ -358,7 +366,9 @@ public abstract class WssServerConnection : ISignalRInvoker
         ArgumentRoutes[sendRequest.RequestId] = 0;
         var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         PendingArgumentedRequests[sendRequest.RequestId] = completion;
-        sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
+
+        // Todo: Volgens mij is dit niet nodig
+        //sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {
@@ -377,6 +387,17 @@ public abstract class WssServerConnection : ISignalRInvoker
             PendingArgumentedRequests.TryRemove(sendRequest.RequestId, out _);
             ArgumentRoutes.TryRemove(sendRequest.RequestId, out _);
         }
+    }
+
+    private async Task Send_SendArgumentedRequestDone_ToClientAsync(RequestId requestId, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendArgumentedRequestDone);
+            writer.Write(ref offset, new SendArgumentedRequestDoneDto { RequestId = requestId });
+            return offset;
+        }, ct);
     }
 
     public bool HasRequest(RequestId requestId) => ArgumentRoutes.ContainsKey(requestId);
@@ -435,10 +456,11 @@ public abstract class WssServerConnection : ISignalRInvoker
                 }
             });
 
-        invokeRequest.StateData =
-            AuthenticationService.IsStateDataChanged()
-                ? AuthenticationService.GetStateData()
-                : null;
+        // Wordt al in de gegenereerde code gedaan
+        //invokeRequest.StateData =
+        //    AuthenticationService.IsStateDataChanged()
+        //        ? AuthenticationService.GetStateData()
+        //        : null;
 
         await EnqueueAsync(writer =>
         {
@@ -479,7 +501,8 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeResponse_ToClientAsync({invokeResponseDto})", invokeResponseDto);
 
-        invokeResponseDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
+        // Wordt al in de gegenereerde code gedaan
+        //invokeResponseDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {
@@ -494,7 +517,8 @@ public abstract class WssServerConnection : ISignalRInvoker
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeResponseDone_ToClientAsync({invokeResponseDoneDto})", invokeResponseDoneDto);
 
-        invokeResponseDoneDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
+        // Wordt al in de gegenereerde code gedaan
+        //invokeResponseDoneDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
         {

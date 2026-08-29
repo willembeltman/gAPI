@@ -104,8 +104,8 @@ public sealed class {Name}(
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 
-    var ___requestId = {RequestId}.New();{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
+        var ___requestId = {RequestId}.New();{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
@@ -140,37 +140,12 @@ public sealed class {Name}(
         var ___requestId = {RequestId}.New();
 
         var ___channel = Channel.CreateUnbounded<{ApiInvokeResponseDto}>();
-        ___PendingRequests[___requestId] = ___channel;
+        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
 {(ct == null ? $@"
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
     ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
-        var ___timeout = TimeSpan.FromSeconds(10);
-        var ___activity = new SemaphoreSlim(0, 1);
-
-        _ = Task.Run(async () =>
-        {{
-            try
-            {{
-                while (!___activityCts.IsCancellationRequested)
-                {{
-                    // wacht op activiteit of ___timeout
-                    if (!await ___activity.WaitAsync(___timeout))
-                        throw new TimeoutException(""Client did not ACK"");
-
-                    // activiteit gezien → reset timer
-                }}
-            }}
-            catch (Exception ex)
-            {{
-                ___Logger.LogError(""{method} => Exception: {{ex}}"", ex);
-                // Als hij stopt en de taak is al klaar zal hij hem niet vinden
-                if (___PendingRequests.TryRemove(___requestId, out var pending))
-                    pending.Writer.TryComplete(ex);
-            }}
-        }}, ___activityCts.Token);
-
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {ApiInvokeRequestDto}()
         {{
@@ -188,14 +163,13 @@ public sealed class {Name}(
             var ___offset = 0;
             var ___span = new Span<byte>(item.BinaryData);
             ___result = {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
-            ___activity.Release();
         }}
 
         ___activityCts.Cancel();
-        ___activity.Release();
 
         if (___PendingRequests.TryRemove(___requestId, out var pending))
             pending.Writer.TryComplete();
+        ___clientConnection.UnregisterInvokeRequest(___requestId);
 
         return ___result;
     }}";
@@ -220,38 +194,12 @@ public sealed class {Name}(
         var ___requestId = {RequestId}.New();
 
         var ___channel = Channel.CreateUnbounded<{ApiInvokeResponseDto}>();
-        ___PendingRequests[___requestId] = ___channel;
+        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
 {(ct == null ? $@"
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
-        var ___timeout = TimeSpan.FromSeconds(10);
-        var ___activity = new SemaphoreSlim(0, 1);
-
-        _ = Task.Run(async () =>
-        {{
-            try
-            {{
-                while (!___activityCts.IsCancellationRequested)
-                {{
-                    // wacht op activiteit of ___timeout
-                    if (!await ___activity.WaitAsync(___timeout, ___activityCts.Token))
-                        throw new TimeoutException(""Client did not ACK"");
-
-                    // activiteit gezien → reset timer
-                }}
-            }}
-            catch (Exception ex)
-            {{
-                ___Logger.LogError(""{method} => Exception: {{ex}}"", ex);
-
-                // Als hij stopt en de taak is al klaar zal hij hem niet vinden
-                if (___PendingRequests.TryRemove(___requestId, out var pending))
-                    pending.Writer.TryComplete(ex);
-            }}
-        }}, ___activityCts.Token);
-
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {ApiInvokeRequestDto}()
         {{
@@ -275,10 +223,10 @@ public sealed class {Name}(
         finally
         {{
             ___activityCts.Cancel();
-            ___activity.Release();
 
             if (___PendingRequests.TryRemove(___requestId, out var pending))
                 pending.Writer.TryComplete();
+            ___clientConnection.UnregisterInvokeRequest(___requestId);
         }}
     }}";
 }))}
@@ -291,7 +239,10 @@ public sealed class {Name}(
         }}
 
         if (___PendingRequests.TryGetValue(invokeResponse.RequestId, out var ___channel))
+        {{
+            ___clientConnection.NotifyInvokeResponse(invokeResponse.RequestId);
             ___channel.Writer.TryWrite(invokeResponse);
+        }}
     }}
     public async Task ReceiveResponseDoneAsync({ApiInvokeResponseDoneDto} invokeResponseDone)
     {{
@@ -301,7 +252,10 @@ public sealed class {Name}(
         }}
 
         if (___PendingRequests.TryRemove(invokeResponseDone.RequestId, out var ___channel))
+        {{
+            ___clientConnection.NotifyInvokeResponseDone(invokeResponseDone.RequestId);
             ___channel.Writer.TryComplete();
+        }}
     }}
 {string.Join("", Interface.Methods.Select(method => $@"
     public byte[] {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"

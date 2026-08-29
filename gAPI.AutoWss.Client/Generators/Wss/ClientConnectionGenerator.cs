@@ -260,12 +260,12 @@ public class {Name}
             ___Logger.LogTrace(""Received_InvokeRequest_FromServerAsync({{___invokeRequest}})"", ___invokeRequest);
 {(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(@interface => $@"
-            case ""{@interface}"":
+        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
+            case ""{hub}"":
                 {{
-                    var clients = await Get{@interface.CleanName.ToMultiple()}SnapshotAsync();
+                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___invokeRequest.MethodId.Value)
-                    {{{string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
             return $@"
@@ -289,7 +289,7 @@ public class {Name}
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
-                                                BinaryData = {@interface}_{method}_Serializer(response)
+                                                BinaryData = {hub}_{method}_Serializer(response)
                                             }}, ___ct);
                                     }}
                                 }}
@@ -317,7 +317,7 @@ public class {Name}
 {(Context.Apis.Any() ? $@"
         switch (___invokeResponse.ServiceId.Value)
         {{{string.Join("", Context.Apis.Select(api => $@"
-            case ""{api}"":
+            case ""{api.Interface}"":
                 return {api.Name}.ReceiveResponseAsync(___invokeResponse);"))}
         }}" : "")}
         throw new Exception($""Service \""{{___invokeResponse.ServiceId.Value}}\"" / Method \""{{___invokeResponse.MethodId.Value}}\"" not found"");
@@ -329,7 +329,7 @@ public class {Name}
 {(Context.Apis.Any() ? $@"
         switch (___invokeResponseDone.ServiceId.Value)
         {{{string.Join("", Context.Apis.Select(api => $@"
-            case ""{api}"":
+            case ""{api.Interface}"":
                 return {api.Name}.ReceiveResponseDoneAsync(___invokeResponseDone);"))}
         }}" : "")}
         throw new Exception($""Service \""{{___invokeResponseDone.ServiceId.Value}}\"" / Method \""{{___invokeResponseDone.MethodId.Value}}\"" not found"");

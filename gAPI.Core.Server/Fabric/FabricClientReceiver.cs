@@ -123,6 +123,10 @@ public class FabricClientReceiver(
             {
             }
         }
+
+        await fabricClient.Sender.Send_SendArgumentedRequestDone_ToFabricAsync(
+            new SendArgumentedRequestDoneDto { RequestId = message.RequestId },
+            ct);
     }
     public async Task Receive_SendArgumentedRequestDone_FromFabricAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
     {
