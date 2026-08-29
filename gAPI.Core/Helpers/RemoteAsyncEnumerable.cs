@@ -6,20 +6,27 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
     private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
     private readonly Func<CancellationToken, Task> _requestNext;
+    private readonly ResettableTimeout _timeout;
 
-    public RemoteAsyncEnumerable(Func<CancellationToken, Task> requestNext)
+    public RemoteAsyncEnumerable(Func<CancellationToken, Task> requestNext, TimeSpan? timeout = null)
     {
         _requestNext = requestNext;
+        _timeout = new ResettableTimeout(
+            timeout ?? TimeSpan.FromSeconds(60),
+            () => Complete(new TimeoutException("Remote async enumerable timed out.")));
     }
 
     public void Push(T item)
     {
         if (!_items.Writer.TryWrite(item))
             throw new InvalidOperationException("The remote async enumerable is no longer accepting items.");
+
+        _timeout.Reset();
     }
 
     public void Complete(Exception? error = null)
     {
+        _timeout.Dispose();
         _items.Writer.TryComplete(error);
     }
 
@@ -52,12 +59,16 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
             }
             catch (ChannelClosedException)
             {
+                if (_owner._items.Reader.Completion.IsFaulted)
+                    await _owner._items.Reader.Completion;
+
                 return false;
             }
         }
 
         public ValueTask DisposeAsync()
         {
+            _owner.Complete();
             return ValueTask.CompletedTask;
         }
     }

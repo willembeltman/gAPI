@@ -34,8 +34,11 @@ public class FabricClientReceiver(
                 {
                     case FabricHostToClientMessageEnum.SendRequest:
                         var sendRequest = fabricClient.BinaryReader.ReadSendRequestDto();
-                        //_ = Task.Run(async () => { await Receive_SendRequest_FromFabricAsync(sendRequest, ct); }, ct);
                         await Receive_SendRequest_FromFabricAsync(sendRequest, ct);
+                        break;
+                    case FabricHostToClientMessageEnum.SendArgumentedRequest:
+                        var sendArgumentedRequest = fabricClient.BinaryReader.ReadSendRequestDto();
+                        _ = Task.Run(async () => { await Receive_SendArgumentedRequest_FromFabricAsync(sendArgumentedRequest, ct); }, ct);
                         break;
                     case FabricHostToClientMessageEnum.InvokeArgumentRequest:
                         var argumentRequest = fabricClient.BinaryReader.ReadInvokeArgumentRequestDto();
@@ -97,6 +100,20 @@ public class FabricClientReceiver(
             try
             {
                 await sseHost.SendAsync(message, ct);
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }
+    }
+    public async Task Receive_SendArgumentedRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
+    {
+        var sseHosts = GetHosts(message.ServiceId, message.UserId, message.SessionId);
+        foreach (var sseHost in sseHosts)
+        {
+            try
+            {
+                await sseHost.SendArgumentedAsync(message, ct);
             }
             catch (TaskCanceledException)
             {

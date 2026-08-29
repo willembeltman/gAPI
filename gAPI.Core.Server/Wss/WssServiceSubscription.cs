@@ -62,6 +62,8 @@ public class WssServiceSubscription
 
         return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
     }
+    public Task SendArgumentedAsync(SendRequestDto message, CancellationToken ct)
+        => Connection.Send_SendArgumentedRequest_ToClientAsync(this, message, ct);
 
     public bool HasRequest(RequestId requestId) => Connection.HasRequest(requestId);
 

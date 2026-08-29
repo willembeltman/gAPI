@@ -201,7 +201,13 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.SendRequest:
                         var sendRequest = span.ReadSendRequestDto(ref offset);
                         await HttpClient.UpdateStateDataAsync(sendRequest.StateData, ct);
-                        _ = Task.Run(async () => { await Received_SendRequest_FromServerAsync(sendRequest, ct); }, ct);
+                        await Received_SendRequest_FromServerAsync(sendRequest, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.SendArgumentedRequest:
+                        var sendArgumentedRequest = span.ReadSendRequestDto(ref offset);
+                        await HttpClient.UpdateStateDataAsync(sendArgumentedRequest.StateData, ct);
+                        _ = Task.Run(async () => { await Received_SendArgumentedRequest_FromServerAsync(sendArgumentedRequest, ct); }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeRequest:
@@ -251,6 +257,7 @@ public abstract class WssClientConnection : IWssClientConnection
     }
 
     protected abstract Task Received_SendRequest_FromServerAsync(SendRequestDto sendRequest, CancellationToken ct);
+    protected abstract Task Received_SendArgumentedRequest_FromServerAsync(SendRequestDto sendRequest, CancellationToken ct);
     protected abstract Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
     protected abstract Task Received_InvokeResponse_FromServerAsync(ApiInvokeResponseDto invokeResponse, CancellationToken ct);
     protected abstract Task Received_InvokeResponseDone_FromServerAsync(ApiInvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
@@ -322,6 +329,19 @@ public abstract class WssClientConnection : IWssClientConnection
             return offset;
         }, ct);
     }
+    public async Task Send_SendArgumentedRequest_ToServerAsync(ApiSendRequestDto sendRequest, CancellationToken ct)
+    {
+        if (!Initialized)
+            return;
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendArgumentedRequest);
+            writer.Write(ref offset, sendRequest);
+            return offset;
+        }, ct);
+    }
     public async Task Send_InvokeRequest_ToServerAsync(ApiInvokeRequestDto invokeRequest, CancellationToken ct)
     {
         if (!Initialized)
@@ -375,8 +395,14 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         var enumerator = source.GetAsyncEnumerator(cancellationToken);
         var gate = new SemaphoreSlim(1, 1);
+        var timeout = new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
+        {
+            ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+            _ = enumerator.DisposeAsync().AsTask();
+        });
         ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
         {
+            timeout.Reset();
             await gate.WaitAsync(ct);
             try
             {
@@ -391,6 +417,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 if (!hasNext)
                 {
                     ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+                    timeout.Dispose();
                     await enumerator.DisposeAsync();
                 }
             }

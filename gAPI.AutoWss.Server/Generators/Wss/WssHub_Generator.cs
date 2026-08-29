@@ -154,6 +154,8 @@ public class {Name} : WssServerConnection
         }}
         throw new Exception($""Send {{___sendRequest.ServiceId.Value}}.{{___sendRequest.MethodId.Value}} not implemented"");
     }}
+    protected override Task SendArgumentedRequestAsync({ApiSendRequestDto} ___sendRequest, CancellationToken ___ct)
+        => SendRequestAsync(___sendRequest, ___ct);
     protected override Task InvokeRequestAsync({ApiInvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
     {{
         var ___offset = 0;

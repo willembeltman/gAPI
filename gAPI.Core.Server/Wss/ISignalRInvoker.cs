@@ -10,6 +10,7 @@ public interface ISignalRInvoker : IAsyncDisposable
 {
     IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeRequestDto request, CancellationToken ct);
     Task Send_SendRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto message, CancellationToken ct);
+    Task Send_SendArgumentedRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto message, CancellationToken ct);
     Task Send_InvokeArgumentRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentRequestDto request, CancellationToken ct);
     Task Send_InvokeArgumentResponse_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentResponseDto response, CancellationToken ct);
     bool HasRequest(RequestId requestId);

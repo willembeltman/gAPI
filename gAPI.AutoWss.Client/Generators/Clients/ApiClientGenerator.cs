@@ -109,7 +109,7 @@ public sealed class {Name}(
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
-        await ___clientConnection.Send_SendRequest_ToServerAsync(new {ApiSendRequestDto}()
+        await ___clientConnection.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "Send_SendArgumentedRequest_ToServerAsync" : "Send_SendRequest_ToServerAsync")}(new {ApiSendRequestDto}()
         {{
             RequestId = ___requestId,
             ServiceId = ___ServiceId,

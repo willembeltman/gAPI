@@ -29,6 +29,8 @@ public class SseHost(
         var sseEvent = new SseEvent(sendRequest);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
+    public Task SendArgumentedAsync(SendRequestDto sendRequest, CancellationToken ct)
+        => throw new NotSupportedException();
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync(
         [EnumeratorCancellation] CancellationToken ct)

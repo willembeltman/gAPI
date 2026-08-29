@@ -133,7 +133,7 @@ public class {Name}(
         var requestId = RequestId.New();
         var payload = {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
-        await ___fabricClient.SendAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, request =>
+        await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendArgumentedAsync" : "SendAsync")}(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, request =>
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
             ___fabricClient.RegisterAsyncEnumerableArgument(request, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
         }}, {(ct == null ? "___cts.Token" : ct.Name)});
