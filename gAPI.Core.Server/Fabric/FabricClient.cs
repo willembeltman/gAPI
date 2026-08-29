@@ -63,6 +63,7 @@ public sealed class FabricClient : IAsyncDisposable
     public Channel<Action<BinaryWriter>> SendQueue { get; } = Channel.CreateUnbounded<Action<BinaryWriter>>();
     public ConcurrentDictionary<ServiceId, ConcurrentDictionary<SseHostId, ISseHost>> Services { get; } = new();
     public ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingRequests { get; } = new();
+    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     public ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = new();
 
     private readonly CancellationTokenSource SenderCts = new();
@@ -283,6 +284,9 @@ public sealed class FabricClient : IAsyncDisposable
     }
 
     public async Task SendAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, CancellationToken ct)
+        => await SendAsync(serviceId, methodId, userId, sessionId, data, null, ct);
+
+    public async Task SendAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, Action<RequestId>? registerArguments, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -293,8 +297,12 @@ public sealed class FabricClient : IAsyncDisposable
                 sessionId,
                 data);
 
+        var requestId = RequestId.New();
+        registerArguments?.Invoke(requestId);
+
         var sendRequest = new SendRequestDto()
         {
+            RequestId = requestId,
             ServiceId = serviceId,
             MethodId = methodId,
             UserId = userId,
@@ -309,6 +317,50 @@ public sealed class FabricClient : IAsyncDisposable
         }
 
         await Sender.Send_SendRequest_ToFabricAsync(sendRequest, ct);
+    }
+
+    public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    {
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var gate = new SemaphoreSlim(1, 1);
+        ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
+        {
+            await gate.WaitAsync(ct);
+            try
+            {
+                var hasNext = await enumerator.MoveNextAsync();
+                var response = new InvokeArgumentResponseDto
+                {
+                    RequestId = requestId,
+                    ArgumentIndex = argumentIndex,
+                    IsCompleted = !hasNext,
+                    BinaryData = hasNext ? serializer(enumerator.Current) : []
+                };
+                if (Host != null)
+                    await Sender.Send_InvokeArgumentResponse_ToFabricAsync(response, ct);
+
+                if (!hasNext)
+                {
+                    ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+                    await enumerator.DisposeAsync();
+                }
+            }
+            finally
+            {
+                gate.Release();
+            }
+        };
+    }
+
+    public async Task<bool> TryHandleInvokeArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    {
+        if (ArgumentRequestHandlers.TryGetValue((request.RequestId, request.ArgumentIndex), out var handler))
+        {
+            await handler(ct);
+            return true;
+        }
+
+        return false;
     }
 
     public IAsyncEnumerable<InvokeResponseDto> InvokeAsync(ServiceId serviceId, ServiceMethodId serviceMethodId, UserId? userId, SessionId? sessionId, byte[] data, CancellationToken ct)

@@ -27,6 +27,9 @@ public abstract class WssServerConnection : ISignalRInvoker
     readonly FabricClient FabricClient;
     readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> Services;
     readonly ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingRequests;
+    readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
+    readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
+    readonly ConcurrentDictionary<RequestId, byte> ArgumentRoutes = [];
     readonly SseHostCollection SseHostCollection;
 
     private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
@@ -148,12 +151,22 @@ public abstract class WssServerConnection : ISignalRInvoker
 
                         case WssClientToServerMessageEnum.SendRequest:
                             var sendRequest = span.ReadApiSendRequestDto(ref offset);
-                            await Receive_SendRequest_FromClientAsync(sendRequest, ct);
+                            _ = Task.Run(async () => { await Receive_SendRequest_FromClientAsync(sendRequest, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeRequest:
                             var invokeRequest = span.ReadApiInvokeRequestDto(ref offset);
                             _ = Task.Run(async () => { await Receive_InvokeRequest_FromClientAsync(invokeRequest, ct); }, ct);
+                            break;
+
+                        case WssClientToServerMessageEnum.InvokeArgumentRequest:
+                            var argumentRequest = span.ReadInvokeArgumentRequestDto(ref offset);
+                            _ = Task.Run(async () => { await ReceiveInvokeArgumentRequest(argumentRequest, ct); }, ct);
+                            break;
+
+                        case WssClientToServerMessageEnum.InvokeArgumentResponse:
+                            var argumentResponse = span.ReadInvokeArgumentResponseDto(ref offset);
+                            await ReceiveInvokeArgumentResponse(argumentResponse, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeResponse:
@@ -182,6 +195,22 @@ public abstract class WssServerConnection : ISignalRInvoker
         {
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
         }
+    }
+
+    private async Task ReceiveInvokeArgumentResponse(InvokeArgumentResponseDto argumentResponse, CancellationToken ct)
+    {
+        if (ArgumentResponseHandlers.TryGetValue((argumentResponse.RequestId, argumentResponse.ArgumentIndex), out var responseHandler))
+            responseHandler(argumentResponse);
+        else if (FabricClient.IsConnected)
+            await FabricClient.Sender.Send_InvokeArgumentResponse_ToFabricAsync(argumentResponse, ct);
+    }
+
+    private async Task ReceiveInvokeArgumentRequest(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
+    {
+        if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
+            await argumentHandler(ct);
+        else if (!await FabricClient.TryHandleInvokeArgumentRequestAsync(argumentRequest, ct) && FabricClient.IsConnected)
+            await FabricClient.Sender.Send_InvokeArgumentRequest_ToFabricAsync(argumentRequest, ct);
     }
 
     private async Task Receive_Initialize_FromClientAsync(PathString path, QueryString queryString, IPAddress? ipAddress, string sessionId, string? cookieData, InitializeDto initialize, CancellationToken ct)
@@ -260,6 +289,8 @@ public abstract class WssServerConnection : ISignalRInvoker
 
         if (PendingRequests.TryRemove(invokeResponseDone.RequestId, out var channel))
             channel.Writer.TryComplete();
+
+        ArgumentRoutes.TryRemove(invokeResponseDone.RequestId, out _);
     }
 
     private async Task Receive_Log_FromClientAsync(WssLoggerLogDto log, CancellationToken ct)
@@ -276,6 +307,7 @@ public abstract class WssServerConnection : ISignalRInvoker
 
     public async Task Send_SendRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto sendRequest, CancellationToken ct)
     {
+        ArgumentRoutes[sendRequest.RequestId] = 0;
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequest_ToClientAsync({sendRequest})", sendRequest);
 
@@ -290,11 +322,37 @@ public abstract class WssServerConnection : ISignalRInvoker
         }, ct);
     }
 
+    public bool HasRequest(RequestId requestId) => ArgumentRoutes.ContainsKey(requestId);
+
+    public async Task Send_InvokeArgumentRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentRequestDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeArgumentRequest);
+            writer.Write(ref offset, request);
+            return offset;
+        }, ct);
+    }
+
+    public async Task Send_InvokeArgumentResponse_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentResponseDto response, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeArgumentResponse);
+            writer.Write(ref offset, response);
+            return offset;
+        }, ct);
+    }
+
     public async IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClientAsync(
          WssServiceSubscription hubHost,
          InvokeRequestDto invokeRequest,
          [EnumeratorCancellation] CancellationToken ct)
     {
+        ArgumentRoutes[invokeRequest.RequestId] = 0;
+
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
                 "Send_InvokeRequest_ToClientAsync({invokeRequest})",
@@ -390,6 +448,75 @@ public abstract class WssServerConnection : ISignalRInvoker
         }, ct);
     }
 
+    public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    {
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var gate = new SemaphoreSlim(1, 1);
+        ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
+        {
+            await gate.WaitAsync(ct);
+            try
+            {
+                var hasNext = await enumerator.MoveNextAsync();
+                await Send_InvokeArgumentResponse_ToClientAsync(new InvokeArgumentResponseDto
+                {
+                    RequestId = requestId,
+                    ArgumentIndex = argumentIndex,
+                    IsCompleted = !hasNext,
+                    BinaryData = hasNext ? serializer(enumerator.Current) : []
+                }, ct);
+                if (!hasNext)
+                {
+                    ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+                    await enumerator.DisposeAsync();
+                }
+            }
+            finally
+            {
+                gate.Release();
+            }
+        };
+    }
+    public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, Func<byte[], T> deserializer)
+    {
+        var remote = new RemoteAsyncEnumerable<T>(ct => Send_InvokeArgumentRequest_ToClientAsync(new InvokeArgumentRequestDto
+        {
+            RequestId = requestId,
+            ArgumentIndex = argumentIndex
+        }, ct));
+        ArgumentResponseHandlers[(requestId, argumentIndex)] = response =>
+        {
+            if (response.IsCompleted)
+            {
+                ArgumentResponseHandlers.TryRemove((requestId, argumentIndex), out _);
+                remote.Complete();
+            }
+            else
+                remote.Push(deserializer(response.BinaryData));
+        };
+        return remote;
+    }
+    private async Task Send_InvokeArgumentRequest_ToClientAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeArgumentRequest);
+            writer.Write(ref offset, request);
+            return offset;
+        }, ct);
+    }
+    private async Task Send_InvokeArgumentResponse_ToClientAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeArgumentResponse);
+            writer.Write(ref offset, response);
+            return offset;
+        }, ct);
+    }
+
     private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
         try
@@ -400,7 +527,6 @@ public abstract class WssServerConnection : ISignalRInvoker
         {
         }
     }
-
 
     private async Task SendKernel(WebSocket socket, CancellationToken ct)
     {

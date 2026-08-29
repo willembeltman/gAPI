@@ -37,6 +37,14 @@ public class FabricClientReceiver(
                         //_ = Task.Run(async () => { await Receive_SendRequest_FromFabricAsync(sendRequest, ct); }, ct);
                         await Receive_SendRequest_FromFabricAsync(sendRequest, ct);
                         break;
+                    case FabricHostToClientMessageEnum.InvokeArgumentRequest:
+                        var argumentRequest = fabricClient.BinaryReader.ReadInvokeArgumentRequestDto();
+                        await Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct);
+                        break;
+                    case FabricHostToClientMessageEnum.InvokeArgumentResponse:
+                        var argumentResponse = fabricClient.BinaryReader.ReadInvokeArgumentResponseDto();
+                        await Receive_InvokeArgumentResponse_FromFabricAsync(argumentResponse, ct);
+                        break;
                     case FabricHostToClientMessageEnum.InvokeRequest:
                         var invokeRequest = fabricClient.BinaryReader.ReadInvokeRequestDto();
                         _ = Task.Run(async () => { await Receive_InvokeRequest_FromFabricAsync(invokeRequest, ct); }, ct);
@@ -94,6 +102,16 @@ public class FabricClientReceiver(
             {
             }
         }
+    }
+    public async Task Receive_InvokeArgumentRequest_FromFabricAsync(InvokeArgumentRequestDto message, CancellationToken ct)
+    {
+        await fabricClient.TryHandleInvokeArgumentRequestAsync(message, ct);
+    }
+    public async Task Receive_InvokeArgumentResponse_FromFabricAsync(InvokeArgumentResponseDto message, CancellationToken ct)
+    {
+        var sseHosts = GetHosts(message.RequestId);
+        foreach (var sseHost in sseHosts)
+            await sseHost.SendArgumentResponseAsync(message, ct);
     }
     public async Task Receive_InvokeRequest_FromFabricAsync(InvokeRequestDto message, CancellationToken ct)
     {
@@ -164,5 +182,11 @@ public class FabricClientReceiver(
                 (sessionId != null && sseHost.SessionId == sessionId) ||
                 // Mogelijkheid 3: Naar user: User not null
                 (userId != null && sseHost.UserId == userId));
+    }
+
+    private IEnumerable<ISseHost> GetHosts(RequestId requestId)
+    {
+        return fabricClient.Services.Values.SelectMany(a => a.Values)
+            .Where(a => a.HasRequest(requestId));
     }
 }

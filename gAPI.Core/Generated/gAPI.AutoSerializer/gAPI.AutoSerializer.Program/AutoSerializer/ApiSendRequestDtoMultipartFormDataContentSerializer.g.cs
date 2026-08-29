@@ -16,6 +16,7 @@ public static class ApiSendRequestDtoMultipartFormDataContentSerializer
     [IsMultipartFormDataContentSerializer]
     public static void Write(this MultipartFormDataContent ___content, string ___name, ApiSendRequestDto value)
     {
+        RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);
         ServiceMethodIdMultipartFormDataContentSerializer.Write(___content, "MethodId", value.MethodId);
         if (value.SessionId != null)

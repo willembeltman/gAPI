@@ -109,6 +109,22 @@ public class FabricClientSender(
             writer.Write(request);
         }, ct);
     }
+    public async Task Send_InvokeArgumentRequest_ToFabricAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeArgumentRequest);
+            writer.Write(request);
+        }, ct);
+    }
+    public async Task Send_InvokeArgumentResponse_ToFabricAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeArgumentResponse);
+            writer.Write(response);
+        }, ct);
+    }
     public async Task Send_InvokeResponse_ToFabricAsync(InvokeResponseDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

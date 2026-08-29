@@ -10,6 +10,7 @@ public static class SendRequestDtoComparer
     [IsComparer]
     public static bool IsDifferent(this SendRequestDto value, SendRequestDto otherValue)
     {
+        if (value.RequestId != otherValue.RequestId) return true;
         if (value.ServiceId != otherValue.ServiceId) return true;
         if (value.MethodId != otherValue.MethodId) return true;
         if (value.UserId != otherValue.UserId) return true;

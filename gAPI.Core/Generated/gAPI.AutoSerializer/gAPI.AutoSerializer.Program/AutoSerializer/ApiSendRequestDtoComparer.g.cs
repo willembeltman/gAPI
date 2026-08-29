@@ -10,6 +10,7 @@ public static class ApiSendRequestDtoComparer
     [IsComparer]
     public static bool IsDifferent(this ApiSendRequestDto value, ApiSendRequestDto otherValue)
     {
+        if (value.RequestId != otherValue.RequestId) return true;
         if (value.ServiceId != otherValue.ServiceId) return true;
         if (value.MethodId != otherValue.MethodId) return true;
         if (value.SessionId != otherValue.SessionId) return true;

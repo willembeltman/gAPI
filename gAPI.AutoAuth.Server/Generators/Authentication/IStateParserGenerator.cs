@@ -42,11 +42,6 @@ namespace {Namespace};
 
 public interface {Name} : {IStateParserT}<{State}>
 {{
-    bool TryParse(string? value, out {State} state);
-    StringValues ToStringValuesBase64({State} value);
-    string? ToStringBase64({State}? value);
-    bool IsDifferent({State}? value1, {State}? value2);
-    {State}? CreateCopy({State}? value);
 }}";
     }
 }

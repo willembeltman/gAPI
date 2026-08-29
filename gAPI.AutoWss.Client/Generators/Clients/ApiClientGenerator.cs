@@ -104,15 +104,19 @@ public sealed class {Name}(
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 
+    var ___requestId = {RequestId}.New();{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
+
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         await ___clientConnection.Send_SendRequest_ToServerAsync(new {ApiSendRequestDto}()
         {{
+            RequestId = ___requestId,
             ServiceId = ___ServiceId,
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
             StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
+            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
     }}";
 }))}
@@ -140,6 +144,8 @@ public sealed class {Name}(
 {(ct == null ? $@"
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
+{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
         var ___timeout = TimeSpan.FromSeconds(10);
         var ___activity = new SemaphoreSlim(0, 1);
 
@@ -173,7 +179,7 @@ public sealed class {Name}(
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
             StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
+            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
 
         {responseInnerType}{(responseInnerType.IsNullable ? "?" : "")} ___result = default!;
@@ -218,6 +224,8 @@ public sealed class {Name}(
 {(ct == null ? $@"
         var ___activityCts = ___Cts;" : $@"
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
+{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
         var ___timeout = TimeSpan.FromSeconds(10);
         var ___activity = new SemaphoreSlim(0, 1);
 
@@ -252,7 +260,7 @@ public sealed class {Name}(
             MethodId = new(""{method}""),
             SessionId = ___httpClient.SessionId,
             StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg}"))})
+            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
         }}, ___activityCts.Token);
 
         try
@@ -296,19 +304,29 @@ public sealed class {Name}(
             ___channel.Writer.TryComplete();
     }}
 {string.Join("", Interface.Methods.Select(method => $@"
-    public byte[] {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"
+    public byte[] {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
         {arg.ParameterType} {arg}"))})
-    {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
-        var ___offset = 0;{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => PropertyHelper.GenerateLengthCode(arg.ParameterSymbol.Type, arg.Name, "        ", false)))}
+    {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
+        var ___offset = 0;{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => PropertyHelper.GenerateLengthCode(arg.ParameterSymbol.Type, arg.Name, "        ", false)))}
         var ___buffer = new byte[___offset];
         var ___span = new Span<byte>(___buffer);
         var ___length = ___offset;
-        ___offset = 0;{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => PropertyHelper.GenerateSpanWriteCode(arg.ParameterSymbol.Type, arg.Name, "        ", false)))}
+        ___offset = 0;{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => PropertyHelper.GenerateSpanWriteCode(arg.ParameterSymbol.Type, arg.Name, "        ", false)))}
         if (___length != ___offset)
             throw new Exception($""Binary length doesn't match: {{___length}} != {{___offset}}"");
         return ___buffer;" : $@"
         return [];")}
-    }}"))}{functions}
+    }}"))}{string.Join("", Interface.Methods.SelectMany(method => method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+    public byte[] {Interface}_{method}_{index}_Serializer({arg.ParameterType.UnderlayingTypes.Single()} value)
+    {{
+        var ___offset = 0;
+        {PropertyHelper.GenerateLengthCode(arg.ParameterType.UnderlayingTypes.Single().Type, "value", "        ", false)}
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        {PropertyHelper.GenerateSpanWriteCode(arg.ParameterType.UnderlayingTypes.Single().Type, "value", "        ", false)}
+        return ___span.Slice(0, ___offset).ToArray();
+    }}" : "")))}{functions}
 
     public void Dispose()
     {{

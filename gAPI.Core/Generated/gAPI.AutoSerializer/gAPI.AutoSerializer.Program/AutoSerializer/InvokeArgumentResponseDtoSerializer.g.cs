@@ -7,37 +7,28 @@ using gAPI.Core.Attributes;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class SendRequestDtoSerializer
+public static class InvokeArgumentResponseDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0xF2E06435;
-    public const uint SchemaHash = 0xA695EE48;
+    public const uint TypeId = 0x40CFF5FA;
+    public const uint SchemaHash = 0x45353D15;
 
     [IsSerializerWrite]
-    public static void Write(this BinaryWriter ___writer, SendRequestDto value)
+    public static void Write(this BinaryWriter ___writer, InvokeArgumentResponseDto value)
     {
         ___writer.Write(Magic); // Magic string `GA` => it's a gAPI stream
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
         RequestIdSerializer.Write(___writer, value.RequestId);
-        ServiceIdSerializer.Write(___writer, value.ServiceId);
-        ServiceMethodIdSerializer.Write(___writer, value.MethodId);
-        ___writer.Write(value.UserId != null); 
-        if (value.UserId != null) 
-            UserIdSerializer.Write(___writer, value.UserId.Value);
-        ___writer.Write(value.SessionId != null); 
-        if (value.SessionId != null) 
-            SessionIdSerializer.Write(___writer, value.SessionId.Value);
-        ___writer.Write(value.StateData != null); 
-        if (value.StateData != null)
-            ___writer.Write(value.StateData);
+        ___writer.Write(value.ArgumentIndex);
+        ___writer.Write(value.IsCompleted);
         ___writer.Write(value.BinaryData.Length);
         ___writer.Write(value.BinaryData);
     }
 
     [IsSerializerRead]
-    public static SendRequestDto ReadSendRequestDto(this BinaryReader ___reader)
+    public static InvokeArgumentResponseDto ReadInvokeArgumentResponseDto(this BinaryReader ___reader)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -46,13 +37,10 @@ public static class SendRequestDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new SendRequestDto();
+        var value = new InvokeArgumentResponseDto();
         value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
-        value.ServiceId = ServiceIdSerializer.ReadServiceId(___reader);
-        value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
-        value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);
-        value.SessionId = ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader);
-        value.StateData = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
+        value.ArgumentIndex = ___reader.ReadInt32();
+        value.IsCompleted = ___reader.ReadBoolean();
         value.BinaryData = ___reader.ReadBytes(___reader.ReadInt32());
         return value;
     }

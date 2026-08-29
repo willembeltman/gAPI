@@ -25,7 +25,7 @@ public class SharedReference
 
     public virtual string Name { get; protected set; } = string.Empty;
     public virtual string? Namespace { get; protected set; }
-    public INamedTypeSymbol _NamedTypeSymbol { get; }
+    public INamedTypeSymbol? _NamedTypeSymbol { get; }
 
     public virtual string FullName => $"{Namespace}.{Name}";
 

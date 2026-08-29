@@ -11,6 +11,7 @@ public static class SendRequestDtoCreateCopy
     public static SendRequestDto CreateCopy(this SendRequestDto value)
     {
         var copy = new SendRequestDto();
+        copy.RequestId = value.RequestId;
         copy.ServiceId = value.ServiceId;
         copy.MethodId = value.MethodId;
         copy.UserId = value.UserId;

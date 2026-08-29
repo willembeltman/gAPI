@@ -14,4 +14,7 @@ public interface ISseHost
 
     IAsyncEnumerable<InvokeResponseDto> InvokeAsync(InvokeRequestDto request, CancellationToken ct);
     Task SendAsync(SendRequestDto message, CancellationToken ct);
+    bool HasRequest(RequestId requestId);
+    Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct);
+    Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct);
 }

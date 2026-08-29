@@ -11,6 +11,7 @@ public static class ApiSendRequestDtoCreateCopy
     public static ApiSendRequestDto CreateCopy(this ApiSendRequestDto value)
     {
         var copy = new ApiSendRequestDto();
+        copy.RequestId = value.RequestId;
         copy.ServiceId = value.ServiceId;
         copy.MethodId = value.MethodId;
         copy.SessionId = value.SessionId;

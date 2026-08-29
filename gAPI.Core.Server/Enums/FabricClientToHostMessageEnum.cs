@@ -5,6 +5,8 @@ public enum FabricClientToHostMessageEnum
     Subscribe,
     Unsubscribe,
     SendRequest,
+    InvokeArgumentRequest,
+    InvokeArgumentResponse,
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,

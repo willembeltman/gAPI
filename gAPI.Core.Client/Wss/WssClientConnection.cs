@@ -2,6 +2,7 @@
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
@@ -29,6 +30,8 @@ public abstract class WssClientConnection : IWssClientConnection
     private readonly ILogger Logger;
     private readonly SemaphoreSlim InitLock = new(1, 1);
     private readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
+    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
+    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
     private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
     private byte[] SendBuffer = new byte[10 * 1024 * 1024];
     private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
@@ -198,13 +201,24 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.SendRequest:
                         var sendRequest = span.ReadSendRequestDto(ref offset);
                         await HttpClient.UpdateStateDataAsync(sendRequest.StateData, ct);
-                        await Received_SendRequest_FromServerAsync(sendRequest, ct);
+                        _ = Task.Run(async () => { await Received_SendRequest_FromServerAsync(sendRequest, ct); }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeRequest:
                         var invokeRequest = span.ReadInvokeRequestDto(ref offset);
                         await HttpClient.UpdateStateDataAsync(invokeRequest.StateData, ct);
                         _ = Task.Run(async () => { await Received_InvokeRequest_FromServerAsync(invokeRequest, ct); }, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeArgumentRequest:
+                        var argumentRequest = span.ReadInvokeArgumentRequestDto(ref offset);
+                        _ = Task.Run(async () => { await Received_InvokeArgumentRequest_FromServerAsync(argumentRequest, ct); }, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeArgumentResponse:
+                        var argumentResponse = span.ReadInvokeArgumentResponseDto(ref offset);
+                        if (ArgumentResponseHandlers.TryGetValue((argumentResponse.RequestId, argumentResponse.ArgumentIndex), out var responseHandler))
+                            responseHandler(argumentResponse);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeResponse:
@@ -230,10 +244,30 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
+    private async Task Received_InvokeArgumentRequest_FromServerAsync(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
+    {
+        if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
+            await argumentHandler(ct);
+    }
+
     protected abstract Task Received_SendRequest_FromServerAsync(SendRequestDto sendRequest, CancellationToken ct);
     protected abstract Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
     protected abstract Task Received_InvokeResponse_FromServerAsync(ApiInvokeResponseDto invokeResponse, CancellationToken ct);
     protected abstract Task Received_InvokeResponseDone_FromServerAsync(ApiInvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
+
+    private async Task Send_Initialize_ToServerAsync(InitializeDto initialize, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("SendRequestAsync({initialize})", initialize);
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
+            writer.Write(ref offset, initialize);
+            return offset;
+        }, ct);
+    }
 
     public async Task Send_Subscribe_ToServerAsync(SubscribeDto subscribe, CancellationToken ct)
     {
@@ -272,19 +306,6 @@ public abstract class WssClientConnection : IWssClientConnection
         }, ct);
     }
 
-    private async Task Send_Initialize_ToServerAsync(InitializeDto initialize, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("SendRequestAsync({initialize})", initialize);
-
-        await EnqueueAsync(writer =>
-        {
-            var offset = 0;
-            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
-            writer.Write(ref offset, initialize);
-            return offset;
-        }, ct);
-    }
     public async Task Send_SendRequest_ToServerAsync(ApiSendRequestDto sendRequest, CancellationToken ct)
     {
         if (!Initialized)
@@ -349,6 +370,76 @@ public abstract class WssClientConnection : IWssClientConnection
             return offset;
         }, ct);
     }
+
+    public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    {
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var gate = new SemaphoreSlim(1, 1);
+        ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
+        {
+            await gate.WaitAsync(ct);
+            try
+            {
+                var hasNext = await enumerator.MoveNextAsync();
+                await Send_InvokeArgumentResponse_ToServerAsync(new InvokeArgumentResponseDto
+                {
+                    RequestId = requestId,
+                    ArgumentIndex = argumentIndex,
+                    IsCompleted = !hasNext,
+                    BinaryData = hasNext ? serializer(enumerator.Current) : []
+                }, ct);
+                if (!hasNext)
+                {
+                    ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+                    await enumerator.DisposeAsync();
+                }
+            }
+            finally
+            {
+                gate.Release();
+            }
+        };
+    }
+    public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, Func<byte[], T> deserializer)
+    {
+        var remote = new RemoteAsyncEnumerable<T>(ct => Send_InvokeArgumentRequest_ToServerAsync(new InvokeArgumentRequestDto
+        {
+            RequestId = requestId,
+            ArgumentIndex = argumentIndex
+        }, ct));
+        ArgumentResponseHandlers[(requestId, argumentIndex)] = response =>
+        {
+            if (response.IsCompleted)
+            {
+                ArgumentResponseHandlers.TryRemove((requestId, argumentIndex), out _);
+                remote.Complete();
+            }
+            else
+                remote.Push(deserializer(response.BinaryData));
+        };
+        return remote;
+    }
+    private async Task Send_InvokeArgumentRequest_ToServerAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeArgumentRequest);
+            writer.Write(ref offset, request);
+            return offset;
+        }, ct);
+    }
+    private async Task Send_InvokeArgumentResponse_ToServerAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeArgumentResponse);
+            writer.Write(ref offset, response);
+            return offset;
+        }, ct);
+    }
+
     public async Task Send_Log_ToServerAsync(WssLoggerLogDto log, CancellationToken ct)
     {
         Console.WriteLine(log);

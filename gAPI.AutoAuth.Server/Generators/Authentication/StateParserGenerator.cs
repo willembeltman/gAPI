@@ -60,13 +60,13 @@ public class {Name} : {IStateParser}
             {{
                 state = data.Read{State}(ref offset);
             }}
-            catch (Exception ex)
+            catch
             {{
                 return false;
             }}
             return true;
         }}
-        catch (Exception ex)
+        catch
         {{
             return false;
         }}

@@ -14,7 +14,7 @@ public static class ApiSendRequestDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x8ABA41BB;
-    public const uint SchemaHash = 0x5451FF61;
+    public const uint SchemaHash = 0xE6DEB1F3;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, ApiSendRequestDto value)
@@ -23,6 +23,7 @@ public static class ApiSendRequestDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
+        RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Write(ref ___span, ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Write(ref ___span, ref ___offset, value.MethodId);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
@@ -45,6 +46,7 @@ public static class ApiSendRequestDtoSpanSerializer
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
         var value = new ApiSendRequestDto();
+        value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
         value.ServiceId = ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset);
         value.MethodId = ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset);
         value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
@@ -57,6 +59,7 @@ public static class ApiSendRequestDtoSpanSerializer
     public static int Length(ref int ___offset, ApiSendRequestDto value)
     {
         ___offset += 10;
+        RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Length(ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Length(ref ___offset, value.MethodId);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);

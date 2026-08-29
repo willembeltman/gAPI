@@ -77,4 +77,12 @@ public class SseHost(
             "You cannot use methods that have return types for SSE, " +
             "it also should be impossible to get here so kuddo's for the hacky bug.");
     }
+
+    public bool HasRequest(RequestId requestId) => false;
+
+    public Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+        => throw new NotSupportedException();
+
+    public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+        => throw new NotSupportedException();
 }

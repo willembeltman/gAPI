@@ -6,6 +6,7 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public class ApiSendRequestDto
 {
+    public RequestId RequestId { get; set; }
     public ServiceId ServiceId { get; set; }
     public ServiceMethodId MethodId { get; set; }
     public SessionId? SessionId { get; set; }

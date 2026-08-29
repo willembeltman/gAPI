@@ -63,6 +63,14 @@ public class WssServiceSubscription
         return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
     }
 
+    public bool HasRequest(RequestId requestId) => Connection.HasRequest(requestId);
+
+    public Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+        => Connection.Send_InvokeArgumentRequest_ToClientAsync(this, request, ct);
+
+    public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+        => Connection.Send_InvokeArgumentResponse_ToClientAsync(this, response, ct);
+
     public IAsyncEnumerable<InvokeResponseDto> InvokeAsync(InvokeRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

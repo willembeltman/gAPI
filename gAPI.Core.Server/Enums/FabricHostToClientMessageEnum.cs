@@ -3,6 +3,8 @@
 public enum FabricHostToClientMessageEnum
 {
     SendRequest,
+    InvokeArgumentRequest,
+    InvokeArgumentResponse,
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
