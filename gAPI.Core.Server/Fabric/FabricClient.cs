@@ -65,6 +65,7 @@ public sealed class FabricClient : IAsyncDisposable
     public ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingRequests { get; } = new();
     private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), InvokeArgumentResponseDto> PendingArgumentResponses = [];
+    private readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingArgumentedRequests = [];
     public ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = new();
 
     private readonly CancellationTokenSource SenderCts = new();
@@ -285,29 +286,28 @@ public sealed class FabricClient : IAsyncDisposable
     }
 
     public async Task SendAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, CancellationToken ct)
-        => await SendAsync(serviceId, methodId, userId, sessionId, data, null, false, ct);
+    {
+        var request = new SendRequestDto
+        {
+            RequestId = RequestId.New(),
+            ServiceId = serviceId,
+            MethodId = methodId,
+            UserId = userId,
+            SessionId = sessionId,
+            BinaryData = data
+        };
+
+        if (Host == null)
+            await Receiver.Receive_SendRequest_FromFabricAsync(request, ct);
+        else
+            await Sender.Send_SendRequest_ToFabricAsync(request, ct);
+    }
 
     public async Task SendArgumentedAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, Action<RequestId> registerArguments, CancellationToken ct)
-        => await SendAsync(serviceId, methodId, userId, sessionId, data, registerArguments, true, ct);
-
-    public async Task SendAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, Action<RequestId>? registerArguments, CancellationToken ct)
-        => await SendAsync(serviceId, methodId, userId, sessionId, data, registerArguments, false, ct);
-
-    private async Task SendAsync(ServiceId serviceId, ServiceMethodId methodId, UserId? userId, SessionId? sessionId, byte[] data, Action<RequestId>? registerArguments, bool argumented, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(
-                "SendAsync({serviceId}, {methodId} {userId}, {sessionId}, {data})",
-                serviceId,
-                methodId,
-                userId,
-                sessionId,
-                data);
-
         var requestId = RequestId.New();
-        registerArguments?.Invoke(requestId);
-
-        var sendRequest = new SendRequestDto()
+        registerArguments(requestId);
+        var request = new SendRequestDto
         {
             RequestId = requestId,
             ServiceId = serviceId,
@@ -319,17 +319,23 @@ public sealed class FabricClient : IAsyncDisposable
 
         if (Host == null)
         {
-            if (argumented)
-                await Receiver.Receive_SendArgumentedRequest_FromFabricAsync(sendRequest, ct);
-            else
-                await Receiver.Receive_SendRequest_FromFabricAsync(sendRequest, ct);
+            await Receiver.Receive_SendArgumentedRequest_FromFabricAsync(request, ct);
             return;
         }
 
-        if (argumented)
-            await Sender.Send_SendArgumentedRequest_ToFabricAsync(sendRequest, ct);
-        else
-            await Sender.Send_SendRequest_ToFabricAsync(sendRequest, ct);
+        var completion = PendingArgumentedRequests.GetOrAdd(
+            requestId,
+            _ => new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously));
+        await Sender.Send_SendArgumentedRequest_ToFabricAsync(request, ct);
+
+        try
+        {
+            await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+        }
+        finally
+        {
+            PendingArgumentedRequests.TryRemove(requestId, out _);
+        }
     }
 
     public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
@@ -380,6 +386,13 @@ public sealed class FabricClient : IAsyncDisposable
 
     public bool TryTakeInvokeArgumentResponse(RequestId requestId, int argumentIndex, out InvokeArgumentResponseDto response)
         => PendingArgumentResponses.TryRemove((requestId, argumentIndex), out response!);
+
+    public Task Receive_SendArgumentedRequestDone_FromFabricAsync(SendArgumentedRequestDoneDto done)
+    {
+        if (PendingArgumentedRequests.TryRemove(done.RequestId, out var completion))
+            completion.TrySetResult(true);
+        return Task.CompletedTask;
+    }
 
     public IAsyncEnumerable<InvokeResponseDto> InvokeAsync(ServiceId serviceId, ServiceMethodId serviceMethodId, UserId? userId, SessionId? sessionId, byte[] data, CancellationToken ct)
     {

@@ -40,6 +40,10 @@ public class FabricClientReceiver(
                         var sendArgumentedRequest = fabricClient.BinaryReader.ReadSendRequestDto();
                         _ = Task.Run(async () => { await Receive_SendArgumentedRequest_FromFabricAsync(sendArgumentedRequest, ct); }, ct);
                         break;
+                    case FabricHostToClientMessageEnum.SendArgumentedRequestDone:
+                        var sendArgumentedRequestDone = fabricClient.BinaryReader.ReadSendArgumentedRequestDoneDto();
+                        await Receive_SendArgumentedRequestDone_FromFabricAsync(sendArgumentedRequestDone, ct);
+                        break;
                     case FabricHostToClientMessageEnum.InvokeArgumentRequest:
                         var argumentRequest = fabricClient.BinaryReader.ReadInvokeArgumentRequestDto();
                         await Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct);
@@ -119,6 +123,10 @@ public class FabricClientReceiver(
             {
             }
         }
+    }
+    public async Task Receive_SendArgumentedRequestDone_FromFabricAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
+    {
+        await fabricClient.Receive_SendArgumentedRequestDone_FromFabricAsync(done);
     }
     public async Task Receive_InvokeArgumentRequest_FromFabricAsync(InvokeArgumentRequestDto message, CancellationToken ct)
     {

@@ -13,6 +13,7 @@ public class FabricManager
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
     public readonly ConcurrentDictionary<RequestId, InvokeRequestState> InvokeRequests = new();
+    public readonly ConcurrentDictionary<RequestId, ArgumentedRequestState> ArgumentedRequests = new();
     public readonly IConsole Console;
 
     public FabricManager(IConsole console)
@@ -80,11 +81,80 @@ public class FabricManager
         }
     }
 
+    public async Task SendArgumentedRequestAsync(FabricHost caller, SendRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        (var fabricHostsEnumerable, var actor) = Services[request.ServiceId]
+            .GetFabricHosts(request.UserId, request.SessionId);
+        var fabricHosts = fabricHostsEnumerable.ToArray();
+        actor.EnqueueReceive(receiveSize);
+        if (fabricHosts.Length == 0)
+            return;
+
+        var state = new ArgumentedRequestState
+        {
+            RequestId = request.RequestId,
+            Caller = caller,
+            Actor = actor,
+            Targets = [.. fabricHosts.Select(host => host.Id)]
+        };
+
+        if (!ArgumentedRequests.TryAdd(request.RequestId, state))
+            return;
+
+        _ = StartArgumentedTimeoutAsync(state, TimeSpan.FromSeconds(60));
+        foreach (var fabricHost in fabricHosts)
+            await fabricHost.SendArgumentedRequestAsync(request, actor);
+    }
+
+    public async Task InvokeArgumentRequestAsync(FabricHost caller, InvokeArgumentRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        if (!ArgumentedRequests.TryGetValue(request.RequestId, out var state))
+            return;
+
+        state.Actor?.EnqueueReceive(receiveSize);
+        await state.Caller.InvokeArgumentRequestAsync(request, state.Actor);
+    }
+
+    public async Task InvokeArgumentResponseAsync(FabricHost caller, InvokeArgumentResponseDto response, long receiveSize, CancellationToken ct)
+    {
+        if (!ArgumentedRequests.TryGetValue(response.RequestId, out var state))
+            return;
+
+        state.Actor?.EnqueueReceive(receiveSize);
+        foreach (var targetId in state.Targets)
+        {
+            var target = Connections.FirstOrDefault(host => host.Id == targetId);
+            if (target != null)
+                await target.InvokeArgumentResponseAsync(response, state.Actor);
+        }
+
+        if (response.IsCompleted)
+            CompleteArgumentedRequest(state);
+    }
+
+    public async Task SendArgumentedRequestDoneAsync(FabricHost target, SendArgumentedRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        if (!ArgumentedRequests.TryGetValue(done.RequestId, out var state))
+            return;
+
+        state.Actor.EnqueueReceive(receiveSize);
+        lock (state)
+        {
+            state.CompletedTargets.Add(target.Id);
+        }
+
+        if (state.CompletedTargets.Count == state.Targets.Count)
+        {
+            await state.Caller.SendArgumentedRequestDoneAsync(done, state.Actor);
+            CompleteArgumentedRequest(state);
+        }
+    }
+
     public async Task InvokeRequestAsync(FabricHost caller, InvokeRequestDto invokeRequest, long receiveSize, CancellationToken ct)
     {
-        (var fabricHosts2, var actor) = Services[invokeRequest.ServiceId]
+        (var fabricHostsEnumerable, var actor) = Services[invokeRequest.ServiceId]
             .GetFabricHosts(invokeRequest.UserId, invokeRequest.SessionId);
-        var fabricHosts = fabricHosts2.ToArray();
+        var fabricHosts = fabricHostsEnumerable.ToArray();
         actor.EnqueueReceive(receiveSize);
         if (fabricHosts.Length == 0)
             return;
@@ -141,6 +211,27 @@ public class FabricManager
         catch (TaskCanceledException)
         {
             // normaal pad
+        }
+    }
+
+    private async Task StartArgumentedTimeoutAsync(ArgumentedRequestState state, TimeSpan timeout)
+    {
+        try
+        {
+            await Task.Delay(timeout, state.TimeoutCts.Token);
+            CompleteArgumentedRequest(state);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private void CompleteArgumentedRequest(ArgumentedRequestState state)
+    {
+        if (ArgumentedRequests.TryRemove(state.RequestId, out _))
+        {
+            state.TimeoutCts.Cancel();
+            state.TimeoutCts.Dispose();
         }
     }
     private async Task CompleteRequestAsync(InvokeRequestState state)

@@ -7,6 +7,7 @@ public enum WssClientToServerMessageEnum
     Unsubscribe,
     SendRequest,
     SendArgumentedRequest,
+    SendArgumentedRequestDone,
     InvokeRequest,
     InvokeArgumentRequest,
     InvokeArgumentResponse,

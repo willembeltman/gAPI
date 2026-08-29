@@ -1,0 +1,10 @@
+using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
+
+namespace gAPI.Core.Dtos;
+
+[GenerateSerializer]
+public class SendArgumentedRequestDoneDto
+{
+    public RequestId RequestId { get; set; }
+}

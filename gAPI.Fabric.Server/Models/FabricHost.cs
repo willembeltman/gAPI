@@ -98,6 +98,38 @@ public sealed class FabricHost
             writer.Write(message);
         }, actor);
     }
+    public async Task SendArgumentedRequestAsync(SendRequestDto message, IActor actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendArgumentedRequest);
+            writer.Write(message);
+        }, actor);
+    }
+    public async Task SendArgumentedRequestDoneAsync(SendArgumentedRequestDoneDto done, IActor? actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendArgumentedRequestDone);
+            writer.Write(done);
+        }, actor);
+    }
+    public async Task InvokeArgumentRequestAsync(InvokeArgumentRequestDto request, IActor? actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeArgumentRequest);
+            writer.Write(request);
+        }, actor);
+    }
+    public async Task InvokeArgumentResponseAsync(InvokeArgumentResponseDto response, IActor? actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeArgumentResponse);
+            writer.Write(response);
+        }, actor);
+    }
     public async Task InvokeRequestAsync(InvokeRequestDto request, IActor actor)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
@@ -211,6 +243,34 @@ public sealed class FabricHost
                             //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" ReceiveLoop({Id}) SendRequest({{sendRequest}})", sendRequest);
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.SendRequestAsync(this, sendRequest, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.SendArgumentedRequest:
+                        {
+                            var sendArgumentedRequest = reader.ReadSendRequestDto();
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.SendArgumentedRequestAsync(this, sendArgumentedRequest, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.SendArgumentedRequestDone:
+                        {
+                            var done = reader.ReadSendArgumentedRequestDoneDto();
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.SendArgumentedRequestDoneAsync(this, done, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.InvokeArgumentRequest:
+                        {
+                            var argumentRequest = reader.ReadInvokeArgumentRequestDto();
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.InvokeArgumentRequestAsync(this, argumentRequest, receiveSize, Cts.Token);
+                        }
+                        break;
+                    case FabricClientToHostMessageEnum.InvokeArgumentResponse:
+                        {
+                            var argumentResponse = reader.ReadInvokeArgumentResponseDto();
+                            var receiveSize = counter.BytesRead - previous;
+                            await Manager.InvokeArgumentResponseAsync(this, argumentResponse, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequest:

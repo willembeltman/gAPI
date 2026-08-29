@@ -207,7 +207,11 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.SendArgumentedRequest:
                         var sendArgumentedRequest = span.ReadSendRequestDto(ref offset);
                         await HttpClient.UpdateStateDataAsync(sendArgumentedRequest.StateData, ct);
-                        _ = Task.Run(async () => { await Received_SendArgumentedRequest_FromServerAsync(sendArgumentedRequest, ct); }, ct);
+                        _ = Task.Run(async () =>
+                        {
+                            await Received_SendArgumentedRequest_FromServerAsync(sendArgumentedRequest, ct);
+                            await Send_SendArgumentedRequestDone_ToServerAsync(sendArgumentedRequest.RequestId, ct);
+                        }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeRequest:
@@ -339,6 +343,17 @@ public abstract class WssClientConnection : IWssClientConnection
             var offset = 0;
             writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendArgumentedRequest);
             writer.Write(ref offset, sendRequest);
+            return offset;
+        }, ct);
+    }
+
+    public async Task Send_SendArgumentedRequestDone_ToServerAsync(RequestId requestId, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendArgumentedRequestDone);
+            writer.Write(ref offset, new SendArgumentedRequestDoneDto { RequestId = requestId });
             return offset;
         }, ct);
     }

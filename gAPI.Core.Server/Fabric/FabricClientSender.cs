@@ -107,6 +107,14 @@ public class FabricClientSender(
             writer.Write(request);
         }, ct);
     }
+    public async Task Send_SendArgumentedRequestDone_ToFabricAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendArgumentedRequestDone);
+            writer.Write(done);
+        }, ct);
+    }
     public async Task Send_InvokeRequest_ToFabricAsync(InvokeRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

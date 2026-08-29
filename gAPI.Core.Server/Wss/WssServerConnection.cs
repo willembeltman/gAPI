@@ -30,6 +30,7 @@ public abstract class WssServerConnection : ISignalRInvoker
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, byte> ArgumentRoutes = [];
+    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingArgumentedRequests = [];
     readonly SseHostCollection SseHostCollection;
 
     private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
@@ -160,6 +161,11 @@ public abstract class WssServerConnection : ISignalRInvoker
                             _ = Task.Run(async () => { await Receive_SendArgumentedRequest_FromClientAsync(sendArgumentedRequest, ct); }, ct);
                             break;
 
+                        case WssClientToServerMessageEnum.SendArgumentedRequestDone:
+                            var sendArgumentedRequestDone = span.ReadSendArgumentedRequestDoneDto(ref offset);
+                            await Receive_SendArgumentedRequestDone_FromClientAsync(sendArgumentedRequestDone, ct);
+                            break;
+
                         case WssClientToServerMessageEnum.InvokeRequest:
                             var invokeRequest = span.ReadApiInvokeRequestDto(ref offset);
                             _ = Task.Run(async () => { await Receive_InvokeRequest_FromClientAsync(invokeRequest, ct); }, ct);
@@ -282,6 +288,12 @@ public abstract class WssServerConnection : ISignalRInvoker
         await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
         await SendArgumentedRequestAsync(sendRequest, ct);
     }
+
+    private async Task Receive_SendArgumentedRequestDone_FromClientAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
+    {
+        if (PendingArgumentedRequests.TryRemove(done.RequestId, out var completion))
+            completion.TrySetResult(true);
+    }
     private async Task Receive_InvokeRequest_FromClientAsync(ApiInvokeRequestDto invokeRequest, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -344,6 +356,8 @@ public abstract class WssServerConnection : ISignalRInvoker
     public async Task Send_SendArgumentedRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto sendRequest, CancellationToken ct)
     {
         ArgumentRoutes[sendRequest.RequestId] = 0;
+        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        PendingArgumentedRequests[sendRequest.RequestId] = completion;
         sendRequest.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
 
         await EnqueueAsync(writer =>
@@ -353,6 +367,16 @@ public abstract class WssServerConnection : ISignalRInvoker
             writer.Write(ref offset, sendRequest);
             return offset;
         }, ct);
+
+        try
+        {
+            await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+        }
+        finally
+        {
+            PendingArgumentedRequests.TryRemove(sendRequest.RequestId, out _);
+            ArgumentRoutes.TryRemove(sendRequest.RequestId, out _);
+        }
     }
 
     public bool HasRequest(RequestId requestId) => ArgumentRoutes.ContainsKey(requestId);
