@@ -544,7 +544,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
         };
     }
-    public async Task<bool> TryHandleInvokeArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    public async Task<bool> Receive_InvokeArgumentRequest_FromFabricAsync(InvokeArgumentRequestDto request, CancellationToken ct)
     {
         if (ArgumentRequestHandlers.TryGetValue((request.RequestId, request.ArgumentIndex), out var handler))
         {

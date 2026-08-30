@@ -13,8 +13,8 @@ public class FabricManager
     public readonly SessionCache SessionCache;
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
-    public readonly ConcurrentDictionary<RequestId, SendRequestState> SendRequests = new();
-    public readonly ConcurrentDictionary<RequestId, InvokeRequestState> InvokeRequests = new();
+    public readonly ConcurrentDictionary<RequestId, RequestState> SendRequests = new();
+    public readonly ConcurrentDictionary<RequestId, RequestState> InvokeRequests = new();
     public readonly IConsole Console;
 
     public FabricManager(IConsole console)
@@ -89,7 +89,7 @@ public class FabricManager
         if (fabricHosts.Length == 0)
             return;
 
-        var state = new SendRequestState
+        var state = new RequestState
         {
             RequestId = request.RequestId,
             Caller = caller,
@@ -117,8 +117,7 @@ public class FabricManager
 
         if (state.CompletedTargets.Count == state.Targets.Count)
         {
-            await state.Caller.Send_SendRequestDone_ToApiAsync(done, state.Actor);
-            CompleteRequestAsync(state);
+            await CompleteRequestAsync(state);
         }
     }
     public async Task Receive_SendRequestExceptionAsync(FabricHost caller, SendRequestExceptionDto ex, long receiveSize, CancellationToken ct)
@@ -134,37 +133,56 @@ public class FabricManager
             state.Exceptions.Add(caller.Id, ex.ExceptionMessage);
         }
 
-        if (state.CompletedTargets.Count == state.Targets.Count)
-        {
-            await state.Caller.Send_SendRequestDone_ToApiAsync(ex, state.Actor);
-            CompleteRequestAsync(state);
-        }
-    }
+        if (state.CompletedTargets.Count != state.Targets.Count)
+            return;
 
-    private async Task StartRequestTimeoutAsync(SendRequestState state, TimeSpan timeout)
+        await CompleteRequestAsync(state);
+
+    }
+    private async Task StartRequestTimeoutAsync(RequestState state, TimeSpan timeout)
     {
         try
         {
             await Task.Delay(timeout, state.TimeoutCts.Token);
-            CompleteRequestAsync(state);
+            state.Exceptions.Add(state.Caller.Id, "Request timed out.");
+            await CompleteRequestAsync(state);
         }
         catch (TaskCanceledException)
         {
         }
     }
-    private void CompleteRequestAsync(SendRequestState state)
+    private async Task CompleteRequestAsync(RequestState state)
     {
-        if (SendRequests.TryRemove(state.RequestId, out _))
+        if (!state.TryComplete())
+            return;
+
+        state.TimeoutCts.Cancel();
+        state.TimeoutCts.Dispose();
+        InvokeRequests.TryRemove(state.RequestId, out _);
+
+        if (state.Exceptions.Count == 0)
         {
-            state.TimeoutCts.Cancel();
-            state.TimeoutCts.Dispose();
+            await state.Caller.Send_SendRequestDone_ToApiAsync(new SendRequestDoneDto()
+            {
+                RequestId = state.RequestId
+            }, state.Actor);
+        }
+        else
+        {
+            var exceptionMessage = string.Join(", ", state.Exceptions.Values);
+            await state.Caller.Send_SendRequestDone_ToApiAsync(new SendRequestExceptionDto()
+            {
+                RequestId = state.RequestId,
+                ExceptionMessage = exceptionMessage
+            }, state.Actor);
         }
     }
 
     public async Task Receive_InvokeArgumentRequestAsync(FabricHost caller, InvokeArgumentRequestDto request, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(request.RequestId, out var state))
-            return;
+            if (!InvokeRequests.TryGetValue(request.RequestId, out state))
+                return;
 
         state.Actor?.EnqueueReceive(receiveSize);
         await state.Caller.Send_InvokeArgumentRequest_ToApiAsync(request, state.Actor);
@@ -172,7 +190,8 @@ public class FabricManager
     public async Task Receive_InvokeArgumentResponseAsync(FabricHost caller, InvokeArgumentResponseDto response, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(response.RequestId, out var state))
-            return;
+            if (!InvokeRequests.TryGetValue(response.RequestId, out state))
+                return;
 
         state.Actor?.EnqueueReceive(receiveSize);
         foreach (var targetId in state.Targets)
@@ -193,12 +212,13 @@ public class FabricManager
         if (fabricHosts.Length == 0)
             return;
 
-        var state = new InvokeRequestState
+        var state = new RequestState
         {
             Actor = actor,
             RequestId = request.RequestId,
             Caller = caller,
-            PendingHosts = [.. fabricHosts.Select(h => h.Id)]
+            Targets = [.. fabricHosts.Select(host => host.Id)]
+            //PendingHosts = [.. fabricHosts.Select(h => h.Id)]
         };
 
         if (!InvokeRequests.TryAdd(request.RequestId, state))
@@ -223,17 +243,15 @@ public class FabricManager
             return;
 
         state.Actor?.EnqueueReceive(receiveSize);
-
-        bool isLast;
-
         lock (state)
         {
-            state.PendingHosts.Remove(caller.Id);
-            isLast = state.PendingHosts.Count == 0;
+            state.CompletedTargets.Add(caller.Id);
         }
 
-        if (isLast)
+        if (state.CompletedTargets.Count == state.Targets.Count)
+        {
             await CompleteInvokeAsync(state);
+        }
     }
     public async Task Receive_InvokeResponseExceptionAsync(FabricHost caller, InvokeResponseExceptionDto ex, long receiveSize, CancellationToken ct)
     {
@@ -241,21 +259,18 @@ public class FabricManager
             return;
 
         state.Actor?.EnqueueReceive(receiveSize);
-
-        bool isLast;
-
         lock (state)
         {
-            state.Exceptions.Add(caller.Id, ex.ExceptionMessage);
-            state.PendingHosts.Remove(caller.Id);
-            isLast = state.PendingHosts.Count == 0;
+            state.CompletedTargets.Add(caller.Id);
         }
 
-        if (isLast)
+        if (state.CompletedTargets.Count == state.Targets.Count)
+        {
             await CompleteInvokeAsync(state);
+        }
     }
 
-    private async Task StartInvokeTimeoutAsync(InvokeRequestState state, TimeSpan timeout)
+    private async Task StartInvokeTimeoutAsync(RequestState state, TimeSpan timeout)
     {
         try
         {
@@ -267,15 +282,32 @@ public class FabricManager
             // normaal pad
         }
     }
-    private async Task CompleteInvokeAsync(InvokeRequestState state)
+    private async Task CompleteInvokeAsync(RequestState state)
     {
         if (!state.TryComplete())
             return;
 
         state.TimeoutCts.Cancel();
+        state.TimeoutCts.Dispose();
         InvokeRequests.TryRemove(state.RequestId, out _);
 
-        await state.Caller.Send_InvokeResponseDone_ToApiAsync(new InvokeResponseDoneDto() { RequestId = state.RequestId }, state.Actor);
+        if (state.Exceptions.Count == 0)
+        {
+            await state.Caller.Send_InvokeResponseDone_ToApiAsync(new InvokeResponseDoneDto()
+            {
+                RequestId = state.RequestId
+            }, state.Actor);
+
+        }
+        else
+        {
+            var exceptionMessage = string.Join(", ", state.Exceptions.Values);
+            await state.Caller.Send_InvokeResponseException_ToApiAsync(new InvokeResponseExceptionDto()
+            {
+                RequestId = state.RequestId,
+                ExceptionMessage = exceptionMessage
+            }, state.Actor);
+        }
     }
 
     public async Task DisconnectAllAsync()

@@ -124,8 +124,10 @@ public class {Name}(
         var ___requestId = RequestId.New();
         var ___payload = {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
+
 {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
+        
         await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
             ___requestId,
             ___serviceId, 
@@ -151,6 +153,8 @@ public class {Name}(
         var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
         var ___payload = {Interface}_{method}_Serializer({string.Join(",", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
+{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
 
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,

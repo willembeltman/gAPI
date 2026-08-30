@@ -97,6 +97,7 @@ public class {Name} : WssServerConnection
     readonly {IServerAuthenticationService} ___authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
     readonly {@interface} {@interface.CleanName};")))}
     readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly {FabricClient} ___fabricClient;
 
     public {Name}(
         {IServerAuthenticationService} authenticationService,
@@ -107,6 +108,7 @@ public class {Name} : WssServerConnection
         ILoggerFactory loggerFactory) 
         : base(authenticationService, SseServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
     {{
+        this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         this.{@interface.CleanName} = {@interface.CleanName.ToCamelCase()};")))}
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();

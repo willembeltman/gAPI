@@ -28,7 +28,7 @@ public abstract class WssServerConnection : IWssServerConnection
     readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> Services;
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingInvokeRequests;
-    readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
+    //readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, byte> ArgumentRoutes = [];
     readonly SseServiceSubscriptionCollection SseServiceSubscriptionCollection = new();
@@ -162,7 +162,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
                         case WssClientToServerMessageEnum.InvokeArgumentRequest:
                             var argumentRequest = span.ReadInvokeArgumentRequestDto(ref offset);
-                            _ = Task.Run(async () => { await ReceiveInvokeArgumentRequest(argumentRequest, ct); }, ct);
+                            _ = Task.Run(async () => { await Receive_InvokeArgumentRequest_FromClientAsync(argumentRequest, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.SendRequestDone:
@@ -287,11 +287,13 @@ public abstract class WssServerConnection : IWssServerConnection
             completion.SetException(new Exception(sendRequestException.ExceptionMessage));
     }
 
-    private async Task ReceiveInvokeArgumentRequest(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
+    private async Task Receive_InvokeArgumentRequest_FromClientAsync(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
     {
-        if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
-            await argumentHandler(ct);
-        else if (await FabricClient.TryHandleInvokeArgumentRequestAsync(argumentRequest, ct))
+        // TODO
+        //if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
+        //    await argumentHandler(ct);
+        //else 
+            if (await FabricClient.Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct))
         {
             if (FabricClient.TryTakeInvokeArgumentResponse(argumentRequest.RequestId, argumentRequest.ArgumentIndex, out var response))
                 await Send_InvokeArgumentResponse_ToClientAsync(response, ct);
@@ -600,42 +602,42 @@ public abstract class WssServerConnection : IWssServerConnection
         }, ct);
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
-    {
-        var enumerator = source.GetAsyncEnumerator(cancellationToken);
-        var gate = new SemaphoreSlim(1, 1);
-        var timeout = new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
-        {
-            ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
-            _ = enumerator.DisposeAsync().AsTask();
-        });
-        ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
-        {
-            timeout.Reset();
-            await gate.WaitAsync(ct);
-            try
-            {
-                var hasNext = await enumerator.MoveNextAsync();
-                await Send_InvokeArgumentResponse_ToClientAsync(new InvokeArgumentResponseDto
-                {
-                    RequestId = requestId,
-                    ArgumentIndex = argumentIndex,
-                    IsCompleted = !hasNext,
-                    BinaryData = hasNext ? serializer(enumerator.Current) : []
-                }, ct);
-                if (!hasNext)
-                {
-                    ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
-                    timeout.Dispose();
-                    await enumerator.DisposeAsync();
-                }
-            }
-            finally
-            {
-                gate.Release();
-            }
-        };
-    }
+    //public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    //{
+    //    var enumerator = source.GetAsyncEnumerator(cancellationToken);
+    //    var gate = new SemaphoreSlim(1, 1);
+    //    var timeout = new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
+    //    {
+    //        ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+    //        _ = enumerator.DisposeAsync().AsTask();
+    //    });
+    //    ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
+    //    {
+    //        timeout.Reset();
+    //        await gate.WaitAsync(ct);
+    //        try
+    //        {
+    //            var hasNext = await enumerator.MoveNextAsync();
+    //            await Send_InvokeArgumentResponse_ToClientAsync(new InvokeArgumentResponseDto
+    //            {
+    //                RequestId = requestId,
+    //                ArgumentIndex = argumentIndex,
+    //                IsCompleted = !hasNext,
+    //                BinaryData = hasNext ? serializer(enumerator.Current) : []
+    //            }, ct);
+    //            if (!hasNext)
+    //            {
+    //                ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+    //                timeout.Dispose();
+    //                await enumerator.DisposeAsync();
+    //            }
+    //        }
+    //        finally
+    //        {
+    //            gate.Release();
+    //        }
+    //    };
+    //}
     public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, Func<byte[], T> deserializer)
     {
         var remote = new RemoteAsyncEnumerable<T>(ct => Send_InvokeArgumentRequest_ToClientAsync(new InvokeArgumentRequestDto

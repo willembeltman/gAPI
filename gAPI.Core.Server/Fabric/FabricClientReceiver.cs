@@ -142,7 +142,7 @@ public class FabricClientReceiver(
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_InvokeArgumentRequest_FromFabricAsync({message})", message);
 
-        await fabricClient.TryHandleInvokeArgumentRequestAsync(message, ct);
+        await fabricClient.Receive_InvokeArgumentRequest_FromFabricAsync(message, ct);
     }
     private async Task Receive_InvokeArgumentResponse_FromFabricAsync(InvokeArgumentResponseDto message, CancellationToken ct)
     {
