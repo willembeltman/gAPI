@@ -22,7 +22,7 @@ public class IClientServiceContext_Generator : _BaseGenerator
     public Generator Context { get; }
     public ClientService_Generator ClientHandler { get; }
     public Interface IClientHandler => ClientHandler.Interface;
-    public WssHub_Generator WssHub => Context.WssHub;
+    public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public SharedReference UserId => Context.SharedReferences.UserId;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
 

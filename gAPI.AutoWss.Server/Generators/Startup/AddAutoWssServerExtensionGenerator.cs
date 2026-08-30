@@ -21,29 +21,29 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
 
     public Generator Context { get; }
 
-    public WssHub_Generator WssHub => Context.WssHub;
+    public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
     public IClientContext_Generator IClientContext => Context.IClientContext;
     public ClientContext_Generator ClientContext => Context.ClientContext;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
-    public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
+    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
-    public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
+    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
 
     public override void GenerateCode()
     {
-        Reg(WssHub);
+        Reg(ServerConnection);
         Reg(IClientContext);
         Reg(ClientContext);
         Reg(FabricClient);
         Reg(ServerConfig);
         Reg(WssServerConnectionCollection);
-        Reg(SseHostCollection);
-        Reg(WssSessionCache);
+        Reg(SseServiceSubscriptionCollection);
+        Reg(SessionCache);
         Reg(ServerAuthenticationAccessor);
         Reg(SessionId);
         Reg("Microsoft.AspNetCore.HttpOverrides");
@@ -170,19 +170,19 @@ public static class {Name}
                 }});
             }});
         }}
-        services.AddScoped<{WssHub}>();
+        services.AddScoped<{ServerConnection}>();
         services.AddSingleton(sp => new {FabricClient}(
-            sp.GetRequiredService<{WssSessionCache}>(),
+            sp.GetRequiredService<{SessionCache}>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
         var connectionCollection = new {WssServerConnectionCollection}();
         services.AddSingleton(connectionCollection);
 
-        var sseHostCollection = new {SseHostCollection}();
-        services.AddSingleton(sseHostCollection);
+        var SseServiceSubscriptionCollection = new {SseServiceSubscriptionCollection}();
+        services.AddSingleton(SseServiceSubscriptionCollection);
 
-        var sessionCache = new {WssSessionCache}();
+        var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
 
         if (fabricConnectionString == null)

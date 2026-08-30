@@ -3,18 +3,19 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Server.Wss;
 
 public class WssServiceSubscription
-    : ISseHost
+    : IServiceSubscription
     , IAsyncDisposable
 {
     public WssServiceSubscription(
-        ISignalRInvoker connection,
+        IWssServerConnection connection,
         ILoggerFactory loggerFactory,
-        SseHostCollection hubHosts,
+        SseServiceSubscriptionCollection hubHosts,
         FabricClient fabricClient,
         ConnectionId connectionId,
         ServiceId serviceId,
@@ -35,10 +36,10 @@ public class WssServiceSubscription
 
     private byte Disposed;
 
-    public SseHostId Id { get; }
+    public ServiceSubscriptionId Id { get; }
     public ILogger Logger { get; }
-    public ISignalRInvoker Connection { get; }
-    public SseHostCollection HubHosts { get; }
+    public IWssServerConnection Connection { get; }
+    public SseServiceSubscriptionCollection HubHosts { get; }
     public FabricClient FabricClient { get; }
     public ConnectionId ConnectionId { get; }
     public SessionId SessionId { get; }
@@ -62,8 +63,6 @@ public class WssServiceSubscription
 
         return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
     }
-    public Task SendArgumentedAsync(SendRequestDto message, CancellationToken ct)
-        => Connection.Send_SendArgumentedRequest_ToClientAsync(this, message, ct);
 
     public bool HasRequest(RequestId requestId) => Connection.HasRequest(requestId);
 

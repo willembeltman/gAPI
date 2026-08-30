@@ -1,0 +1,20 @@
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
+
+namespace gAPI.Core.Server.Interfaces;
+
+// Warning: This interface is only for escaping the gAPI core module to the application specific implementation
+// Do not use this interface for mocking as it doesn't expose the full interface
+public interface IServiceSubscription
+{
+    ServiceSubscriptionId Id { get; }
+    ServiceId ServiceId { get; }
+    SessionId SessionId { get; }
+    UserId UserId { get; }
+
+    IAsyncEnumerable<InvokeResponseDto> InvokeAsync(InvokeRequestDto request, CancellationToken ct);
+    Task SendAsync(SendRequestDto message, CancellationToken ct);
+    bool HasRequest(RequestId requestId);
+    Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct);
+    Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct);
+}

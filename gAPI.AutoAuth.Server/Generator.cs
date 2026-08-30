@@ -37,7 +37,7 @@ public class Generator
         //AuthenticationStateMapping = new AuthenticationStateMappingGenerator(this);
         AddAutoAuthServerExtension = new AddAutoAuthServerExtensionGenerator(this);
 
-        //WssHub = new WssHub_Generator(this);
+        //ServerConnection = new ServerConnection_Generator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -93,17 +93,17 @@ public class Generator
         //    }
         //}
 
-        //var WssHubSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
-        //    WssHub.NeededSerializers.ToArray(),
+        //var ServerConnectionSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+        //    ServerConnection.NeededSerializers.ToArray(),
         //    CustomSpanSerializers.Select(a => a.Type));
-        //foreach (var item in WssHubSpanSerializers)
+        //foreach (var item in ServerConnectionSpanSerializers)
         //{
         //    var name = item.ToDisplayString();
         //    if (generatedItems.Contains(name)) continue;
         //    generatedItems.Add(name);
 
         //    var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
-        //    serializerGenerator.Namespace = WssHub.Namespace!;
+        //    serializerGenerator.Namespace = ServerConnection.Namespace!;
         //    var code = serializerGenerator.Generate();
         //    spc.AddSource(
         //        serializerGenerator.FileName,

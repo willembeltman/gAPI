@@ -23,14 +23,14 @@ public class ClientServiceContext_Generator : _BaseGenerator
 
     public ClientService_Generator Client => IClientContext.ClientHandler;
     public Interface IClient => Client.Interface;
-    public SharedReference WssHub => Context.WssHub;
+    public SharedReference ServerConnection => Context.ServerConnection;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference UserId => Context.SharedReferences.UserId;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
 
     public override void GenerateCode()
     {
-        Reg(WssHub);
+        Reg(ServerConnection);
         Reg(IClientContext);
         Reg(FabricClient);
         Reg(IClient);

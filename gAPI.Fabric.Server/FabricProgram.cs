@@ -1,4 +1,7 @@
-﻿using gAPI.Fabric.Server.Models;
+﻿using gAPI.Fabric.Server.Config;
+using gAPI.Fabric.Server.ConsoleHelper;
+using gAPI.Fabric.Server.Models;
+using gAPI.Fabric.Server.Services;
 using System.Diagnostics;
 
 namespace gAPI.Fabric.Server;
@@ -21,9 +24,9 @@ public class FabricProgram
         textArea.SetItems(
         [
             new ColorLine () { Text = "Server started!"},
-    new ColorLine () { Text = "" },
-    new ColorLine () { Text = "press q to exit..." },
-    new ColorLine () { Text = "press r to restart all connections..." }
+            new ColorLine () { Text = "" },
+            new ColorLine () { Text = "press q to exit..." },
+            new ColorLine () { Text = "press r to restart all connections..." }
         ]);
 
         var screen = new Screen([textArea, connections, subscriptions]);

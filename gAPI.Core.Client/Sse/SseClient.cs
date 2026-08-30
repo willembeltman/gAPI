@@ -16,7 +16,7 @@ public class SseClient(
     private CancellationTokenSource Cts = new();
 
     public ServiceId ServiceId { get; } = serviceId;
-    public SseHostId? SseHostId { get; private set; }
+    public ServiceSubscriptionId? ServiceSubscriptionId { get; private set; }
 
     public async Task ConnectAsync()
     {
@@ -28,7 +28,7 @@ public class SseClient(
 
             try
             {
-                var url = $"/ssehost/connect/{WebUtility.UrlEncode(ServiceId.Value)}";
+                var url = $"/SseServiceSubscription/connect/{WebUtility.UrlEncode(ServiceId.Value)}";
                 using var stream = await clientAuthenticationService.GetStreamAsync(url, Cts.Token);
                 using var streamReader = new StreamReader(stream);
 
@@ -47,10 +47,10 @@ public class SseClient(
                         if (!ParseFrame(frame, out string eventName, out string eventData))
                             continue;
 
-                        if (eventName == "SseHostId")
+                        if (eventName == "ServiceSubscriptionId")
                         {
                             if (long.TryParse(eventData, out var id))
-                                SseHostId = new SseHostId(id);
+                                ServiceSubscriptionId = new ServiceSubscriptionId(id);
                         }
                         else if (eventName == "SendRequestDto")
                         {

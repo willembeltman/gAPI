@@ -19,7 +19,7 @@ public class IClientContext_Generator : _BaseGenerator
 
     public Generator Context { get; }
 
-    public WssHub_Generator WssHub => Context.WssHub;
+    public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public ClientServiceContext_Generator[] ClientHandlerContexts => Context.ClientContexts;
 
     public override void GenerateCode()

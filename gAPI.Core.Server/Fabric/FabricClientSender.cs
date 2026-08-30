@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Enums;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Server.Fabric;
@@ -56,15 +56,15 @@ public class FabricClientSender(
         }, ct);
     }
 
-    public async Task Send_Subscribe_ToFabricAsync(ISseHost sseHost, CancellationToken ct)
+    public async Task Send_Subscribe_ToFabricAsync(IServiceSubscription SseServiceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_Subscribe_ToFabricAsync({sseHost})", sseHost);
+            Logger.LogTrace("Send_Subscribe_ToFabricAsync({SseServiceSubscription})", SseServiceSubscription);
         var request = new SubscribeDto()
         {
-            ServiceId = sseHost.ServiceId,
-            UserId = sseHost.UserId,
-            SessionId = sseHost.SessionId
+            ServiceId = SseServiceSubscription.ServiceId,
+            UserId = SseServiceSubscription.UserId,
+            SessionId = SseServiceSubscription.SessionId
         };
         await EnqueueAsync(w =>
         {
@@ -72,15 +72,15 @@ public class FabricClientSender(
             w.Write(request);
         }, ct);
     }
-    public async Task Send_Unsubscribe_ToFabricAsync(ISseHost sseHost, CancellationToken ct)
+    public async Task Send_Unsubscribe_ToFabricAsync(IServiceSubscription SseServiceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_Unsubscribe_ToFabricAsync({sseHost})", sseHost);
+            Logger.LogTrace("Send_Unsubscribe_ToFabricAsync({SseServiceSubscription})", SseServiceSubscription);
         var request = new UnsubscribeDto()
         {
-            ServiceId = sseHost.ServiceId,
-            UserId = sseHost.UserId,
-            SessionId = sseHost.SessionId
+            ServiceId = SseServiceSubscription.ServiceId,
+            UserId = SseServiceSubscription.UserId,
+            SessionId = SseServiceSubscription.SessionId
         };
         await EnqueueAsync(w =>
         {
@@ -89,7 +89,7 @@ public class FabricClientSender(
         }, ct);
     }
 
-    public async Task Send_SendRequest_ToFabricAsync(SendRequestDto request, CancellationToken ct)
+    public async Task Send_SendRequest_ToFabricAsync2(SendRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequest_ToFabricAsync({request})", request);
@@ -99,20 +99,24 @@ public class FabricClientSender(
             writer.Write(request);
         }, ct);
     }
-    public async Task Send_SendArgumentedRequest_ToFabricAsync(SendRequestDto request, CancellationToken ct)
+    public async Task Send_SendRequestDone_ToFabricAsync(SendRequestDoneDto done, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_SendRequestDone_ToFabricAsync({request})", done);
         await EnqueueAsync(writer =>
         {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendArgumentedRequest);
-            writer.Write(request);
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestDone);
+            writer.Write(done);
         }, ct);
     }
-    public async Task Send_SendArgumentedRequestDone_ToFabricAsync(SendArgumentedRequestDoneDto done, CancellationToken ct)
+    public async Task Send_SendRequestException_ToFabricAsync(SendRequestExceptionDto ex, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_SendRequestDone_ToFabricAsync({ex})", ex);
         await EnqueueAsync(writer =>
         {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendArgumentedRequestDone);
-            writer.Write(done);
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestException);
+            writer.Write(ex);
         }, ct);
     }
     public async Task Send_InvokeRequest_ToFabricAsync(InvokeRequestDto request, CancellationToken ct)
@@ -152,18 +156,28 @@ public class FabricClientSender(
             writer.Write(response);
         }, ct);
     }
-    public async Task Send_InvokeResponseDone_ToFabricAsync(RequestId requestId, CancellationToken ct)
+    public async Task Send_InvokeResponseDone_ToFabricAsync(InvokeResponseDoneDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeResponseDone_ToFabricAsync({requestId})", requestId);
+            Logger.LogTrace("Send_InvokeResponseDone_ToFabricAsync({requestId})", response);
 
         await EnqueueAsync(writer =>
         {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeResponseDone);
-            writer.Write(requestId);
+            writer.Write(response);
         }, ct);
     }
+    public async Task Send_InvokeResponseException_ToFabricAsync(InvokeResponseExceptionDto ex, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_InvokeResponseDone_ToFabricAsync({ex})", ex);
 
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeResponseException);
+            writer.Write(ex);
+        }, ct);
+    }
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
         try
@@ -174,4 +188,5 @@ public class FabricClientSender(
         {
         }
     }
+
 }

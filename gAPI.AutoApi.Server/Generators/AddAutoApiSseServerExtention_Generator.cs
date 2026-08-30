@@ -23,7 +23,7 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
-    public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
+    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference? Middleware => Context.SharedReferences.AuthServer_Middleware;
 
@@ -34,8 +34,8 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference UserId => Context.SharedReferences.UserId;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
-    public SharedReference SseHost => Context.SharedReferences.SseHost;
-    public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
+    public SharedReference SseServiceSubscription => Context.SharedReferences.SseServiceSubscription;
+    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
 
     public override void GenerateCode()
     {
@@ -45,8 +45,8 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
         Reg(ServiceId);
         Reg(UserId);
         Reg(SessionId);
-        Reg(SseHost);
-        Reg(WssSessionCache);
+        Reg(SseServiceSubscription);
+        Reg(SessionCache);
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Builder");
@@ -70,7 +70,7 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
         Reg("Microsoft.Extensions.Logging");
         Reg(ServerConfig);
         Reg(FabricClient);
-        Reg(SseHostCollection);
+        Reg(SseServiceSubscriptionCollection);
         Reg("Microsoft.Extensions.DependencyInjection");
         var propertiesCode = "";
         foreach (var controller in Context.Apis.Where(a => a.Interface.FullName != "gAPI.Core.Interfaces.IAccountService"))
@@ -127,8 +127,8 @@ public static class {Name}
 
         services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-        var sseHostCollection = new {SseHostCollection}();
-        services.AddSingleton(sseHostCollection);
+        var SseServiceSubscriptionCollection = new {SseServiceSubscriptionCollection}();
+        services.AddSingleton(SseServiceSubscriptionCollection);
 
         {propertiesCode}
         services.AddAuthorization();
@@ -151,7 +151,7 @@ public static class {Name}
 
         services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-        var sessionCache = new {WssSessionCache}();
+        var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
 
         services.AddScoped<{IClientContext}, {ClientContext}>();

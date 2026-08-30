@@ -37,7 +37,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference AuthenticationInitializeResult => Context.SharedReferences.AuthenticationInitializeResult;
     public SharedReference AuthenticationHeaders => Context.SharedReferences.AuthenticationHeaders;
-    public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
+    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference IAuthenticationStateFactoryT => Context.SharedReferences.IAuthenticationStateFactoryT;
     public SharedReference IUserTokenFactoryT => Context.SharedReferences.IUserTokenFactoryT;
     public SharedReference IAuthenticationCheckT => Context.SharedReferences.IAuthenticationCheckT;
@@ -51,7 +51,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
         Reg(IAuthenticationCheckT);
         Reg(IUserTokenFactoryT);
         Reg(UserId);
-        Reg(WssSessionCache);
+        Reg(SessionCache);
         Reg(IAuthenticationStateFactoryT);
         Reg(AuthenticationInitializeResult);
         Reg(SessionId);

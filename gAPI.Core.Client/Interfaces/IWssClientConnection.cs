@@ -16,8 +16,8 @@ public interface IWssClientConnection : IWssLoggerFactory
     Task TryConnectAsync(CancellationToken ct);
     Task ForceReconnectAsync(CancellationToken ct);
 
-    Task Send_SendRequest_ToServerAsync(ApiSendRequestDto sendRequest, CancellationToken ct);
-    Task Send_InvokeRequest_ToServerAsync(ApiInvokeRequestDto invokeRequest, CancellationToken ct);
+    Task Send_SendRequest_ToServerAsync(SendRequestDto sendRequest, CancellationToken ct);
+    Task Send_InvokeRequest_ToServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
     Task Send_InvokeResponse_ToServerAsync(InvokeResponseDto invokeResponse, CancellationToken ct);
     Task Send_InvokeResponseDone_ToServerAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
 

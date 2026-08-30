@@ -9,4 +9,6 @@ public class InvokeResponseDoneDto
     public RequestId RequestId { get; set; }
     public ServiceId ServiceId { get; set; }
     public ServiceMethodId MethodId { get; set; }
+    public SessionId SessionId { get; set; }
+    public string? StateData { get; set; }
 }

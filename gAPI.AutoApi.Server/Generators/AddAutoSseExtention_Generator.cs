@@ -23,29 +23,29 @@
 //    public IEnumerable<ClientService_Generator> SseServices => Context.SseServices;
 //    public IClientContext_Generator IClientContext => Context.IClientContext;
 //    public ClientContext_Generator ClientContext => Context.ClientContext;
-//    public SharedReference SseHostCollection => Context.SharedReferences.SseHostCollection;
+//    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
 //    public SharedReference FabricClient => Context.SharedReferences.FabricClient;
 //    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 //    public SharedReference ServiceId => Context.SharedReferences.ServiceId;
 //    public SharedReference UserId => Context.SharedReferences.UserId;
 //    public SharedReference SessionId => Context.SharedReferences.SessionId;
 //    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
-//    public SharedReference SseHost => Context.SharedReferences.SseHost;
-//    public SharedReference WssSessionCache => Context.SharedReferences.WssSessionCache;
+//    public SharedReference SseServiceSubscription => Context.SharedReferences.SseServiceSubscription;
+//    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
 
 //    public override void GenerateCode()
 //    {
 //        Reg(IClientContext);
 //        Reg(ClientContext);
-//        Reg(SseHostCollection);
+//        Reg(SseServiceSubscriptionCollection);
 //        Reg(FabricClient);
 //        Reg(IServerAuthenticationService);
 //        Reg(ServiceId);
 //        Reg(UserId);
 //        Reg(SessionId);
 //        Reg(ServerConfig);
-//        Reg(SseHost);
-//        Reg(WssSessionCache);
+//        Reg(SseServiceSubscription);
+//        Reg(SessionCache);
 //        Reg("Microsoft.AspNetCore.Mvc");
 //        Reg("Microsoft.AspNetCore.HttpOverrides");
 //        Reg("Microsoft.AspNetCore.Builder");
@@ -88,10 +88,10 @@
 
 //        services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-//        var sseHostCollection = new {SseHostCollection}();
-//        services.AddSingleton(sseHostCollection);
+//        var SseServiceSubscriptionCollection = new {SseServiceSubscriptionCollection}();
+//        services.AddSingleton(SseServiceSubscriptionCollection);
 
-//        var sessionCache = new {WssSessionCache}();
+//        var sessionCache = new {SessionCache}();
 //        services.AddSingleton(sessionCache);
 
 //        services.AddScoped<{IClientContext}, {ClientContext}>();
@@ -103,17 +103,17 @@
 //    }}
 //    public static WebApplication MapAutoSse(this WebApplication app)
 //    {{
-//        app.MapGet(""/ssehost/connect/{{serviceId}}"", async (
+//        app.MapGet(""/SseServiceSubscription/connect/{{serviceId}}"", async (
 //            string serviceId,
 //            [FromHeader(Name = ""X-SessionId"")] string sessionId,
 //            {IServerAuthenticationService} authenticationService,
-//            {SseHostCollection} sseHostCollection,
+//            {SseServiceSubscriptionCollection} SseServiceSubscriptionCollection,
 //            {FabricClient} fabricClient,
 //            CancellationToken ct
 //        ) =>
 //        {{
-//            var sseHost = new {SseHost}(
-//                sseHostCollection,
+//            var SseServiceSubscription = new {SseServiceSubscription}(
+//                SseServiceSubscriptionCollection,
 //                fabricClient,
 //                new {ServiceId}(serviceId),
 //                authenticationService.UserId,
@@ -121,7 +121,7 @@
 //            );
 
 //            return Results.ServerSentEvents(
-//                sseHost.ReadAllAsync(ct)
+//                SseServiceSubscription.ReadAllAsync(ct)
 //            );
 //        }});
 //        return app;

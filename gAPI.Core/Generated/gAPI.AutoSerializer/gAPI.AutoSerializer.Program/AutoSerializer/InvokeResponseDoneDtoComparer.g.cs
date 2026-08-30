@@ -13,6 +13,8 @@ public static class InvokeResponseDoneDtoComparer
         if (value.RequestId != otherValue.RequestId) return true;
         if (value.ServiceId != otherValue.ServiceId) return true;
         if (value.MethodId != otherValue.MethodId) return true;
+        if (value.SessionId != otherValue.SessionId) return true;
+        if (value.StateData != otherValue.StateData) return true;
         return false;
     }
 }

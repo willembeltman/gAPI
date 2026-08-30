@@ -27,15 +27,15 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference SubscribeDto => Context.SharedReferences.SubscribeDto;
-    public SharedReference ApiInvokeResponseDto => Context.SharedReferences.ApiInvokeResponseDto;
+    //public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
-    public SharedReference ApiInvokeResponseDoneDto => Context.SharedReferences.ApiInvokeResponseDoneDto;
-    public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
-    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
+    //public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
+    //public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
+    //public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = new();
@@ -70,14 +70,14 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
         Reg(SubscribeDto);
-        Reg(ApiInvokeResponseDto);
+        //Reg(InvokeResponseDto);
         Reg(InvokeRequestDto);
         Reg(SendRequestDto);
         Reg(UnsubscribeDto);
         Reg(ServiceId);
         Reg(InvokeResponseDto);
-        Reg(ApiInvokeResponseDoneDto);
-        Reg(InvokeResponseDoneDto);
+        //Reg(InvokeResponseDoneDto);
+        //Reg(InvokeResponseDoneDto);
         Reg(IWssLoggerFactory);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
@@ -222,10 +222,10 @@ public class {Name}
         }}"))}
     }}
 
-    protected override async Task Received_SendRequest_FromServerAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Received_SendRequest_FromServerAsync({{___sendRequest}})"", ___sendRequest);
+            ___Logger.LogTrace(""Send_SendRequest_ToServiceAsync({{___sendRequest}})"", ___sendRequest);
 {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
         switch (___sendRequest.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
@@ -252,12 +252,10 @@ public class {Name}
         }}" : "")}
         throw new Exception($""Service \""{{___sendRequest.ServiceId.Value}}\"" / Method \""{{___sendRequest.MethodId.Value}}\"" not found"");
     }}
-    protected override Task Received_SendArgumentedRequest_FromServerAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
-        => Received_SendRequest_FromServerAsync(___sendRequest, ___ct);
-    protected override async Task Received_InvokeRequest_FromServerAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
+    protected override async Task Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Received_InvokeRequest_FromServerAsync({{___invokeRequest}})"", ___invokeRequest);
+            ___Logger.LogTrace(""Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", ___invokeRequest);
 {(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
@@ -293,14 +291,6 @@ public class {Name}
                                             }}, ___ct);
                                     }}
                                 }}
-
-                                await Send_InvokeResponseDone_ToServerAsync(
-                                    new {InvokeResponseDoneDto}()
-                                    {{
-                                        RequestId = ___invokeRequest.RequestId,
-                                        ServiceId = ___invokeRequest.ServiceId,
-                                        MethodId = ___invokeRequest.MethodId
-                                    }}, ___ct);
                             }}
                             return;";
         }))}
@@ -309,30 +299,6 @@ public class {Name}
                 }}"))}
         }}" : "")}
         throw new Exception($""Service \""{{___invokeRequest.ServiceId.Value}}\"" / Method \""{{___invokeRequest.MethodId.Value}}\"" not found"");
-    }}
-    protected override Task Received_InvokeResponse_FromServerAsync({ApiInvokeResponseDto} ___invokeResponse, CancellationToken ___ct)
-    {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Received_InvokeResponse_FromServerAsync({{___invokeResponse}})"", ___invokeResponse);
-{(Context.Apis.Any() ? $@"
-        switch (___invokeResponse.ServiceId.Value)
-        {{{string.Join("", Context.Apis.Select(api => $@"
-            case ""{api.Interface}"":
-                return {api.Name}.ReceiveResponseAsync(___invokeResponse);"))}
-        }}" : "")}
-        throw new Exception($""Service \""{{___invokeResponse.ServiceId.Value}}\"" / Method \""{{___invokeResponse.MethodId.Value}}\"" not found"");
-    }}
-    protected override Task Received_InvokeResponseDone_FromServerAsync({ApiInvokeResponseDoneDto} ___invokeResponseDone, CancellationToken ___ct)
-    {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Received_InvokeResponseDone_FromServerAsync({{___invokeResponseDone}})"", ___invokeResponseDone);
-{(Context.Apis.Any() ? $@"
-        switch (___invokeResponseDone.ServiceId.Value)
-        {{{string.Join("", Context.Apis.Select(api => $@"
-            case ""{api.Interface}"":
-                return {api.Name}.ReceiveResponseDoneAsync(___invokeResponseDone);"))}
-        }}" : "")}
-        throw new Exception($""Service \""{{___invokeResponseDone.ServiceId.Value}}\"" / Method \""{{___invokeResponseDone.MethodId.Value}}\"" not found"");
     }}
 {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => string.Join("", Interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
 {

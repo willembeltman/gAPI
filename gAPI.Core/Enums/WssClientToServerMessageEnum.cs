@@ -5,13 +5,16 @@ public enum WssClientToServerMessageEnum
     Initialize,
     Subscribe,
     Unsubscribe,
+
     SendRequest,
-    SendArgumentedRequest,
-    SendArgumentedRequestDone,
-    InvokeRequest,
+    SendRequestDone,
+    SendRequestException,
     InvokeArgumentRequest,
     InvokeArgumentResponse,
+    InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
+    InvokeResponseException,
+
     Log
 }

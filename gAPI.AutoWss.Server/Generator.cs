@@ -32,7 +32,7 @@ public class Generator
         CustomCreateCopys = customCreateCopys;
         CustomMultipartFormDataContents = customMultipartFormDataContents;
 
-        WssHub = new WssHub_Generator(this);
+        ServerConnection = new ServerConnection_Generator(this);
         IClientContext = new IClientContext_Generator(this);
         ClientContext = new ClientContext_Generator(this);
         AddAutoWssExtension = new AddAutoWssServerExtensionGenerator(this);
@@ -69,7 +69,7 @@ public class Generator
     public CustomObjectMethod[] CustomMultipartFormDataContents { get; }
 
 
-    public WssHub_Generator WssHub { get; }
+    public ServerConnection_Generator ServerConnection { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
     public AddAutoWssServerExtensionGenerator AddAutoWssExtension { get; }
@@ -84,7 +84,7 @@ public class Generator
 
     public void Generate(SourceProductionContext spc)
     {
-        GenerateItem(spc, WssHub);
+        GenerateItem(spc, ServerConnection);
         GenerateItem(spc, IClientContext);
         GenerateItem(spc, ClientContext);
         GenerateItem(spc, AddAutoWssExtension);
@@ -132,17 +132,17 @@ public class Generator
             }
         }
 
-        var WssHubSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
-            WssHub.NeededSerializers.ToArray(), 
+        var ServerConnectionSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
+            ServerConnection.NeededSerializers.ToArray(), 
             CustomSpanSerializers.Select(a => a.Type));
-        foreach (var item in WssHubSpanSerializers)
+        foreach (var item in ServerConnectionSpanSerializers)
         {
             var name = item.ToDisplayString();
             if (generatedItems.Contains(name)) continue;
             generatedItems.Add(name);
 
             var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
-            serializerGenerator.Namespace = WssHub.Namespace!;
+            serializerGenerator.Namespace = ServerConnection.Namespace!;
             var code = serializerGenerator.Generate();
             spc.AddSource(
                 serializerGenerator.FileName,

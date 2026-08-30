@@ -4,14 +4,17 @@ public enum FabricClientToHostMessageEnum
 {
     Subscribe,
     Unsubscribe,
+
     SendRequest,
-    SendArgumentedRequest,
-    SendArgumentedRequestDone,
+    SendRequestDone,
+    SendRequestException,
     InvokeArgumentRequest,
     InvokeArgumentResponse,
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
+    InvokeResponseException,
+
     UpdateSession,
     ClearSession,
     GetSessionCookieData

@@ -19,5 +19,8 @@ public static class InvokeResponseDoneDtoMultipartFormDataContentSerializer
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);
         ServiceMethodIdMultipartFormDataContentSerializer.Write(___content, "MethodId", value.MethodId);
+        SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId);
+        if (value.StateData != null)
+            ___content.Add(new StringContent(value.StateData), "StateData");
     }
 }
