@@ -88,8 +88,8 @@ public class {Name} : {IStateParser}
     }}
     public bool IsDifferent({State}? value1, {State}? value2)
     {{
-        if (value1 == null && value2 == null) return true;
-        if (value1 == null || value2 == null) return false;
+        if (value1 == null && value2 == null) return false;
+        if (value1 == null || value2 == null) return true;
         return value1.IsDifferent(value2);
     }}
     public {State}? CreateCopy({State}? value)

@@ -11,7 +11,7 @@ public static class SendRequestDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xF2E06435;
-    public const uint SchemaHash = 0xA695EE48;
+    public const uint SchemaHash = 0xB9B52283;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, SendRequestDto value)
@@ -29,6 +29,7 @@ public static class SendRequestDtoSerializer
         ___writer.Write(value.SessionId != null); 
         if (value.SessionId != null) 
             SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
@@ -52,6 +53,7 @@ public static class SendRequestDtoSerializer
         value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
         value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);
         value.SessionId = ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader);
+        value.StateIsChanged = ___reader.ReadBoolean();
         value.StateData = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
         value.BinaryData = ___reader.ReadBytes(___reader.ReadInt32());
         return value;

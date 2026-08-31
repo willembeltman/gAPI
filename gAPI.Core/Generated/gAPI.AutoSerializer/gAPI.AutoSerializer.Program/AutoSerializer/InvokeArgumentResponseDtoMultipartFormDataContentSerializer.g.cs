@@ -18,6 +18,7 @@ public static class InvokeArgumentResponseDtoMultipartFormDataContentSerializer
     {
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ___content.Add(new StringContent(value.ArgumentIndex.ToString()), "ArgumentIndex");
+        GuidSerializer.Write(___content, "StreamId", value.StreamId);
         ___content.Add(new StringContent(value.IsCompleted.ToString()), "IsCompleted");
         ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");
     }

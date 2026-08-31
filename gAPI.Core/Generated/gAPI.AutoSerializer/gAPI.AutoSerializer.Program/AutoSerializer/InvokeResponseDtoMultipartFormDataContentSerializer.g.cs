@@ -19,10 +19,10 @@ public static class InvokeResponseDtoMultipartFormDataContentSerializer
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);
         ServiceMethodIdMultipartFormDataContentSerializer.Write(___content, "MethodId", value.MethodId);
-        UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId);
-        SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId);
-        if (value.StateData != null)
-            ___content.Add(new StringContent(value.StateData), "StateData");
+        if (value.UserId != null)
+            UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId.Value);
+        if (value.SessionId != null)
+            SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId.Value);
         if (value.BinaryData != null)
             ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");
     }

@@ -11,7 +11,7 @@ public static class InvokeResponseExceptionDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x3CD54CD0;
-    public const uint SchemaHash = 0xFB41F420;
+    public const uint SchemaHash = 0xEC1A4F8B;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeResponseExceptionDto value)
@@ -23,10 +23,12 @@ public static class InvokeResponseExceptionDtoSerializer
         RequestIdSerializer.Write(___writer, value.RequestId);
         ServiceIdSerializer.Write(___writer, value.ServiceId);
         ServiceMethodIdSerializer.Write(___writer, value.MethodId);
-        SessionIdSerializer.Write(___writer, value.SessionId);
-        ___writer.Write(value.StateData != null); 
-        if (value.StateData != null)
-            ___writer.Write(value.StateData);
+        ___writer.Write(value.SessionId != null); 
+        if (value.SessionId != null) 
+            SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        ___writer.Write(value.UserId != null); 
+        if (value.UserId != null) 
+            UserIdSerializer.Write(___writer, value.UserId.Value);
         ___writer.Write(value.ExceptionMessage);
     }
 
@@ -44,8 +46,8 @@ public static class InvokeResponseExceptionDtoSerializer
         value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
         value.ServiceId = ServiceIdSerializer.ReadServiceId(___reader);
         value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
-        value.SessionId = SessionIdSerializer.ReadSessionId(___reader);
-        value.StateData = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
+        value.SessionId = ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader);
+        value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);
         value.ExceptionMessage = ___reader.ReadString();
         return value;
     }

@@ -16,7 +16,6 @@ public static class InvokeResponseDtoCreateCopy
         copy.MethodId = value.MethodId;
         copy.UserId = value.UserId;
         copy.SessionId = value.SessionId;
-        copy.StateData = value.StateData;
         copy.BinaryData = value.BinaryData == null ? null : value.BinaryData.ToArray();
         return copy;
     }

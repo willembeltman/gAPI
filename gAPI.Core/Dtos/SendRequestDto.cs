@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Attributes;
+using gAPI.Core.Attributes;
 using gAPI.Core.Ids;
 
 namespace gAPI.Core.Dtos;
@@ -11,6 +11,7 @@ public class SendRequestDto
     public ServiceMethodId MethodId { get; set; }
     public UserId? UserId { get; set; }
     public SessionId? SessionId { get; set; }
+    public bool StateIsChanged { get; set; }
     public string? StateData { get; set; }
     public byte[] BinaryData { get; set; } = [];
 

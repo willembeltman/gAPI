@@ -16,6 +16,7 @@ public static class InvokeRequestDtoCreateCopy
         copy.MethodId = value.MethodId;
         copy.UserId = value.UserId;
         copy.SessionId = value.SessionId;
+        copy.StateIsChanged = value.StateIsChanged;
         copy.StateData = value.StateData;
         copy.BinaryData = value.BinaryData.ToArray();
         return copy;

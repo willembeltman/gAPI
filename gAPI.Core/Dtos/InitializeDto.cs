@@ -1,10 +1,10 @@
-﻿using gAPI.Core.Attributes;
+using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
 namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public class InitializeDto
 {
-    public string SessionId { get; set; } = string.Empty;
     public string? StateData { get; set; }
 }

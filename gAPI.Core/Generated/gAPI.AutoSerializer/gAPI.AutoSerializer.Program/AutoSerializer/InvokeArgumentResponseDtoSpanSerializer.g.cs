@@ -14,7 +14,7 @@ public static class InvokeArgumentResponseDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x40CFF5FA;
-    public const uint SchemaHash = 0x45353D15;
+    public const uint SchemaHash = 0xD0FB42F0;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeArgumentResponseDto value)
@@ -25,6 +25,7 @@ public static class InvokeArgumentResponseDtoSpanSerializer
         
         RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
+        GuidSerializer.WriteGuid(ref ___span, ref ___offset, value.StreamId);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.IsCompleted);
         PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.BinaryData);
     }
@@ -42,6 +43,7 @@ public static class InvokeArgumentResponseDtoSpanSerializer
         var value = new InvokeArgumentResponseDto();
         value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
         value.ArgumentIndex = PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset);
+        value.StreamId = GuidSerializer.ReadGuid(___span, ref ___offset);
         value.IsCompleted = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
         value.BinaryData = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
         return value;
@@ -53,6 +55,7 @@ public static class InvokeArgumentResponseDtoSpanSerializer
         ___offset += 10;
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
+        GuidSerializer.GetMessageLength(ref ___offset, value.StreamId);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.IsCompleted);
         PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.BinaryData);
         return ___offset;

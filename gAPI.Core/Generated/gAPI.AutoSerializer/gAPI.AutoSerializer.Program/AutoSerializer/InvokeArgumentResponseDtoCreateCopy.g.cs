@@ -13,6 +13,7 @@ public static class InvokeArgumentResponseDtoCreateCopy
         var copy = new InvokeArgumentResponseDto();
         copy.RequestId = value.RequestId;
         copy.ArgumentIndex = value.ArgumentIndex;
+        copy.StreamId = value.StreamId;
         copy.IsCompleted = value.IsCompleted;
         copy.BinaryData = value.BinaryData.ToArray();
         return copy;

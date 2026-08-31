@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Interfaces;
@@ -70,8 +71,9 @@ public sealed class FabricClient : IAsyncDisposable
     public ConcurrentDictionary<ServiceId, ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>> Services { get; } = [];
     private readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingSendRequests = [];
     private readonly ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingInvokeRequests = [];
-    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
-    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), InvokeArgumentResponseDto> PendingArgumentResponses = [];
+    private readonly ConcurrentDictionary<RequestId, ResettableTimeout> InvokeTimeouts = [];
+    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<Guid, CancellationToken, Task>> ArgumentRequestHandlers = [];
+    private readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex, Guid StreamId), InvokeArgumentResponseDto> PendingArgumentResponses = [];
     private readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
 
     private readonly CancellationTokenSource SenderCts = new();
@@ -289,6 +291,8 @@ public sealed class FabricClient : IAsyncDisposable
         ServiceMethodId methodId,
         UserId? userId,
         SessionId? sessionId,
+        bool stateIsChanged,
+        string? stateData,
         byte[] data,
         CancellationToken ct)
     {
@@ -304,6 +308,8 @@ public sealed class FabricClient : IAsyncDisposable
             MethodId = methodId,
             UserId = userId,
             SessionId = sessionId,
+            StateIsChanged = stateIsChanged,
+            StateData = stateData,
             BinaryData = data
         };
 
@@ -362,6 +368,8 @@ public sealed class FabricClient : IAsyncDisposable
         ServiceMethodId serviceMethodId,
         UserId? userId,
         SessionId? sessionId,
+        bool stateIsChanged,
+        string? stateData,
         byte[] data,
         CancellationToken ct)
     {
@@ -380,7 +388,9 @@ public sealed class FabricClient : IAsyncDisposable
             MethodId = serviceMethodId,
             SessionId = sessionId,
             UserId = userId,
-            BinaryData = data
+            StateIsChanged = stateIsChanged,
+            StateData = stateIsChanged ? stateData : null,
+            BinaryData = data,
         };
         if (Host == null)
         {
@@ -398,43 +408,27 @@ public sealed class FabricClient : IAsyncDisposable
         var channel = Channel.CreateUnbounded<InvokeResponseDto>();
         PendingInvokeRequests[request.RequestId] = channel;
 
-        using var activityCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        var timeout = TimeSpan.FromSeconds(10);
-        var activity = new SemaphoreSlim(0, 1);
-
-        _ = Task.Run(async () =>
+        using var timeout = new ResettableTimeout(TimeSpan.FromSeconds(60), () =>
         {
-            try
-            {
-                while (!activityCts.IsCancellationRequested)
-                {
-                    if (!await activity.WaitAsync(timeout))
-                        throw new TimeoutException("Client did not ACK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Send_InvokeRequest_ToFabricAsync => Exception: {ex}", ex);
-                if (PendingInvokeRequests.TryRemove(request.RequestId, out var pending))
-                    pending.Writer.TryComplete(ex);
-            }
-        }, ct);
+            if (PendingInvokeRequests.TryRemove(request.RequestId, out var pending))
+                pending.Writer.TryComplete(new TimeoutException("Fabric invoke request timed out."));
+            InvokeTimeouts.TryRemove(request.RequestId, out _);
+        });
+        InvokeTimeouts[request.RequestId] = timeout;
 
         await Sender.Send_InvokeRequest_ToFabricAsync(request, ct);
 
         try
         {
-            await foreach (var response in channel.Reader.ReadAllAsync(activityCts.Token))
+            await foreach (var response in channel.Reader.ReadAllAsync(ct))
             {
-                activity.Release();   // reset timeout
+                timeout.Reset();
                 yield return response;
             }
         }
         finally
         {
-            activityCts.Cancel();
-            activity.Release();
-
+            InvokeTimeouts.TryRemove(request.RequestId, out _);
             if (PendingInvokeRequests.TryRemove(request.RequestId, out var pending))
                 pending.Writer.TryComplete();
         }
@@ -482,6 +476,9 @@ public sealed class FabricClient : IAsyncDisposable
                 response);
         }
 
+        if (InvokeTimeouts.TryGetValue(response.RequestId, out var timeout))
+            timeout.Reset();
+
         if (PendingInvokeRequests.TryGetValue(response.RequestId, out var channel))
             channel.Writer.TryWrite(response);
     }
@@ -494,11 +491,17 @@ public sealed class FabricClient : IAsyncDisposable
                 done.RequestId);
         }
 
+        if (InvokeTimeouts.TryRemove(done.RequestId, out var timeout))
+            timeout.Dispose();
+
         if (PendingInvokeRequests.TryRemove(done.RequestId, out var channel))
             channel.Writer.TryComplete();
     }
     public async Task Receive_InvokeArgumentResponse_FromFabricAsync(InvokeArgumentResponseDto message, CancellationToken ct)
     {
+        if (InvokeTimeouts.TryGetValue(message.RequestId, out var timeout))
+            timeout.Reset();
+
         var SseServiceSubscriptions = GetHosts(message.RequestId);
         foreach (var SseServiceSubscription in SseServiceSubscriptions)
             await SseServiceSubscription.SendArgumentResponseAsync(message, ct);
@@ -512,10 +515,10 @@ public sealed class FabricClient : IAsyncDisposable
 
     public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
     {
-        var enumerator = source.GetAsyncEnumerator(cancellationToken);
-        var gate = new SemaphoreSlim(1, 1);
-        ArgumentRequestHandlers[(requestId, argumentIndex)] = async ct =>
+        var activeStreams = new ConcurrentDictionary<Guid, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate)>();
+        ArgumentRequestHandlers[(requestId, argumentIndex)] = async (streamId, ct) =>
         {
+            var (enumerator, gate) = activeStreams.GetOrAdd(streamId, _ => (source.GetAsyncEnumerator(cancellationToken), new SemaphoreSlim(1, 1)));
             await gate.WaitAsync(ct);
             try
             {
@@ -524,17 +527,18 @@ public sealed class FabricClient : IAsyncDisposable
                 {
                     RequestId = requestId,
                     ArgumentIndex = argumentIndex,
+                    StreamId = streamId,
                     IsCompleted = !hasNext,
                     BinaryData = hasNext ? serializer(enumerator.Current) : []
                 };
                 if (Host != null)
                     await Sender.Send_InvokeArgumentResponse_ToFabricAsync(response, ct);
                 else
-                    PendingArgumentResponses[(response.RequestId, response.ArgumentIndex)] = response;
+                    PendingArgumentResponses[(response.RequestId, response.ArgumentIndex, streamId)] = response;
 
                 if (!hasNext)
                 {
-                    ArgumentRequestHandlers.TryRemove((requestId, argumentIndex), out _);
+                    activeStreams.TryRemove(streamId, out _);
                     await enumerator.DisposeAsync();
                 }
             }
@@ -546,16 +550,19 @@ public sealed class FabricClient : IAsyncDisposable
     }
     public async Task<bool> Receive_InvokeArgumentRequest_FromFabricAsync(InvokeArgumentRequestDto request, CancellationToken ct)
     {
+        if (InvokeTimeouts.TryGetValue(request.RequestId, out var timeout))
+            timeout.Reset();
+
         if (ArgumentRequestHandlers.TryGetValue((request.RequestId, request.ArgumentIndex), out var handler))
         {
-            await handler(ct);
+            await handler(request.StreamId, ct);
             return true;
         }
 
         return false;
     }
-    public bool TryTakeInvokeArgumentResponse(RequestId requestId, int argumentIndex, out InvokeArgumentResponseDto response)
-        => PendingArgumentResponses.TryRemove((requestId, argumentIndex), out response!);
+    public bool TryTakeInvokeArgumentResponse(RequestId requestId, int argumentIndex, Guid streamId, out InvokeArgumentResponseDto response)
+        => PendingArgumentResponses.TryRemove((requestId, argumentIndex, streamId), out response!);
 
 
     private IEnumerable<IServiceSubscription> GetHosts(ServiceId serviceId, UserId? userId, SessionId? sessionId)

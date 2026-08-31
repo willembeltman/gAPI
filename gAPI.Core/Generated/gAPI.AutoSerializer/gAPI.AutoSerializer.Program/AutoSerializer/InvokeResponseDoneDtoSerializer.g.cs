@@ -11,7 +11,7 @@ public static class InvokeResponseDoneDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xBEB8CB23;
-    public const uint SchemaHash = 0x76CB16DB;
+    public const uint SchemaHash = 0x99F3CF34;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeResponseDoneDto value)
@@ -23,10 +23,12 @@ public static class InvokeResponseDoneDtoSerializer
         RequestIdSerializer.Write(___writer, value.RequestId);
         ServiceIdSerializer.Write(___writer, value.ServiceId);
         ServiceMethodIdSerializer.Write(___writer, value.MethodId);
-        SessionIdSerializer.Write(___writer, value.SessionId);
-        ___writer.Write(value.StateData != null); 
-        if (value.StateData != null)
-            ___writer.Write(value.StateData);
+        ___writer.Write(value.SessionId != null); 
+        if (value.SessionId != null) 
+            SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        ___writer.Write(value.UserId != null); 
+        if (value.UserId != null) 
+            UserIdSerializer.Write(___writer, value.UserId.Value);
     }
 
     [IsSerializerRead]
@@ -43,8 +45,8 @@ public static class InvokeResponseDoneDtoSerializer
         value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
         value.ServiceId = ServiceIdSerializer.ReadServiceId(___reader);
         value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
-        value.SessionId = SessionIdSerializer.ReadSessionId(___reader);
-        value.StateData = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
+        value.SessionId = ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader);
+        value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);
         return value;
     }
 }

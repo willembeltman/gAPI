@@ -23,6 +23,7 @@ public static class SendRequestDtoMultipartFormDataContentSerializer
             UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId.Value);
         if (value.SessionId != null)
             SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId.Value);
+        ___content.Add(new StringContent(value.StateIsChanged.ToString()), "StateIsChanged");
         if (value.StateData != null)
             ___content.Add(new StringContent(value.StateData), "StateData");
         ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");

@@ -13,6 +13,7 @@ public static class InvokeArgumentRequestDtoCreateCopy
         var copy = new InvokeArgumentRequestDto();
         copy.RequestId = value.RequestId;
         copy.ArgumentIndex = value.ArgumentIndex;
+        copy.StreamId = value.StreamId;
         return copy;
     }
 }

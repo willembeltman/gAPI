@@ -15,7 +15,6 @@ public static class InitializeDtoMultipartFormDataContentSerializer
     [IsMultipartFormDataContentSerializer]
     public static void Write(this MultipartFormDataContent ___content, string ___name, InitializeDto value)
     {
-        ___content.Add(new StringContent(value.SessionId), "SessionId");
         if (value.StateData != null)
             ___content.Add(new StringContent(value.StateData), "StateData");
     }

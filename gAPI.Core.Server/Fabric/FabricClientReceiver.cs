@@ -172,6 +172,8 @@ public class FabricClientReceiver(
                 RequestId = message.RequestId,
                 MethodId = message.MethodId,
                 ServiceId = message.ServiceId,
+                SessionId = message.SessionId,
+                UserId = message.UserId,
             }, ct);
         }
         catch (Exception ex)
@@ -181,6 +183,8 @@ public class FabricClientReceiver(
                 RequestId = message.RequestId,
                 MethodId = message.MethodId,
                 ServiceId = message.ServiceId,
+                SessionId = message.SessionId,
+                UserId = message.UserId,
                 ExceptionMessage = ex.Message
             }, ct);
         }

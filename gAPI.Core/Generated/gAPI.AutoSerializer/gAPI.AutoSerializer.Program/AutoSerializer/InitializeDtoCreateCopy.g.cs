@@ -11,7 +11,6 @@ public static class InitializeDtoCreateCopy
     public static InitializeDto CreateCopy(this InitializeDto value)
     {
         var copy = new InitializeDto();
-        copy.SessionId = value.SessionId;
         copy.StateData = value.StateData;
         return copy;
     }

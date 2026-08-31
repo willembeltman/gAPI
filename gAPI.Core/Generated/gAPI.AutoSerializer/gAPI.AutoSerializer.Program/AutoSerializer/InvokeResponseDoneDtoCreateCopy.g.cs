@@ -15,7 +15,7 @@ public static class InvokeResponseDoneDtoCreateCopy
         copy.ServiceId = value.ServiceId;
         copy.MethodId = value.MethodId;
         copy.SessionId = value.SessionId;
-        copy.StateData = value.StateData;
+        copy.UserId = value.UserId;
         return copy;
     }
 }

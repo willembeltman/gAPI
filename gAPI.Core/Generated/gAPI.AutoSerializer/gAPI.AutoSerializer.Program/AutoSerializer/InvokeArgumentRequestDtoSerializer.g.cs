@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Serializers;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
@@ -11,7 +12,7 @@ public static class InvokeArgumentRequestDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xBD2B83B4;
-    public const uint SchemaHash = 0xC0391251;
+    public const uint SchemaHash = 0x6819BAD2;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeArgumentRequestDto value)
@@ -22,6 +23,7 @@ public static class InvokeArgumentRequestDtoSerializer
         
         RequestIdSerializer.Write(___writer, value.RequestId);
         ___writer.Write(value.ArgumentIndex);
+        ___writer.Write(value.StreamId);
     }
 
     [IsSerializerRead]
@@ -37,6 +39,7 @@ public static class InvokeArgumentRequestDtoSerializer
         var value = new InvokeArgumentRequestDto();
         value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
         value.ArgumentIndex = ___reader.ReadInt32();
+        value.StreamId = ___reader.ReadGuid();
         return value;
     }
 }

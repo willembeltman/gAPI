@@ -14,7 +14,7 @@ public static class InvokeArgumentRequestDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xBD2B83B4;
-    public const uint SchemaHash = 0xC0391251;
+    public const uint SchemaHash = 0x6819BAD2;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeArgumentRequestDto value)
@@ -25,6 +25,7 @@ public static class InvokeArgumentRequestDtoSpanSerializer
         
         RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
+        GuidSerializer.WriteGuid(ref ___span, ref ___offset, value.StreamId);
     }
 
     [IsSpanSerializerRead]
@@ -40,6 +41,7 @@ public static class InvokeArgumentRequestDtoSpanSerializer
         var value = new InvokeArgumentRequestDto();
         value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
         value.ArgumentIndex = PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset);
+        value.StreamId = GuidSerializer.ReadGuid(___span, ref ___offset);
         return value;
     }
 
@@ -49,6 +51,7 @@ public static class InvokeArgumentRequestDtoSpanSerializer
         ___offset += 10;
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
+        GuidSerializer.GetMessageLength(ref ___offset, value.StreamId);
         return ___offset;
     }
 }

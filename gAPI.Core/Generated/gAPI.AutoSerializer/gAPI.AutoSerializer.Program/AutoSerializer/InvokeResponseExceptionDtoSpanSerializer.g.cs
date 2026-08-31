@@ -14,7 +14,7 @@ public static class InvokeResponseExceptionDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x3CD54CD0;
-    public const uint SchemaHash = 0xFB41F420;
+    public const uint SchemaHash = 0xEC1A4F8B;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeResponseExceptionDto value)
@@ -26,10 +26,12 @@ public static class InvokeResponseExceptionDtoSpanSerializer
         RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Write(ref ___span, ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Write(ref ___span, ref ___offset, value.MethodId);
-        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId.Value);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.UserId != null);
+        if (value.UserId != null)
+            UserIdSpanSerializer.Write(ref ___span, ref ___offset, value.UserId.Value);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.ExceptionMessage);
     }
 
@@ -47,8 +49,8 @@ public static class InvokeResponseExceptionDtoSpanSerializer
         value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
         value.ServiceId = ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset);
         value.MethodId = ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset);
-        value.SessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
-        value.StateData = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+        value.UserId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset);
         value.ExceptionMessage = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         return value;
     }
@@ -60,10 +62,12 @@ public static class InvokeResponseExceptionDtoSpanSerializer
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Length(ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Length(ref ___offset, value.MethodId);
-        SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId.Value);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.UserId != null);
+        if (value.UserId != null)
+            UserIdSpanSerializer.Length(ref ___offset, value.UserId.Value);
         PrimitivesSpanSerializer.LengthString(ref ___offset, value.ExceptionMessage);
         return ___offset;
     }

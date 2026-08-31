@@ -27,15 +27,11 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference SubscribeDto => Context.SharedReferences.SubscribeDto;
-    //public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
-    //public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
-    //public SharedReference InvokeResponseDoneDto => Context.SharedReferences.InvokeResponseDoneDto;
-    //public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = new();
@@ -70,14 +66,11 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
         Reg(SubscribeDto);
-        //Reg(InvokeResponseDto);
         Reg(InvokeRequestDto);
         Reg(SendRequestDto);
         Reg(UnsubscribeDto);
         Reg(ServiceId);
         Reg(InvokeResponseDto);
-        //Reg(InvokeResponseDoneDto);
-        //Reg(InvokeResponseDoneDto);
         Reg(IWssLoggerFactory);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
@@ -287,6 +280,8 @@ public class {Name}
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = {hub}_{method}_Serializer(response)
                                             }}, ___ct);
                                     }}

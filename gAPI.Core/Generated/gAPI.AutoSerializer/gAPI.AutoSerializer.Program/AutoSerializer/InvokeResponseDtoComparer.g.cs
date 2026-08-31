@@ -15,7 +15,6 @@ public static class InvokeResponseDtoComparer
         if (value.MethodId != otherValue.MethodId) return true;
         if (value.UserId != otherValue.UserId) return true;
         if (value.SessionId != otherValue.SessionId) return true;
-        if (value.StateData != otherValue.StateData) return true;
         if (!(value.BinaryData?.AsSpan().SequenceEqual(otherValue.BinaryData) ?? otherValue.BinaryData is null)) return true;
         return false;
     }

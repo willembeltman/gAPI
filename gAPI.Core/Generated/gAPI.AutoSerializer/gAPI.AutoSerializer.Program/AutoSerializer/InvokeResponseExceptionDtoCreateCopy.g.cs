@@ -15,7 +15,7 @@ public static class InvokeResponseExceptionDtoCreateCopy
         copy.ServiceId = value.ServiceId;
         copy.MethodId = value.MethodId;
         copy.SessionId = value.SessionId;
-        copy.StateData = value.StateData;
+        copy.UserId = value.UserId;
         copy.ExceptionMessage = value.ExceptionMessage;
         return copy;
     }

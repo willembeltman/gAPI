@@ -31,6 +31,7 @@ public class ClientService_Generator : _BaseGenerator
     public SharedReference UserId => Context.SharedReferences.UserId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference ServiceMethodId => Context.SharedReferences.ServiceMethodId;
+    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -50,6 +51,7 @@ public class ClientService_Generator : _BaseGenerator
         Reg(UserId);
         Reg(ServiceId);
         Reg(ServiceMethodId);
+        Reg(IServerAuthenticationService);
         Reg("gAPI.Core.Ids");
 
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
@@ -94,6 +96,7 @@ public class ClientService_Generator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
+    {IServerAuthenticationService} ___authenticationService,
     {FabricClient} ___fabricClient,
     ILoggerFactory ___loggerFactory,
     {SessionId}? ___sessionId,
@@ -128,12 +131,15 @@ public class {Name}(
 {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
         
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId,
             ___sessionId,
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             {(ct == null ? "___cts.Token" : ct.Name)});
     }}";
@@ -156,12 +162,15 @@ public class {Name}(
 {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             {(ct == null ? "___cts.Token" : ct.Name)});
         await foreach (var response in responses)

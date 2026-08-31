@@ -1,4 +1,4 @@
-﻿using gAPI.AutoSerializer;
+using gAPI.AutoSerializer;
 using gAPI.AutoWss.Server.Helpers;
 using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
@@ -179,15 +179,17 @@ public class {Name} : WssServerConnection
             ___ct" : $@"
             {arg}"))});
 
+        //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await Send_InvokeResponse_ToClientAsync(new {InvokeResponseDto}()
-            {{
-                RequestId = ___invokeRequest.RequestId,
-                ServiceId = ___invokeRequest.ServiceId,
-                MethodId = ___invokeRequest.MethodId,
-                SessionId = ___authenticationService.SessionId,
-                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
-                BinaryData = {@interface}_{method}_Serializer(response)
-            }}, ___ct);
+        {{
+            RequestId = ___invokeRequest.RequestId,
+            ServiceId = ___invokeRequest.ServiceId,
+            MethodId = ___invokeRequest.MethodId,
+            SessionId = ___authenticationService.SessionId,
+            //StateIsChanged = ___stateIsChanged,
+            //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
+            BinaryData = {@interface}_{method}_Serializer(response)
+        }}, ___ct);
     }}")))))}
 {(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method => $@"
     public async Task {@interface}_{method}(
@@ -204,13 +206,15 @@ public class {Name} : WssServerConnection
 
         await foreach (var response in responses)
         {{
+            //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
             await Send_InvokeResponse_ToClientAsync(new {InvokeResponseDto}()
                 {{
                     RequestId = ___invokeRequest.RequestId,
                     ServiceId = ___invokeRequest.ServiceId,
                     MethodId = ___invokeRequest.MethodId,
                     SessionId = ___authenticationService.SessionId,
-                    StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
+                    //StateIsChanged = ___stateIsChanged,
+                    //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
                     BinaryData = {@interface}_{method}_Serializer(response)
                 }}, ___ct);
         }}

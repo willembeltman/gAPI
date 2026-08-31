@@ -4,63 +4,62 @@ namespace gAPI.Core.Helpers;
 
 public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
-    private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
-    private readonly Func<CancellationToken, Task> _requestNext;
-    private readonly ResettableTimeout _timeout;
+    private readonly Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
 
-    public RemoteAsyncEnumerable(Func<CancellationToken, Task> requestNext, TimeSpan? timeout = null)
+    public RemoteAsyncEnumerable(Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext)
     {
         _requestNext = requestNext;
-        _timeout = new ResettableTimeout(
-            timeout ?? TimeSpan.FromSeconds(60),
-            () => Complete(new TimeoutException("Remote async enumerable timed out.")));
-    }
-
-    public void Push(T item)
-    {
-        if (!_items.Writer.TryWrite(item))
-            throw new InvalidOperationException("The remote async enumerable is no longer accepting items.");
-
-        _timeout.Reset();
-    }
-
-    public void Complete(Exception? error = null)
-    {
-        _timeout.Dispose();
-        _items.Writer.TryComplete(error);
     }
 
     public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        return new Enumerator(this, cancellationToken);
+        return new Enumerator(_requestNext, cancellationToken);
     }
 
     private sealed class Enumerator : IAsyncEnumerator<T>
     {
-        private readonly RemoteAsyncEnumerable<T> _owner;
+        private readonly Guid _streamId = Guid.NewGuid();
+        private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
+        private readonly Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
         private readonly CancellationToken _cancellationToken;
+        private readonly ResettableTimeout _timeout;
 
-        public Enumerator(RemoteAsyncEnumerable<T> owner, CancellationToken cancellationToken)
+        public Enumerator(Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext, CancellationToken cancellationToken)
         {
-            _owner = owner;
+            _requestNext = requestNext;
             _cancellationToken = cancellationToken;
+            _timeout = new ResettableTimeout(
+                TimeSpan.FromSeconds(60),
+                () => Complete(new TimeoutException("Remote async enumerable timed out.")));
         }
 
         public T Current { get; private set; } = default!;
 
+        public void Push(T item)
+        {
+            _items.Writer.TryWrite(item);
+            _timeout.Reset();
+        }
+
+        public void Complete(Exception? error = null)
+        {
+            _timeout.Dispose();
+            _items.Writer.TryComplete(error);
+        }
+
         public async ValueTask<bool> MoveNextAsync()
         {
-            await _owner._requestNext(_cancellationToken);
+            await _requestNext(_streamId, Push, Complete, _cancellationToken);
 
             try
             {
-                Current = await _owner._items.Reader.ReadAsync(_cancellationToken);
+                Current = await _items.Reader.ReadAsync(_cancellationToken);
                 return true;
             }
             catch (ChannelClosedException)
             {
-                if (_owner._items.Reader.Completion.IsFaulted)
-                    await _owner._items.Reader.Completion;
+                if (_items.Reader.Completion.IsFaulted)
+                    await _items.Reader.Completion;
 
                 return false;
             }
@@ -68,7 +67,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 
         public ValueTask DisposeAsync()
         {
-            _owner.Complete();
+            Complete();
             return ValueTask.CompletedTask;
         }
     }

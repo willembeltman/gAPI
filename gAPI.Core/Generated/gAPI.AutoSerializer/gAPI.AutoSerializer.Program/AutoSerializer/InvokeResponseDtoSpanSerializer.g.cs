@@ -14,7 +14,7 @@ public static class InvokeResponseDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xDB12BA9B;
-    public const uint SchemaHash = 0x16D6B5A3;
+    public const uint SchemaHash = 0xF741183C;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeResponseDto value)
@@ -26,11 +26,12 @@ public static class InvokeResponseDtoSpanSerializer
         RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Write(ref ___span, ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Write(ref ___span, ref ___offset, value.MethodId);
-        UserIdSpanSerializer.Write(ref ___span, ref ___offset, value.UserId);
-        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.UserId != null);
+        if (value.UserId != null)
+            UserIdSpanSerializer.Write(ref ___span, ref ___offset, value.UserId.Value);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId.Value);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.BinaryData != null);
         if (value.BinaryData != null)
         {
@@ -52,9 +53,8 @@ public static class InvokeResponseDtoSpanSerializer
         value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
         value.ServiceId = ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset);
         value.MethodId = ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset);
-        value.UserId = UserIdSpanSerializer.ReadUserId(___span, ref ___offset);
-        value.SessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
-        value.StateData = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        value.UserId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset);
+        value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
         value.BinaryData = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
         return value;
     }
@@ -66,11 +66,12 @@ public static class InvokeResponseDtoSpanSerializer
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
         ServiceIdSpanSerializer.Length(ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Length(ref ___offset, value.MethodId);
-        UserIdSpanSerializer.Length(ref ___offset, value.UserId);
-        SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.UserId != null);
+        if (value.UserId != null)
+            UserIdSpanSerializer.Length(ref ___offset, value.UserId.Value);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId.Value);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.BinaryData != null);
         if (value.BinaryData != null)
         {

@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
@@ -29,7 +29,7 @@ public abstract class WssServerConnection : IWssServerConnection
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingInvokeRequests;
     //readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
-    readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
+    readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex, Guid StreamId), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, byte> ArgumentRoutes = [];
     readonly SseServiceSubscriptionCollection SseServiceSubscriptionCollection = new();
 
@@ -177,22 +177,22 @@ public abstract class WssServerConnection : IWssServerConnection
 
                         case WssClientToServerMessageEnum.InvokeArgumentResponse:
                             var argumentResponse = span.ReadInvokeArgumentResponseDto(ref offset);
-                            await ReceiveInvokeArgumentResponse(argumentResponse, ct);
+                            _ = Task.Run(async () => { await ReceiveInvokeArgumentResponse(argumentResponse, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeResponse:
                             var invokeResponse = span.ReadInvokeResponseDto(ref offset);
-                            await Receive_InvokeResponse_FromClientAsync(invokeResponse, ct);
+                            _ = Task.Run(async () => { await Receive_InvokeResponse_FromClientAsync(invokeResponse, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeResponseDone:
                             var invokeResponseDone = span.ReadInvokeResponseDoneDto(ref offset);
-                            await Receive_InvokeResponseDone_FromClientAsync(invokeResponseDone, ct);
+                            _ = Task.Run(async () => { await Receive_InvokeResponseDone_FromClientAsync(invokeResponseDone, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeResponseException:
                             var invokeResponseException = span.ReadInvokeResponseExceptionDto(ref offset);
-                            await Receive_InvokeResponseException_FromClientAsync(invokeResponseException, ct);
+                            _ = Task.Run(async () => { await Receive_InvokeResponseException_FromClientAsync(invokeResponseException, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
@@ -289,21 +289,22 @@ public abstract class WssServerConnection : IWssServerConnection
 
     private async Task Receive_InvokeArgumentRequest_FromClientAsync(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
     {
-        // TODO
-        //if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
-        //    await argumentHandler(ct);
-        //else 
-            if (await FabricClient.Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct))
+        if (FabricClient.IsConnected)
         {
-            if (FabricClient.TryTakeInvokeArgumentResponse(argumentRequest.RequestId, argumentRequest.ArgumentIndex, out var response))
-                await Send_InvokeArgumentResponse_ToClientAsync(response, ct);
-        }
-        else if (FabricClient.IsConnected)
             await FabricClient.Sender.Send_InvokeArgumentRequest_ToFabricAsync(argumentRequest, ct);
+        }
+        else
+        {
+            if (await FabricClient.Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct))
+            {
+                if (FabricClient.TryTakeInvokeArgumentResponse(argumentRequest.RequestId, argumentRequest.ArgumentIndex, argumentRequest.StreamId, out var response))
+                    await Send_InvokeArgumentResponse_ToClientAsync(response, ct);
+            }
+        }
     }
     private async Task ReceiveInvokeArgumentResponse(InvokeArgumentResponseDto argumentResponse, CancellationToken ct)
     {
-        if (ArgumentResponseHandlers.TryGetValue((argumentResponse.RequestId, argumentResponse.ArgumentIndex), out var responseHandler))
+        if (ArgumentResponseHandlers.TryGetValue((argumentResponse.RequestId, argumentResponse.ArgumentIndex, argumentResponse.StreamId), out var responseHandler))
             responseHandler(argumentResponse);
         else if (FabricClient.IsConnected)
             await FabricClient.Sender.Send_InvokeArgumentResponse_ToFabricAsync(argumentResponse, ct);
@@ -323,8 +324,9 @@ public abstract class WssServerConnection : IWssServerConnection
                 RequestId = invokeRequest.RequestId,
                 ServiceId = invokeRequest.ServiceId,
                 MethodId = invokeRequest.MethodId,
-                SessionId = AuthenticationService.SessionId,
-                StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null
+                SessionId = invokeRequest.SessionId,
+                UserId = invokeRequest.UserId,
+                //StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null
             }, ct);
         }
         catch (Exception ex)
@@ -334,8 +336,9 @@ public abstract class WssServerConnection : IWssServerConnection
                 RequestId = invokeRequest.RequestId,
                 ServiceId = invokeRequest.ServiceId,
                 MethodId = invokeRequest.MethodId,
-                SessionId = AuthenticationService.SessionId,
-                StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null,
+                SessionId = invokeRequest.SessionId,
+                UserId = invokeRequest.UserId,
+                //StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null,
                 ExceptionMessage = ex.ToString()
             }, ct);
         }
@@ -349,6 +352,8 @@ public abstract class WssServerConnection : IWssServerConnection
 
         if (PendingInvokeRequests.TryGetValue(invokeResponse.RequestId, out var channel))
             channel.Writer.TryWrite(invokeResponse);
+        else if (FabricClient.IsConnected)
+            await FabricClient.Sender.Send_InvokeResponse_ToFabricAsync(invokeResponse, ct);
     }
     private async Task Receive_InvokeResponseDone_FromClientAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken ct)
     {
@@ -357,6 +362,8 @@ public abstract class WssServerConnection : IWssServerConnection
 
         if (PendingInvokeRequests.TryRemove(invokeResponseDone.RequestId, out var channel))
             channel.Writer.TryComplete();
+        else if (FabricClient.IsConnected)
+            await FabricClient.Sender.Send_InvokeResponseDone_ToFabricAsync(invokeResponseDone, ct);
 
         ArgumentRoutes.TryRemove(invokeResponseDone.RequestId, out _);
     }
@@ -367,6 +374,8 @@ public abstract class WssServerConnection : IWssServerConnection
 
         if (PendingInvokeRequests.TryRemove(invokeResponseException.RequestId, out var channel))
             channel.Writer.TryComplete(new Exception(invokeResponseException.ExceptionMessage));
+        else if (FabricClient.IsConnected)
+            await FabricClient.Sender.Send_InvokeResponseException_ToFabricAsync(invokeResponseException, ct);
 
         ArgumentRoutes.TryRemove(invokeResponseException.RequestId, out _);
     }
@@ -455,8 +464,8 @@ public abstract class WssServerConnection : IWssServerConnection
     public bool HasRequest(RequestId requestId) => ArgumentRoutes.ContainsKey(requestId);
 
     public async Task Send_InvokeArgumentRequest_ToClientAsync(
-        WssServiceSubscription hubHost, 
-        InvokeArgumentRequestDto request, 
+        WssServiceSubscription hubHost,
+        InvokeArgumentRequestDto request,
         CancellationToken ct)
     {
         await EnqueueAsync(writer =>
@@ -468,7 +477,7 @@ public abstract class WssServerConnection : IWssServerConnection
         }, ct);
     }
     public async Task Send_InvokeArgumentResponse_ToClientAsync(
-        WssServiceSubscription hubHost, 
+        WssServiceSubscription hubHost,
         InvokeArgumentResponseDto response,
         CancellationToken ct)
     {
@@ -640,22 +649,31 @@ public abstract class WssServerConnection : IWssServerConnection
     //}
     public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, Func<byte[], T> deserializer)
     {
-        var remote = new RemoteAsyncEnumerable<T>(ct => Send_InvokeArgumentRequest_ToClientAsync(new InvokeArgumentRequestDto
+        return new RemoteAsyncEnumerable<T>((streamId, push, complete, ct) =>
         {
-            RequestId = requestId,
-            ArgumentIndex = argumentIndex
-        }, ct));
-        ArgumentResponseHandlers[(requestId, argumentIndex)] = response =>
-        {
-            if (response.IsCompleted)
+            var key = (requestId, argumentIndex, streamId);
+            if (!ArgumentResponseHandlers.ContainsKey(key))
             {
-                ArgumentResponseHandlers.TryRemove((requestId, argumentIndex), out _);
-                remote.Complete();
+                ArgumentResponseHandlers[key] = response =>
+                {
+                    if (response.IsCompleted)
+                    {
+                        ArgumentResponseHandlers.TryRemove(key, out _);
+                        complete(null);
+                    }
+                    else
+                    {
+                        push(deserializer(response.BinaryData));
+                    }
+                };
             }
-            else
-                remote.Push(deserializer(response.BinaryData));
-        };
-        return remote;
+            return Send_InvokeArgumentRequest_ToClientAsync(new InvokeArgumentRequestDto
+            {
+                RequestId = requestId,
+                ArgumentIndex = argumentIndex,
+                StreamId = streamId
+            }, ct);
+        });
     }
     private async Task Send_InvokeArgumentRequest_ToClientAsync(InvokeArgumentRequestDto request, CancellationToken ct)
     {
