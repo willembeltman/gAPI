@@ -281,7 +281,6 @@ public class {Name}
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
                                                 SessionId = ___invokeRequest.SessionId,
-                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = {hub}_{method}_Serializer(response)
                                             }}, ___ct);
                                     }}

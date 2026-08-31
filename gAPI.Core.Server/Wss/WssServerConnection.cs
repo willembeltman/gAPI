@@ -326,7 +326,6 @@ public abstract class WssServerConnection : IWssServerConnection
                 MethodId = invokeRequest.MethodId,
                 SessionId = invokeRequest.SessionId,
                 UserId = invokeRequest.UserId,
-                //StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null
             }, ct);
         }
         catch (Exception ex)
@@ -338,7 +337,6 @@ public abstract class WssServerConnection : IWssServerConnection
                 MethodId = invokeRequest.MethodId,
                 SessionId = invokeRequest.SessionId,
                 UserId = invokeRequest.UserId,
-                //StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null,
                 ExceptionMessage = ex.ToString()
             }, ct);
         }
