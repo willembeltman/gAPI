@@ -132,7 +132,7 @@ public class {Name}(
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, {(ct == null ? "___cts.Token" : ct.Name)});" : ""))}
         
         var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
-        await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
+        var response = await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
@@ -142,6 +142,11 @@ public class {Name}(
             ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             {(ct == null ? "___cts.Token" : ct.Name)});
+
+        if (response.StateIsChanged)
+            await ___authenticationService.UpdateStateDataAsync(
+                response.StateData, 
+                {(ct == null ? "___cts.Token" : ct.Name)});
     }}";
     }
     private string GenerateNotTask(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
@@ -175,6 +180,11 @@ public class {Name}(
             {(ct == null ? "___cts.Token" : ct.Name)});
         await foreach (var response in responses)
         {{
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    {(ct == null ? "___cts.Token" : ct.Name)});
+
             if (ct.IsCancellationRequested)
                 yield break;
 

@@ -274,15 +274,19 @@ public class {Name}
                                         response.UserId = HttpClient.UserId;
                                         response.SessionId = HttpClient.SessionId;
 " : "")}
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new {InvokeResponseDto}()
-                                            {{
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = {hub}_{method}_Serializer(response)
-                                            }}, ___ct);
+                                            new {InvokeResponseDto}(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                {hub}_{method}_Serializer(response)
+                                            ), ___ct);
                                     }}
                                 }}
                             }}

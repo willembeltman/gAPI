@@ -26,7 +26,7 @@ public abstract class WssServerConnection : IWssServerConnection
     readonly IServerAuthenticationService AuthenticationService;
     readonly FabricClient FabricClient;
     readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> Services;
-    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<bool>> PendingSendRequests = [];
+    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, Channel<InvokeResponseDto>> PendingInvokeRequests;
     //readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex, Guid StreamId), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
@@ -170,11 +170,6 @@ public abstract class WssServerConnection : IWssServerConnection
                             await Receive_SendRequestDone_FromClientAsync(sendArgumentedRequestDone, ct);
                             break;
 
-                        case WssClientToServerMessageEnum.SendRequestException:
-                            var sendRequestException = span.ReadSendRequestExceptionDto(ref offset);
-                            await Receive_SendRequestException_FromClientAsync(sendRequestException, ct);
-                            break;
-
                         case WssClientToServerMessageEnum.InvokeArgumentResponse:
                             var argumentResponse = span.ReadInvokeArgumentResponseDto(ref offset);
                             _ = Task.Run(async () => { await ReceiveInvokeArgumentResponse(argumentResponse, ct); }, ct);
@@ -188,11 +183,6 @@ public abstract class WssServerConnection : IWssServerConnection
                         case WssClientToServerMessageEnum.InvokeResponseDone:
                             var invokeResponseDone = span.ReadInvokeResponseDoneDto(ref offset);
                             _ = Task.Run(async () => { await Receive_InvokeResponseDone_FromClientAsync(invokeResponseDone, ct); }, ct);
-                            break;
-
-                        case WssClientToServerMessageEnum.InvokeResponseException:
-                            var invokeResponseException = span.ReadInvokeResponseExceptionDto(ref offset);
-                            _ = Task.Run(async () => { await Receive_InvokeResponseException_FromClientAsync(invokeResponseException, ct); }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
@@ -262,29 +252,39 @@ public abstract class WssServerConnection : IWssServerConnection
         {
             await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, ct);
             await Send_SendRequest_ToServiceAsync(sendRequest, ct);
-            await Send_SendRequestDone_ToClientAsync(new SendRequestDoneDto
-            {
-                RequestId = sendRequest.RequestId
-            }, ct);
+            await Send_SendRequestDone_ToClientAsync(
+                new SendRequestDoneDto(
+                    sendRequest.RequestId,
+                    sendRequest.ServiceId,
+                    sendRequest.MethodId,
+                    sendRequest.UserId,
+                    sendRequest.SessionId,
+                    sendRequest.StateIsChanged,
+                    sendRequest.StateData,
+                    null
+                ), ct);
         }
         catch (Exception ex)
         {
-            await Send_SendRequestException_ToClientAsync(new SendRequestExceptionDto
-            {
-                RequestId = sendRequest.RequestId,
-                ExceptionMessage = ex.Message
-            }, ex, ct);
+            await Send_SendRequestDone_ToClientAsync(
+                new SendRequestDoneDto(
+                    sendRequest.RequestId,
+                    sendRequest.ServiceId,
+                    sendRequest.MethodId,
+                    sendRequest.UserId,
+                    sendRequest.SessionId,
+                    sendRequest.StateIsChanged,
+                    sendRequest.StateData,
+                    ex.Message
+                ), ct);
         }
     }
     private async Task Receive_SendRequestDone_FromClientAsync(SendRequestDoneDto done, CancellationToken ct)
     {
         if (PendingSendRequests.TryRemove(done.RequestId, out var completion))
-            completion.TrySetResult(true);
-    }
-    private async Task Receive_SendRequestException_FromClientAsync(SendRequestExceptionDto sendRequestException, CancellationToken ct)
-    {
-        if (PendingSendRequests.TryRemove(sendRequestException.RequestId, out var completion))
-            completion.SetException(new Exception(sendRequestException.ExceptionMessage));
+        {
+            completion.TrySetResult(done);
+        }
     }
 
     private async Task Receive_InvokeArgumentRequest_FromClientAsync(InvokeArgumentRequestDto argumentRequest, CancellationToken ct)
@@ -319,26 +319,27 @@ public abstract class WssServerConnection : IWssServerConnection
         {
             await AuthenticationService.UpdateStateDataAsync(invokeRequest.StateData, ct);
             await Send_InvokeRequest_ToServiceAsync(invokeRequest, ct);
-            await Send_InvokeResponseDone_ToClientAsync(new InvokeResponseDoneDto()
-            {
-                RequestId = invokeRequest.RequestId,
-                ServiceId = invokeRequest.ServiceId,
-                MethodId = invokeRequest.MethodId,
-                SessionId = invokeRequest.SessionId,
-                UserId = invokeRequest.UserId,
-            }, ct);
+            await Send_InvokeResponseDone_ToClientAsync(
+                new InvokeResponseDoneDto(
+                    invokeRequest.RequestId,
+                    invokeRequest.ServiceId,
+                    invokeRequest.MethodId,
+                    invokeRequest.UserId,
+                    invokeRequest.SessionId,
+                    null
+                ), ct);
         }
         catch (Exception ex)
         {
-            await Send_InvokeResponseException_ToClientAsync(new InvokeResponseExceptionDto()
-            {
-                RequestId = invokeRequest.RequestId,
-                ServiceId = invokeRequest.ServiceId,
-                MethodId = invokeRequest.MethodId,
-                SessionId = invokeRequest.SessionId,
-                UserId = invokeRequest.UserId,
-                ExceptionMessage = ex.ToString()
-            }, ct);
+            await Send_InvokeResponseDone_ToClientAsync(
+                new InvokeResponseDoneDto(
+                    invokeRequest.RequestId,
+                    invokeRequest.ServiceId,
+                    invokeRequest.MethodId,
+                    invokeRequest.UserId,
+                    invokeRequest.SessionId,
+                    ex.ToString()
+                ), ct);
         }
     }
 
@@ -359,23 +360,16 @@ public abstract class WssServerConnection : IWssServerConnection
             Logger.LogTrace("Receive_InvokeResponseDone_FromClientAsync({invokeResponseDone})", invokeResponseDone);
 
         if (PendingInvokeRequests.TryRemove(invokeResponseDone.RequestId, out var channel))
-            channel.Writer.TryComplete();
+        {
+            if (invokeResponseDone.ExceptionMessage != null)
+                channel.Writer.TryComplete(new Exception(invokeResponseDone.ExceptionMessage));
+            else
+                channel.Writer.TryComplete();
+        }
         else if (FabricClient.IsConnected)
             await FabricClient.Sender.Send_InvokeResponseDone_ToFabricAsync(invokeResponseDone, ct);
 
         ArgumentRoutes.TryRemove(invokeResponseDone.RequestId, out _);
-    }
-    private async Task Receive_InvokeResponseException_FromClientAsync(InvokeResponseExceptionDto invokeResponseException, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Receive_InvokeResponseException_FromClientAsync({invokeResponseException})", invokeResponseException);
-
-        if (PendingInvokeRequests.TryRemove(invokeResponseException.RequestId, out var channel))
-            channel.Writer.TryComplete(new Exception(invokeResponseException.ExceptionMessage));
-        else if (FabricClient.IsConnected)
-            await FabricClient.Sender.Send_InvokeResponseException_ToFabricAsync(invokeResponseException, ct);
-
-        ArgumentRoutes.TryRemove(invokeResponseException.RequestId, out _);
     }
 
 
@@ -409,10 +403,10 @@ public abstract class WssServerConnection : IWssServerConnection
     //    }, ct);
     //}
 
-    public async Task Send_SendRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto sendRequest, CancellationToken ct)
+    public async Task<SendRequestDoneDto> Send_SendRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto sendRequest, CancellationToken ct)
     {
         ArgumentRoutes[sendRequest.RequestId] = 0;
-        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         PendingSendRequests[sendRequest.RequestId] = completion;
 
         // Todo: Volgens mij is dit niet nodig
@@ -428,7 +422,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         try
         {
-            await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+            return await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
         }
         finally
         {
@@ -444,17 +438,6 @@ public abstract class WssServerConnection : IWssServerConnection
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendRequestDone);
             writer.Write(ref offset, sendRequestDone);
-            return offset;
-        }, ct);
-    }
-
-    private async Task Send_SendRequestException_ToClientAsync(SendRequestExceptionDto sendRequestException, Exception ex, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendRequestException);
-            writer.Write(ref offset, sendRequestException);
             return offset;
         }, ct);
     }
@@ -592,22 +575,6 @@ public abstract class WssServerConnection : IWssServerConnection
             return offset;
         }, ct);
     }
-    private async Task Send_InvokeResponseException_ToClientAsync(InvokeResponseExceptionDto invokeResponseExceptionDto, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeResponseDone_ToClientAsync({invokeResponseDoneDto})", invokeResponseExceptionDto);
-
-        // Wordt al in de gegenereerde code gedaan
-        //invokeResponseDoneDto.StateData = AuthenticationService.IsStateDataChanged() ? AuthenticationService.GetStateData() : null;
-
-        await EnqueueAsync(writer =>
-        {
-            var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeResponseException);
-            writer.Write(ref offset, invokeResponseExceptionDto);
-            return offset;
-        }, ct);
-    }
 
     //public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
     //{
@@ -665,12 +632,12 @@ public abstract class WssServerConnection : IWssServerConnection
                     }
                 };
             }
-            return Send_InvokeArgumentRequest_ToClientAsync(new InvokeArgumentRequestDto
-            {
-                RequestId = requestId,
-                ArgumentIndex = argumentIndex,
-                StreamId = streamId
-            }, ct);
+            return Send_InvokeArgumentRequest_ToClientAsync(
+                new InvokeArgumentRequestDto(
+                    requestId,
+                    argumentIndex,
+                    streamId
+                ), ct);
         });
     }
     private async Task Send_InvokeArgumentRequest_ToClientAsync(InvokeArgumentRequestDto request, CancellationToken ct)

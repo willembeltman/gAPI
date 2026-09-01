@@ -49,16 +49,7 @@ public static class SendRequestDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new SendRequestDto();
-        value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
-        value.ServiceId = ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset);
-        value.MethodId = ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset);
-        value.UserId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset);
-        value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
-        value.StateIsChanged = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
-        value.StateData = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        value.BinaryData = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
-        return value;
+        return new SendRequestDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset), PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

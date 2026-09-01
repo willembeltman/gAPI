@@ -7,13 +7,11 @@ public enum FabricClientToHostMessageEnum
 
     SendRequest,
     SendRequestDone,
-    SendRequestException,
     InvokeArgumentRequest,
     InvokeArgumentResponse,
     InvokeRequest,
     InvokeResponse,
     InvokeResponseDone,
-    InvokeResponseException,
 
     UpdateSession,
     ClearSession,

@@ -10,12 +10,6 @@ public static class InvokeArgumentResponseDtoCreateCopy
     [IsCreateCopy]
     public static InvokeArgumentResponseDto CreateCopy(this InvokeArgumentResponseDto value)
     {
-        var copy = new InvokeArgumentResponseDto();
-        copy.RequestId = value.RequestId;
-        copy.ArgumentIndex = value.ArgumentIndex;
-        copy.StreamId = value.StreamId;
-        copy.IsCompleted = value.IsCompleted;
-        copy.BinaryData = value.BinaryData.ToArray();
-        return copy;
+        return new InvokeArgumentResponseDto(value.RequestId, value.ArgumentIndex, value.StreamId, value.IsCompleted, value.BinaryData.ToArray());
     }
 }

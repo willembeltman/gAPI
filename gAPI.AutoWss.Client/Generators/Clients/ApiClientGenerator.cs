@@ -122,15 +122,17 @@ public sealed class {Name}(
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_SendRequest_ToServerAsync(new {SendRequestDto}()
-        {{
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new(""{method}""),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
-        }}, ___activityCts.Token);
+        await ___clientConnection.Send_SendRequest_ToServerAsync(
+            new {SendRequestDto}(
+                ___requestId,
+                ___ServiceId,
+                new(""{method}""),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
+            ), ___activityCts.Token);
     }}";
     }
     private string GenerateMethodForTaskT(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
@@ -158,15 +160,17 @@ public sealed class {Name}(
     ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {InvokeRequestDto}()
-        {{
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new(""{method}""),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
-        }}, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new {InvokeRequestDto}(
+                ___requestId,
+                ___ServiceId,
+                new(""{method}""),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
+            ), ___activityCts.Token);
 
         {responseInnerType}{(responseInnerType.IsNullable ? "?" : "")} ___result = default!;
         await foreach (var item in ___channel.Reader.ReadAllAsync())
@@ -207,15 +211,16 @@ public sealed class {Name}(
         ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, {index}, {arg}, {Interface}_{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new {InvokeRequestDto}()
-        {{
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new(""{method}""),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = {Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
-        }}, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new {InvokeRequestDto}(
+                ___requestId,
+                ___ServiceId,
+                new(""{method}""),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,{Interface}_{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))})
+            ), ___activityCts.Token);
 
         try
         {{

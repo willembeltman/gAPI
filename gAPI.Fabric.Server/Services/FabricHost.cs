@@ -100,14 +100,6 @@ public sealed class FabricHost
             writer.Write(done);
         }, actor);
     }
-    public async Task Send_SendRequestException_ToApiAsync(SendRequestExceptionDto ex, IActor? actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequestException);
-            writer.Write(ex);
-        }, actor);
-    }
 
     public async Task Send_InvokeArgumentRequest_ToApiAsync(InvokeArgumentRequestDto request, IActor? actor)
     {
@@ -154,16 +146,6 @@ public sealed class FabricHost
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeResponseDone);
             writer.Write(done);
-        }, actor);
-    }
-    public async Task Send_InvokeResponseException_ToApiAsync(InvokeResponseExceptionDto ex, IActor? actor)
-    {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeResponseException);
-            writer.Write(ex);
         }, actor);
     }
 
@@ -234,13 +216,6 @@ public sealed class FabricHost
                             await Manager.Receive_SendRequestDoneAsync(this, done, receiveSize, Cts.Token);
                         }
                         break;
-                    case FabricClientToHostMessageEnum.SendRequestException:
-                        {
-                            var ex = reader.ReadSendRequestExceptionDto();
-                            var receiveSize = counter.BytesRead - previous;
-                            await Manager.Receive_SendRequestExceptionAsync(this, ex, receiveSize, Cts.Token);
-                        }
-                        break;
                     case FabricClientToHostMessageEnum.InvokeArgumentRequest:
                         {
                             var argumentRequest = reader.ReadInvokeArgumentRequestDto();
@@ -274,13 +249,6 @@ public sealed class FabricHost
                             var invokeResponseDone = reader.ReadInvokeResponseDoneDto();
                             var receiveSize = counter.BytesRead - previous;
                             await Manager.Receive_InvokeResponseDoneAsync(this, invokeResponseDone, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.InvokeResponseException:
-                        {
-                            var invokeResponseException = reader.ReadInvokeResponseExceptionDto();
-                            var receiveSize = counter.BytesRead - previous;
-                            await Manager.Receive_InvokeResponseExceptionAsync(this, invokeResponseException, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.UpdateSession:

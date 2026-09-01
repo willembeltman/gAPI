@@ -38,11 +38,7 @@ public static class InvokeArgumentRequestDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new InvokeArgumentRequestDto();
-        value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
-        value.ArgumentIndex = PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset);
-        value.StreamId = GuidSerializer.ReadGuid(___span, ref ___offset);
-        return value;
+        return new InvokeArgumentRequestDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), GuidSerializer.ReadGuid(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

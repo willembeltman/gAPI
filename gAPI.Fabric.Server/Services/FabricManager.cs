@@ -123,32 +123,21 @@ public class FabricManager
         lock (state)
         {
             state.CompletedTargets.Add(caller.Id);
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.Add(caller.Id, done.ExceptionMessage);
+            }
+            if (done.StateIsChanged)
+            {
+                state.StateIsChanged = true;
+                state.StateData = done.StateData;
+            }
         }
 
         if (state.CompletedTargets.Count == state.Targets.Count)
         {
             await CompleteRequestAsync(state);
         }
-    }
-    public async Task Receive_SendRequestExceptionAsync(FabricHost caller, SendRequestExceptionDto ex, long receiveSize, CancellationToken ct)
-    {
-        if (!SendRequests.TryGetValue(ex.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor.EnqueueReceive(receiveSize);
-
-        lock (state)
-        {
-            state.CompletedTargets.Add(caller.Id);
-            state.Exceptions.Add(caller.Id, ex.ExceptionMessage);
-        }
-
-        if (state.CompletedTargets.Count != state.Targets.Count)
-            return;
-
-        await CompleteRequestAsync(state);
-
     }
     private async Task CompleteRequestAsync(RequestState state)
     {
@@ -159,19 +148,32 @@ public class FabricManager
 
         if (state.Exceptions.Count == 0)
         {
-            await state.Caller.Send_SendRequestDone_ToApiAsync(new SendRequestDoneDto()
-            {
-                RequestId = state.RequestId
-            }, state.Actor);
+            await state.Caller.Send_SendRequestDone_ToApiAsync(
+                new SendRequestDoneDto(
+                    state.RequestId,
+                    state.ServiceId,
+                    state.MethodId,
+                    state.UserId,
+                    state.SessionId,
+                    state.StateIsChanged,
+                    state.StateData,
+                    null
+                ), state.Actor);
         }
         else
         {
             var exceptionMessage = string.Join(", ", state.Exceptions.Values);
-            await state.Caller.Send_SendRequestDone_ToApiAsync(new SendRequestExceptionDto()
-            {
-                RequestId = state.RequestId,
-                ExceptionMessage = exceptionMessage
-            }, state.Actor);
+            await state.Caller.Send_SendRequestDone_ToApiAsync(
+                new SendRequestDoneDto(
+                    state.RequestId,
+                    state.ServiceId,
+                    state.MethodId,
+                    state.UserId,
+                    state.SessionId,
+                    state.StateIsChanged,
+                    state.StateData,
+                    exceptionMessage
+                ), state.Actor);
         }
     }
 
@@ -242,6 +244,11 @@ public class FabricManager
             return; // timeout / already completed
         state.ResetTimeout();
         state.Actor?.EnqueueReceive(receiveSize);
+        if (response.StateIsChanged)
+        {
+            state.StateIsChanged = true;
+            state.StateData = response.StateData;
+        }
         // DIRECT doorsluizen
         await state.Caller.Send_InvokeResponse_ToApiAsync(response, state.Actor);
     }
@@ -255,23 +262,10 @@ public class FabricManager
         lock (state)
         {
             state.CompletedTargets.Add(caller.Id);
-        }
-
-        if (state.CompletedTargets.Count == state.Targets.Count)
-        {
-            await CompleteInvokeAsync(state);
-        }
-    }
-    public async Task Receive_InvokeResponseExceptionAsync(FabricHost caller, InvokeResponseExceptionDto ex, long receiveSize, CancellationToken ct)
-    {
-        if (!InvokeRequests.TryGetValue(ex.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-        lock (state)
-        {
-            state.CompletedTargets.Add(caller.Id);
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.Add(caller.Id, done.ExceptionMessage);
+            }
         }
 
         if (state.CompletedTargets.Count == state.Targets.Count)
@@ -287,31 +281,15 @@ public class FabricManager
 
         InvokeRequests.TryRemove(state.RequestId, out _);
 
-        if (state.Exceptions.Count == 0)
-        {
-            await state.Caller.Send_InvokeResponseDone_ToApiAsync(new InvokeResponseDoneDto()
-            {
-                RequestId = state.RequestId,
-                MethodId = state.MethodId,
-                ServiceId = state.ServiceId,
-                SessionId = state.SessionId,
-                UserId = state.UserId
-            }, state.Actor);
-
-        }
-        else
-        {
-            var exceptionMessage = string.Join(", ", state.Exceptions.Values);
-            await state.Caller.Send_InvokeResponseException_ToApiAsync(new InvokeResponseExceptionDto()
-            {
-                RequestId = state.RequestId,
-                MethodId = state.MethodId,
-                ServiceId = state.ServiceId,
-                SessionId = state.SessionId,
-                UserId = state.UserId,
-                ExceptionMessage = exceptionMessage
-            }, state.Actor);
-        }
+        await state.Caller.Send_InvokeResponseDone_ToApiAsync(
+            new InvokeResponseDoneDto(
+                state.RequestId,
+                state.ServiceId,
+                state.MethodId,
+                state.UserId,
+                state.SessionId,
+                state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
+            ), state.Actor);
     }
 
     public async Task DisconnectAllAsync()

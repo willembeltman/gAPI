@@ -40,10 +40,6 @@ public class FabricClientReceiver(
                         var sendArgumentedRequestDone = fabricClient.BinaryReader.ReadSendRequestDoneDto();
                         await Receive_SendRequestDone_FromFabricAsync(sendArgumentedRequestDone, ct);
                         break;
-                    case FabricHostToClientMessageEnum.SendRequestException:
-                        var sendArgumentedRequestException = fabricClient.BinaryReader.ReadSendRequestExceptionDto();
-                        await Receive_SendRequestException_FromFabricAsync(sendArgumentedRequestException, ct);
-                        break;
                     case FabricHostToClientMessageEnum.InvokeArgumentRequest:
                         var argumentRequest = fabricClient.BinaryReader.ReadInvokeArgumentRequestDto();
                         await Receive_InvokeArgumentRequest_FromFabricAsync(argumentRequest, ct);
@@ -63,10 +59,6 @@ public class FabricClientReceiver(
                     case FabricHostToClientMessageEnum.InvokeResponseDone:
                         var invokeResponseDone = fabricClient.BinaryReader.ReadInvokeResponseDoneDto();
                         await Receive_InvokeResponseDone_FromFabricAsync(invokeResponseDone, ct);
-                        break;
-                    case FabricHostToClientMessageEnum.InvokeResponseException:
-                        var invokeResponseException = fabricClient.BinaryReader.ReadInvokeResponseExceptionDto();
-                        await Receive_InvokeResponseException_FromFabricAsync(invokeResponseException, ct);
                         break;
                     case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
                         var activate = fabricClient.BinaryReader.ReadSendGetSessionCookieDataResponseDto();
@@ -94,16 +86,6 @@ public class FabricClientReceiver(
         await fabricClient.ReconnectAsync(ct); // Letop deze moet naar boven
     }
 
-    private async Task Receive_InvokeResponseException_FromFabricAsync(InvokeResponseExceptionDto invokeResponseException, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
-
-    private async Task Receive_SendRequestException_FromFabricAsync(SendRequestExceptionDto sendArgumentedRequestException, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
-
     private async Task Receive_SendRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -113,21 +95,30 @@ public class FabricClientReceiver(
         {
             await fabricClient.Send_SendRequest_ToClient_Async(message, ct);
             await fabricClient.Sender.Send_SendRequestDone_ToFabricAsync(
-                new SendRequestDoneDto
-                {
-                    RequestId = message.RequestId
-                },
-                ct);
+                new SendRequestDoneDto(
+                    message.RequestId,
+                    message.ServiceId,
+                    message.MethodId,
+                    message.UserId, 
+                    message.SessionId,
+                    message.StateIsChanged,
+                    message.StateData,
+                    null
+                ), ct);
         }
         catch (Exception ex)
         {
-            await fabricClient.Sender.Send_SendRequestException_ToFabricAsync(
-                new SendRequestExceptionDto
-                {
-                    RequestId = message.RequestId,
-                    ExceptionMessage = ex.Message
-                },
-                ct);
+            await fabricClient.Sender.Send_SendRequestDone_ToFabricAsync(
+                new SendRequestDoneDto(
+                    message.RequestId,
+                    message.ServiceId,
+                    message.MethodId,
+                    message.UserId,
+                    message.SessionId,
+                    message.StateIsChanged,
+                    message.StateData, 
+                    ex.Message
+                ), ct);
         }
     }
     private async Task Receive_SendRequestDone_FromFabricAsync(SendRequestDoneDto done, CancellationToken ct)
@@ -167,26 +158,27 @@ public class FabricClientReceiver(
                 await fabricClient.Sender.Send_InvokeResponse_ToFabricAsync(item, ct);
 
             // Send done for this host
-            await fabricClient.Sender.Send_InvokeResponseDone_ToFabricAsync(new InvokeResponseDoneDto()
-            {
-                RequestId = message.RequestId,
-                MethodId = message.MethodId,
-                ServiceId = message.ServiceId,
-                SessionId = message.SessionId,
-                UserId = message.UserId,
-            }, ct);
+            await fabricClient.Sender.Send_InvokeResponseDone_ToFabricAsync(
+                new InvokeResponseDoneDto(
+                    message.RequestId,
+                    message.ServiceId,
+                    message.MethodId,
+                    message.UserId,
+                    message.SessionId,
+                    null
+                ), ct);
         }
         catch (Exception ex)
         {
-            await fabricClient.Sender.Send_InvokeResponseException_ToFabricAsync(new InvokeResponseExceptionDto()
-            {
-                RequestId = message.RequestId,
-                MethodId = message.MethodId,
-                ServiceId = message.ServiceId,
-                SessionId = message.SessionId,
-                UserId = message.UserId,
-                ExceptionMessage = ex.Message
-            }, ct);
+            await fabricClient.Sender.Send_InvokeResponseDone_ToFabricAsync(
+                new InvokeResponseDoneDto(
+                    message.RequestId,
+                    message.ServiceId,
+                    message.MethodId,
+                    message.UserId,
+                    message.SessionId,
+                    ex.Message
+                ), ct);
         }
     }
     private async Task Receive_InvokeResponse_FromFabricAsync(InvokeResponseDto response, CancellationToken ct)

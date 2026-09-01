@@ -10,12 +10,6 @@ public static class InvokeResponseDoneDtoCreateCopy
     [IsCreateCopy]
     public static InvokeResponseDoneDto CreateCopy(this InvokeResponseDoneDto value)
     {
-        var copy = new InvokeResponseDoneDto();
-        copy.RequestId = value.RequestId;
-        copy.ServiceId = value.ServiceId;
-        copy.MethodId = value.MethodId;
-        copy.SessionId = value.SessionId;
-        copy.UserId = value.UserId;
-        return copy;
+        return new InvokeResponseDoneDto(value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.ExceptionMessage);
     }
 }

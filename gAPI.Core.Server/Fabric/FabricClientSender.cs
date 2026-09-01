@@ -89,7 +89,7 @@ public class FabricClientSender(
         }, ct);
     }
 
-    public async Task Send_SendRequest_ToFabricAsync2(SendRequestDto request, CancellationToken ct)
+    public async Task Send_SendRequest_ToFabricAsync(SendRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequest_ToFabricAsync({request})", request);
@@ -107,16 +107,6 @@ public class FabricClientSender(
         {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestDone);
             writer.Write(done);
-        }, ct);
-    }
-    public async Task Send_SendRequestException_ToFabricAsync(SendRequestExceptionDto ex, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_SendRequestDone_ToFabricAsync({ex})", ex);
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestException);
-            writer.Write(ex);
         }, ct);
     }
     public async Task Send_InvokeRequest_ToFabricAsync(InvokeRequestDto request, CancellationToken ct)
@@ -167,17 +157,7 @@ public class FabricClientSender(
             writer.Write(response);
         }, ct);
     }
-    public async Task Send_InvokeResponseException_ToFabricAsync(InvokeResponseExceptionDto ex, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeResponseDone_ToFabricAsync({ex})", ex);
-
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeResponseException);
-            writer.Write(ex);
-        }, ct);
-    }
+   
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
         try

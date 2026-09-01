@@ -10,14 +10,6 @@ public static class InvokeResponseDtoCreateCopy
     [IsCreateCopy]
     public static InvokeResponseDto CreateCopy(this InvokeResponseDto value)
     {
-        var copy = new InvokeResponseDto();
-        copy.RequestId = value.RequestId;
-        copy.RespondingSessionId = value.RespondingSessionId;
-        copy.ServiceId = value.ServiceId;
-        copy.MethodId = value.MethodId;
-        copy.UserId = value.UserId;
-        copy.SessionId = value.SessionId;
-        copy.BinaryData = value.BinaryData == null ? null : value.BinaryData.ToArray();
-        return copy;
+        return new InvokeResponseDto(value.RespondingSessionId, value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.StateIsChanged, value.StateData, value.BinaryData == null ? null : value.BinaryData.ToArray());
     }
 }

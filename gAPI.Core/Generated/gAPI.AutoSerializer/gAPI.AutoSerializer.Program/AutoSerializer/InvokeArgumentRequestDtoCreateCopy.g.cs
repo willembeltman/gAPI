@@ -10,10 +10,6 @@ public static class InvokeArgumentRequestDtoCreateCopy
     [IsCreateCopy]
     public static InvokeArgumentRequestDto CreateCopy(this InvokeArgumentRequestDto value)
     {
-        var copy = new InvokeArgumentRequestDto();
-        copy.RequestId = value.RequestId;
-        copy.ArgumentIndex = value.ArgumentIndex;
-        copy.StreamId = value.StreamId;
-        return copy;
+        return new InvokeArgumentRequestDto(value.RequestId, value.ArgumentIndex, value.StreamId);
     }
 }

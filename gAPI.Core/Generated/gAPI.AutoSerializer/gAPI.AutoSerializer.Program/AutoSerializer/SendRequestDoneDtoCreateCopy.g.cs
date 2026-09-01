@@ -10,8 +10,6 @@ public static class SendRequestDoneDtoCreateCopy
     [IsCreateCopy]
     public static SendRequestDoneDto CreateCopy(this SendRequestDoneDto value)
     {
-        var copy = new SendRequestDoneDto();
-        copy.RequestId = value.RequestId;
-        return copy;
+        return new SendRequestDoneDto(value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.StateIsChanged, value.StateData, value.ExceptionMessage);
     }
 }

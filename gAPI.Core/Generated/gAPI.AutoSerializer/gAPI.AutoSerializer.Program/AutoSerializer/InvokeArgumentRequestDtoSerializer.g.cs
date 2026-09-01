@@ -36,10 +36,6 @@ public static class InvokeArgumentRequestDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new InvokeArgumentRequestDto();
-        value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
-        value.ArgumentIndex = ___reader.ReadInt32();
-        value.StreamId = ___reader.ReadGuid();
-        return value;
+        return new InvokeArgumentRequestDto(RequestIdSerializer.ReadRequestId(___reader), ___reader.ReadInt32(), ___reader.ReadGuid());
     }
 }

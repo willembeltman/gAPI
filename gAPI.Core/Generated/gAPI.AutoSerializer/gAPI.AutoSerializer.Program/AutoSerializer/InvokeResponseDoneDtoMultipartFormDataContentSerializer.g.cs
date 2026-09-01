@@ -19,9 +19,11 @@ public static class InvokeResponseDoneDtoMultipartFormDataContentSerializer
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);
         ServiceMethodIdMultipartFormDataContentSerializer.Write(___content, "MethodId", value.MethodId);
-        if (value.SessionId != null)
-            SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId.Value);
         if (value.UserId != null)
             UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId.Value);
+        if (value.SessionId != null)
+            SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId.Value);
+        if (value.ExceptionMessage != null)
+            ___content.Add(new StringContent(value.ExceptionMessage), "ExceptionMessage");
     }
 }

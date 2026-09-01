@@ -19,6 +19,8 @@ public sealed class RequestState : IDisposable
     public HashSet<FabricHostId> CompletedTargets { get; } = [];
     public Dictionary<FabricHostId, string> Exceptions { get; } = [];
     private ResettableTimeout? Timeout { get; set; }
+    public bool StateIsChanged { get; set; }
+    public string? StateData { get; set; }
 
     private int _completed;
     public bool TryComplete()

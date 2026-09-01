@@ -24,14 +24,22 @@ public class SseServiceSubscription(
     public SessionId SessionId { get; } = sessionId;
     public UserId UserId { get; } = userId;
 
-    public async Task SendAsync(SendRequestDto sendRequest, CancellationToken ct)
+    public async Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto sendRequest, CancellationToken ct)
     {
         var sseEvent = new SseEvent(sendRequest);
         await Channel.Writer.WriteAsync(sseEvent, ct);
+        return new SendRequestDoneDto(
+            sendRequest.RequestId,
+            sendRequest.ServiceId,
+            sendRequest.MethodId,
+            sendRequest.UserId,
+            sendRequest.SessionId,
+            false,
+            null,
+            null);
     }
 
-    public async IAsyncEnumerable<SseItem<string>> ReadAllAsync(
-        [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
     {
         Id = ServiceSubscriptionCollection.Add(this);
         //Console.WriteLine($"SseServiceSubscription {Id} started");
@@ -71,7 +79,7 @@ public class SseServiceSubscription(
         }
     }
 
-    IAsyncEnumerable<InvokeResponseDto> IServiceSubscription.InvokeAsync(InvokeRequestDto request, CancellationToken ct)
+    IAsyncEnumerable<InvokeResponseDto> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
     {
         throw new NotSupportedException(
             "You cannot use methods that have return types for SSE, " +
@@ -85,4 +93,5 @@ public class SseServiceSubscription(
 
     public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
         => throw new NotSupportedException();
+
 }

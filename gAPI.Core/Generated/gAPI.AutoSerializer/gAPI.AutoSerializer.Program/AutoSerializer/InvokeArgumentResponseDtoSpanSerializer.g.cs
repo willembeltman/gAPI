@@ -40,13 +40,7 @@ public static class InvokeArgumentResponseDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new InvokeArgumentResponseDto();
-        value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
-        value.ArgumentIndex = PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset);
-        value.StreamId = GuidSerializer.ReadGuid(___span, ref ___offset);
-        value.IsCompleted = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
-        value.BinaryData = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
-        return value;
+        return new InvokeArgumentResponseDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), GuidSerializer.ReadGuid(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

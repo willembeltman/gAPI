@@ -179,14 +179,18 @@ public class {Name} : WssServerConnection
             ___ct" : $@"
             {arg}"))});
 
-        await Send_InvokeResponse_ToClientAsync(new {InvokeResponseDto}()
-        {{
-            RequestId = ___invokeRequest.RequestId,
-            ServiceId = ___invokeRequest.ServiceId,
-            MethodId = ___invokeRequest.MethodId,
-            SessionId = ___authenticationService.SessionId,
-            BinaryData = {@interface}_{method}_Serializer(response)
-        }}, ___ct);
+        await Send_InvokeResponse_ToClientAsync(
+            new {InvokeResponseDto}(
+                ___authenticationService.SessionId,
+                ___invokeRequest.RequestId,
+                ___invokeRequest.ServiceId,
+                ___invokeRequest.MethodId,
+                ___invokeRequest.UserId,
+                ___invokeRequest.SessionId,
+                false,
+                null,
+                {@interface}_{method}_Serializer(response)
+            ), ___ct);
     }}")))))}
 {(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method => $@"
     public async Task {@interface}_{method}(
@@ -203,14 +207,18 @@ public class {Name} : WssServerConnection
 
         await foreach (var response in responses)
         {{
-            await Send_InvokeResponse_ToClientAsync(new {InvokeResponseDto}()
-                {{
-                    RequestId = ___invokeRequest.RequestId,
-                    ServiceId = ___invokeRequest.ServiceId,
-                    MethodId = ___invokeRequest.MethodId,
-                    SessionId = ___authenticationService.SessionId,
-                    BinaryData = {@interface}_{method}_Serializer(response)
-                }}, ___ct);
+            await Send_InvokeResponse_ToClientAsync(
+                new {InvokeResponseDto}(
+                    ___authenticationService.SessionId,
+                    ___invokeRequest.RequestId,
+                    ___invokeRequest.ServiceId,
+                    ___invokeRequest.MethodId,
+                    ___invokeRequest.UserId,
+                    ___invokeRequest.SessionId,
+                    false,
+                    null,
+                    {@interface}_{method}_Serializer(response)
+                ), ___ct);
         }}
     }}")))))}{functions}
 

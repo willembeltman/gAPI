@@ -11,7 +11,7 @@ public static class InvokeResponseDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xDB12BA9B;
-    public const uint SchemaHash = 0xCBB4B3FF;
+    public const uint SchemaHash = 0x1568B443;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeResponseDto value)
@@ -20,8 +20,8 @@ public static class InvokeResponseDtoSerializer
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
-        RequestIdSerializer.Write(___writer, value.RequestId);
         SessionIdSerializer.Write(___writer, value.RespondingSessionId);
+        RequestIdSerializer.Write(___writer, value.RequestId);
         ServiceIdSerializer.Write(___writer, value.ServiceId);
         ServiceMethodIdSerializer.Write(___writer, value.MethodId);
         ___writer.Write(value.UserId != null); 
@@ -30,6 +30,10 @@ public static class InvokeResponseDtoSerializer
         ___writer.Write(value.SessionId != null); 
         if (value.SessionId != null) 
             SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        ___writer.Write(value.StateIsChanged);
+        ___writer.Write(value.StateData != null); 
+        if (value.StateData != null)
+            ___writer.Write(value.StateData);
         ___writer.Write(value.BinaryData != null); 
         if (value.BinaryData != null) 
         {
@@ -48,14 +52,6 @@ public static class InvokeResponseDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new InvokeResponseDto();
-        value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
-        value.RespondingSessionId = SessionIdSerializer.ReadSessionId(___reader);
-        value.ServiceId = ServiceIdSerializer.ReadServiceId(___reader);
-        value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
-        value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);
-        value.SessionId = ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader);
-        value.BinaryData = ___reader.ReadBoolean() == false ? null : ___reader.ReadBytes(___reader.ReadInt32());
-        return value;
+        return new InvokeResponseDto(SessionIdSerializer.ReadSessionId(___reader), RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBoolean() == false ? null : ___reader.ReadBytes(___reader.ReadInt32()));
     }
 }

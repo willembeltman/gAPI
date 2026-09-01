@@ -10,15 +10,6 @@ public static class SendRequestDtoCreateCopy
     [IsCreateCopy]
     public static SendRequestDto CreateCopy(this SendRequestDto value)
     {
-        var copy = new SendRequestDto();
-        copy.RequestId = value.RequestId;
-        copy.ServiceId = value.ServiceId;
-        copy.MethodId = value.MethodId;
-        copy.UserId = value.UserId;
-        copy.SessionId = value.SessionId;
-        copy.StateIsChanged = value.StateIsChanged;
-        copy.StateData = value.StateData;
-        copy.BinaryData = value.BinaryData.ToArray();
-        return copy;
+        return new SendRequestDto(value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.StateIsChanged, value.StateData, value.BinaryData.ToArray());
     }
 }

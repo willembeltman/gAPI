@@ -56,7 +56,7 @@ public class WssServiceSubscription
     }
 
     // FabricClient => SignalRConnection: Client functies
-    public Task SendAsync(SendRequestDto message, CancellationToken ct)
+    public Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("SendAsync({message})", message);
@@ -72,7 +72,7 @@ public class WssServiceSubscription
     public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
         => Connection.Send_InvokeArgumentResponse_ToClientAsync(this, response, ct);
 
-    public IAsyncEnumerable<InvokeResponseDto> InvokeAsync(InvokeRequestDto request, CancellationToken ct)
+    public IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("InvokeAsync({request})", request);
