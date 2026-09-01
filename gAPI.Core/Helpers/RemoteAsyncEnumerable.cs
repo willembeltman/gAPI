@@ -49,12 +49,29 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 
         public async ValueTask<bool> MoveNextAsync()
         {
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                Complete(new OperationCanceledException(_cancellationToken));
+                return false;
+            }
+
             await _requestNext(_streamId, Push, Complete, _cancellationToken);
 
             try
             {
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    Complete(new OperationCanceledException(_cancellationToken));
+                    return false;
+                }
+
                 Current = await _items.Reader.ReadAsync(_cancellationToken);
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Complete();
+                throw;
             }
             catch (ChannelClosedException)
             {

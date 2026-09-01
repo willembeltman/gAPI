@@ -8,9 +8,12 @@ public enum WssClientToServerMessageEnum
 
     SendRequest,
     SendRequestDone,
+    SendRequestCancelled,
     InvokeArgumentRequest,
     InvokeArgumentResponse,
+    InvokeArgumentCancelled,
     InvokeRequest,
+    InvokeRequestCancelled,
     InvokeResponse,
     InvokeResponseDone,
 

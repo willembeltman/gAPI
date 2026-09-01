@@ -9,9 +9,12 @@ namespace gAPI.Core.Interfaces;
 public interface IWssServerConnection : IAsyncDisposable
 {
     Task<SendRequestDoneDto> Send_SendRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto message, CancellationToken ct);
+    Task Send_SendRequestCancelled_ToClientAsync(WssServiceSubscription hubHost, SendRequestCancelledDto message, CancellationToken ct);
     IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeRequestDto request, CancellationToken ct);
+    Task Send_InvokeRequestCancelled_ToClientAsync(WssServiceSubscription hubHost, InvokeRequestCancelledDto request, CancellationToken ct);
     //Task Send_SendArgumentedRequest_ToClientAsync(WssServiceSubscription hubHost, SendRequestDto message, CancellationToken ct);
     Task Send_InvokeArgumentRequest_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentRequestDto request, CancellationToken ct);
     Task Send_InvokeArgumentResponse_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentResponseDto response, CancellationToken ct);
+    Task Send_InvokeArgumentCancelled_ToClientAsync(WssServiceSubscription hubHost, InvokeArgumentCancelledDto response, CancellationToken ct);
     bool HasRequest(RequestId requestId);
 }

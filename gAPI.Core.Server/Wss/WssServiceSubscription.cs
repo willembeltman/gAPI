@@ -63,6 +63,8 @@ public class WssServiceSubscription
 
         return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
     }
+    public Task Send_SendRequestCancelled_ToClient_Async(SendRequestCancelledDto message, CancellationToken ct)
+        => Connection.Send_SendRequestCancelled_ToClientAsync(this, message, ct);
 
     public bool HasRequest(RequestId requestId) => Connection.HasRequest(requestId);
 
@@ -71,6 +73,8 @@ public class WssServiceSubscription
 
     public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
         => Connection.Send_InvokeArgumentResponse_ToClientAsync(this, response, ct);
+    public Task SendArgumentCancelledAsync(InvokeArgumentCancelledDto response, CancellationToken ct)
+        => Connection.Send_InvokeArgumentCancelled_ToClientAsync(this, response, ct);
 
     public IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
     {
@@ -79,6 +83,8 @@ public class WssServiceSubscription
 
         return Connection.Send_InvokeRequest_ToClientAsync(this, request, ct);
     }
+    public Task Send_InvokeRequestCancelled_ToClient_Async(InvokeRequestCancelledDto request, CancellationToken ct)
+        => Connection.Send_InvokeRequestCancelled_ToClientAsync(this, request, ct);
 
     // SignalRConnection => FabricClient: Unsubscribe (op dispose)
     public async ValueTask DisposeAsync()

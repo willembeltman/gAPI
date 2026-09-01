@@ -535,10 +535,17 @@ public sealed class FabricClient : IAsyncDisposable
 
     public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
     {
-        var activeStreams = new ConcurrentDictionary<Guid, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate)>();
+        var activeStreams = new ConcurrentDictionary<Guid, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate, CancellationTokenSource linkedCts)>();
         ArgumentRequestHandlers[(requestId, argumentIndex)] = async (streamId, ct) =>
         {
-            var (enumerator, gate) = activeStreams.GetOrAdd(streamId, _ => (source.GetAsyncEnumerator(cancellationToken), new SemaphoreSlim(1, 1)));
+            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                    return (source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
+                });
+
             await gate.WaitAsync(ct);
             try
             {
@@ -558,7 +565,28 @@ public sealed class FabricClient : IAsyncDisposable
                 {
                     activeStreams.TryRemove(streamId, out _);
                     await enumerator.DisposeAsync();
+                    linkedCts.Dispose();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                if (!ct.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                    throw;
+
+                var response = new InvokeArgumentResponseDto(
+                    requestId,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    []);
+                if (Host != null)
+                    await Sender.Send_InvokeArgumentResponse_ToFabricAsync(response, CancellationToken.None);
+                else
+                    PendingArgumentResponses[(response.RequestId, response.ArgumentIndex, streamId)] = response;
+
+                activeStreams.TryRemove(streamId, out _);
+                await enumerator.DisposeAsync();
+                linkedCts.Dispose();
             }
             finally
             {

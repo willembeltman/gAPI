@@ -232,6 +232,11 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
                         break;
 
+                    case WssServerToClientMessageEnum.SendRequestCancelled:
+                        var sendRequestCancelled = span.ReadSendRequestCancelledDto(ref offset);
+                        await Received_SendRequestCancelled_FromServer(sendRequestCancelled, ct);
+                        break;
+
                     case WssServerToClientMessageEnum.InvokeArgumentRequest:
                         var argumentRequest = span.ReadInvokeArgumentRequestDto(ref offset);
                         _ = Task.Run(async () => { await Received_InvokeArgumentRequest_FromServerAsync(argumentRequest, ct); }, ct);
@@ -240,6 +245,16 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.InvokeArgumentResponse:
                         var argumentResponse = span.ReadInvokeArgumentResponseDto(ref offset);
                         await Received_InvokeArgumentResponse_FromServer(argumentResponse, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeArgumentCancelled:
+                        var invokeArgumentCancelled = span.ReadInvokeArgumentCancelledDto(ref offset);
+                        await Received_InvokeArgumentCancelled_FromServer(invokeArgumentCancelled, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeRequestCancelled:
+                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledDto(ref offset);
+                        await Received_InvokeRequestCancelled_FromServer(invokeRequestCancelled, ct);
                         break;
 
                     case WssServerToClientMessageEnum.InvokeResponse:
@@ -275,6 +290,10 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         if (PendingArgumentedRequests.TryRemove(sendArgumentedRequestDone.RequestId, out var completion))
             completion.TrySetResult(true);
+    }
+    private async Task Received_SendRequestCancelled_FromServer(SendRequestCancelledDto sendRequestCancelled, CancellationToken ct)
+    {
+        PendingArgumentedRequests.TryRemove(sendRequestCancelled.RequestId, out _);
     }
     private async Task Received_SendRequest_FromServer(SendRequestDto sendArgumentedRequest, CancellationToken ct)
     {
@@ -347,6 +366,15 @@ public abstract class WssClientConnection : IWssClientConnection
 
         if (ArgumentRequestHandlers.TryGetValue((argumentRequest.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
             await argumentHandler(argumentRequest.StreamId, ct);
+    }
+    private async Task Received_InvokeArgumentCancelled_FromServer(InvokeArgumentCancelledDto invokeArgumentCancelled, CancellationToken ct)
+    {
+        var key = (invokeArgumentCancelled.RequestId, invokeArgumentCancelled.ArgumentIndex, invokeArgumentCancelled.StreamId);
+        ArgumentResponseHandlers.TryRemove(key, out _);
+    }
+    private async Task Received_InvokeRequestCancelled_FromServer(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct)
+    {
+        UnregisterInvokeRequest(invokeRequestCancelled.RequestId);
     }
     private async Task Received_InvokeResponse_FromServerAsync(InvokeResponseDto invokeResponse, CancellationToken ct)
     {
@@ -520,6 +548,16 @@ public abstract class WssClientConnection : IWssClientConnection
             return offset;
         }, ct);
     }
+    public async Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledDto sendRequestCancelled, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendRequestCancelled);
+            writer.Write(ref offset, sendRequestCancelled);
+            return offset;
+        }, ct);
+    }
     public async Task Send_InvokeRequest_ToServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
     {
         if (!Initialized)
@@ -533,6 +571,32 @@ public abstract class WssClientConnection : IWssClientConnection
             var offset = 0;
             writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequest);
             writer.Write(ref offset, invokeRequest);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_InvokeRequestCancelled_ToServerAsync(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct)
+    {
+        if (!Initialized)
+            return;
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequestCancelled);
+            writer.Write(ref offset, invokeRequestCancelled);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_InvokeArgumentCancelled_ToServerAsync(InvokeArgumentCancelledDto invokeArgumentCancelled, CancellationToken ct)
+    {
+        if (!Initialized)
+            return;
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeArgumentCancelled);
+            writer.Write(ref offset, invokeArgumentCancelled);
             return offset;
         }, ct);
     }
@@ -571,10 +635,17 @@ public abstract class WssClientConnection : IWssClientConnection
     
     public void RegisterAsyncEnumerableArgument<T>(RequestId requestId, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
     {
-        var activeStreams = new ConcurrentDictionary<Guid, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate)>();
+        var activeStreams = new ConcurrentDictionary<Guid, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate, CancellationTokenSource linkedCts)>();
         ArgumentRequestHandlers[(requestId, argumentIndex)] = async (streamId, ct) =>
         {
-            var (enumerator, gate) = activeStreams.GetOrAdd(streamId, _ => (source.GetAsyncEnumerator(cancellationToken), new SemaphoreSlim(1, 1)));
+            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                    return (source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
+                });
+
             await gate.WaitAsync(ct);
             try
             {
@@ -589,7 +660,24 @@ public abstract class WssClientConnection : IWssClientConnection
                 {
                     activeStreams.TryRemove(streamId, out _);
                     await enumerator.DisposeAsync();
+                    linkedCts.Dispose();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                if (!ct.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                    throw;
+
+                await Send_InvokeArgumentResponse_ToServerAsync(new InvokeArgumentResponseDto(
+                    requestId,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    []), CancellationToken.None);
+
+                activeStreams.TryRemove(streamId, out _);
+                await enumerator.DisposeAsync();
+                linkedCts.Dispose();
             }
             finally
             {
