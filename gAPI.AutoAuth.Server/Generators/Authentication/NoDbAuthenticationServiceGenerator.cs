@@ -2,16 +2,16 @@ using gAPI.AutoAuth.Server.Models;
 
 namespace gAPI.AutoAuth.Server.Generators.Authentication;
 
-public class AuthenticationServiceGenerator : _BaseGenerator
+public class NoDbAuthenticationServiceGenerator : _BaseGenerator
 {
-    public AuthenticationServiceGenerator(Generator context)
+    public NoDbAuthenticationServiceGenerator(Generator context)
     {
         Context = context;
 
         Directory = "";
         Namespace = "gAPI.Generated";
 
-        Name = "AuthenticationService";
+        Name = "NoDbAuthenticationService";
         FileName = $"Authentication/{Name}.g.cs";
     }
 
@@ -34,7 +34,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
 
     public SharedReference SessionId => Context.SharedReferences.SessionId;
     public SharedReference UserId => Context.SharedReferences.UserId;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
+    public SharedReference NoDbServerAuthenticationServiceT => Context.SharedReferences.NoDbServerAuthenticationServiceT;
     public SharedReference AuthenticationInitializeResult => Context.SharedReferences.AuthenticationInitializeResult;
     public SharedReference AuthenticationHeaders => Context.SharedReferences.AuthenticationHeaders;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
@@ -57,7 +57,7 @@ public class AuthenticationServiceGenerator : _BaseGenerator
         Reg(AuthenticationInitializeResult);
         Reg(SessionId);
         Reg(UserId);
-        Reg(IServerAuthenticationService);
+        Reg(NoDbServerAuthenticationServiceT);
         Reg(AuthenticationHeaders);
         Reg(IStateParserT);
         Reg(IAuthenticationService);
@@ -72,20 +72,14 @@ public class AuthenticationServiceGenerator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IAuthenticationStateFactoryT}<{User}> authenticationStateFactory,
-    {IUserTokenFactoryT}<{User}> userTokenFactory,
     {IStateMappingT}<{User}, {State}> stateMapping,
     {IStateParserT}<{State}> stateSerializer,
-    IHostEnvironment hostEnvironment,
     {FabricClient} fabricClient,
     {AuthenticationOptions} authenticationOptions,
     IEnumerable<{IAuthenticationCheckT}<{User}, {State}>> authenticationChecks) 
-    : {AuthenticationServiceT}<{User}, {State}>(
-        authenticationStateFactory,
-        userTokenFactory,
+    : {NoDbServerAuthenticationServiceT}<{User}, {State}>(
         stateMapping,
         stateSerializer,
-        hostEnvironment,
         fabricClient,
         authenticationOptions,
         authenticationChecks)

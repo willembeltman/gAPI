@@ -11,7 +11,7 @@ public static class InvokeResponseDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xDB12BA9B;
-    public const uint SchemaHash = 0xF741183C;
+    public const uint SchemaHash = 0xCBB4B3FF;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeResponseDto value)
@@ -21,6 +21,7 @@ public static class InvokeResponseDtoSerializer
         ___writer.Write(SchemaHash); // Schema identifier
         
         RequestIdSerializer.Write(___writer, value.RequestId);
+        SessionIdSerializer.Write(___writer, value.RespondingSessionId);
         ServiceIdSerializer.Write(___writer, value.ServiceId);
         ServiceMethodIdSerializer.Write(___writer, value.MethodId);
         ___writer.Write(value.UserId != null); 
@@ -49,6 +50,7 @@ public static class InvokeResponseDtoSerializer
         
         var value = new InvokeResponseDto();
         value.RequestId = RequestIdSerializer.ReadRequestId(___reader);
+        value.RespondingSessionId = SessionIdSerializer.ReadSessionId(___reader);
         value.ServiceId = ServiceIdSerializer.ReadServiceId(___reader);
         value.MethodId = ServiceMethodIdSerializer.ReadServiceMethodId(___reader);
         value.UserId = ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader);

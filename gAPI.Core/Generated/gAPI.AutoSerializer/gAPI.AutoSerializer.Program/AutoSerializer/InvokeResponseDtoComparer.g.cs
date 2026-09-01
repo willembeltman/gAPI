@@ -11,6 +11,7 @@ public static class InvokeResponseDtoComparer
     public static bool IsDifferent(this InvokeResponseDto value, InvokeResponseDto otherValue)
     {
         if (value.RequestId != otherValue.RequestId) return true;
+        if (value.RespondingSessionId != otherValue.RespondingSessionId) return true;
         if (value.ServiceId != otherValue.ServiceId) return true;
         if (value.MethodId != otherValue.MethodId) return true;
         if (value.UserId != otherValue.UserId) return true;

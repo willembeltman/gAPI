@@ -14,7 +14,7 @@ public static class InvokeResponseDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xDB12BA9B;
-    public const uint SchemaHash = 0xF741183C;
+    public const uint SchemaHash = 0xCBB4B3FF;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeResponseDto value)
@@ -24,6 +24,7 @@ public static class InvokeResponseDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
+        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.RespondingSessionId);
         ServiceIdSpanSerializer.Write(ref ___span, ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Write(ref ___span, ref ___offset, value.MethodId);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.UserId != null);
@@ -51,6 +52,7 @@ public static class InvokeResponseDtoSpanSerializer
         
         var value = new InvokeResponseDto();
         value.RequestId = RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset);
+        value.RespondingSessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
         value.ServiceId = ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset);
         value.MethodId = ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset);
         value.UserId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset);
@@ -64,6 +66,7 @@ public static class InvokeResponseDtoSpanSerializer
     {
         ___offset += 10;
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
+        SessionIdSpanSerializer.Length(ref ___offset, value.RespondingSessionId);
         ServiceIdSpanSerializer.Length(ref ___offset, value.ServiceId);
         ServiceMethodIdSpanSerializer.Length(ref ___offset, value.MethodId);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.UserId != null);

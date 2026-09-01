@@ -12,6 +12,7 @@ public static class InvokeResponseDtoCreateCopy
     {
         var copy = new InvokeResponseDto();
         copy.RequestId = value.RequestId;
+        copy.RespondingSessionId = value.RespondingSessionId;
         copy.ServiceId = value.ServiceId;
         copy.MethodId = value.MethodId;
         copy.UserId = value.UserId;

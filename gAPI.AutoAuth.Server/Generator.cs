@@ -34,10 +34,9 @@ public class Generator
 
         IAuthenticationService = new IAuthenticationServiceGenerator(this);
         AuthenticationService = new AuthenticationServiceGenerator(this);
-        //AuthenticationStateMapping = new AuthenticationStateMappingGenerator(this);
+        NoDbAuthenticationService = new NoDbAuthenticationServiceGenerator(this);
         AddAutoAuthServerExtension = new AddAutoAuthServerExtensionGenerator(this);
-
-        //ServerConnection = new ServerConnection_Generator(this);
+        MapAutoAuthServerExtension = new MapAutoAuthServerExtensionGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -51,8 +50,9 @@ public class Generator
     public StateParserGenerator StateParser { get; }
     public IAuthenticationServiceGenerator IAuthenticationService { get; }
     public AuthenticationServiceGenerator AuthenticationService { get; }
-    //public AuthenticationStateMappingGenerator AuthenticationStateMapping { get; }
+    public NoDbAuthenticationServiceGenerator NoDbAuthenticationService { get; }
     public AddAutoAuthServerExtensionGenerator AddAutoAuthServerExtension { get; }
+    public MapAutoAuthServerExtensionGenerator MapAutoAuthServerExtension { get; }
 
     public void Generate(SourceProductionContext spc)
     {
@@ -61,8 +61,9 @@ public class Generator
 
         GenerateItem(spc, IAuthenticationService);
         GenerateItem(spc, AuthenticationService);
-        //GenerateItem(spc, AuthenticationStateMapping);
+        GenerateItem(spc, NoDbAuthenticationService);
         GenerateItem(spc, AddAutoAuthServerExtension);
+        GenerateItem(spc, MapAutoAuthServerExtension);
 
         GenerateSpanSerializers(spc);
         GenerateCreateCopys(spc);

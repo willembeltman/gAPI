@@ -12,77 +12,46 @@ public class SharedReferences
 
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
 
-        HubResult = SharedReferenceFinder.Find("gAPI.Core.Sse.HubResult", allSymbols);
-        HubResultT = new SharedReference("gAPI.Core.Sse.HubResultT");
-        SseEvent = SharedReferenceFinder.Find("gAPI.Core.Sse.SseEvent", allSymbols);
-
-        ConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ConnectionId", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
 
-        BaseListResponseT = new SharedReference("gAPI.Core.Dtos.BaseListResponseT"); //Find("gAPI.Core.Dtos.BaseListResponseT", allSymbols);
-        BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT"); //Find("gAPI.Core.Dtos.BaseResponseT", allSymbols);
-        BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServerConfig", allSymbols);
-        SubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SubscribeDto", allSymbols);
-        UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.UnsubscribeDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
         InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
 
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
-        IAuthenticationSecurity = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAuthenticationSecurity", allSymbols);
-        IServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceSubscription", allSymbols);
-        IUseCase = new SharedReference("gAPI.Core.Interfaces.IUseCase");
-        Mapping = new SharedReference("gAPI.Core.Interfaces.Mapping");
-
-        SseServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseServiceSubscriptionCollection", allSymbols);
+        
+        ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
-        ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
-
+        
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
-        StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
-        IStateParserT = new SharedReference("gAPI.Core.Interfaces.IStateParser");
-        IServerAuthenticationServiceImplementation = SharedReferenceFinder.TryFindByInterface(IServerAuthenticationService, allSymbols);
+        AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
+        AuthenticationMiddleware = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationMiddleware", allSymbols);
 
     }
 
     public SharedReference FabricClient { get; }
-    public SharedReference SseServiceSubscriptionCollection { get; }
+    public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }
     public SharedReference SessionId { get; }
-    public SharedReference BaseListResponseT { get; }
-    public SharedReference BaseResponse { get; }
-    public SharedReference BaseResponseT { get; }
     public SharedReference InvokeRequestDto { get; }
     public SharedReference InvokeResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
-    public SharedReference IAuthenticationSecurity { get; }
-    public SharedReference IServiceSubscription { get; }
-    public SharedReference IUseCase { get; }
-    public SharedReference Mapping { get; }
-    public SharedReference HubResult { get; }
-    public SharedReference HubResultT { get; }
-    public SharedReference SseEvent { get; }
-    public SharedReference ConnectionId { get; }
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference AuthenticationHeaders { get; }
     public SharedReference SendRequestDto { get; }
     public SharedReference ServerConfig { get; }
-    public SharedReference SubscribeDto { get; }
-    public SharedReference UnsubscribeDto { get; }
     public SharedReference WssServerConnectionCollection { get; }
     public SharedReference SessionCache { get; }
-    public SharedReference ServerAuthenticationAccessor { get; }
     public SharedReference AuthStateDto { get; }
-    public SharedReference? StateDto { get; }
-    public SharedReference IStateParserT { get; }
-    public SharedReference? IServerAuthenticationServiceImplementation { get; }
+    public SharedReference AuthenticationOptions { get; }
     public SharedReference InvokeResponseDoneDto { get; }
+    public SharedReference AuthenticationMiddleware { get; }
 }

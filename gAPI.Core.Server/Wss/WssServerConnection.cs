@@ -31,7 +31,7 @@ public abstract class WssServerConnection : IWssServerConnection
     //readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex), Func<CancellationToken, Task>> ArgumentRequestHandlers = [];
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex, Guid StreamId), Action<InvokeArgumentResponseDto>> ArgumentResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, byte> ArgumentRoutes = [];
-    readonly SseServiceSubscriptionCollection SseServiceSubscriptionCollection = new();
+    readonly ServiceSubscriptionCollection ServiceSubscriptionCollection = new();
 
     private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
     private byte[] SendBuffer = new byte[10 * 1024 * 1024];
@@ -44,14 +44,14 @@ public abstract class WssServerConnection : IWssServerConnection
 
     public WssServerConnection(
         IServerAuthenticationService authenticationService,
-        SseServiceSubscriptionCollection sseServiceSubscriptionCollection,
+        ServiceSubscriptionCollection ServiceSubscriptionCollection,
         WssServerConnectionCollection connections,
         FabricClient fabricClient,
         ILoggerFactory loggerFactory)
     {
         LoggerFactory = loggerFactory;
         Logger = loggerFactory.CreateLogger<WssServerConnection>();
-        SseServiceSubscriptionCollection = sseServiceSubscriptionCollection;
+        ServiceSubscriptionCollection = ServiceSubscriptionCollection;
         Connections = connections;
         AuthenticationService = authenticationService;
         FabricClient = fabricClient;
@@ -215,7 +215,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
     private async Task Receive_Initialize_FromClientAsync(PathString path, QueryString queryString, IPAddress? ipAddress, string sessionId, string? cookieData, InitializeDto initialize, CancellationToken ct)
     {
-        await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, false, ct);
+        await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, ct);
     }
 
     private async Task Receive_Subscribe_FromClientAsync(SubscribeDto subscribe, CancellationToken ct)
@@ -232,7 +232,7 @@ public abstract class WssServerConnection : IWssServerConnection
         subscription = new WssServiceSubscription(
             this,
             LoggerFactory,
-            SseServiceSubscriptionCollection,
+            ServiceSubscriptionCollection,
             FabricClient,
             ConnectionId,
             subscribe.ServiceId,

@@ -18,15 +18,16 @@ public class SharedReferences
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerConfig", allSymbols);
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
-        SseServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseServiceSubscriptionCollection", allSymbols);
+        ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
+        AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
     }
 
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference? AuthServer_Middleware { get; }
 
     public SharedReference FabricClient { get; }
-    public SharedReference SseServiceSubscriptionCollection { get; }
+    public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference SseServiceSubscription { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
@@ -35,4 +36,5 @@ public class SharedReferences
     public SharedReference IServerAuthenticationService { get; }
     public SharedReference ServerConfig { get; }
     public SharedReference SessionCache { get; }
+    public SharedReference AuthenticationOptions { get; }
 }

@@ -1,5 +1,4 @@
 using gAPI.AutoWss.Server.Generators.Hubs;
-using gAPI.AutoWss.Server.Generators.Wss;
 using gAPI.AutoWss.Server.Models;
 using System.Linq;
 
@@ -21,33 +20,10 @@ public class MapAutoWssServerExtensionGenerator : _BaseGenerator
 
     public Generator Context { get; }
 
-    public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
-    public IClientContext_Generator IClientContext => Context.IClientContext;
-    public ClientContext_Generator ClientContext => Context.ClientContext;
-
-    public SharedReference FabricClient => Context.SharedReferences.FabricClient;
-    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
-    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
-    public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
-    public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
-    public SharedReference SessionId => Context.SharedReferences.SessionId;
 
     public override void GenerateCode()
     {
-        Reg(ServerConnection);
-        Reg(IClientContext);
-        Reg(ClientContext);
-        Reg(FabricClient);
-        Reg(ServerConfig);
-        Reg(WssServerConnectionCollection);
-        Reg(SseServiceSubscriptionCollection);
-        Reg(IServerAuthenticationService);
-        Reg(SessionCache);
-        Reg(ServerAuthenticationAccessor);
-        Reg(SessionId);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
@@ -132,11 +108,14 @@ public static class {Name}
 
         app.UseCors(""AllowSpecificOrigin"");
         app.UseRouting();
+        
+        // State endpoint
+        app.MapGet(""/__state"", ([FromHeader(Name = ""X-SessionId"")] string sessionId) => {{ }}).AllowAnonymous();
 
-        app.UseWebSockets();
+        // Wss endpoint
         app.MapWssEndpoint();
-        app.MapStateEndpoint();
 
+        // Minimal api endpoints
 {(string.Join("", Context.MinimalApis.Select(Interface => $@"
         app.Map{Interface.Interface.CleanName}Endpoints();")))}
 

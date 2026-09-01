@@ -7,4 +7,6 @@ namespace gAPI.Core.Dtos;
 public class SendRequestDoneDto
 {
     public RequestId RequestId { get; set; }
+    //public bool StateIsChanged { get; set; }
+    //public string? StateData { get; set; }
 }

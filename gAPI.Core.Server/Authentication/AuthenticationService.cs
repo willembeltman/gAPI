@@ -18,6 +18,7 @@ public class AuthenticationService<TUser, TStateDto>(
     IStateParser<TStateDto> stateParser,
     IHostEnvironment hostEnvironment,
     FabricClient fabricClient,
+    AuthenticationOptions authenticationOptions,
     IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks) // optioneel.
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
@@ -64,7 +65,6 @@ public class AuthenticationService<TUser, TStateDto>(
         string? cookieData, 
         string? sessionData,
         string? stateData,
-        bool updateSession,
         CancellationToken ct)
     {
         if (ipAddress == null)
@@ -97,18 +97,17 @@ public class AuthenticationService<TUser, TStateDto>(
         var sessionId = new SessionId(sessionData);
 
         _Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, sessionId);
-        return await Make(_Headers, updateSession, ct);
+        return await Make(_Headers, ct);
     }
     private async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
     {
         if (_AuthenticationState == null || _Headers == null)
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        return await Make(_Headers, true, ct);
+        return await Make(_Headers, ct);
     }
     private async Task<AuthenticationInitializeResult> Make(
         AuthenticationHeaders headers,
-        bool updateSession,
         CancellationToken ct)
     {
         if (stateParser.TryParse(headers.StateData, out var recievedClientState))
@@ -140,7 +139,7 @@ public class AuthenticationService<TUser, TStateDto>(
             }
         }
 
-        if (updateSession)
+        if (authenticationOptions.UpdateSession)
             await fabricClient.UpdateSession(headers.SessionId, headers.CookieData, ct);
 
         _Result = new AuthenticationInitializeResult()
@@ -175,7 +174,7 @@ public class AuthenticationService<TUser, TStateDto>(
 
         _Headers.StateData = stateData;
 
-        return await Make(_Headers, true, ct);
+        return await Make(_Headers, ct);
     }
 
     public bool IsCookieDataChanged()

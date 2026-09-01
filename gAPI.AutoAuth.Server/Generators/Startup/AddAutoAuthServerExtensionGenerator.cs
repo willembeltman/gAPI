@@ -53,15 +53,15 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
     public SharedReference AuthenticationService => Context.AuthenticationService;
     public SharedReference AuthenticationServiceT => Context.SharedReferences.AuthenticationServiceT;
 
-    public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
     public SharedReference IAccountService => Context.SharedReferences.IAccountService;
     public SharedReference IAuthenticationSecurity => Context.SharedReferences.IAuthenticationSecurity;
     public SharedReference AuthenticationHandler => Context.SharedReferences.AuthenticationHandler;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public SharedReference NoDbServerAuthenticationService => Context.SharedReferences.NoDbServerAuthenticationServiceT;
+    public SharedReference NoDbAuthenticationService => Context.NoDbAuthenticationService;
     public SharedReference IStateParser => Context.IStateParser;
     public SharedReference StateParser => Context.StateParser;
     public SharedReference IStateParserT => Context.SharedReferences.IStateParserT;
+    public SharedReference AuthenticationMiddleware => Context.SharedReferences.AuthenticationMiddleware;
 
     public override void GenerateCode()
     {
@@ -71,18 +71,18 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
         Reg(UserTokenFactoryT);
         Reg(AuthenticationSecurityT);
         Reg(IAuthenticationStateFactoryT);
-        Reg(ServerAuthenticationAccessor);
         Reg(IAccountService);
         Reg(IAuthenticationSecurity);
         Reg(AuthenticationHandler);
         Reg(IServerAuthenticationService);
-        Reg(NoDbServerAuthenticationService);
+        Reg(NoDbAuthenticationService);
         Reg(IStateMappingT);
         Reg(AuthenticationDbContextT);
         Reg(ServerConfig);
         Reg(IStateParserT);
         Reg(IStateParser);
         Reg(StateParser);
+        Reg(AuthenticationMiddleware);
         if (CustomStateMapping != null)
             Reg(CustomStateMapping);
 
@@ -142,53 +142,13 @@ public static class {Name}
     {{
         if (dbConnectionString == null)
         {{
-            services.AddScoped<{IServerAuthenticationService}, {NoDbServerAuthenticationService}<{User}, {State}>>();
-
-            // Todo State ellende
+            services.AddScoped<{NoDbAuthenticationService}>();
+            services.AddScoped<{IAuthenticationService}>(sp => sp.GetRequiredService<{NoDbAuthenticationService}>());
         }}
         else
         {{
-            services.AddScoped<{ServerAuthenticationAccessor}>();
             services.AddScoped<{AuthenticationService}>();
-            services.AddScoped<{IAuthenticationService}>(sp =>
-            {{
-                var accessor = sp.GetRequiredService<{ServerAuthenticationAccessor}>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<{AuthenticationService}>();
-
-                return (accessor.Current as {IAuthenticationService})!;
-            }});
-            services.AddScoped<{IAuthenticationServiceT}<{User}, {State}>>(sp =>
-            {{
-                var accessor = sp.GetRequiredService<{ServerAuthenticationAccessor}>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<{AuthenticationService}>();
-
-                return (accessor.Current as {IAuthenticationServiceT}<{User}, {State}>)!;
-            }});
-            services.AddScoped<{AuthenticationServiceT}<{User}, {State}>>(sp =>
-            {{
-                var accessor = sp.GetRequiredService<{ServerAuthenticationAccessor}>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<{AuthenticationService}>();
-
-                return (accessor.Current as {AuthenticationServiceT}<{User}, {State}>)!;
-            }});
-            services.AddScoped<{IServerAuthenticationService}>(sp =>
-            {{
-                var accessor = sp.GetRequiredService<{ServerAuthenticationAccessor}>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<{AuthenticationService}>();
-
-                return (accessor.Current as {IServerAuthenticationService})!;
-            }});
-
-            services.AddAuthentication(""gAPI"")
-                    .AddScheme<AuthenticationSchemeOptions, {AuthenticationHandler}>(""gAPI"", _ => {{ }});
+            services.AddScoped<{IAuthenticationService}>(sp => sp.GetRequiredService<{AuthenticationService}>());
 
             services.AddScoped<{IAuthenticationSecurity}>(sp => 
                 new {AuthenticationSecurityT}<{User}, {State}>(
@@ -215,66 +175,14 @@ public static class {Name}
             services.AddScoped<{IUserTokenFactoryT}<{User}>, {UserTokenFactoryT}<{User}>>();
             services.AddScoped<{IAccountService}, {AccountServiceT}<{User}, {State}>>();
 
-            // DATABASE SECTION{(
-
-    CustomDbContext == null ? $@"
-
-            // ✅ Factory voor {ApplicationDbContext}
-            services.AddDbContextFactory<{ApplicationDbContext}>(options =>
-            {{
-                if (useMemoryDatabase)
-                {{
-                    options.UseInMemoryDatabase(""InMemoryDb"");
-                }}
-                else
-                {{
-                    options.UseSqlServer(
-                        dbConnectionString,
-                        sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
-                }}
-            }});
-
-            // ✅ Normale {ApplicationDbContext}
-            services.AddScoped<{ApplicationDbContext}>(sp =>
-                sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>()
-                  .CreateDbContext());"
-
-    : $@"
-
-            // ✅ Factory voor {ApplicationDbContext}
-            services.AddDbContextFactory<{ApplicationDbContext}>(options =>
-            {{
-                if (useMemoryDatabase)
-                {{
-                    options.UseInMemoryDatabase(""InMemoryDb"");
-                }}
-                else
-                {{
-                    options.UseSqlServer(
-                        dbConnectionString,
-                        sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
-                }}
-            }});
-
-            // ✅ Normale {ApplicationDbContext}
-            services.AddScoped<{ApplicationDbContext}>(sp =>
-                sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>()
-                  .CreateDbContext());
-
-            // ✅ Normale {AuthenticationDbContextT}<{User}>
-            services.AddScoped<{AuthenticationDbContextT}<{User}>>(sp =>
-                sp.GetRequiredService<{ApplicationDbContext}>());
-
-            // ✅ Factory voor {AuthenticationDbContextT}<{User}>
-            services.AddScoped<IDbContextFactory<{AuthenticationDbContextT}<{User}>>>(sp =>
-            {{
-                var factory = sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>();
-
-                return new AuthenticationDbContextFactory<{AuthenticationDbContextT}<{User}>>(
-                    () => factory.CreateDbContext());
-            }});"
-    )}
+            services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }}
+
+        services.AddAuthentication(""gAPI"")
+                .AddScheme<AuthenticationSchemeOptions, {AuthenticationHandler}>(""gAPI"", _ => {{ }});
+
+        services.AddScoped<{IAuthenticationServiceT}<{User}, {State}>>(sp => sp.GetRequiredService<{IAuthenticationService}>());
+        services.AddScoped<{IServerAuthenticationService}>(sp => sp.GetRequiredService<{IAuthenticationService}>());
 
         // Register StateParser
         services.AddScoped<{StateParser}>();
@@ -285,6 +193,70 @@ public static class {Name}
         services.AddScoped<{IStateMappingT}<{User}, {State}>, {StateMapping}>();
         return services;
     }}
+
+    // Private voor geen verwarring.
+    private static IServiceCollection AddDatabase(
+        this IServiceCollection services,
+        bool useMemoryDatabase = false,
+        string? dbConnectionString = null)
+{{{(CustomDbContext == null 
+? $@"
+
+    // ✅ Factory voor {ApplicationDbContext}
+    services.AddDbContextFactory<{ApplicationDbContext}>(options =>
+    {{
+        if (useMemoryDatabase)
+        {{
+            options.UseInMemoryDatabase(""InMemoryDb"");
+        }}
+        else
+        {{
+            options.UseSqlServer(
+                dbConnectionString,
+                sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
+        }}
+    }});
+
+    // ✅ Normale {ApplicationDbContext}
+    services.AddScoped<{ApplicationDbContext}>(sp =>
+        sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>()
+            .CreateDbContext());"
+: $@"
+
+    // ✅ Factory voor {ApplicationDbContext}
+    services.AddDbContextFactory<{ApplicationDbContext}>(options =>
+    {{
+        if (useMemoryDatabase)
+        {{
+            options.UseInMemoryDatabase(""InMemoryDb"");
+        }}
+        else
+        {{
+            options.UseSqlServer(
+                dbConnectionString,
+                sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
+        }}
+    }});
+
+    // ✅ Normale {ApplicationDbContext}
+    services.AddScoped<{ApplicationDbContext}>(sp =>
+        sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>()
+            .CreateDbContext());
+
+    // ✅ Normale {AuthenticationDbContextT}<{User}>
+    services.AddScoped<{AuthenticationDbContextT}<{User}>>(sp =>
+        sp.GetRequiredService<{ApplicationDbContext}>());
+
+    // ✅ Factory voor {AuthenticationDbContextT}<{User}>
+    services.AddScoped<IDbContextFactory<{AuthenticationDbContextT}<{User}>>>(sp =>
+    {{
+        var factory = sp.GetRequiredService<IDbContextFactory<{ApplicationDbContext}>>();
+
+        return new AuthenticationDbContextFactory<{AuthenticationDbContextT}<{User}>>(
+            () => factory.CreateDbContext());
+    }});")}
+    return services;
+}}
 }}
 ";
     }

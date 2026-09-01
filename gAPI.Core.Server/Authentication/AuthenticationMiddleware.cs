@@ -16,6 +16,12 @@ public class AuthenticationMiddleware
         IServerAuthenticationService authentication,
         IHostEnvironment hostEnvironment)
     {
+        if (ctx.Request.Path == "/fabricr")
+        {
+            await _next(ctx);
+            return;
+        }
+
         IPAddress? forwardedIp = ctx.Connection.RemoteIpAddress;
         if (ctx.Request.Headers.TryGetValue("X-Forwarded-For", out var ipHeader))
         {
@@ -42,7 +48,6 @@ public class AuthenticationMiddleware
             ctx.Request.Cookies["AuthenticationToken"],
             ctx.Request.Headers["X-SessionId"],
             ctx.Request.Headers["X-StateData"],
-            false,
             ctx.RequestAborted);
 
         if (initResult.Forbidden)

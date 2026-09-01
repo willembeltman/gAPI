@@ -23,31 +23,13 @@ public class WssEndpointExtensionGenerator : _BaseGenerator
 
     public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
-    public IClientContext_Generator IClientContext => Context.IClientContext;
-    public ClientContext_Generator ClientContext => Context.ClientContext;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
-    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
-    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
-    public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
-    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public SharedReference SessionCache => Context.SharedReferences.SessionCache;
-    public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
-    public SharedReference SessionId => Context.SharedReferences.SessionId;
 
     public override void GenerateCode()
     {
         Reg(ServerConnection);
-        Reg(IClientContext);
-        Reg(ClientContext);
         Reg(FabricClient);
-        Reg(ServerConfig);
-        Reg(WssServerConnectionCollection);
-        Reg(SseServiceSubscriptionCollection);
-        Reg(IServerAuthenticationService);
-        Reg(SessionCache);
-        Reg(ServerAuthenticationAccessor);
-        Reg(SessionId);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");

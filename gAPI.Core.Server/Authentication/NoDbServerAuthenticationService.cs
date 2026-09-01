@@ -6,6 +6,7 @@ using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Reflection.PortableExecutable;
 using System.Security.Claims;
@@ -15,7 +16,9 @@ namespace gAPI.Core.Server.Authentication;
 public class NoDbServerAuthenticationService<TUser, TStateDto>(
     IStateMapping<TUser, TStateDto> stateMapping,
     IStateParser<TStateDto> stateParser,
-    FabricClient fabricClient)
+    FabricClient fabricClient,
+    AuthenticationOptions authenticationOptions,
+    IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks)
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
@@ -42,7 +45,6 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
         string? cookieData,
         string? sessionId,
         string? stateData,
-        bool updateSession,
         CancellationToken ct)
     {
         if (ipAddress == null)
@@ -66,7 +68,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
 
         _State = await stateMapping.ToDtoAsync(null, null, null, _ClientState, ct);
 
-        if (updateSession)
+        if (authenticationOptions.UpdateSession)
             await fabricClient.UpdateSession(parsedSessionId, cookieData, ct);
 
         _Result = new AuthenticationInitializeResult();
@@ -137,73 +139,3 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
         return Task.FromResult(new ClaimsPrincipal());
     }
 }
-
-//public class NoDbServerAuthenticationService<TStateDto>(
-//    IStateParser<TStateDto> stateParser)
-//    : IServerAuthenticationService
-//{
-//    public UserId UserId { get; set; } = new UserId();
-
-//    public SessionId SessionId { get; set; } = SessionId.New();
-
-//    public bool Initialized { get; set; } = true;
-
-//    public AuthenticationInitializeResult Result { get; set; } = new();
-
-//    public async Task<AuthenticationInitializeResult> InitializeAsync(
-//        PathString path, 
-//        QueryString query,
-//        IPAddress? ipAddress,
-//        string? cookieId,
-//        string? sessionId, 
-//        string? stateData,
-//        bool updateSession,
-//        CancellationToken ct)
-//    {
-//        if (SessionId.TryParse(sessionId, out var parsed))
-//            SessionId = parsed;
-//        Initialized = true;
-//        return new AuthenticationInitializeResult();
-//    }
-//    public async Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct)
-//    {
-//        return new AuthenticationInitializeResult();
-//    }
-
-//    public bool IsStateDataChanged()
-//    {
-//        return false;
-//    }
-//    public string? GetStateData()
-//    {
-//        return null;
-//    }
-//    public async Task<AuthenticationInitializeResult> UpdateStateDataAsync(string? stateData, CancellationToken ct)
-//    {
-//        return new AuthenticationInitializeResult();
-//    }
-
-//    public bool IsCookieDataChanged()
-//    {
-//        return false;
-//    }
-//    public string? GetCookieData()
-//    {
-//        return null;
-//    }
-
-//    public async Task<bool> AuthenticateUserAsync(string userId, CancellationToken ct)
-//    {
-//        return false;
-//    }
-//    public async Task<bool> LogoffAsync(CancellationToken ct)
-//    {
-//        return false;
-//    }
-
-//    public async Task<ClaimsPrincipal> GetClaimsPrincipalAsync(CancellationToken ct)
-//    {
-//        return new ClaimsPrincipal();
-//    }
-
-//}

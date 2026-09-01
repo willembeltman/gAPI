@@ -20,7 +20,6 @@ public interface IServerAuthenticationService
         string? cookieData, 
         string? sessionData,
         string? stateData,
-        bool updateSession,
         CancellationToken ct);
     //Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct);
 

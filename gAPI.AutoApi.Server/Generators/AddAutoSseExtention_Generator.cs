@@ -23,7 +23,7 @@
 //    public IEnumerable<ClientService_Generator> SseServices => Context.SseServices;
 //    public IClientContext_Generator IClientContext => Context.IClientContext;
 //    public ClientContext_Generator ClientContext => Context.ClientContext;
-//    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
+//    public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
 //    public SharedReference FabricClient => Context.SharedReferences.FabricClient;
 //    public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 //    public SharedReference ServiceId => Context.SharedReferences.ServiceId;
@@ -37,7 +37,7 @@
 //    {
 //        Reg(IClientContext);
 //        Reg(ClientContext);
-//        Reg(SseServiceSubscriptionCollection);
+//        Reg(ServiceSubscriptionCollection);
 //        Reg(FabricClient);
 //        Reg(IServerAuthenticationService);
 //        Reg(ServiceId);
@@ -88,8 +88,8 @@
 
 //        services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-//        var SseServiceSubscriptionCollection = new {SseServiceSubscriptionCollection}();
-//        services.AddSingleton(SseServiceSubscriptionCollection);
+//        var ServiceSubscriptionCollection = new {ServiceSubscriptionCollection}();
+//        services.AddSingleton(ServiceSubscriptionCollection);
 
 //        var sessionCache = new {SessionCache}();
 //        services.AddSingleton(sessionCache);
@@ -107,13 +107,13 @@
 //            string serviceId,
 //            [FromHeader(Name = ""X-SessionId"")] string sessionId,
 //            {IServerAuthenticationService} authenticationService,
-//            {SseServiceSubscriptionCollection} SseServiceSubscriptionCollection,
+//            {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
 //            {FabricClient} fabricClient,
 //            CancellationToken ct
 //        ) =>
 //        {{
 //            var SseServiceSubscription = new {SseServiceSubscription}(
-//                SseServiceSubscriptionCollection,
+//                ServiceSubscriptionCollection,
 //                fabricClient,
 //                new {ServiceId}(serviceId),
 //                authenticationService.UserId,

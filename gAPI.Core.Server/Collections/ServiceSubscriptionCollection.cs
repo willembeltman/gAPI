@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Core.Server.Collections;
 
-public sealed class SseServiceSubscriptionCollection
+public sealed class ServiceSubscriptionCollection
 {
     private long _nextId;
     private readonly ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription> SseServiceSubscriptions = new();

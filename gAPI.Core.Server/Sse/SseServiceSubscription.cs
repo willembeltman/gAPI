@@ -10,7 +10,7 @@ using System.Threading.Channels;
 namespace gAPI.Core.Sse;
 
 public class SseServiceSubscription(
-    SseServiceSubscriptionCollection SseServiceSubscriptionCollection,
+    ServiceSubscriptionCollection ServiceSubscriptionCollection,
     FabricClient fabricClient,
     ServiceId serviceId,
     UserId userId,
@@ -33,7 +33,7 @@ public class SseServiceSubscription(
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync(
         [EnumeratorCancellation] CancellationToken ct)
     {
-        Id = SseServiceSubscriptionCollection.Add(this);
+        Id = ServiceSubscriptionCollection.Add(this);
         //Console.WriteLine($"SseServiceSubscription {Id} started");
         await fabricClient.SubscribeAsync(this, ct);
 
@@ -66,7 +66,7 @@ public class SseServiceSubscription(
             if (Interlocked.Exchange(ref closed, 1) == 0)
             {
                 await fabricClient.UnsubscribeAsync(this, ct);
-                SseServiceSubscriptionCollection.Remove(Id);
+                ServiceSubscriptionCollection.Remove(Id);
             }
         }
     }

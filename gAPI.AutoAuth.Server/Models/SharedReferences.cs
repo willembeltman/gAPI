@@ -56,10 +56,9 @@ public class SharedReferences
         IUserTokenFactoryT = new("gAPI.Core.Server.Authentication.IUserTokenFactory");
         UserTokenFactoryT = new("gAPI.Core.Server.Authentication.UserTokenFactory");
 
-        SseServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SseServiceSubscriptionCollection", allSymbols);
+        ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
-        ServerAuthenticationAccessor = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.ServerAuthenticationAccessor", allSymbols);
         AuthenticationState = new("gAPI.Core.Server.Authentication.AuthenticationState");
 
         IAccountService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAccountService", allSymbols);
@@ -82,12 +81,14 @@ public class SharedReferences
 
         AuthenticationStateMappingT = new("gAPI.Core.Server.Authentication.AuthenticationStateMapping");
         CustomStateMapping = SharedReferenceFinder.TryFindByBaseTypeNameStart("gAPI.Core.Server.Authentication.AuthenticationStateMapping", allSymbols);
+        AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
+        AuthenticationMiddleware = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationMiddleware", allSymbols);
 
     }
 
 
     public SharedReference FabricClient { get; }
-    public SharedReference SseServiceSubscriptionCollection { get; }
+    public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }
@@ -123,7 +124,6 @@ public class SharedReferences
     public SharedReference AccountServiceT { get; }
     public SharedReference AuthenticationSecurityT { get; }
     public SharedReference IAuthenticationStateFactoryT { get; }
-    public SharedReference ServerAuthenticationAccessor { get; }
     public SharedReference IStateParserT { get; }
     public SharedReference? IServerAuthenticationServiceImplementation { get; }
     public SharedReference IAccountService { get; }
@@ -147,5 +147,7 @@ public class SharedReferences
     public SharedReference AuthenticationServiceT { get; }
     public SharedReference AuthenticationStateMappingT { get; }
     public SharedReference? CustomStateMapping { get; }
+    public SharedReference AuthenticationOptions { get; }
+    public SharedReference AuthenticationMiddleware { get; }
     public SharedReference IAuthenticationServiceT { get; }
 }

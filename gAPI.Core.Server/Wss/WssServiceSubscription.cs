@@ -15,7 +15,7 @@ public class WssServiceSubscription
     public WssServiceSubscription(
         IWssServerConnection connection,
         ILoggerFactory loggerFactory,
-        SseServiceSubscriptionCollection hubHosts,
+        ServiceSubscriptionCollection hubHosts,
         FabricClient fabricClient,
         ConnectionId connectionId,
         ServiceId serviceId,
@@ -39,7 +39,7 @@ public class WssServiceSubscription
     public ServiceSubscriptionId Id { get; }
     public ILogger Logger { get; }
     public IWssServerConnection Connection { get; }
-    public SseServiceSubscriptionCollection HubHosts { get; }
+    public ServiceSubscriptionCollection HubHosts { get; }
     public FabricClient FabricClient { get; }
     public ConnectionId ConnectionId { get; }
     public SessionId SessionId { get; }

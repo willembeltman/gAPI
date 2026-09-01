@@ -25,7 +25,7 @@ public class ServerConnection_Generator : _BaseGenerator
     public Generator Context { get; }
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
+    public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
@@ -101,12 +101,12 @@ public class {Name} : WssServerConnection
 
     public {Name}(
         {IServerAuthenticationService} authenticationService,
-        {SseServiceSubscriptionCollection} SseServiceSubscriptionCollection,
+        {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
         {WssServerConnectionCollection} connections,
         {FabricClient} fabricClient,{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         {@interface} {@interface.CleanName.ToCamelCase()},")))}
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, SseServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
+        : base(authenticationService, ServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
     {{
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"

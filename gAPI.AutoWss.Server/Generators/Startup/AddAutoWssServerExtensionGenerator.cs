@@ -27,12 +27,11 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public ClientContext_Generator ClientContext => Context.ClientContext;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
-    public SharedReference SseServiceSubscriptionCollection => Context.SharedReferences.SseServiceSubscriptionCollection;
+    public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
-    public SharedReference ServerAuthenticationAccessor => Context.SharedReferences.ServerAuthenticationAccessor;
-    public SharedReference SessionId => Context.SharedReferences.SessionId;
+    public SharedReference AuthenticationOptions => Context.SharedReferences.AuthenticationOptions;
 
     public override void GenerateCode()
     {
@@ -42,10 +41,9 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(FabricClient);
         Reg(ServerConfig);
         Reg(WssServerConnectionCollection);
-        Reg(SseServiceSubscriptionCollection);
+        Reg(ServiceSubscriptionCollection);
         Reg(SessionCache);
-        Reg(ServerAuthenticationAccessor);
-        Reg(SessionId);
+        Reg(AuthenticationOptions);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
@@ -153,6 +151,7 @@ public static class {Name}
         TimeProvider? dateTime = null)
     {{
         services.AddSingleton(dateTime ?? TimeProvider.System);
+        services.AddSingleton(new {AuthenticationOptions}(true));
 
         services.AddHttpContextAccessor();
         if (frontendUrl != null)
@@ -170,20 +169,18 @@ public static class {Name}
                 }});
             }});
         }}
-        services.AddScoped<{ServerConnection}>();
-        services.AddSingleton(sp => new {FabricClient}(
-            sp.GetRequiredService<{SessionCache}>(),
-            sp.GetRequiredService<ILoggerFactory>(), 
-            fabricConnectionString));
-
-        var connectionCollection = new {WssServerConnectionCollection}();
-        services.AddSingleton(connectionCollection);
-
-        var SseServiceSubscriptionCollection = new {SseServiceSubscriptionCollection}();
-        services.AddSingleton(SseServiceSubscriptionCollection);
 
         var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
+
+        services.AddScoped<{ServerConnection}>();
+        services.AddSingleton(sp => new {FabricClient}(
+            sessionCache,
+            sp.GetRequiredService<ILoggerFactory>(), 
+            fabricConnectionString));
+
+        services.AddSingleton(new {WssServerConnectionCollection}());
+        services.AddSingleton(new {ServiceSubscriptionCollection}());
 
         if (fabricConnectionString == null)
         {{

@@ -168,7 +168,6 @@ public class InterfaceMethod
     public string? IsPageTitle { get; }
     public string? IsPageSubmitText { get; }
     public string? IsPageResponseText { get; }
-    public bool IsAuthorize { get; }
     public bool IsAsync { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }

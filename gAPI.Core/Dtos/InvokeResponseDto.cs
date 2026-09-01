@@ -7,6 +7,7 @@ namespace gAPI.Core.Dtos;
 public class InvokeResponseDto
 {
     public RequestId RequestId { get; set; } = default!;
+    public SessionId RespondingSessionId { get; set; }
     public ServiceId ServiceId { get; set; } = default!;
     public ServiceMethodId MethodId { get; set; } = default!;
     public UserId? UserId { get; set; }
