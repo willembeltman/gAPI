@@ -15,6 +15,6 @@ public interface IServiceSubscription
     IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct);
     Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct);
     bool HasRequest(RequestId requestId);
-    Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct);
-    Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct);
+    Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct);
+    Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct);
 }

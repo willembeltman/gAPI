@@ -2,16 +2,19 @@
 
 public enum FabricHostToClientMessageEnum
 {
+    SynchronizeFabricIds,
+    Log,
+
     SendRequest,
     SendRequestDone,
     SendRequestCancelled,
-    InvokeArgumentRequest,
-    InvokeArgumentResponse,
-    InvokeArgumentCancelled,
+    StreamingRequest,
+    StreamingResponse,
+    StreamingRequestCancelled,
     InvokeRequest,
-    InvokeRequestCancelled,
     InvokeResponse,
     InvokeResponseDone,
+    InvokeRequestCancelled,
 
     GetSessionCookieDataResponse,
 }

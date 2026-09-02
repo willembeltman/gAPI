@@ -7,16 +7,16 @@ namespace gAPI.Core.Server.Collections;
 public sealed class WssServerConnectionCollection
 {
     private long _nextId;
-    private readonly ConcurrentDictionary<ConnectionId, WssServerConnection> Clients = new();
+    private readonly ConcurrentDictionary<ClientConnectionId, WssServerConnection> Clients = new();
 
-    public ConnectionId AddConnection(WssServerConnection client)
+    public ClientConnectionId AddConnection(WssServerConnection client)
     {
-        var id = new ConnectionId(Interlocked.Increment(ref _nextId));
+        var id = new ClientConnectionId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
         return id;
     }
 
-    public bool RemoveConnection(ConnectionId id)
+    public bool RemoveConnection(ClientConnectionId id)
     {
         return Clients.TryRemove(id, out _);
     }

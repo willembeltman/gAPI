@@ -22,7 +22,7 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
     public SharedReference? StateDto => Context.SharedReferences.StateDto;
     public SharedReference State => StateDto ?? AuthStateDto;
 
-    public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
+    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
 
@@ -51,7 +51,7 @@ public class AddAutoAuthClientExtensionGenerator : _BaseGenerator
         Reg("gAPI.Core.Client.Interfaces");
         Reg("gAPI.Core.Client.Extensions");
         Reg(State);
-        Reg(IWssLoggerFactory);
+        Reg(IClientLoggerFactory);
         Reg(IWssClientConnection);
         Reg(ClientConfig);
         Reg(IUriNavigationManager);

@@ -7,23 +7,16 @@ namespace gAPI.Fabric.Server.Collections;
 public sealed class FabricHostCollection : IEnumerable<FabricHost>
 {
     private long _nextId;
-    private readonly ConcurrentDictionary<FabricHostId, FabricHost> Clients = new();
+    private readonly ConcurrentDictionary<FabricConnectionId, FabricHost> Clients = new();
 
-    public FabricHostCollection(FabricManager fabricManager)
+    public FabricConnectionId AddConnection(FabricHost client)
     {
-        FabricManager = fabricManager;
-    }
-
-    public FabricManager FabricManager { get; }
-
-    public FabricHostId AddConnection(FabricHost client)
-    {
-        var id = new FabricHostId(Interlocked.Increment(ref _nextId));
+        var id = new FabricConnectionId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
         return id;
     }
 
-    public bool RemoveConnection(FabricHostId id)
+    public bool RemoveConnection(FabricConnectionId id)
     {
         return Clients.TryRemove(id, out _);
     }

@@ -14,10 +14,10 @@ public sealed class RequestState : IDisposable
     public required UserId? UserId { get; init; }
     public required IActor Actor { get; init; }
     public required FabricHost Caller { get; init; }
-    public required HashSet<FabricHostId> Targets { get; init; }
+    public required HashSet<FabricConnectionId> Targets { get; init; }
 
-    public HashSet<FabricHostId> CompletedTargets { get; } = [];
-    public Dictionary<FabricHostId, string> Exceptions { get; } = [];
+    public HashSet<FabricConnectionId> CompletedTargets { get; } = [];
+    public Dictionary<FabricConnectionId, string> Exceptions { get; } = [];
     private ResettableTimeout? Timeout { get; set; }
     public bool StateIsChanged { get; set; }
     public string? StateData { get; set; }

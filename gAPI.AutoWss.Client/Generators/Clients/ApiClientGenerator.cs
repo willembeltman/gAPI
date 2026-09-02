@@ -26,7 +26,7 @@ public class ApiClientGenerator : _BaseGenerator
     public Generator Context { get; }
     public Interface Interface { get; }
     public SharedReference WssClientConnection => Context.SharedReferences.WssClientConnection;
-    public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
+    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference RequestId => Context.SharedReferences.RequestId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
@@ -48,7 +48,7 @@ public class ApiClientGenerator : _BaseGenerator
         Reg("gAPI.Core.Serializers");
         Reg(Interface);
         Reg(WssClientConnection);
-        Reg(IWssLoggerFactory);
+        Reg(IClientLoggerFactory);
         Reg(IClientAuthenticatedHttpClient);
         Reg(RequestId);
         Reg(ServiceId);
@@ -87,7 +87,7 @@ namespace {Namespace};
 
 public sealed class {Name}(
     {WssClientConnection} ___clientConnection,
-    {IWssLoggerFactory} ___loggerFactory,
+    {IClientLoggerFactory} ___loggerFactory,
     {IClientAuthenticatedHttpClient} ___httpClient)
     : {Interface}
     , IDisposable

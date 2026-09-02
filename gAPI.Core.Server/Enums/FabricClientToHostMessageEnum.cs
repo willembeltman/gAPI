@@ -8,9 +8,10 @@ public enum FabricClientToHostMessageEnum
     SendRequest,
     SendRequestDone,
     SendRequestCancelled,
-    InvokeArgumentRequest,
-    InvokeArgumentResponse,
-    InvokeArgumentCancelled,
+
+    StreamingRequest,
+    StreamingResponse,
+
     InvokeRequest,
     InvokeRequestCancelled,
     InvokeResponse,

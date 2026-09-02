@@ -9,13 +9,13 @@ public class WssConverter
         => (WssClientToServerMessageEnum)Reader.ReadByte();
     public static WssServerToClientMessageEnum ReadHostToClientMessageType(BinaryReader Reader)
         => (WssServerToClientMessageEnum)Reader.ReadByte();
-    public static ConnectionId ReadConnectionId(BinaryReader binaryReader)
+    public static ClientConnectionId ReadConnectionId(BinaryReader binaryReader)
         => new(binaryReader.ReadInt64());
 
     public static void WriteClientToHostMessageType(BinaryWriter w, WssClientToServerMessageEnum type)
         => w.Write((byte)type);
     public static void WriteServerToClientMessageType(BinaryWriter w, WssServerToClientMessageEnum type)
         => w.Write((byte)type);
-    public static void WriteConnectionId(BinaryWriter w, ConnectionId id)
+    public static void WriteConnectionId(BinaryWriter w, ClientConnectionId id)
         => w.Write(id.Value);
 }

@@ -9,10 +9,10 @@ namespace gAPI.Fabric.Server.Models;
 public record User(UserId Id) : IActor
 {
     public UserId Id { get; } = Id;
-    public ConcurrentDictionary<FabricHostId, FabricHost> Connections { get; } = new();
+    public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
 
-    public void Subscribe(FabricHost connection) => Connections[connection.Id] = connection;
-    public void Unsubscribe(FabricHost connection) => Connections.TryRemove(connection.Id, out _);
+    public void Subscribe(FabricHost connection) => Connections[connection.FabricConnectionId] = connection;
+    public void Unsubscribe(FabricHost connection) => Connections.TryRemove(connection.FabricConnectionId, out _);
 
     public override string ToString() => Id.ToString();
 

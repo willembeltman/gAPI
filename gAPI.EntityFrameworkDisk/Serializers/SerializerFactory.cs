@@ -257,7 +257,7 @@ internal static class SerializerFactory<T>
         if (type == typeof(FabricHostId)) return "reader.ReadFabricHostId()";
         if (type == typeof(RequestId)) return "reader.ReadRequestId()";
         if (type == typeof(SessionId)) return "reader.ReadSessionId()";
-        if (type == typeof(SseHostId)) return "reader.ReadSseHostId()";
+        if (type == typeof(ServiceSubscriptionId)) return "reader.ReadServiceSubscriptionId()";
         if (type == typeof(SseManagerId)) return "reader.ReadSseManagerId()";
         if (type == typeof(ServiceId)) return "reader.ReadSseServiceId()";
         if (type == typeof(ServiceMethodId)) return "reader.ReadServiceMethodId()";
@@ -413,7 +413,7 @@ internal static class SerializerFactory<T>
         typeof(FabricHostId),
         typeof(RequestId),
         typeof(SessionId),
-        typeof(SseHostId),
+        typeof(ServiceSubscriptionId),
         typeof(SseManagerId),
         typeof(ServiceId),
         typeof(ServiceMethodId),

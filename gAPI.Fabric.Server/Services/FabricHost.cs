@@ -1,11 +1,13 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Wss;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Helpers;
 using gAPI.Fabric.Server.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -13,15 +15,16 @@ using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Services;
 
-public sealed class FabricHost
+public sealed class FabricHost : IFabricLoggerFactory
 {
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
-    private readonly CancellationTokenSource Cts;
     private readonly NetworkStream Stream;
     private readonly Channel<(Action<BinaryWriter> write, IActor? actor)> SendQueue;
+    private readonly CancellationTokenSource Cts;
 
-    public FabricHostId Id { get; }
+    public FabricConnectionId FabricConnectionId { get; }
+    public ILogger<FabricHost> Logger { get; }
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
@@ -62,8 +65,8 @@ public sealed class FabricHost
         Cts = new CancellationTokenSource();
         Stream = tcpClient.GetStream();
         SendQueue = Channel.CreateUnbounded<(Action<BinaryWriter> write, IActor? actor)>();
-        Id = Connections.AddConnection(this);
-        //Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
+        FabricConnectionId = Connections.AddConnection(this);
+        Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
     }
 
     public void Start()
@@ -71,7 +74,6 @@ public sealed class FabricHost
         _ = Task.Run(ReceiveLoop);
         _ = Task.Run(SendLoop);
     }
-
 
     public async Task Send_GetSessionCookieDataResponse_ToApiAsync(SendGetSessionCookieDataResponseDto getSessionCookieDataResponse, IActor? actor)
     {
@@ -101,19 +103,19 @@ public sealed class FabricHost
         }, actor);
     }
 
-    public async Task Send_InvokeArgumentRequest_ToApiAsync(InvokeArgumentRequestDto request, IActor? actor)
+    public async Task Send_StreamingRequest_ToApiAsync(StreamingRequestDto request, IActor? actor)
     {
         await Enqueue(writer =>
         {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeArgumentRequest);
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingRequest);
             writer.Write(request);
         }, actor);
     }
-    public async Task Send_InvokeArgumentResponse_ToApiAsync(InvokeArgumentResponseDto response, IActor? actor)
+    public async Task Send_StreamingResponse_ToApiAsync(StreamingResponseDto response, IActor? actor)
     {
         await Enqueue(writer =>
         {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeArgumentResponse);
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingResponse);
             writer.Write(response);
         }, actor);
     }
@@ -153,7 +155,12 @@ public sealed class FabricHost
     {
         using var counter = new CountingDuplexStream(Stream);
         using var writer = new BinaryWriter(counter);
-        FabricConverter.WriteFabricHostId(writer, Id);
+
+        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SynchronizeFabricIds);
+        writer.Write(new SynchronizeFabricIdsDto(
+            Manager.FabricManagerId,
+            FabricConnectionId));
+
         var previous = counter.BytesWritten;
         await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
         {
@@ -176,7 +183,7 @@ public sealed class FabricHost
     private async Task ReceiveLoop()
     {
         Console.WriteLine();
-        Console.WriteLine($"FabricHost {Id} started");
+        Console.WriteLine($"FabricHost {FabricConnectionId} started");
         Console.WriteLine();
 
         try
@@ -216,18 +223,18 @@ public sealed class FabricHost
                             await Manager.Receive_SendRequestDoneAsync(this, done, receiveSize, Cts.Token);
                         }
                         break;
-                    case FabricClientToHostMessageEnum.InvokeArgumentRequest:
+                    case FabricClientToHostMessageEnum.StreamingRequest:
                         {
-                            var argumentRequest = reader.ReadInvokeArgumentRequestDto();
+                            var argumentRequest = reader.ReadStreamingRequestDto();
                             var receiveSize = counter.BytesRead - previous;
-                            await Manager.Receive_InvokeArgumentRequestAsync(this, argumentRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_StreamingRequestAsync(this, argumentRequest, receiveSize, Cts.Token);
                         }
                         break;
-                    case FabricClientToHostMessageEnum.InvokeArgumentResponse:
+                    case FabricClientToHostMessageEnum.StreamingResponse:
                         {
-                            var argumentResponse = reader.ReadInvokeArgumentResponseDto();
+                            var argumentResponse = reader.ReadStreamingResponseDto();
                             var receiveSize = counter.BytesRead - previous;
-                            await Manager.Receive_InvokeArgumentResponseAsync(this, argumentResponse, receiveSize, Cts.Token);
+                            await Manager.Receive_StreamingResponseAsync(this, argumentResponse, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequest:
@@ -282,49 +289,38 @@ public sealed class FabricHost
         catch (Exception ex)
         {
             Console.WriteLine();
-            Console.WriteLine($"FabricClient #{Id.Value}: Exception occured, restarting fabric client", ConsoleColor.Red);
+            Console.WriteLine($"FabricClient #{FabricConnectionId.Value}: Exception occured, restarting fabric client", ConsoleColor.Red);
             Console.WriteLine($"{ex}");
             Console.WriteLine();
         }
         Dispose();
 
         Console.WriteLine();
-        Console.WriteLine($"!FabricHost {Id} stopped");
+        Console.WriteLine($"!FabricHost {FabricConnectionId} stopped");
         Console.WriteLine();
     }
 
     public void Dispose()
     {
         Cts.Dispose();
-        Connections.RemoveConnection(Id);
+        Connections.RemoveConnection(FabricConnectionId);
 
         Stream.Dispose();
         TcpClient.Dispose();
     }
 
-    //public ILogger<FabricHost> Logger { get; }
-    //public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct = default)
-    //{
-    //    await Enqueue(writer =>
-    //    {
-    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
-    //        writer.Write(dto);
-    //    });
-    //}
-    //public async Task ActivateWssConnectionAsync(SendGetSessionCookieDataResponseDto activate, IActor? actor)
-    //{
-    //    //if (Logger.IsEnabled(LogLevel.Trace))
-    //    //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseDoneAsync({{requestId}})", requestId);
-    //    await Enqueue(writer =>
-    //    {
-    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.GetSessionCookieDataResponse);
-    //        writer.Write(activate);
-    //    }, actor);
-    //}
-    //public ILogger CreateLogger(string categoryName)
-    //    => new WssLogger(categoryName, this);
-    //public void AddProvider(ILoggerProvider provider)
-    //{
-    //    // no-op
-    //}
+    public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct = default)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
+            writer.Write(dto);
+        });
+    }
+    public ILogger CreateLogger(string categoryName)
+        => new FabricLogger(categoryName, this);
+    public void AddProvider(ILoggerProvider provider)
+    {
+        // no-op
+    }
 }

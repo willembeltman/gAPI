@@ -32,7 +32,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference InvokeResponseDto => Context.SharedReferences.InvokeResponseDto;
-    public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
+    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -71,7 +71,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(UnsubscribeDto);
         Reg(ServiceId);
         Reg(InvokeResponseDto);
-        Reg(IWssLoggerFactory);
+        Reg(IClientLoggerFactory);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
             Reg(@interface);
@@ -133,7 +133,7 @@ public class {Name}
         string wssBackendUrl)
         : base(httpClient, wssBackendUrl)
     {{
-        ___Logger = (({IWssLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
+        ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
     }}
 

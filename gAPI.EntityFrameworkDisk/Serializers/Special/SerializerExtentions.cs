@@ -112,11 +112,11 @@ public static class SerializerExtensions
         bw.Write(value.Value);
     }
 
-    public static SseHostId ReadSseHostId(this BinaryReader br)
+    public static ServiceSubscriptionId ReadServiceSubscriptionId(this BinaryReader br)
     {
-        return new SseHostId(br.ReadInt64());
+        return new ServiceSubscriptionId(br.ReadInt64());
     }
-    public static void Write(this BinaryWriter bw, SseHostId value)
+    public static void Write(this BinaryWriter bw, ServiceSubscriptionId value)
     {
         bw.Write(value.Value);
     }

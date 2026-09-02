@@ -88,10 +88,10 @@ public class SseServiceSubscription(
 
     public bool HasRequest(RequestId requestId) => false;
 
-    public Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
+    public Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct)
         => throw new NotSupportedException();
 
-    public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
+    public Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct)
         => throw new NotSupportedException();
 
 }

@@ -10,19 +10,23 @@ namespace gAPI.Fabric.Server.Services;
 
 public class FabricManager
 {
+    public readonly FabricManagerId FabricManagerId;
     public readonly SessionCache SessionCache;
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
-    public readonly ConcurrentDictionary<RequestId, RequestState> SendRequests = new();
-    public readonly ConcurrentDictionary<RequestId, RequestState> InvokeRequests = new();
+    public readonly ConcurrentDictionary<RequestId, RequestState> SendRequests;
+    public readonly ConcurrentDictionary<RequestId, RequestState> InvokeRequests;
     public readonly IConsole Console;
 
     public FabricManager(IConsole console)
     {
+        FabricManagerId = FabricManagerId.New();
         Console = console;
         SessionCache = new();
-        Connections = new(this);
+        Connections = new();
         Services = new(this);
+        SendRequests = new();
+        InvokeRequests = new();
     }
 
     public event EventHandler? OnUpdate;
@@ -30,9 +34,7 @@ public class FabricManager
     public void StartNewFabricHost(TcpClient tcpClient)
     {
         // FabricHost abonneert zichzelf op connections
-        var fabricHost = new FabricHost(
-            this,
-            tcpClient);
+        var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
 
         OnUpdate?.Invoke(this, new EventArgs());
@@ -98,7 +100,7 @@ public class FabricManager
             UserId = request.UserId,
             Caller = caller,
             Actor = actor,
-            Targets = [.. fabricHosts.Select(host => host.Id)]
+            Targets = [.. fabricHosts.Select(host => host.FabricConnectionId)]
         };
 
         if (!SendRequests.TryAdd(request.RequestId, state))
@@ -106,7 +108,7 @@ public class FabricManager
 
         state.StartTimeout(TimeSpan.FromSeconds(60), () =>
         {
-            state.Exceptions.Add(state.Caller.Id, "Request timed out.");
+            state.Exceptions.Add(state.Caller.FabricConnectionId, "Request timed out.");
             _ = CompleteRequestAsync(state);
         });
 
@@ -122,10 +124,10 @@ public class FabricManager
         state.Actor.EnqueueReceive(receiveSize);
         lock (state)
         {
-            state.CompletedTargets.Add(caller.Id);
+            state.CompletedTargets.Add(caller.FabricConnectionId);
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.Add(caller.Id, done.ExceptionMessage);
+                state.Exceptions.Add(caller.FabricConnectionId, done.ExceptionMessage);
             }
             if (done.StateIsChanged)
             {
@@ -177,7 +179,7 @@ public class FabricManager
         }
     }
 
-    public async Task Receive_InvokeArgumentRequestAsync(FabricHost caller, InvokeArgumentRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingRequestAsync(FabricHost caller, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(request.RequestId, out var state))
             if (!InvokeRequests.TryGetValue(request.RequestId, out state))
@@ -185,9 +187,9 @@ public class FabricManager
 
         state.ResetTimeout();
         state.Actor?.EnqueueReceive(receiveSize);
-        await state.Caller.Send_InvokeArgumentRequest_ToApiAsync(request, state.Actor);
+        await state.Caller.Send_StreamingRequest_ToApiAsync(request, state.Actor);
     }
-    public async Task Receive_InvokeArgumentResponseAsync(FabricHost caller, InvokeArgumentResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingResponseAsync(FabricHost caller, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(response.RequestId, out var state))
             if (!InvokeRequests.TryGetValue(response.RequestId, out state))
@@ -197,9 +199,9 @@ public class FabricManager
         state.Actor?.EnqueueReceive(receiveSize);
         foreach (var targetId in state.Targets)
         {
-            var target = Connections.FirstOrDefault(host => host.Id == targetId);
+            var target = Connections.FirstOrDefault(host => host.FabricConnectionId == targetId);
             if (target != null)
-                await target.Send_InvokeArgumentResponse_ToApiAsync(response, state.Actor);
+                await target.Send_StreamingResponse_ToApiAsync(response, state.Actor);
         }
 
     }
@@ -222,7 +224,7 @@ public class FabricManager
             UserId = request.UserId,
             Actor = actor,
             Caller = caller,
-            Targets = [.. fabricHosts.Select(host => host.Id)]
+            Targets = [.. fabricHosts.Select(host => host.FabricConnectionId)]
             //PendingHosts = [.. fabricHosts.Select(h => h.Id)]
         };
 
@@ -231,7 +233,7 @@ public class FabricManager
 
         state.StartTimeout(TimeSpan.FromSeconds(60), () =>
         {
-            state.Exceptions.Add(state.Caller.Id, "Invoke request timed out.");
+            state.Exceptions.Add(state.Caller.FabricConnectionId, "Invoke request timed out.");
             _ = CompleteInvokeAsync(state);
         });
 
@@ -261,10 +263,10 @@ public class FabricManager
         state.Actor?.EnqueueReceive(receiveSize);
         lock (state)
         {
-            state.CompletedTargets.Add(caller.Id);
+            state.CompletedTargets.Add(caller.FabricConnectionId);
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.Add(caller.Id, done.ExceptionMessage);
+                state.Exceptions.Add(caller.FabricConnectionId, done.ExceptionMessage);
             }
         }
 

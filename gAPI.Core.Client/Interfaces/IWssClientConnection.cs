@@ -4,7 +4,7 @@ using gAPI.Core.Interfaces;
 
 namespace gAPI.Core.Client.Interfaces;
 
-public interface IWssClientConnection : IWssLoggerFactory
+public interface IWssClientConnection : IClientLoggerFactory
 {
     SessionId SessionId { get; }
 
@@ -19,8 +19,7 @@ public interface IWssClientConnection : IWssLoggerFactory
     Task Send_SendRequest_ToServerAsync(SendRequestDto sendRequest, CancellationToken ct);
     Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledDto sendRequestCancelled, CancellationToken ct);
     Task Send_InvokeRequest_ToServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
-    Task Send_InvokeRequestCancelled_ToServerAsync(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct);
-    Task Send_InvokeArgumentCancelled_ToServerAsync(InvokeArgumentCancelledDto invokeArgumentCancelled, CancellationToken ct);
+    Task Send_InvokeCancelled_ToServerAsync(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct);
     Task Send_InvokeResponse_ToServerAsync(InvokeResponseDto invokeResponse, CancellationToken ct);
     Task Send_InvokeResponseDone_ToServerAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
 

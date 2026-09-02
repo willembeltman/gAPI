@@ -21,7 +21,7 @@ public class SharedReferences
         InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
         InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
-        IWssLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IWssLoggerFactory", allSymbols);
+        IClientLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Wss.WssClientConnection", allSymbols);
         IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
@@ -53,7 +53,7 @@ public class SharedReferences
     public SharedReference InvokeResponseDto { get; }
     public SharedReference InvokeResponseDoneDto { get; }
     public SharedReference WssClientConnection { get; }
-    public SharedReference IWssLoggerFactory { get; }
+    public SharedReference IClientLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }
     public SharedReference IWssClientConnection { get; }
     public SharedReference? AuthClient_FormFile { get; }

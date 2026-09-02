@@ -84,7 +84,7 @@ public class FabricProgram
                     {
                         return new ColorLine()
                         {
-                            Text = $"Node {a.Id} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
+                            Text = $"Node {a.FabricConnectionId} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
                         };
                     })]);
                 subscriptions.SetItems([.. server.Manager.Services.SelectMany(Get)]);

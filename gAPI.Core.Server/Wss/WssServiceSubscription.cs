@@ -17,7 +17,7 @@ public class WssServiceSubscription
         ILoggerFactory loggerFactory,
         ServiceSubscriptionCollection hubHosts,
         FabricClient fabricClient,
-        ConnectionId connectionId,
+        ClientConnectionId clientConnectionId,
         ServiceId serviceId,
         UserId userId,
         SessionId sessionId)
@@ -25,7 +25,7 @@ public class WssServiceSubscription
         HubHosts = hubHosts;
         Connection = connection;
         FabricClient = fabricClient;
-        ConnectionId = connectionId;
+        ClientConnectionId = clientConnectionId;
         SessionId = sessionId;
         UserId = userId;
         ServiceId = serviceId;
@@ -41,52 +41,29 @@ public class WssServiceSubscription
     public IWssServerConnection Connection { get; }
     public ServiceSubscriptionCollection HubHosts { get; }
     public FabricClient FabricClient { get; }
-    public ConnectionId ConnectionId { get; }
+    public ClientConnectionId ClientConnectionId { get; }
     public SessionId SessionId { get; }
     public UserId UserId { get; }
     public ServiceId ServiceId { get; }
 
-    // SignalRConnection => FabricClient: Subscribe
-    public Task InitializeAsync(CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("InitializeAsync()");
+    public bool HasRequest(RequestId requestId)
+        => Connection.HasRequest(requestId);
 
-        return FabricClient.SubscribeAsync(this, ct);
-    }
-
-    // FabricClient => SignalRConnection: Client functies
-    public Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("SendAsync({message})", message);
-
-        return Connection.Send_SendRequest_ToClientAsync(this, message, ct);
-    }
+    // FabricClient => SignalRConnection
+    public Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct) 
+        => Connection.Send_SendRequest_ToClientAsync(message, ct);
     public Task Send_SendRequestCancelled_ToClient_Async(SendRequestCancelledDto message, CancellationToken ct)
-        => Connection.Send_SendRequestCancelled_ToClientAsync(this, message, ct);
-
-    public bool HasRequest(RequestId requestId) => Connection.HasRequest(requestId);
-
-    public Task SendArgumentRequestAsync(InvokeArgumentRequestDto request, CancellationToken ct)
-        => Connection.Send_InvokeArgumentRequest_ToClientAsync(this, request, ct);
-
-    public Task SendArgumentResponseAsync(InvokeArgumentResponseDto response, CancellationToken ct)
-        => Connection.Send_InvokeArgumentResponse_ToClientAsync(this, response, ct);
-    public Task SendArgumentCancelledAsync(InvokeArgumentCancelledDto response, CancellationToken ct)
-        => Connection.Send_InvokeArgumentCancelled_ToClientAsync(this, response, ct);
-
+        => Connection.Send_SendRequestCancelled_ToClientAsync(message, ct);
+    public Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct)
+        => Connection.Send_StreamingRequest_ToClientAsync(request, ct);
+    public Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct)
+        => Connection.Send_StreamingResponse_ToClientAsync(response, ct);
     public IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("InvokeAsync({request})", request);
+        => Connection.Send_InvokeRequest_ToClientAsync(request, ct);
+    public Task Send_InvokeCancelled_ToClient_Async(InvokeRequestCancelledDto request, CancellationToken ct)
+        => Connection.Send_InvokeCancelled_ToClientAsync(request, ct);
 
-        return Connection.Send_InvokeRequest_ToClientAsync(this, request, ct);
-    }
-    public Task Send_InvokeRequestCancelled_ToClient_Async(InvokeRequestCancelledDto request, CancellationToken ct)
-        => Connection.Send_InvokeRequestCancelled_ToClientAsync(this, request, ct);
-
-    // SignalRConnection => FabricClient: Unsubscribe (op dispose)
+    // SignalRConnection => FabricClient
     public async ValueTask DisposeAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))

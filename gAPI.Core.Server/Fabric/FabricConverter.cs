@@ -9,14 +9,14 @@ public class FabricConverter
         => (FabricClientToHostMessageEnum)Reader.ReadByte();
     public static FabricHostToClientMessageEnum ReadHostToClientMessageType(BinaryReader Reader)
         => (FabricHostToClientMessageEnum)Reader.ReadByte();
-    public static FabricHostId ReadFabricHostId(BinaryReader binaryReader)
+    public static FabricConnectionId ReadFabricHostId(BinaryReader binaryReader)
         => new(binaryReader.ReadInt64());
 
     public static void WriteClientToHostMessageType(BinaryWriter w, FabricClientToHostMessageEnum type)
         => w.Write((byte)type);
     public static void WriteHostToClientMessageType(BinaryWriter w, FabricHostToClientMessageEnum type)
         => w.Write((byte)type);
-    public static void WriteFabricHostId(BinaryWriter w, FabricHostId id)
+    public static void WriteFabricHostId(BinaryWriter w, FabricConnectionId id)
         => w.Write(id.Value);
 
     //public ServiceId ReadServiceId(BinaryReader Reader)

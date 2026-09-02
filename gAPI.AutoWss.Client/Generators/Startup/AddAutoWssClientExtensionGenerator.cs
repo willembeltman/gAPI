@@ -19,7 +19,7 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     public Generator Context { get; }
     public SharedReference ClientConnection => Context.ClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
-    public SharedReference IWssLoggerFactory => Context.SharedReferences.IWssLoggerFactory;
+    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
@@ -36,7 +36,7 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
         Reg("gAPI.Core.Client.Extensions");
         Reg(ClientConnection);
         Reg(IClientConnection);
-        Reg(IWssLoggerFactory);
+        Reg(IClientLoggerFactory);
         Reg(IWssClientConnection);
         Reg(ClientConfig);
         foreach (var api in Context.Apis)
@@ -86,7 +86,7 @@ public static class {Name}
         services.AddScoped<{ClientConnection}>(sp => 
             new {ClientConnection}(sp.GetRequiredService<{IClientAuthenticatedHttpClient}>(), wssBackendUrl));
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
-        services.AddScoped<{IWssLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddScoped<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         
         // Api clients{string.Join("", Context.Apis.Select(api => $@"
         services.AddScoped<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}
