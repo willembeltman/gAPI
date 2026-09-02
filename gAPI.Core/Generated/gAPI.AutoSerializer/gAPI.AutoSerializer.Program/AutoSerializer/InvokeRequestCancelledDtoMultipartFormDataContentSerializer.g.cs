@@ -10,11 +10,11 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeCancelledDtoMultipartFormDataContentSerializer
+public static class InvokeRequestCancelledDtoMultipartFormDataContentSerializer
 {
 
     [IsMultipartFormDataContentSerializer]
-    public static void Write(this MultipartFormDataContent ___content, string ___name, InvokeCancelledDto value)
+    public static void Write(this MultipartFormDataContent ___content, string ___name, InvokeRequestCancelledDto value)
     {
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);

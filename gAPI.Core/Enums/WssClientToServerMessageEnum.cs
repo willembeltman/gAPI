@@ -13,7 +13,7 @@ public enum WssClientToServerMessageEnum
     StreamingResponse,
 
     InvokeRequest,
-    InvokeCancelled,
+    InvokeRequestCancelled,
     InvokeResponse,
     InvokeResponseDone,
 

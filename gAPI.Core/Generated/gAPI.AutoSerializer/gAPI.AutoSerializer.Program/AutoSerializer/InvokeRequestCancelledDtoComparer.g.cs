@@ -5,10 +5,10 @@ using gAPI.Core.Attributes;
 
 namespace gAPI.Core.Dtos;
 
-public static class InvokeCancelledDtoComparer
+public static class InvokeRequestCancelledDtoComparer
 {
     [IsComparer]
-    public static bool IsDifferent(this InvokeCancelledDto value, InvokeCancelledDto otherValue)
+    public static bool IsDifferent(this InvokeRequestCancelledDto value, InvokeRequestCancelledDto otherValue)
     {
         if (value.RequestId != otherValue.RequestId) return true;
         if (value.ServiceId != otherValue.ServiceId) return true;

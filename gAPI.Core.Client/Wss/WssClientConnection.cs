@@ -361,7 +361,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
 
                     case WssServerToClientMessageEnum.InvokeCancelled:
-                        var invokeRequestCancelled = span.ReadInvokeCancelledDto(ref offset);
+                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledDto(ref offset);
                         await Received_InvokeCancelled_FromServer(invokeRequestCancelled, ct);
                         break;
 
@@ -647,7 +647,7 @@ public abstract class WssClientConnection : IWssClientConnection
         await EnqueueAsync(writer =>
         {
             var offset = 0;
-            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeCancelled);
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequestCancelled);
             writer.Write(ref offset, invokeRequestCancelled);
             return offset;
         }, ct);

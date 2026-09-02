@@ -40,15 +40,15 @@ public class FabricManager
         OnUpdate?.Invoke(this, new EventArgs());
     }
 
-    public async Task Receive_UpdateSessionAsync(FabricHost caller, UpdateSessionDto updateSession, long receiveSize, CancellationToken token)
+    public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, UpdateSessionDto updateSession, long receiveSize, CancellationToken token)
     {
         SessionCache.AddOrUpdate(updateSession.SessionId, updateSession.CookieData);
     }
-    public async Task Receive_ClearSessionAsync(FabricHost caller, SendClearSessionDto clearSession, long receiveSize, CancellationToken token)
+    public async Task Receive_ClearSession_FromApiAsync(FabricHost caller, SendClearSessionDto clearSession, long receiveSize, CancellationToken token)
     {
         SessionCache.Remove(clearSession.SessionId);
     }
-    public async Task Receive_GetSessionCookieDataAsync(FabricHost caller, SendGetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
+    public async Task Receive_GetSessionCookieData_FromApiAsync(FabricHost caller, SendGetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
     {
         var sessionId = getSessionCookieData.SessionId;
         string? cookieData = null;
@@ -57,14 +57,14 @@ public class FabricManager
         await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null); // todo dat actor spul
     }
 
-    public async Task Receive_SubscribeAsync(FabricHost caller, SubscribeDto subscribe, long receiveSize, CancellationToken ct)
+    public async Task Receive_Subscribe_FromApiAsync(FabricHost caller, SubscribeDto subscribe, long receiveSize, CancellationToken ct)
     {
         await Services[subscribe.ServiceId]
             .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
         OnUpdate?.Invoke(this, new EventArgs());
     }
-    public async Task Receive_UnsubscribeAsync(FabricHost caller, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
+    public async Task Receive_Unsubscribe_FromApiAsync(FabricHost caller, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
     {
         await Services[unsubscribe.ServiceId]
             .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
@@ -82,7 +82,7 @@ public class FabricManager
     //    }
     //}
 
-    public async Task Receive_Send_SendRequest_ToServiceAsync(FabricHost caller, SendRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_SendRequest_FromApiAsync(FabricHost caller, SendRequestDto request, long receiveSize, CancellationToken ct)
     {
         (var fabricHostsEnumerable, var actor) = Services[request.ServiceId]
             .GetFabricHosts(request.UserId, request.SessionId);
@@ -115,7 +115,11 @@ public class FabricManager
         foreach (var fabricHost in fabricHosts)
             await fabricHost.Send_SendRequest_ToApiAsync(request, actor);
     }
-    public async Task Receive_SendRequestDoneAsync(FabricHost caller, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost fabricHost, SendRequestCancelledDto sendRequestCancelled, long receiveSize, CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
+    public async Task Receive_SendRequestDone_FromApiAsync(FabricHost caller, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(done.RequestId, out var state))
             return;
@@ -179,7 +183,7 @@ public class FabricManager
         }
     }
 
-    public async Task Receive_StreamingRequestAsync(FabricHost caller, StreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(request.RequestId, out var state))
             if (!InvokeRequests.TryGetValue(request.RequestId, out state))
@@ -189,7 +193,7 @@ public class FabricManager
         state.Actor?.EnqueueReceive(receiveSize);
         await state.Caller.Send_StreamingRequest_ToApiAsync(request, state.Actor);
     }
-    public async Task Receive_StreamingResponseAsync(FabricHost caller, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         if (!SendRequests.TryGetValue(response.RequestId, out var state))
             if (!InvokeRequests.TryGetValue(response.RequestId, out state))
@@ -239,6 +243,10 @@ public class FabricManager
 
         foreach (var host in fabricHosts)
             await host.Send_InvokeRequest_ToApiAsync(request, actor);
+    }
+    public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost fabricHost, InvokeRequestCancelledDto invokeRequestCancelled, long receiveSize, CancellationToken token)
+    {
+        throw new NotImplementedException();
     }
     public async Task Receive_InvokeResponseAsync(FabricHost caller, InvokeResponseDto response, long receiveSize, CancellationToken ct)
     {
@@ -306,4 +314,5 @@ public class FabricManager
     {
         await DisconnectAllAsync();
     }
+
 }

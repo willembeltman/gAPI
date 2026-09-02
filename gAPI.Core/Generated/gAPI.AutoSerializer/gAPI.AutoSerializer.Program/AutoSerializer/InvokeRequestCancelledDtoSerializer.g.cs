@@ -7,14 +7,14 @@ using gAPI.Core.Attributes;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeCancelledDtoSerializer
+public static class InvokeRequestCancelledDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x1613D0C9;
+    public const uint TypeId = 0x0D35D986;
     public const uint SchemaHash = 0xBE4D21B2;
 
     [IsSerializerWrite]
-    public static void Write(this BinaryWriter ___writer, InvokeCancelledDto value)
+    public static void Write(this BinaryWriter ___writer, InvokeRequestCancelledDto value)
     {
         ___writer.Write(Magic); // Magic string `GA` => it's a gAPI stream
         ___writer.Write(TypeId); // Type identifier
@@ -35,7 +35,7 @@ public static class InvokeCancelledDtoSerializer
     }
 
     [IsSerializerRead]
-    public static InvokeCancelledDto ReadInvokeCancelledDto(this BinaryReader ___reader)
+    public static InvokeRequestCancelledDto ReadInvokeRequestCancelledDto(this BinaryReader ___reader)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -44,6 +44,6 @@ public static class InvokeCancelledDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeCancelledDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
+        return new InvokeRequestCancelledDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

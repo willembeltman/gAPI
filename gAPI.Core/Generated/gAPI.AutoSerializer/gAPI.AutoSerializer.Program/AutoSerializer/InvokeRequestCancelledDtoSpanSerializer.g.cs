@@ -10,14 +10,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeCancelledDtoSpanSerializer
+public static class InvokeRequestCancelledDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x1613D0C9;
+    public const uint TypeId = 0x0D35D986;
     public const uint SchemaHash = 0xBE4D21B2;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeCancelledDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeRequestCancelledDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -38,7 +38,7 @@ public static class InvokeCancelledDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static InvokeCancelledDto ReadInvokeCancelledDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static InvokeRequestCancelledDto ReadInvokeRequestCancelledDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -47,11 +47,11 @@ public static class InvokeCancelledDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeCancelledDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
+        return new InvokeRequestCancelledDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, InvokeCancelledDto value)
+    public static int Length(ref int ___offset, InvokeRequestCancelledDto value)
     {
         ___offset += 10;
         RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
