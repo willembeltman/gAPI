@@ -5,8 +5,11 @@ namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public record StreamingResponseDto(
-    RequestId RequestId,
+    SessionId ResponseFromSessionId,
+    RoutingDto Routing,
     int ArgumentIndex,
-    Guid StreamId,
+    StreamId StreamId,
     bool IsCompleted,
+    bool StateIsChanged,
+    string? StateData,
     byte[] BinaryData);

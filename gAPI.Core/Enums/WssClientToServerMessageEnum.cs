@@ -14,8 +14,8 @@ public enum WssClientToServerMessageEnum
 
     InvokeRequest,
     InvokeRequestCancelled,
-    InvokeResponse,
-    InvokeResponseDone,
+    //InvokeResponse,
+    InvokeRequestDone,
 
     Log
 }

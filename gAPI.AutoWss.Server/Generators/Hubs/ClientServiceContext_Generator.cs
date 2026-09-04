@@ -21,7 +21,7 @@ public class ClientServiceContext_Generator : _BaseGenerator
     public Generator Context { get; }
     public IClientServiceContext_Generator IClientContext { get; }
 
-    public ClientService_Generator Client => IClientContext.ClientHandler;
+    public HubClient_Generator Client => IClientContext.ClientHandler;
     public Interface IClient => Client.Interface;
     public SharedReference ServerConnection => Context.ServerConnection;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;

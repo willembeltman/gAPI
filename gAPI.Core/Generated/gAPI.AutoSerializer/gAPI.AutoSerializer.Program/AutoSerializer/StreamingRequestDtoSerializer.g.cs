@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Serializers;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
@@ -12,7 +11,7 @@ public static class StreamingRequestDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x8BF49449;
-    public const uint SchemaHash = 0x6819BAD2;
+    public const uint SchemaHash = 0x00C88240;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingRequestDto value)
@@ -21,9 +20,9 @@ public static class StreamingRequestDtoSerializer
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
-        RequestIdSerializer.Write(___writer, value.RequestId);
+        RoutingDtoSerializer.Write(___writer, value.Routing);
         ___writer.Write(value.ArgumentIndex);
-        ___writer.Write(value.StreamId);
+        StreamIdSerializer.Write(___writer, value.StreamId);
     }
 
     [IsSerializerRead]
@@ -36,6 +35,6 @@ public static class StreamingRequestDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingRequestDto(RequestIdSerializer.ReadRequestId(___reader), ___reader.ReadInt32(), ___reader.ReadGuid());
+        return new StreamingRequestDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader));
     }
 }

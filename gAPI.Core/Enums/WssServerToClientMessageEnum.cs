@@ -11,5 +11,5 @@ public enum WssServerToClientMessageEnum
     InvokeRequest,
     InvokeCancelled,
     InvokeResponse,
-    InvokeResponseDone
+    InvokeRequestDone
 }

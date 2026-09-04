@@ -1,12 +1,13 @@
+using gAPI.Core.Ids;
 using System.Threading.Channels;
 
 namespace gAPI.Core.Helpers;
 
 public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
-    private readonly Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
+    private readonly Func<StreamId, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
 
-    public RemoteAsyncEnumerable(Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext)
+    public RemoteAsyncEnumerable(Func<StreamId, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext)
     {
         _requestNext = requestNext;
     }
@@ -18,13 +19,13 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 
     private sealed class Enumerator : IAsyncEnumerator<T>
     {
-        private readonly Guid _streamId = Guid.NewGuid();
+        private readonly StreamId _streamId = StreamId.New();
         private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
-        private readonly Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
+        private readonly Func<StreamId, Action<T>, Action<Exception?>, CancellationToken, Task> _requestNext;
         private readonly CancellationToken _cancellationToken;
         private readonly ResettableTimeout _timeout;
 
-        public Enumerator(Func<Guid, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext, CancellationToken cancellationToken)
+        public Enumerator(Func<StreamId, Action<T>, Action<Exception?>, CancellationToken, Task> requestNext, CancellationToken cancellationToken)
         {
             _requestNext = requestNext;
             _cancellationToken = cancellationToken;

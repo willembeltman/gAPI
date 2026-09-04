@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Ids;
-using gAPI.Core.Server.Enums;
+﻿using gAPI.Core.Server.Enums;
 
 namespace gAPI.Core.Server.Fabric;
 
@@ -9,15 +8,18 @@ public class FabricConverter
         => (FabricClientToHostMessageEnum)Reader.ReadByte();
     public static FabricHostToClientMessageEnum ReadHostToClientMessageType(BinaryReader Reader)
         => (FabricHostToClientMessageEnum)Reader.ReadByte();
-    public static FabricConnectionId ReadFabricHostId(BinaryReader binaryReader)
-        => new(binaryReader.ReadInt64());
 
     public static void WriteClientToHostMessageType(BinaryWriter w, FabricClientToHostMessageEnum type)
         => w.Write((byte)type);
     public static void WriteHostToClientMessageType(BinaryWriter w, FabricHostToClientMessageEnum type)
         => w.Write((byte)type);
-    public static void WriteFabricHostId(BinaryWriter w, FabricConnectionId id)
-        => w.Write(id.Value);
+
+
+
+    //public static FabricConnectionId ReadFabricHostId(BinaryReader binaryReader)
+    //    => new(binaryReader.ReadInt64());
+    //public static void WriteFabricHostId(BinaryWriter w, FabricConnectionId id)
+    //    => w.Write(id.Value);
 
     //public ServiceId ReadServiceId(BinaryReader Reader)
     //{

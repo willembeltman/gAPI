@@ -31,7 +31,7 @@ public class Generator
         CustomCreateCopys = customCreateCopys;
         CustomMultipartFormDataContents = customMultipartFormDataContents;
 
-        Apis = ServiceContext.ApiInterfaces.Select(a => new ApiClientGenerator(this, a)).ToArray();
+        Apis = ServiceContext.ApiInterfaces.Select(a => new ApiClient_Generator(this, a)).ToArray();
         MinimalApis = ServiceContext.MinimalApiInterfaces.Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContents)).ToArray();
         IClientConnection = new IClientConnectionGenerator(this);
         ClientConnection = new ClientConnectionGenerator(this);
@@ -45,7 +45,7 @@ public class Generator
     public CustomObjectMethod[] CustomComparers { get; }
     public CustomObjectMethod[] CustomCreateCopys { get; }
     public CustomObjectMethod[] CustomMultipartFormDataContents { get; }
-    public ApiClientGenerator[] Apis { get; }
+    public ApiClient_Generator[] Apis { get; }
     public MinimalClientGenerator[] MinimalApis { get; }
     public IClientConnectionGenerator IClientConnection { get; }
     public ClientConnectionGenerator ClientConnection { get; }

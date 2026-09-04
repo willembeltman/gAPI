@@ -44,7 +44,7 @@ public class Generator
             .ToArray();
 
         ClientHandlers = serviceContext.HubInterfaces
-            .Select(@interface => new ClientService_Generator(this, @interface))
+            .Select(@interface => new HubClient_Generator(this, @interface))
             .ToArray();
 
         IClientHandlerContexts = ClientHandlers
@@ -76,7 +76,7 @@ public class Generator
     public MapAutoWssServerExtensionGenerator MapAutoWssExtension { get; }
     public WssEndpointExtensionGenerator MapWssEndpointExtension { get; }
     public MinimalApi_Generator[] MinimalApis { get; }
-    public ClientService_Generator[] ClientHandlers { get; }
+    public HubClient_Generator[] ClientHandlers { get; }
     public IClientServiceContext_Generator[] IClientHandlerContexts { get; }
     public ClientServiceContext_Generator[] ClientContexts { get; }
     //public IStateParserGenerator IStateParser { get; }

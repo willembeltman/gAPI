@@ -13,13 +13,14 @@ public class SharedReferences
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
         BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
+        RoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.RoutingDto", allSymbols);
         SubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SubscribeDto", allSymbols);
         UnsubscribeDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.UnsubscribeDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
-        InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
-        InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
-        InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
+        StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
+        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
+        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
         IClientLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
@@ -45,13 +46,14 @@ public class SharedReferences
     public SharedReference SessionId { get; }
     public SharedReference UserId { get; }
     public SharedReference BaseResponse { get; }
+    public SharedReference RoutingDto { get; }
     public SharedReference BaseResponseT { get; }
     public SharedReference SendRequestDto { get; }
     public SharedReference SubscribeDto { get; }
     public SharedReference UnsubscribeDto { get; }
     public SharedReference InvokeRequestDto { get; }
-    public SharedReference InvokeResponseDto { get; }
-    public SharedReference InvokeResponseDoneDto { get; }
+    public SharedReference StreamingResponseDto { get; }
+    public SharedReference InvokeRequestDoneDto { get; }
     public SharedReference WssClientConnection { get; }
     public SharedReference IClientLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }

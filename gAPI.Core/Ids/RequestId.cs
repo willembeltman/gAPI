@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace gAPI.Core.Ids;
 
-public readonly record struct RequestId(string Value)
+public record RequestId(string Value)
 {
     public static RequestId New()
     {

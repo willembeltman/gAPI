@@ -10,6 +10,6 @@ public static class InvokeRequestCancelledDtoCreateCopy
     [IsCreateCopy]
     public static InvokeRequestCancelledDto CreateCopy(this InvokeRequestCancelledDto value)
     {
-        return new InvokeRequestCancelledDto(value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.Reason);
+        return new InvokeRequestCancelledDto(value.Routing, value.Reason);
     }
 }

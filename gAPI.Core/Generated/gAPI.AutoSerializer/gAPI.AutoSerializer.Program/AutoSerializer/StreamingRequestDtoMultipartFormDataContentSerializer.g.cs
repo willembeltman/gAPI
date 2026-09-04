@@ -16,8 +16,8 @@ public static class StreamingRequestDtoMultipartFormDataContentSerializer
     [IsMultipartFormDataContentSerializer]
     public static void Write(this MultipartFormDataContent ___content, string ___name, StreamingRequestDto value)
     {
-        RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
+        RoutingDtoMultipartFormDataContentSerializer.Write(___content, "Routing", value.Routing);
         ___content.Add(new StringContent(value.ArgumentIndex.ToString()), "ArgumentIndex");
-        GuidSerializer.Write(___content, "StreamId", value.StreamId);
+        StreamIdMultipartFormDataContentSerializer.Write(___content, "StreamId", value.StreamId);
     }
 }

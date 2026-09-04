@@ -5,6 +5,6 @@ namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public record StreamingRequestDto(
-    RequestId RequestId,
+    RoutingDto Routing,
     int ArgumentIndex,
-    Guid StreamId);
+    StreamId StreamId);

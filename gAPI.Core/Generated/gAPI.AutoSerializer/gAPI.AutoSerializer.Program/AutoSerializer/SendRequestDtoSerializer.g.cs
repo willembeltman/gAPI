@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
@@ -11,7 +10,7 @@ public static class SendRequestDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xF2E06435;
-    public const uint SchemaHash = 0xB9B52283;
+    public const uint SchemaHash = 0x45CBDBC7;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, SendRequestDto value)
@@ -20,15 +19,7 @@ public static class SendRequestDtoSerializer
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
-        RequestIdSerializer.Write(___writer, value.RequestId);
-        ServiceIdSerializer.Write(___writer, value.ServiceId);
-        ServiceMethodIdSerializer.Write(___writer, value.MethodId);
-        ___writer.Write(value.UserId != null); 
-        if (value.UserId != null) 
-            UserIdSerializer.Write(___writer, value.UserId.Value);
-        ___writer.Write(value.SessionId != null); 
-        if (value.SessionId != null) 
-            SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        RoutingDtoSerializer.Write(___writer, value.Routing);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
@@ -47,6 +38,6 @@ public static class SendRequestDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new SendRequestDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new SendRequestDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
     }
 }

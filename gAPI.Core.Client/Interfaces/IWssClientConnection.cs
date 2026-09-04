@@ -7,20 +7,13 @@ namespace gAPI.Core.Client.Interfaces;
 public interface IWssClientConnection : IClientLoggerFactory
 {
     SessionId SessionId { get; }
-
     bool Initialized { get; }
     bool IsConnected { get; }
 
-    Task Send_Subscribe_ToServerAsync(SubscribeDto subscribe, CancellationToken ct);
-    Task Send_Unsubscribe_ToServerAsync(UnsubscribeDto unsubscribe, CancellationToken ct);
     Task TryConnectAsync(CancellationToken ct);
-    Task ForceReconnectAsync(CancellationToken ct);
 
-    Task Send_SendRequest_ToServerAsync(SendRequestDto sendRequest, CancellationToken ct);
-    Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledDto sendRequestCancelled, CancellationToken ct);
-    Task Send_InvokeRequest_ToServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
-    Task Send_InvokeCancelled_ToServerAsync(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct);
-    Task Send_InvokeResponse_ToServerAsync(InvokeResponseDto invokeResponse, CancellationToken ct);
-    Task Send_InvokeResponseDone_ToServerAsync(InvokeResponseDoneDto invokeResponseDone, CancellationToken ct);
-
+    Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct);
+    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct);
+    void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
+    void UnRegisterAsyncEnumerableArguments(RoutingDto routing);
 }

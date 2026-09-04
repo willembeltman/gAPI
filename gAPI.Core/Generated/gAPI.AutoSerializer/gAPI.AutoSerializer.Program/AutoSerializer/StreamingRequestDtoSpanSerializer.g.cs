@@ -14,7 +14,7 @@ public static class StreamingRequestDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x8BF49449;
-    public const uint SchemaHash = 0x6819BAD2;
+    public const uint SchemaHash = 0x00C88240;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, StreamingRequestDto value)
@@ -23,9 +23,9 @@ public static class StreamingRequestDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
-        RequestIdSpanSerializer.Write(ref ___span, ref ___offset, value.RequestId);
+        RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
-        GuidSerializer.WriteGuid(ref ___span, ref ___offset, value.StreamId);
+        StreamIdSpanSerializer.Write(ref ___span, ref ___offset, value.StreamId);
     }
 
     [IsSpanSerializerRead]
@@ -38,16 +38,16 @@ public static class StreamingRequestDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingRequestDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), GuidSerializer.ReadGuid(___span, ref ___offset));
+        return new StreamingRequestDto(RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
     public static int Length(ref int ___offset, StreamingRequestDto value)
     {
         ___offset += 10;
-        RequestIdSpanSerializer.Length(ref ___offset, value.RequestId);
+        RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
-        GuidSerializer.GetMessageLength(ref ___offset, value.StreamId);
+        StreamIdSpanSerializer.Length(ref ___offset, value.StreamId);
         return ___offset;
     }
 }

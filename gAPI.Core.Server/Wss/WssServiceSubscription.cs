@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
@@ -15,14 +14,14 @@ public class WssServiceSubscription
     public WssServiceSubscription(
         IWssServerConnection connection,
         ILoggerFactory loggerFactory,
-        ServiceSubscriptionCollection hubHosts,
+        ServiceSubscriptionCollection serviceSubscriptionCollection,
         FabricClient fabricClient,
         ClientConnectionId clientConnectionId,
         ServiceId serviceId,
         UserId userId,
         SessionId sessionId)
     {
-        HubHosts = hubHosts;
+        ServiceSubscriptionCollection = serviceSubscriptionCollection;
         Connection = connection;
         FabricClient = fabricClient;
         ClientConnectionId = clientConnectionId;
@@ -30,40 +29,37 @@ public class WssServiceSubscription
         UserId = userId;
         ServiceId = serviceId;
 
-        Id = HubHosts.Add(this);
+        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this);
         Logger = loggerFactory.CreateLogger<WssServiceSubscription>();
     }
 
     private byte Disposed;
 
-    public ServiceSubscriptionId Id { get; }
     public ILogger Logger { get; }
     public IWssServerConnection Connection { get; }
-    public ServiceSubscriptionCollection HubHosts { get; }
+    public ServiceSubscriptionCollection ServiceSubscriptionCollection { get; }
     public FabricClient FabricClient { get; }
     public ClientConnectionId ClientConnectionId { get; }
-    public SessionId SessionId { get; }
-    public UserId UserId { get; }
+    public ServiceSubscriptionId ServiceSubscriptionId { get; }
     public ServiceId ServiceId { get; }
-
-    public bool HasRequest(RequestId requestId)
-        => Connection.HasRequest(requestId);
+    public UserId UserId { get; }
+    public SessionId SessionId { get; }
 
     // FabricClient => SignalRConnection
     public Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct) 
         => Connection.Send_SendRequest_ToClientAsync(message, ct);
-    public Task Send_SendRequestCancelled_ToClient_Async(SendRequestCancelledDto message, CancellationToken ct)
-        => Connection.Send_SendRequestCancelled_ToClientAsync(message, ct);
+    public IAsyncEnumerable<StreamingResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+        => Connection.Send_InvokeRequest_ToClientAsync(request, ct);
     public Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct)
         => Connection.Send_StreamingRequest_ToClientAsync(request, ct);
     public Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct)
         => Connection.Send_StreamingResponse_ToClientAsync(response, ct);
-    public IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
-        => Connection.Send_InvokeRequest_ToClientAsync(request, ct);
-    public Task Send_InvokeCancelled_ToClient_Async(InvokeRequestCancelledDto request, CancellationToken ct)
-        => Connection.Send_InvokeCancelled_ToClientAsync(request, ct);
 
-    // SignalRConnection => FabricClient
+
+    //public bool HasRequest(RequestId requestId)
+    //    => Connection.HasRequest(requestId);
+
+
     public async ValueTask DisposeAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -72,7 +68,7 @@ public class WssServiceSubscription
         if (Interlocked.Exchange(ref Disposed, 1) == 0)
         {
             await FabricClient.UnsubscribeAsync(this, default);
-            HubHosts.Remove(Id);
+            ServiceSubscriptionCollection.Remove(ServiceSubscriptionId);
         }
         GC.SuppressFinalize(this);
     }

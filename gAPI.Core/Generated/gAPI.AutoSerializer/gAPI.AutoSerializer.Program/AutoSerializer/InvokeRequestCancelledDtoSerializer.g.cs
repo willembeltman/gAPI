@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
@@ -11,7 +10,7 @@ public static class InvokeRequestCancelledDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x0D35D986;
-    public const uint SchemaHash = 0xBE4D21B2;
+    public const uint SchemaHash = 0x155EE74E;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeRequestCancelledDto value)
@@ -20,15 +19,7 @@ public static class InvokeRequestCancelledDtoSerializer
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
-        RequestIdSerializer.Write(___writer, value.RequestId);
-        ServiceIdSerializer.Write(___writer, value.ServiceId);
-        ServiceMethodIdSerializer.Write(___writer, value.MethodId);
-        ___writer.Write(value.UserId != null); 
-        if (value.UserId != null) 
-            UserIdSerializer.Write(___writer, value.UserId.Value);
-        ___writer.Write(value.SessionId != null); 
-        if (value.SessionId != null) 
-            SessionIdSerializer.Write(___writer, value.SessionId.Value);
+        RoutingDtoSerializer.Write(___writer, value.Routing);
         ___writer.Write(value.Reason != null); 
         if (value.Reason != null)
             ___writer.Write(value.Reason);
@@ -44,6 +35,6 @@ public static class InvokeRequestCancelledDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeRequestCancelledDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
+        return new InvokeRequestCancelledDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

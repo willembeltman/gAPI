@@ -1,15 +1,15 @@
 ﻿using gAPI.Core.Ids;
-using gAPI.Core.Server.Wss;
+using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
 
 namespace gAPI.Core.Server.Collections;
 
-public sealed class WssServerConnectionCollection
+public sealed class ServerConnectionCollection
 {
     private long _nextId;
-    private readonly ConcurrentDictionary<ClientConnectionId, WssServerConnection> Clients = new();
+    private readonly ConcurrentDictionary<ClientConnectionId, IServerConnection> Clients = new();
 
-    public ClientConnectionId AddConnection(WssServerConnection client)
+    public ClientConnectionId AddConnection(IServerConnection client)
     {
         var id = new ClientConnectionId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
@@ -21,5 +21,5 @@ public sealed class WssServerConnectionCollection
         return Clients.TryRemove(id, out _);
     }
 
-    public IEnumerable<WssServerConnection> All => Clients.Values;
+    public IEnumerable<IServerConnection> All => Clients.Values;
 }

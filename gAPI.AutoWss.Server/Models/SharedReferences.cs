@@ -16,17 +16,19 @@ public class SharedReferences
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
+        RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
 
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServerConfig", allSymbols);
+        RoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.RoutingDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
-        InvokeResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDto", allSymbols);
-        InvokeResponseDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeResponseDoneDto", allSymbols);
+        StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
+        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
 
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
         
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
-        WssServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.WssServerConnectionCollection", allSymbols);
+        ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
@@ -41,17 +43,19 @@ public class SharedReferences
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }
     public SharedReference SessionId { get; }
+    public SharedReference RequestId { get; }
     public SharedReference InvokeRequestDto { get; }
-    public SharedReference InvokeResponseDto { get; }
+    public SharedReference StreamingResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference AuthenticationHeaders { get; }
     public SharedReference SendRequestDto { get; }
     public SharedReference ServerConfig { get; }
-    public SharedReference WssServerConnectionCollection { get; }
+    public SharedReference RoutingDto { get; }
+    public SharedReference ServerConnectionCollection { get; }
     public SharedReference SessionCache { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference AuthenticationOptions { get; }
-    public SharedReference InvokeResponseDoneDto { get; }
+    public SharedReference InvokeRequestDoneDto { get; }
     public SharedReference AuthenticationMiddleware { get; }
 }

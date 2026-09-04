@@ -9,31 +9,43 @@ using System.Threading.Channels;
 
 namespace gAPI.Core.Sse;
 
-public class SseServiceSubscription(
-    ServiceSubscriptionCollection ServiceSubscriptionCollection,
-    FabricClient fabricClient,
-    ServiceId serviceId,
-    UserId userId,
-    SessionId sessionId) : IServiceSubscription
+public class SseServiceSubscription : IServiceSubscription
+    , IServerConnection
 {
     private byte closed;
+    private readonly ServiceSubscriptionCollection ServiceSubscriptionCollection;
+    private readonly FabricClient FabricClient;
 
     public Channel<SseEvent> Channel { get; } = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
-    public ServiceSubscriptionId Id { get; private set; }
-    public ServiceId ServiceId { get; } = serviceId;
-    public SessionId SessionId { get; } = sessionId;
-    public UserId UserId { get; } = userId;
+    public ClientConnectionId ClientConnectionId { get; }
+    public ServiceSubscriptionId ServiceSubscriptionId { get; private set; }
+    public ServiceId ServiceId { get; }
+    public SessionId SessionId { get; }
+    public UserId UserId { get; }
+
+    public SseServiceSubscription(
+        ServerConnectionCollection serverConnectionCollection,
+        ServiceSubscriptionCollection serviceSubscriptionCollection,
+        FabricClient fabricClient,
+        ServiceId serviceId,
+        UserId userId,
+        SessionId sessionId)
+    {
+        ServiceSubscriptionCollection = serviceSubscriptionCollection;
+        FabricClient = fabricClient;
+        ServiceId = serviceId;
+        SessionId = sessionId;
+        UserId = userId;
+        ServiceSubscriptionId = serviceSubscriptionCollection.Add(this);
+        ClientConnectionId = serverConnectionCollection.AddConnection(this);
+    }
 
     public async Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto sendRequest, CancellationToken ct)
     {
         var sseEvent = new SseEvent(sendRequest);
         await Channel.Writer.WriteAsync(sseEvent, ct);
         return new SendRequestDoneDto(
-            sendRequest.RequestId,
-            sendRequest.ServiceId,
-            sendRequest.MethodId,
-            sendRequest.UserId,
-            sendRequest.SessionId,
+            sendRequest.Routing,
             false,
             null,
             null);
@@ -41,13 +53,13 @@ public class SseServiceSubscription(
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
     {
-        Id = ServiceSubscriptionCollection.Add(this);
+        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this);
         //Console.WriteLine($"SseServiceSubscription {Id} started");
-        await fabricClient.SubscribeAsync(this, ct);
+        await FabricClient.SubscribeAsync(this, ct);
 
         try
         {
-            yield return new SseItem<string>(Id.Value.ToString(), "ServiceSubscriptionId");
+            yield return new SseItem<string>(ServiceSubscriptionId.Value.ToString(), "ServiceSubscriptionId");
 
             while (true)
             {
@@ -73,13 +85,13 @@ public class SseServiceSubscription(
         {
             if (Interlocked.Exchange(ref closed, 1) == 0)
             {
-                await fabricClient.UnsubscribeAsync(this, ct);
-                ServiceSubscriptionCollection.Remove(Id);
+                await FabricClient.UnsubscribeAsync(this, ct);
+                ServiceSubscriptionCollection.Remove(ServiceSubscriptionId);
             }
         }
     }
 
-    IAsyncEnumerable<InvokeResponseDto> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+    IAsyncEnumerable<StreamingResponseDto> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
     {
         throw new NotSupportedException(
             "You cannot use methods that have return types for SSE, " +

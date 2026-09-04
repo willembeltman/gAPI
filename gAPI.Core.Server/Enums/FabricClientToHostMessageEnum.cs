@@ -15,7 +15,7 @@ public enum FabricClientToHostMessageEnum
     InvokeRequest,
     InvokeRequestCancelled,
     InvokeResponse,
-    InvokeResponseDone,
+    InvokeRequestDone,
 
     UpdateSession,
     ClearSession,

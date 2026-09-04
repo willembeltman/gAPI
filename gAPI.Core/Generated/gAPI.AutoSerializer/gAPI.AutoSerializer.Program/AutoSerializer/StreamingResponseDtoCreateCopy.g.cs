@@ -10,6 +10,6 @@ public static class StreamingResponseDtoCreateCopy
     [IsCreateCopy]
     public static StreamingResponseDto CreateCopy(this StreamingResponseDto value)
     {
-        return new StreamingResponseDto(value.RequestId, value.ArgumentIndex, value.StreamId, value.IsCompleted, value.BinaryData.ToArray());
+        return new StreamingResponseDto(value.ResponseFromSessionId, value.Routing, value.ArgumentIndex, value.StreamId, value.IsCompleted, value.StateIsChanged, value.StateData, value.BinaryData.ToArray());
     }
 }

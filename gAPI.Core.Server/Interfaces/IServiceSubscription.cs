@@ -7,14 +7,15 @@ namespace gAPI.Core.Server.Interfaces;
 // Do not use this interface for mocking as it doesn't expose the full interface
 public interface IServiceSubscription
 {
-    ServiceSubscriptionId Id { get; }
+    ClientConnectionId ClientConnectionId { get; }
+    ServiceSubscriptionId ServiceSubscriptionId { get; }
     ServiceId ServiceId { get; }
     SessionId SessionId { get; }
     UserId UserId { get; }
 
-    IAsyncEnumerable<InvokeResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct);
+    IAsyncEnumerable<StreamingResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct);
     Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct);
-    bool HasRequest(RequestId requestId);
+    //bool HasRequest(RequestId requestId);
     Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct);
     Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct);
 }

@@ -28,7 +28,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
     private TStateDto? _State;
     private TStateDto? _OldState;
 
-    public UserId UserId { get; set; } = new();
+    public UserId UserId { get; set; } = new(null);
     public SessionId SessionId { get; set; } = SessionId.New();
 
     public bool Initialized => _Result != null;

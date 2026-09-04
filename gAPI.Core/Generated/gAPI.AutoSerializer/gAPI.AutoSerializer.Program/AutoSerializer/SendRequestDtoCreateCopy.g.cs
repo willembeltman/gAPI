@@ -10,6 +10,6 @@ public static class SendRequestDtoCreateCopy
     [IsCreateCopy]
     public static SendRequestDto CreateCopy(this SendRequestDto value)
     {
-        return new SendRequestDto(value.RequestId, value.ServiceId, value.MethodId, value.UserId, value.SessionId, value.StateIsChanged, value.StateData, value.BinaryData.ToArray());
+        return new SendRequestDto(value.Routing, value.StateIsChanged, value.StateData, value.BinaryData.ToArray());
     }
 }

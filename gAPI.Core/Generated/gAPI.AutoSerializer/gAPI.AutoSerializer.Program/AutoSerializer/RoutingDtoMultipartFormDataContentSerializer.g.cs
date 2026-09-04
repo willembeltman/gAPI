@@ -10,20 +10,18 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeResponseDoneDtoMultipartFormDataContentSerializer
+public static class RoutingDtoMultipartFormDataContentSerializer
 {
 
     [IsMultipartFormDataContentSerializer]
-    public static void Write(this MultipartFormDataContent ___content, string ___name, InvokeResponseDoneDto value)
+    public static void Write(this MultipartFormDataContent ___content, string ___name, RoutingDto value)
     {
         RequestIdMultipartFormDataContentSerializer.Write(___content, "RequestId", value.RequestId);
         ServiceIdMultipartFormDataContentSerializer.Write(___content, "ServiceId", value.ServiceId);
         ServiceMethodIdMultipartFormDataContentSerializer.Write(___content, "MethodId", value.MethodId);
         if (value.UserId != null)
-            UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId.Value);
+            UserIdMultipartFormDataContentSerializer.Write(___content, "UserId", value.UserId);
         if (value.SessionId != null)
-            SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId.Value);
-        if (value.ExceptionMessage != null)
-            ___content.Add(new StringContent(value.ExceptionMessage), "ExceptionMessage");
+            SessionIdMultipartFormDataContentSerializer.Write(___content, "SessionId", value.SessionId);
     }
 }

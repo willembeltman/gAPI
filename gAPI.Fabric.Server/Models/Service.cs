@@ -36,13 +36,13 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
     {
         if (userId != null)
         {
-            var user = Users.TryGet(userId.Value);
+            var user = Users.TryGet(userId);
             if (user == null) return ([], this);
             return (user.Connections.Values, user);
         }
         else if (sessionId != null)
         {
-            var session = Sessions.TryGet(sessionId.Value);
+            var session = Sessions.TryGet(sessionId);
             if (session == null) return ([], this);
             return (session.Connections.Values, session);
         }

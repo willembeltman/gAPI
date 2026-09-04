@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace gAPI.Core.Ids;
 
-public readonly record struct SessionId(string Value)
+public record SessionId(string Value)
 {
     public static SessionId New()
     {

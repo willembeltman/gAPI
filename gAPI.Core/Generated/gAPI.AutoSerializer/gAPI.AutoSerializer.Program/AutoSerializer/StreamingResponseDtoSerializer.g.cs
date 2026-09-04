@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Serializers;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
@@ -12,7 +11,7 @@ public static class StreamingResponseDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x170227ED;
-    public const uint SchemaHash = 0xD0FB42F0;
+    public const uint SchemaHash = 0xC4515737;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingResponseDto value)
@@ -21,10 +20,15 @@ public static class StreamingResponseDtoSerializer
         ___writer.Write(TypeId); // Type identifier
         ___writer.Write(SchemaHash); // Schema identifier
         
-        RequestIdSerializer.Write(___writer, value.RequestId);
+        SessionIdSerializer.Write(___writer, value.ResponseFromSessionId);
+        RoutingDtoSerializer.Write(___writer, value.Routing);
         ___writer.Write(value.ArgumentIndex);
-        ___writer.Write(value.StreamId);
+        StreamIdSerializer.Write(___writer, value.StreamId);
         ___writer.Write(value.IsCompleted);
+        ___writer.Write(value.StateIsChanged);
+        ___writer.Write(value.StateData != null); 
+        if (value.StateData != null)
+            ___writer.Write(value.StateData);
         ___writer.Write(value.BinaryData.Length);
         ___writer.Write(value.BinaryData);
     }
@@ -39,6 +43,6 @@ public static class StreamingResponseDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingResponseDto(RequestIdSerializer.ReadRequestId(___reader), ___reader.ReadInt32(), ___reader.ReadGuid(), ___reader.ReadBoolean(), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new StreamingResponseDto(SessionIdSerializer.ReadSessionId(___reader), RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
     }
 }

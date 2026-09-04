@@ -7,7 +7,7 @@ public class IClientServiceContext_Generator : _BaseGenerator
 {
     public IClientServiceContext_Generator(
         Generator context,
-        ClientService_Generator clientHandler)
+        HubClient_Generator clientHandler)
     {
         Context = context;
         ClientHandler = clientHandler;
@@ -20,7 +20,7 @@ public class IClientServiceContext_Generator : _BaseGenerator
     }
 
     public Generator Context { get; }
-    public ClientService_Generator ClientHandler { get; }
+    public HubClient_Generator ClientHandler { get; }
     public Interface IClientHandler => ClientHandler.Interface;
     public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public SharedReference UserId => Context.SharedReferences.UserId;

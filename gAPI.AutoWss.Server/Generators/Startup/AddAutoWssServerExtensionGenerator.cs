@@ -29,7 +29,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
-    public SharedReference WssServerConnectionCollection => Context.SharedReferences.WssServerConnectionCollection;
+    public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference AuthenticationOptions => Context.SharedReferences.AuthenticationOptions;
 
@@ -40,7 +40,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ClientContext);
         Reg(FabricClient);
         Reg(ServerConfig);
-        Reg(WssServerConnectionCollection);
+        Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
         Reg(SessionCache);
         Reg(AuthenticationOptions);
@@ -179,7 +179,7 @@ public static class {Name}
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
-        services.AddSingleton(new {WssServerConnectionCollection}());
+        services.AddSingleton(new {ServerConnectionCollection}());
         services.AddSingleton(new {ServiceSubscriptionCollection}());
 
         if (fabricConnectionString == null)

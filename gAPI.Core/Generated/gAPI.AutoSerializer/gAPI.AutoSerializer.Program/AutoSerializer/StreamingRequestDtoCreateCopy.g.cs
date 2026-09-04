@@ -10,6 +10,6 @@ public static class StreamingRequestDtoCreateCopy
     [IsCreateCopy]
     public static StreamingRequestDto CreateCopy(this StreamingRequestDto value)
     {
-        return new StreamingRequestDto(value.RequestId, value.ArgumentIndex, value.StreamId);
+        return new StreamingRequestDto(value.Routing, value.ArgumentIndex, value.StreamId);
     }
 }

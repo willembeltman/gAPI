@@ -12,8 +12,7 @@ public enum FabricHostToClientMessageEnum
     StreamingResponse,
     StreamingRequestCancelled,
     InvokeRequest,
-    InvokeResponse,
-    InvokeResponseDone,
+    InvokeRequestDone,
     InvokeRequestCancelled,
 
     GetSessionCookieDataResponse,

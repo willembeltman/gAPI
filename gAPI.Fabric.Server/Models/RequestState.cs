@@ -1,3 +1,4 @@
+using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Fabric.Server.Interfaces;
@@ -7,17 +8,14 @@ namespace gAPI.Fabric.Server.Models;
 
 public sealed class RequestState : IDisposable
 {
-    public required RequestId RequestId { get; init; }
-    public required ServiceMethodId MethodId { get; init; }
-    public required ServiceId ServiceId { get; init; }
-    public required SessionId? SessionId { get; init; }
-    public required UserId? UserId { get; init; }
+    public required RoutingDto RequestId { get; init; }
     public required IActor Actor { get; init; }
     public required FabricHost Caller { get; init; }
     public required HashSet<FabricConnectionId> Targets { get; init; }
 
     public HashSet<FabricConnectionId> CompletedTargets { get; } = [];
     public Dictionary<FabricConnectionId, string> Exceptions { get; } = [];
+    public List<StreamId> StreamIds { get; private set; } = [];
     private ResettableTimeout? Timeout { get; set; }
     public bool StateIsChanged { get; set; }
     public string? StateData { get; set; }

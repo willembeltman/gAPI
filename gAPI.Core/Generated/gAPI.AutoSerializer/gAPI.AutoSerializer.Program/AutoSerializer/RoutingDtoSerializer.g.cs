@@ -7,14 +7,14 @@ using gAPI.Core.Attributes;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeResponseDoneDtoSerializer
+public static class RoutingDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0xBEB8CB23;
-    public const uint SchemaHash = 0xB1ABBDBE;
+    public const uint TypeId = 0xBCE3FFA2;
+    public const uint SchemaHash = 0x7CBA090C;
 
     [IsSerializerWrite]
-    public static void Write(this BinaryWriter ___writer, InvokeResponseDoneDto value)
+    public static void Write(this BinaryWriter ___writer, RoutingDto value)
     {
         ___writer.Write(Magic); // Magic string `GA` => it's a gAPI stream
         ___writer.Write(TypeId); // Type identifier
@@ -25,17 +25,14 @@ public static class InvokeResponseDoneDtoSerializer
         ServiceMethodIdSerializer.Write(___writer, value.MethodId);
         ___writer.Write(value.UserId != null); 
         if (value.UserId != null) 
-            UserIdSerializer.Write(___writer, value.UserId.Value);
+            UserIdSerializer.Write(___writer, value.UserId);
         ___writer.Write(value.SessionId != null); 
         if (value.SessionId != null) 
-            SessionIdSerializer.Write(___writer, value.SessionId.Value);
-        ___writer.Write(value.ExceptionMessage != null); 
-        if (value.ExceptionMessage != null)
-            ___writer.Write(value.ExceptionMessage);
+            SessionIdSerializer.Write(___writer, value.SessionId);
     }
 
     [IsSerializerRead]
-    public static InvokeResponseDoneDto ReadInvokeResponseDoneDto(this BinaryReader ___reader)
+    public static RoutingDto ReadRoutingDto(this BinaryReader ___reader)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -44,6 +41,6 @@ public static class InvokeResponseDoneDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeResponseDoneDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
+        return new RoutingDto(RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader));
     }
 }
