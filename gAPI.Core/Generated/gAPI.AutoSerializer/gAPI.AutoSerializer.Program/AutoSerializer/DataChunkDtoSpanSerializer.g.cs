@@ -9,28 +9,25 @@ using System.Text;
 #nullable enable
 namespace gAPI.Core.Dtos;
 
-public static class InvokeRequestDoneDtoSpanSerializer
+public static class DataChunkDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x498DADF7;
-    public const uint SchemaHash = 0xC6ED7364;
+    public const uint TypeId = 0x85FCD607;
+    public const uint SchemaHash = 0xBFB6C178;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeRequestDoneDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, DataChunkDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
-        RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.Data);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Offset);
     }
 
     [IsSpanSerializerRead]
-    public static InvokeRequestDoneDto ReadInvokeRequestDoneDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static DataChunkDto ReadDataChunkDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -39,18 +36,18 @@ public static class InvokeRequestDoneDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeRequestDoneDto(RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
+        var value = new DataChunkDto();
+        value.Data = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
+        value.Offset = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
+        return value;
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, InvokeRequestDoneDto value)
+    public static int Length(ref int ___offset, DataChunkDto value)
     {
         ___offset += 10;
-        RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.Data);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Offset);
         return ___offset;
     }
 }

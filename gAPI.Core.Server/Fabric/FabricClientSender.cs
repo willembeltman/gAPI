@@ -1,30 +1,27 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Enums;
-using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Fabric;
 
 public class FabricClientSender(
-    FabricClient fabricClient,
     ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
 
-
-    public async Task SendKernel(CancellationToken ct)
+    public async Task SendKernel(BinaryWriter binaryWriter, CancellationToken ct)
     {
         await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
         {
-            while (fabricClient.BinaryWriter == null)
+            while (binaryWriter == null)
             {
                 await Task.Delay(10, ct);
             }
-            item(fabricClient.BinaryWriter);
-            fabricClient.BinaryWriter.Flush();
+            item(binaryWriter);
+            binaryWriter.Flush();
         }
     }
 

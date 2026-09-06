@@ -255,7 +255,7 @@ public class FabricManager
         state.Actor?.EnqueueReceive(receiveSize);
         lock (state)
         {
-            state.StreamIds.AddRange(done.StreamIds);
+            //state.StreamIds.AddRange(done.StreamIds);
             state.CompletedTargets.Add(caller.FabricConnectionId);
             //if (done.ExceptionMessage != null)
             //{
@@ -278,8 +278,10 @@ public class FabricManager
 
         await state.Caller.Send_InvokeRequestDone_ToApiAsync(
             new InvokeRequestDoneDto(
-                state.RequestId,
-                [.. state.StreamIds]
+                state.RequestId, 
+                state.StateIsChanged, 
+                state.StateData
+                //[.. state.StreamIds]
             ), state.Actor);
     }
 

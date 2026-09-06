@@ -138,15 +138,12 @@ public class Generator
             }
         }
     }
- 
+
     private static void GenerateItem(SourceProductionContext spc, _BaseGenerator generator)
     {
         generator.GenerateCode();
 
-        if (!string.IsNullOrEmpty(generator.Code))
-        {
-            var signalRHubFullName = Path.Combine(generator.Directory, generator.FileName);
-            spc.AddSource(signalRHubFullName, SourceText.From(generator.Code, Encoding.UTF8));
-        }
+        var signalRHubFullName = Path.Combine(generator.Directory, generator.FileName);
+        spc.AddSource(signalRHubFullName, SourceText.From(generator.Code, Encoding.UTF8));
     }
 }

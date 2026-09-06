@@ -4,6 +4,7 @@ using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 
 namespace gAPI.AutoWss.Server.Generators.Wss;
@@ -14,8 +15,17 @@ public class ServerConnection_Generator : _BaseGenerator
     {
         Context = context;
 
-        Namespace = "gAPI.Generated";
-        Name = "ServerConnection";
+        OwnServerConnection = context.SharedReferences.OwnServerConnection;
+        if (OwnServerConnection != null)
+        {
+            Namespace = OwnServerConnection.Namespace;
+            Name = OwnServerConnection.Name;
+        }
+        else
+        {
+            Namespace = "gAPI.Generated";
+            Name = "ServerConnection";
+        }
 
         Directory = "";
         FileName = $"Wss/{Name}.g.cs";
@@ -24,6 +34,7 @@ public class ServerConnection_Generator : _BaseGenerator
     }
 
     public Generator Context { get; }
+    public SharedReference? OwnServerConnection { get; }
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
@@ -33,13 +44,20 @@ public class ServerConnection_Generator : _BaseGenerator
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference InvokeRequestDoneDto => Context.SharedReferences.InvokeRequestDoneDto;
+    public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
 
     public override void GenerateCode()
     {
+        if (OwnServerConnection != null)
+        {
+            Code = "";
+            return;
+        }
         Reg("Microsoft.Extensions.Logging");
+        Reg("System.Runtime.CompilerServices");
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
@@ -83,12 +101,13 @@ public class {Name} : WssServerConnection
 
     public {Name}(
         {IServerAuthenticationService} authenticationService,
-        {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
+        {ServiceSubscriptionCollection} serviceSubscriptions,
         {ServerConnectionCollection} connections,
+        {StreamingCache} requestCache,
         {FabricClient} fabricClient,{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         {@interface} {@interface.CleanName.ToCamelCase()},")))}
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, ServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
+        : base(authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {{
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
@@ -97,78 +116,376 @@ public class {Name} : WssServerConnection
     }}
     {GenerateSendRequest(ref functions, functionNames)}
     {GenerateInvokeRequest(ref functions, functionNames)}
-    {GenerateTaskCalls()}
-    {GenerateTaskTCalls()}
-    {GenerateIAsyncEnumerableCalls()}
+    {string.Join(
+        "",
+        Context.ServiceContext.ApiInterfaces
+            .SelectMany(@interface => @interface.Methods
+                .Select(method => GenerateMethod(@interface, method, ref functions, functionNames))))}
     {functions}
-    {GenerateSerializers()}
-    {GenerateArgumentDeserializers(ref functions, functionNames)}
 }}";
         Code = $"{GetNamespacesCode()}{Code}";
+
+        //{GenerateTaskCalls()}
+        //{GenerateTaskTCalls()}
+        //{GenerateIAsyncEnumerableCalls()}
+        //{GenerateSerializers()}
+        //{GenerateArgumentDeserializers(ref functions, functionNames)}
     }
 
-    private string GenerateIAsyncEnumerableCalls()
+    private string GenerateMethod(Interface @interface, InterfaceMethod method, ref string functions2, HashSet<string> functionNames)
     {
-        return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method => $@"
-    public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
-    {{
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        var code = "";
+        var functions = "";
+        if (method.ResponseType.IsTask)
+        {
+            code += GenerateTaskMethod(@interface, method);
+            code += GenerateTaskTaskMethod(@interface, method);
+        }
+        else if (method.ResponseType.IsTaskT)
+        {
+            code += GenerateTaskTMethod(@interface, method);
+            code += GenerateTaskTEnumeratorMethod(@interface, method);
+            code += GenerateResponseSerializer(@interface, method, functionNames, ref functions);
+        }
+        else if (method.ResponseType.IsIAsyncEnumerable)
+        {
+            code += GenerateIAsyncEnumerableMethod(@interface, method);
+            code += GenerateIAsyncEnumerableEnumeratorMethod(@interface, method);
+            code += GenerateResponseSerializer(@interface, method, functionNames, ref functions);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
 
-        var responses = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
-            ___ct" : $@"
-            {arg}"))});
+        code += GenerateArgumentDeserializer(@interface, method, functionNames, ref functions);
 
-        await foreach (var response in responses)
-        {{
-            yield return {@interface}_{method}_Serializer(response);
-        }}
-    }}"))));
+        code += "\r\n";
+
+        functions2 = functions;
+        return code;
     }
-    private string GenerateTaskTCalls()
-    {
-        return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTaskT).Select(method => $@"
-    public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
-    {{
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
 
-        var response = await {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
-            ___ct" : $@"
-            {arg}"))});
-
-        yield return {@interface}_{method}_Serializer(response);
-    }}"))));
-    }
-    private string GenerateTaskCalls()
+    private string GenerateTaskMethod(Interface @interface, InterfaceMethod method)
     {
-        return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
-    public async Task {@interface}_{method}({SendRequestDto} ___sendRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
+        return $@"
+    public Task {@interface}_{method}({SendRequestDto} ___sendRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
     {{
         if (___logger.IsEnabled(LogLevel.Trace))
             ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
-
-        await {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
-            ___ct" : $@"
-            {arg}"))});
-    }}"))));
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            var ___task = {@interface.CleanName}.{method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"___ct" : $@"{arg}"))});
+            return {@interface}_{method}_Task(___sendRequest, ___task, ___ct);
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        catch
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+            throw;
+        }}" : "")}
+    }}";
+    }
+    private string GenerateTaskTMethod(Interface @interface, InterfaceMethod method)
+    {
+        return $@"
+    public IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
+    {{
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            var ___responseTask = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
+                ___ct" : $@"
+                {arg}"))});
+            return {@interface}_{method}_Enumerator(___invokeRequest, ___responseTask, ___ct);
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        catch
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+            throw;
+        }}" : "")}
+    }}";
+    }
+    private string GenerateIAsyncEnumerableMethod(Interface @interface, InterfaceMethod method)
+    {
+        return $@"
+    public IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
+    {{
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            var responses = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
+                ___ct" : $@"
+                {arg}"))});
+            return {@interface}_{method}_Enumerator(___invokeRequest, responses, ___ct);
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        catch
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+            throw;
+        }}" : "")}
+    }}";
     }
 
-    private string GenerateSerializers()
+    private string GenerateTaskTaskMethod(Interface @interface, InterfaceMethod method)
     {
-        return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method =>
-        {
-            var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
-            return $@"
+        return $@"
+    public async Task {@interface}_{method}_Task({SendRequestDto} ___sendRequest, Task task, CancellationToken ___ct)
+    {{
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await task;
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+        }}" : "")}
+    }}";
+    }
+    private string GenerateTaskTEnumeratorMethod(Interface @interface, InterfaceMethod method)
+    {
+        return $@"
+    public async IAsyncEnumerable<byte[]> {@interface}_{method}_Enumerator({InvokeRequestDto} ___invokeRequest, {method.ResponseType} ___responseTask, [EnumeratorCancellation] CancellationToken ___ct)
+    {{
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            yield return {@interface}_{method}_Serializer(await ___responseTask);
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+        }}" : "")}
+    }}";
+    }
+    private string GenerateIAsyncEnumerableEnumeratorMethod(Interface @interface, InterfaceMethod method)
+    {
+        return $@"
+    public async IAsyncEnumerable<byte[]> {@interface}_{method}_Enumerator({InvokeRequestDto} ___invokeRequest,  {method.ResponseType} ___responseList, [EnumeratorCancellation] CancellationToken ___ct)
+    {{
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace(""{@interface}_{method}_Enumerator({{___invokeRequest}}, {{___responseList}})"", 
+                ___invokeRequest,
+                ___responseList);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await foreach (var response in ___responseList)
+            {{
+                yield return {@interface}_{method}_Serializer(response);
+            }}
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+        }}" : "")}
+    }}";
+    }
 
+    private string GenerateResponseSerializer(Interface @interface, InterfaceMethod method, HashSet<string> functionNames, ref string functions)
+    {
+        var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
+        return $@"
     public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
     {{
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);{PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}   
         return ___span.Slice(0, ___offset).ToArray();
     }}";
-        }))));
     }
+    private string GenerateArgumentDeserializer(Interface @interface, InterfaceMethod method, HashSet<string> functionNames, ref string functions)
+    {
+        var code = "";
+        foreach (var (arg, index) in method.Arguments.Select((arg, index) => (arg, index)))
+        {
+            if (!arg.ParameterType.IsIAsyncEnumerable)
+                continue;
+
+            var innerType = arg.ParameterType.UnderlayingTypes.Single();
+            code += $@"
+    public {innerType} {@interface}_{method}_{index}_Deserializer(byte[] value)
+    {{
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return {PropertyHelper.GenerateSpanReadCode(innerType.Type, false, ref functions, functionNames)};
+    }}";
+        }
+        return code;
+    }
+
+
+    //private string GenerateIAsyncEnumerableCalls()
+    //{
+    //    return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method => $@"
+    //public IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        var responses = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
+    //            ___ct" : $@"
+    //            {arg}"))});
+    //        return {@interface}_{method}_Enumerator(___invokeRequest, responses, ___ct);
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    catch
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+    //        throw;
+    //    }}" : "")}
+    //}}
+    //public async IAsyncEnumerable<byte[]> {@interface}_{method}_Enumerator(
+    //    {InvokeRequestDto} ___invokeRequest, 
+    //    {method.ResponseType} ___responseList,
+    //    [EnumeratorCancellation] CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}_Enumerator({{___invokeRequest}}, {{___responseList}})"", 
+    //            ___invokeRequest,
+    //            ___responseList);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        await foreach (var response in ___responseList)
+    //        {{
+    //            yield return {@interface}_{method}_Serializer(response);
+    //        }}
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    finally
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+    //    }}" : "")}
+    //}}"))));
+    //}
+    //private string GenerateTaskTCalls()
+    //{
+    //    return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTaskT).Select(method => $@"
+    //public IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        var ___responseTask = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
+    //            ___ct" : $@"
+    //            {arg}"))});
+    //        return {@interface}_{method}_Enumerator(___invokeRequest, ___responseTask, ___ct);
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    catch
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+    //        throw;
+    //    }}" : "")}
+    //}}
+    //public async IAsyncEnumerable<byte[]> {@interface}_{method}_Enumerator(
+    //    {InvokeRequestDto} ___invokeRequest,
+    //    {method.ResponseType} ___responseTask,
+    //    [EnumeratorCancellation] CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        yield return {@interface}_{method}_Serializer(await ___responseTask);
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    finally
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+    //    }}" : "")}
+    //}}"))));
+    //}
+    //private string GenerateTaskCalls()
+    //{
+    //    return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
+    //public Task {@interface}_{method}({SendRequestDto} ___sendRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        var ___task = {@interface.CleanName}.{method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"___ct" : $@"{arg}"))});
+    //        return {@interface}_{method}_Task(___sendRequest, ___task, ___ct);
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    catch
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+    //        throw;
+    //    }}" : "")}
+    //}}
+    //public async Task {@interface}_{method}_Task(
+    //    {SendRequestDto} ___sendRequest, 
+    //    Task task,
+    //    CancellationToken ___ct)
+    //{{
+    //    if (___logger.IsEnabled(LogLevel.Trace))
+    //        ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
+    //    {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    try" : "")}
+    //    {{
+    //        await task;
+    //    }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+    //    finally
+    //    {{
+    //        UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+    //    }}" : "")}
+    //}}"))));
+    //}
+
+    //private string GenerateSerializers()
+    //{
+    //    return string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method =>
+    //    {
+    //        var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
+    //        return $@"
+
+    //public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
+    //{{
+    //    var ___offset = 0;
+    //    var ___span = new Span<byte>(___Buffer);{PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}   
+    //    return ___span.Slice(0, ___offset).ToArray();
+    //}}";
+    //    }))));
+    //}
+    //private string GenerateArgumentDeserializers(ref string functions, HashSet<string> functionNames)
+    //{
+    //    var argumentDeserializers = string.Empty;
+    //    foreach (var @interface in Context.ServiceContext.ApiInterfaces)
+    //    {
+    //        foreach (var method in @interface.Methods)
+    //        {
+    //            foreach (var (arg, index) in method.Arguments.Select((arg, index) => (arg, index)))
+    //            {
+    //                if (!arg.ParameterType.IsIAsyncEnumerable)
+    //                    continue;
+
+    //                var innerType = arg.ParameterType.UnderlayingTypes.Single();
+    //                argumentDeserializers += $@"
+
+    //public {innerType} {@interface}_{method}_{index}_Deserializer(byte[] value)
+    //{{
+    //    var ___offset = 0;
+    //    var ___span = new Span<byte>(value);
+    //    return {PropertyHelper.GenerateSpanReadCode(innerType.Type, false, ref functions, functionNames)};
+    //}}";
+    //            }
+    //        }
+    //    }
+
+    //    return argumentDeserializers;
+    //}
 
     private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
     {
@@ -224,33 +541,6 @@ public class {Name} : WssServerConnection
         return code;
     }
 
-    private string GenerateArgumentDeserializers(ref string functions, HashSet<string> functionNames)
-    {
-        var argumentDeserializers = string.Empty;
-        foreach (var @interface in Context.ServiceContext.ApiInterfaces)
-        {
-            foreach (var method in @interface.Methods)
-            {
-                foreach (var (arg, index) in method.Arguments.Select((arg, index) => (arg, index)))
-                {
-                    if (!arg.ParameterType.IsIAsyncEnumerable)
-                        continue;
-
-                    var innerType = arg.ParameterType.UnderlayingTypes.Single();
-                    argumentDeserializers += $@"
-
-    public {innerType} {@interface}_{method}_{index}_Deserializer(byte[] value)
-    {{
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return {PropertyHelper.GenerateSpanReadCode(innerType.Type, false, ref functions, functionNames)};
-    }}";
-                }
-            }
-        }
-
-        return argumentDeserializers;
-    }
     private string GenerateArguments(InterfaceMethod method, string requestName, ref string functions, HashSet<string> functionNames)
     {
         var result = string.Empty;

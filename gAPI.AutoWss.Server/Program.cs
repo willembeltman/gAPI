@@ -27,9 +27,9 @@ public class Program : IIncrementalGenerator
             {
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
 
-                var sharedReferences = new SharedReferences(allSymbols);
                 var serviceContext = new ServiceContext(allSymbols);
                 var serviceModelErrors = serviceContext.CheckForErrors();
+                var sharedReferences = new SharedReferences(serviceContext, allSymbols);
                 var customSpanSerializers = FindCustomSerializer.GetAllCustomSpanSerializers(allSymbols);
                 var customComparers = FindCustomSerializer.GetAllCustomComparers(allSymbols);
                 var customCreateCopys = FindCustomSerializer.GetAllCustomCreateCopys(allSymbols);

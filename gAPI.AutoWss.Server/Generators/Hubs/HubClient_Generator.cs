@@ -1,7 +1,6 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,11 +13,20 @@ public class HubClient_Generator : _BaseGenerator
         Context = context;
         Interface = @interface;
 
-        Directory = "";
-        Namespace = "gAPI.Generated";
+        if (context.SharedReferences.OwnHubs.TryGetValue(Interface, out var impl))
+        {
+            OwnImplementation = impl;
+            Namespace = impl.Namespace;
+            Name = impl.Name;
+        }
+        else
+        {
+            Namespace = "gAPI.Generated";
+            Name = Interface.CleanName;
+        }
 
-        Name = Interface.CleanName;
         FileName = $"Hubs/{Name}.g.cs";
+        Directory = "";
 
         PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
     }
@@ -36,9 +44,16 @@ public class HubClient_Generator : _BaseGenerator
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
+    public SharedReference? OwnImplementation { get; }
 
     public override void GenerateCode()
     {
+        if (OwnImplementation != null)
+        {
+            Code = "";
+            return;
+        }
+
         Reg("Microsoft.Extensions.Logging");
         Reg("System");
         Reg("System.Text");
@@ -129,7 +144,7 @@ public class {Name}(
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
-    public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
+    public Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
@@ -145,14 +160,36 @@ public class {Name}(
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
 
-{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
-        
-        await ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
-            ___authenticationService,
-            ___routing,
-            ___payload, 
-            {(ct == null ? "___Cts.Token" : ct.Name)});
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            var task = ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
+                ___authenticationService,
+                ___routing,
+                ___payload, 
+                {(ct == null ? "___Cts.Token" : ct.Name)});
+            return {method.Name}_Task(___routing, task, {(ct == null ? "___Cts.Token" : ct.Name)});
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        }}" : "")}
+    }}
+    public async Task {method.Name}_Task({RoutingDto} ___routing, Task ___task, CancellationToken ___ct)
+    {{
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace(""{method.Name}_Task({{___routing}}, {{___task}})"", ___routing, ___task);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await ___task;
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        }}" : "")}
     }}";
     }
     private string GenerateIAsyncEnumerable(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
@@ -160,7 +197,7 @@ public class {Name}(
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         var responseInnerType = method.ResponseType.UnderlayingTypes.Single();
         return $@"
-    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
+    public {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
@@ -174,28 +211,45 @@ public class {Name}(
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
-{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            {(ct == null ? "___Cts.Token" : ct.Name)});
-        await foreach (var response in responses)
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
         {{
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    {(ct == null ? "___Cts.Token" : ct.Name)});
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                {(ct == null ? "___Cts.Token" : ct.Name)});
+            return {method.Name}_Enumerator(___routing, ___responses, {(ct == null ? "___Cts.Token" : ct.Name)});
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        catch
+        {{
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+            throw;
+        }}" : "")}
+    }}
+    public async {method.ResponseType} {method.Name}_Enumerator({RoutingDto} ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {{
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace(""{method.Name}_Enumerator({{responses}})"", responses);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await foreach (var response in responses)
+            {{
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
-        }}
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
+            }}
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        }}" : "")}
     }}";
     }
     private string GenerateSerializer(InterfaceMethod method)

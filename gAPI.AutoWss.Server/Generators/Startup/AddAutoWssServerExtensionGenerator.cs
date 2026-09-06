@@ -31,6 +31,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
+    public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference AuthenticationOptions => Context.SharedReferences.AuthenticationOptions;
 
     public override void GenerateCode()
@@ -173,14 +174,23 @@ public static class {Name}
         var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
 
+        var requestCache = new {StreamingCache}();
+        services.AddSingleton(requestCache);
+
+        var serviceSubscriptionCollection = new {ServiceSubscriptionCollection}();
+        services.AddSingleton(serviceSubscriptionCollection);
+
+        var serverConnectionCollection = new {ServerConnectionCollection}();
+        services.AddSingleton(serverConnectionCollection);
+
         services.AddScoped<{ServerConnection}>();
         services.AddSingleton(sp => new {FabricClient}(
             sessionCache,
+            requestCache,
+            serviceSubscriptionCollection,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
-        services.AddSingleton(new {ServerConnectionCollection}());
-        services.AddSingleton(new {ServiceSubscriptionCollection}());
 
         if (fabricConnectionString == null)
         {{

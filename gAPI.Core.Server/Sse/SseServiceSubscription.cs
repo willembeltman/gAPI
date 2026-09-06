@@ -36,7 +36,7 @@ public class SseServiceSubscription : IServiceSubscription
         ServiceId = serviceId;
         SessionId = sessionId;
         UserId = userId;
-        ServiceSubscriptionId = serviceSubscriptionCollection.Add(this);
+        ServiceSubscriptionId = serviceSubscriptionCollection.Add(this, serviceId);
         ClientConnectionId = serverConnectionCollection.AddConnection(this);
     }
 
@@ -53,7 +53,6 @@ public class SseServiceSubscription : IServiceSubscription
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
     {
-        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this);
         //Console.WriteLine($"SseServiceSubscription {Id} started");
         await FabricClient.SubscribeAsync(this, ct);
 

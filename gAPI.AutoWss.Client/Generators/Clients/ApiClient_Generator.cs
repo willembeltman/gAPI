@@ -1,7 +1,6 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,11 +13,20 @@ public class ApiClient_Generator : _BaseGenerator
         Context = context;
         Interface = @interface;
 
-        Directory = "";
-        Namespace = "gAPI.Generated";
-
-        Name = @interface.CleanName;
+        if (context.SharedReferences.OwnApis.TryGetValue(Interface, out var impl))
+        {
+            OwnImplementation = impl;
+            Namespace = impl.Namespace;
+            Name = impl.Name;
+        }
+        else
+        {
+            Namespace = "gAPI.Generated";
+            Name = @interface.CleanName;
+        }
+        
         FileName = $"Clients/{Name}.g.cs";
+        Directory = "";
 
         PropertyHelper = new GeneratePropertyHelper([], [.. Context.CustomSpanSerializers], [], Reg, NeededSpanSerializerTypes);
     }
@@ -34,9 +42,16 @@ public class ApiClient_Generator : _BaseGenerator
 
     public List<INamedTypeSymbol> NeededSpanSerializerTypes { get; private set; } = new();
     public GeneratePropertyHelper PropertyHelper { get; }
+    public SharedReference OwnImplementation { get; }
 
     public override void GenerateCode()
     {
+        if (OwnImplementation != null)
+        {
+            Code = "";
+            return;
+        }
+
         Reg("Microsoft.Extensions.Logging");
         Reg("System");
         Reg("System.Text");

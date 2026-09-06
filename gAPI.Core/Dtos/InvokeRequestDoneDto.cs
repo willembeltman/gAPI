@@ -6,4 +6,5 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public record InvokeRequestDoneDto(
     RoutingDto Routing,
-    StreamId[] StreamIds);
+    bool StateIsChanged,
+    string? StateData);

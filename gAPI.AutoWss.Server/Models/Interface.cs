@@ -5,14 +5,14 @@ using System.Linq;
 
 namespace gAPI.AutoWss.Server.Models;
 
-public class Interface
+public class Interface : SharedReference
 {
     public Interface(ServiceContext dataModel, INamedTypeSymbol namedTypeSymbol, IEnumerable<INamedTypeSymbol> allSymbols)
     {
         NamedTypeSymbol = namedTypeSymbol;
 
         Name = NamedTypeSymbol.Name;
-        FullName = NamedTypeSymbol.ToDisplayString();
+        //FullName = NamedTypeSymbol.ToDisplayString();
         Namespace = NamedTypeSymbol.ContainingNamespace.ToDisplayString();
 
         CleanName = Name;
@@ -56,9 +56,9 @@ public class Interface
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }
-    public string Name { get; }
-    public string FullName { get; }
-    public string Namespace { get; }
+    //public string Name { get; }
+    //public string FullName { get; }
+    //public string Namespace { get; }
     public string CleanName { get; }
     public string Title { get; }
     public bool IsAuthorized { get; }

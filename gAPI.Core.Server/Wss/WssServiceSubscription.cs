@@ -29,7 +29,7 @@ public class WssServiceSubscription
         UserId = userId;
         ServiceId = serviceId;
 
-        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this);
+        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this, serviceId);
         Logger = loggerFactory.CreateLogger<WssServiceSubscription>();
     }
 

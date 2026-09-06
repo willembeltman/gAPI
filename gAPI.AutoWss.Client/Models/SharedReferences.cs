@@ -1,11 +1,13 @@
 ﻿using gAPI.AutoWss.Client.Helpers;
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace gAPI.AutoWss.Client.Models;
 
 public class SharedReferences
 {
-    public SharedReferences(INamedTypeSymbol[] allSymbols)
+    public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
@@ -39,6 +41,12 @@ public class SharedReferences
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
         IClientAuthenticatedHttpClientImplementation = SharedReferenceFinder.TryFindByInterface(IClientAuthenticatedHttpClient, allSymbols);
 
+        OwnClientConnection = SharedReferenceFinder.TryFindByBaseType(WssClientConnection, allSymbols);
+
+        OwnApis = serviceContext.ApiInterfaces
+            .Select(a => new { Interface = a, Implementation = SharedReferenceFinder.TryFindByInterface(a, allSymbols) })
+            .Where(a => a.Implementation != null)
+            .ToDictionary(a => a.Interface, a => a.Implementation!);
     }
 
     public SharedReference ServiceId { get; }
@@ -70,4 +78,6 @@ public class SharedReferences
     public SharedReference? StateDto { get; }
     public SharedReference StateChangedHandler { get; }
     public SharedReference? IClientAuthenticatedHttpClientImplementation { get; }
+    public SharedReference? OwnClientConnection { get; }
+    public Dictionary<Interface, SharedReference> OwnApis { get; }
 }

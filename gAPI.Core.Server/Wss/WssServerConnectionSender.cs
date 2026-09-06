@@ -61,8 +61,8 @@ public class WssServerConnectionSender(
         // Send Id's
         span.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SynchronizeClientIds);
         var ids = new SynchronizeClientIdsDto(
-            wssServerConnection.FabricClient.FabricManagerId,
-            wssServerConnection.FabricClient.FabricConnectionId,
+            wssServerConnection.FabricManagerId,
+            wssServerConnection.FabricConnectionId,
             wssServerConnection.ClientConnectionId);
         span.Write(ref offset, ids);
         await socket.SendAsync(

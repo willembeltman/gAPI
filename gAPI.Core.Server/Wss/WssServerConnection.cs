@@ -23,36 +23,36 @@ public abstract class WssServerConnection : IWssServerConnection
 {
     readonly ILoggerFactory LoggerFactory;
     readonly ILogger Logger;
-    readonly ServerConnectionCollection Connections;
     readonly IServerAuthenticationService AuthenticationService;
-    public readonly FabricClient FabricClient;
-    readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> Services;
-    readonly ConcurrentDictionary<RoutingDto, TaskCompletionSource<SendRequestDoneDto>> PendingSendRequests = [];
-    readonly ConcurrentDictionary<RoutingDto, TaskCompletionSource<InvokeRequestDoneDto>> PendingInvokeRequests = [];
-    readonly ConcurrentDictionary<(RoutingDto RequestId, int ArgumentIndex, StreamId StreamId), Action<StreamingResponseDto>> StreamingResponseHandlers = [];
-    readonly ConcurrentDictionary<RoutingDto, byte> ArgumentRoutes = [];
-    readonly ServiceSubscriptionCollection ServiceSubscriptionCollection = new();
+    readonly FabricClient FabricClient;
     readonly WssServerConnectionSender Sender;
-
-    private byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
+    readonly ServerConnectionCollection Connections; // Doet niet veel anders dan id's
+    readonly ServiceSubscriptionCollection ServiceSubscriptions; // Voor alle service subscriptions
+    readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> ConnectedServiceSubscriptions; // Alleen voor dispose
+    readonly StreamingCache StreamingCache;
+    readonly byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
 
     public ClientConnectionId ClientConnectionId { get; }
+    public FabricManagerId FabricManagerId => FabricClient.FabricManagerId;
+    public FabricConnectionId FabricConnectionId => FabricClient.FabricConnectionId;
 
     public WssServerConnection(
         IServerAuthenticationService authenticationService,
-        ServiceSubscriptionCollection serviceSubscriptionCollection,
+        ServiceSubscriptionCollection serviceSubscriptions,
         ServerConnectionCollection connections,
+        StreamingCache requestCache,
         FabricClient fabricClient,
         ILoggerFactory loggerFactory)
     {
-        LoggerFactory = loggerFactory;
         Logger = loggerFactory.CreateLogger<WssServerConnection>();
-        ServiceSubscriptionCollection = serviceSubscriptionCollection;
-        Connections = connections;
         AuthenticationService = authenticationService;
+        ServiceSubscriptions = serviceSubscriptions;
+        StreamingCache = requestCache;
+        Connections = connections;
         FabricClient = fabricClient;
-        Services = new();
-        PendingInvokeRequests = new();
+        LoggerFactory = loggerFactory;
+        ConnectedServiceSubscriptions = [];
+
         ClientConnectionId = connections.AddConnection(this);
         Sender = new WssServerConnectionSender(this, loggerFactory);
     }
@@ -89,12 +89,6 @@ public abstract class WssServerConnection : IWssServerConnection
 
     //public bool HasRequest(RequestId requestId) => ArgumentRoutes.ContainsKey(requestId);
 
-    #region ToService 
-
-    protected abstract Task Send_SendRequest_ToServiceAsync(SendRequestDto sendRequest, CancellationToken ct);
-    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
-
-    #endregion
 
     #region Receiver
 
@@ -227,7 +221,7 @@ public abstract class WssServerConnection : IWssServerConnection
             Logger.LogTrace("Receive_Subscribe_FromClientAsync({subscribe})", subscribe);
 
         // Voor het geval dat...
-        if (Services.TryRemove(subscribe.ServiceId, out var subscription))
+        if (ConnectedServiceSubscriptions.TryRemove(subscribe.ServiceId, out var subscription))
         {
             await subscription.DisposeAsync();
         }
@@ -235,7 +229,7 @@ public abstract class WssServerConnection : IWssServerConnection
         subscription = new WssServiceSubscription(
             this,
             LoggerFactory,
-            ServiceSubscriptionCollection,
+            ServiceSubscriptions,
             FabricClient,
             ClientConnectionId,
             subscribe.ServiceId,
@@ -243,14 +237,14 @@ public abstract class WssServerConnection : IWssServerConnection
             AuthenticationService.SessionId);
 
         await FabricClient.SubscribeAsync(subscription, ct);
-        Services[subscribe.ServiceId] = subscription;
+        ConnectedServiceSubscriptions[subscribe.ServiceId] = subscription;
     }
     private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto unsubscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_Unsubscribe_FromClientAsync({unsubscribe})", unsubscribe);
 
-        if (Services.TryRemove(unsubscribe.ServiceId, out var subsciption))
+        if (ConnectedServiceSubscriptions.TryRemove(unsubscribe.ServiceId, out var subsciption))
         {
             await subsciption.DisposeAsync();
         }
@@ -286,15 +280,15 @@ public abstract class WssServerConnection : IWssServerConnection
     }
     private async Task Receive_SendRequestDone_FromClientAsync(SendRequestDoneDto done, CancellationToken ct)
     {
-        if (PendingSendRequests.TryRemove(done.Routing, out var completion))
+        if (StreamingCache.PendingSendRequests.TryRemove(done.Routing, out var completion))
         {
             completion.TrySetResult(done);
         }
     }
     private async Task Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledDto done, CancellationToken ct)
     {
-        PendingSendRequests.TryRemove(done.Routing, out _);
-        ArgumentRoutes.TryRemove(done.Routing, out _);
+        StreamingCache.PendingSendRequests.TryRemove(done.Routing, out _);
+        StreamingCache.ArgumentRoutes.TryRemove(done.Routing, out _);
     }
 
     private async Task Receive_StreamingRequest_FromClientAsync(StreamingRequestDto argumentRequest, CancellationToken ct)
@@ -308,14 +302,20 @@ public abstract class WssServerConnection : IWssServerConnection
         {
             if (await FabricClient.Handle_StreamingRequest_FromFabricAsync(argumentRequest, ct))
             {
-                if (FabricClient.TryTakeStreamingResponse(argumentRequest.Routing, argumentRequest.ArgumentIndex, argumentRequest.StreamId, out var response))
+                if (FabricClient.TryTakeStreamingResponse(
+                    argumentRequest.Routing,
+                    argumentRequest.ArgumentIndex,
+                    argumentRequest.StreamId,
+                    out var response))
+                {
                     await Send_StreamingResponse_ToClientAsync(response, ct);
+                }
             }
         }
     }
     private async Task Receive_StreamingResponse_FromClientAsync(StreamingResponseDto argumentResponse, CancellationToken ct)
     {
-        if (StreamingResponseHandlers.TryGetValue((argumentResponse.Routing, argumentResponse.ArgumentIndex, argumentResponse.StreamId), out var responseHandler))
+        if (StreamingCache.StreamingResponseHandlers.TryGetValue((argumentResponse.Routing, argumentResponse.ArgumentIndex, argumentResponse.StreamId), out var responseHandler))
             responseHandler(argumentResponse);
         else if (FabricClient.IsConnected)
             await FabricClient.Send_StreamingResponse_ToFabricAsync(argumentResponse, ct);
@@ -340,11 +340,11 @@ public abstract class WssServerConnection : IWssServerConnection
     }
     private async Task Receive_InvokeCancelled_FromClientAsync(InvokeRequestCancelledDto cancel, CancellationToken ct)
     {
-        if (PendingInvokeRequests.TryRemove(cancel.Routing, out var completion))
+        if (StreamingCache.PendingInvokeRequests.TryRemove(cancel.Routing, out var completion))
         {
             completion.SetCanceled();
         }
-        ArgumentRoutes.TryRemove(cancel.Routing, out _);
+        StreamingCache.ArgumentRoutes.TryRemove(cancel.Routing, out _);
     }
     //private async Task Receive_InvokeResponse_FromClientAsync(InvokeResponseDto invokeResponse, CancellationToken ct)
     //{
@@ -361,12 +361,12 @@ public abstract class WssServerConnection : IWssServerConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Receive_InvokeRequestDone_FromClientAsync({invokeResponseDone})", invokeResponseDone);
 
-        if (PendingInvokeRequests.TryRemove(invokeResponseDone.Routing, out var completion))
+        if (StreamingCache.PendingInvokeRequests.TryRemove(invokeResponseDone.Routing, out var completion))
             completion.TrySetResult(invokeResponseDone);
         else if (FabricClient.IsConnected)
             await FabricClient.Send_InvokeRequestDone_ToFabricAsync(invokeResponseDone, ct);
 
-        ArgumentRoutes.TryRemove(invokeResponseDone.Routing, out _);
+        StreamingCache.ArgumentRoutes.TryRemove(invokeResponseDone.Routing, out _);
     }
 
     private async Task Receive_Log_FromClientAsync(WssLoggerLogDto log, CancellationToken ct)
@@ -383,13 +383,13 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #endregion
 
-    #region Sender (Call's vanuit gegenereerde code)
+    #region Sender
 
     public async Task<SendRequestDoneDto> Send_SendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
-        ArgumentRoutes[sendRequest.Routing] = 0;
+        StreamingCache.ArgumentRoutes[sendRequest.Routing] = 0;
         var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        PendingSendRequests[sendRequest.Routing] = completion;
+        StreamingCache.PendingSendRequests[sendRequest.Routing] = completion;
 
         await Sender.Send_SendRequest_ToClientAsync(sendRequest, ct);
 
@@ -399,8 +399,8 @@ public abstract class WssServerConnection : IWssServerConnection
         }
         finally
         {
-            PendingSendRequests.TryRemove(sendRequest.Routing, out _);
-            ArgumentRoutes.TryRemove(sendRequest.Routing, out _);
+            StreamingCache.PendingSendRequests.TryRemove(sendRequest.Routing, out _);
+            StreamingCache.ArgumentRoutes.TryRemove(sendRequest.Routing, out _);
         }
     }
     public async IAsyncEnumerable<StreamingResponseDto> Send_InvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
@@ -410,7 +410,7 @@ public abstract class WssServerConnection : IWssServerConnection
                 "Send_InvokeRequest_ToClientAsync({invokeRequest})",
                 invokeRequest);
 
-        ArgumentRoutes[invokeRequest.Routing] = 0;
+        StreamingCache.ArgumentRoutes[invokeRequest.Routing] = 0;
 
         yield break;
         throw new NotImplementedException();
@@ -477,36 +477,6 @@ public abstract class WssServerConnection : IWssServerConnection
     {
         await Sender.Send_StreamingResponse_ToClientAsync(response, ct);
     }
-
-    public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto requestId, int argumentIndex, Func<byte[], T> deserializer)
-    {
-        return new RemoteAsyncEnumerable<T>((streamId, push, complete, ct) =>
-        {
-            var key = (requestId, argumentIndex, streamId);
-            if (!StreamingResponseHandlers.ContainsKey(key))
-            {
-                StreamingResponseHandlers[key] = response =>
-                {
-                    if (response.IsCompleted)
-                    {
-                        StreamingResponseHandlers.TryRemove(key, out _);
-                        complete(null);
-                    }
-                    else
-                    {
-                        push(deserializer(response.BinaryData));
-                    }
-                };
-            }
-            return Send_StreamingRequest_ToClientAsync(
-                new StreamingRequestDto(
-                    requestId,
-                    argumentIndex,
-                    streamId
-                ), ct);
-        });
-    }
-
 
     //private async Task SendKernel(WebSocket socket, CancellationToken ct)
     //{
@@ -656,6 +626,50 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #endregion
 
+    #region Calls naar de service 
+
+    protected abstract Task Send_SendRequest_ToServiceAsync(SendRequestDto sendRequest, CancellationToken ct);
+    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto invokeRequest, CancellationToken ct);
+
+    #endregion
+
+    #region Calls vanuit gegenereerde code
+
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
+    {
+        return new RemoteAsyncEnumerable<T>((streamId, push, complete, ct) =>
+        {
+            var key = (routing, argumentIndex, streamId);
+            if (!StreamingCache.StreamingResponseHandlers.ContainsKey(key))
+            {
+                StreamingCache.StreamingResponseHandlers[key] = response =>
+                {
+                    if (response.IsCompleted)
+                    {
+                        StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
+                        complete(null);
+                    }
+                    else
+                    {
+                        push(deserializer(response.BinaryData));
+                    }
+                };
+            }
+            return Send_StreamingRequest_ToClientAsync(
+                new StreamingRequestDto(
+                    routing,
+                    argumentIndex,
+                    streamId
+                ), ct);
+        });
+    }
+    protected void UnRegisterRemoteAsyncEnumerableArguments(RoutingDto routing)
+    {
+
+    }
+
+    #endregion
+
     public async ValueTask DisposeAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -663,7 +677,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         Connections.RemoveConnection(ClientConnectionId);
 
-        foreach (var hubHost in Services.Values)
+        foreach (var hubHost in ConnectedServiceSubscriptions.Values)
         {
             try
             {
@@ -674,7 +688,7 @@ public abstract class WssServerConnection : IWssServerConnection
                 Logger.LogWarning(ex, "Error while disposing hubhost {hubHost.Id}", hubHost.ServiceSubscriptionId);
             }
         }
-        Services.Clear();
+        ConnectedServiceSubscriptions.Clear();
 
         GC.SuppressFinalize(this);
     }

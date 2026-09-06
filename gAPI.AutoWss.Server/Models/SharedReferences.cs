@@ -1,11 +1,13 @@
 ﻿using gAPI.AutoWss.Server.Helpers;
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace gAPI.AutoWss.Server.Models;
 
 public class SharedReferences
 {
-    public SharedReferences(INamedTypeSymbol[] allSymbols)
+    public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthenticationHeaders = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHeaders", allSymbols);
@@ -30,10 +32,19 @@ public class SharedReferences
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
+        StreamingCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
         
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
         AuthenticationMiddleware = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationMiddleware", allSymbols);
+        WssServerConnection = SharedReferenceFinder.Find("gAPI.Core.Server.Wss.WssServerConnection", allSymbols);
+
+        OwnServerConnection = SharedReferenceFinder.TryFindByBaseType(WssServerConnection, allSymbols);
+
+        OwnHubs = serviceContext.HubInterfaces
+            .Select(a => new { Interface = a, Implementation = SharedReferenceFinder.TryFindByInterface(a, allSymbols) })
+            .Where(a => a.Implementation != null)
+            .ToDictionary(a => a.Interface, a => a.Implementation!);
 
     }
 
@@ -54,8 +65,12 @@ public class SharedReferences
     public SharedReference RoutingDto { get; }
     public SharedReference ServerConnectionCollection { get; }
     public SharedReference SessionCache { get; }
+    public SharedReference StreamingCache { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference AuthenticationOptions { get; }
     public SharedReference InvokeRequestDoneDto { get; }
     public SharedReference AuthenticationMiddleware { get; }
+    public SharedReference WssServerConnection { get; }
+    public SharedReference? OwnServerConnection { get; }
+    public Dictionary<Interface, SharedReference> OwnHubs { get; }
 }

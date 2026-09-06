@@ -6,20 +6,23 @@ namespace gAPI.Core.Server.Collections;
 
 public sealed class ServiceSubscriptionCollection
 {
-    private long _nextId;
-    private readonly ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription> SseServiceSubscriptions = new();
+    long _nextId;
+    readonly ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription> ServiceSubscriptions = new(); 
+    public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>> Services = [];
 
-    public ServiceSubscriptionId Add(IServiceSubscription client)
+    public IEnumerable<IServiceSubscription> All => ServiceSubscriptions.Values;
+
+    public ServiceSubscriptionId Add(IServiceSubscription client, ServiceId serviceId)
     {
         var id = new ServiceSubscriptionId(Interlocked.Increment(ref _nextId));
-        SseServiceSubscriptions[id] = client;
+        ServiceSubscriptions[id] = client;
+        var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>(); });
+        connections[id] = client;
         return id;
     }
 
     public bool Remove(ServiceSubscriptionId id)
     {
-        return SseServiceSubscriptions.TryRemove(id, out _);
+        return ServiceSubscriptions.TryRemove(id, out _);
     }
-
-    public IEnumerable<IServiceSubscription> All => SseServiceSubscriptions.Values;
 }

@@ -221,7 +221,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
     //#endregion
 
-    #region Sender (Call's vanuit gegenereerde code)
+    #region Sender
 
     public async Task Send_Subscribe_ToServerAsync(SubscribeDto subscribe, CancellationToken ct)
     {
@@ -247,6 +247,10 @@ public abstract class WssClientConnection : IWssClientConnection
 
         await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
     }
+
+    #endregion 
+
+    #region Call's vanuit gegenereerde code
 
     public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
@@ -383,12 +387,12 @@ public abstract class WssClientConnection : IWssClientConnection
                 streamId), ct);
         });
     }
-    protected void UnRegisterRemoteAsyncEnumerableArgument(RoutingDto requestId)
+    protected void UnRegisterRemoteAsyncEnumerableArguments(RoutingDto requestId)
     {
 
     }
 
-    #endregion
+    #endregion 
 
     #region Receiver
     private async Task ReceiverKernel(WebSocket socket, CancellationTokenSource cts)
@@ -432,14 +436,10 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
                         break;
 
+
                     case WssServerToClientMessageEnum.SendRequest:
                         var sendArgumentedRequest = span.ReadSendRequestDto(ref offset);
                         _ = Task.Run(async () => { await Received_SendRequest_FromServer(sendArgumentedRequest, ct); }, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.InvokeRequest:
-                        var invokeRequest = span.ReadInvokeRequestDto(ref offset);
-                        _ = Task.Run(async () => { await Received_InvokeRequest_FromServerAsync(invokeRequest, ct); }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.SendRequestDone:
@@ -452,6 +452,23 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_SendRequestCancelled_FromServer(sendRequestCancelled, ct);
                         break;
 
+
+                    case WssServerToClientMessageEnum.InvokeRequest:
+                        var invokeRequest = span.ReadInvokeRequestDto(ref offset);
+                        _ = Task.Run(async () => { await Received_InvokeRequest_FromServerAsync(invokeRequest, ct); }, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeCancelled:
+                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledDto(ref offset);
+                        await Received_InvokeCancelled_FromServer(invokeRequestCancelled, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.InvokeRequestDone:
+                        var invokeResponseDone = span.ReadInvokeRequestDoneDto(ref offset);
+                        await Received_InvokeRequestDone_FromServerAsync(invokeResponseDone, ct);
+                        break;
+
+
                     case WssServerToClientMessageEnum.StreamingRequest:
                         var argumentRequest = span.ReadStreamingRequestDto(ref offset);
                         _ = Task.Run(async () => { await Received_StreamingRequest_FromServerAsync(argumentRequest, ct); }, ct);
@@ -460,21 +477,6 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.StreamingResponse:
                         var argumentResponse = span.ReadStreamingResponseDto(ref offset);
                         await Received_StreamingResponse_FromServer(argumentResponse, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.InvokeCancelled:
-                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledDto(ref offset);
-                        await Received_InvokeCancelled_FromServer(invokeRequestCancelled, ct);
-                        break;
-
-                    //case WssServerToClientMessageEnum.InvokeResponse:
-                    //    var invokeResponse = span.ReadInvokeResponseDto(ref offset);
-                    //    await Received_InvokeResponse_FromServerAsync(invokeResponse, ct);
-                    //    break;
-
-                    case WssServerToClientMessageEnum.InvokeRequestDone:
-                        var invokeResponseDone = span.ReadInvokeRequestDoneDto(ref offset);
-                        await Received_InvokeRequestDone_FromServerAsync(invokeResponseDone, ct);
                         break;
                 }
             }

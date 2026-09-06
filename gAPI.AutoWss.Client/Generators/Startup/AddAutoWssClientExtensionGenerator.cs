@@ -83,16 +83,16 @@ public static class {Name}
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Connection stuff
-        services.AddScoped<{ClientConnection}>(sp => 
+        services.AddSingleton<{ClientConnection}>(sp => 
             new {ClientConnection}(sp.GetRequiredService<{IClientAuthenticatedHttpClient}>(), wssBackendUrl));
-        services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
-        services.AddScoped<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddSingleton<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddSingleton<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         
         // Api clients{string.Join("", Context.Apis.Select(api => $@"
-        services.AddScoped<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}
+        services.AddSingleton<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}
         
         // Minimal api clients{string.Join("", Context.MinimalApis.Select(api => $@"
-        services.AddScoped<{api.Interface}, {api}>();"))}
+        services.AddSingleton<{api.Interface}, {api}>();"))}
 
         return services;
     }}

@@ -14,16 +14,27 @@ public class ClientConnectionGenerator : _BaseGenerator
     {
         Context = context;
 
-        Directory = "";
-        Namespace = "gAPI.Generated";
+        OwnClientConnection = context.SharedReferences.OwnClientConnection;
+        if (OwnClientConnection != null)
+        {
+            Namespace = OwnClientConnection.Namespace;
+            Name = OwnClientConnection.Name;
+        }
+        else
+        {
+            Namespace = "gAPI.Generated";
+            Name = "ClientConnection";
+        }
 
-        Name = "ClientConnection";
         FileName = $"Wss/{Name}.g.cs";
+        Directory = "";
 
         PropertyHelper = new GeneratePropertyHelper([], [.. Context.CustomSpanSerializers], [], Reg, NeededSpanSerializers);
     }
 
     public Generator Context { get; }
+    public SharedReference? OwnClientConnection { get; }
+
     public SharedReference WssClientConnection => Context.SharedReferences.WssClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
@@ -40,6 +51,12 @@ public class ClientConnectionGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
+        if (OwnClientConnection != null)
+        {
+            Code = "";
+            return;
+        }
+
         Reg("Microsoft.Extensions.Logging");
         Reg("Microsoft.Extensions.Options");
         Reg("System");
@@ -238,7 +255,7 @@ public class {Name}
                             }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
                             finally
                             {{
-                                UnRegisterRemoteAsyncEnumerableArgument(___sendRequest.Routing);
+                                UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
                             }}" : "")}"))}
                     }}
                     break;
@@ -254,7 +271,7 @@ public class {Name}
     {
         var functions2 = "";
         var code = $@"
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", ___invokeRequest);
@@ -291,7 +308,7 @@ public class {Name}
                             }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
                             finally
                             {{
-                                UnRegisterRemoteAsyncEnumerableArgument(___invokeRequest.Routing);
+                                UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
                             }}" : "")}
                             yield break;" 
                 : 
@@ -318,7 +335,7 @@ public class {Name}
                             }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
                             finally
                             {{
-                                UnRegisterRemoteAsyncEnumerableArgument(___invokeRequest.Routing);
+                                UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
                             }}" : "")}
                             yield break;"
                     : "";
