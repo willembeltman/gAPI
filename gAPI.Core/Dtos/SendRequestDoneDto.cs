@@ -5,6 +5,5 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public record SendRequestDoneDto(
     RoutingDto Routing,
-    bool StateIsChanged,
-    string? StateData,
+    bool Cancelled,
     string? ExceptionMessage);

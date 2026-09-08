@@ -27,7 +27,6 @@ public class AccountService<TUser, TStateDto>(
 
         var db = dbFactory.CreateDbContext();
         var dbUser = await db.Users
-            // Todo: Add includes for state if you use this
             .FirstOrDefaultAsync(a => a.Email == email, ct);
         if (dbUser == null)
             return new BaseResponse();

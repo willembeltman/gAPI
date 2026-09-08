@@ -10,7 +10,7 @@ public static class InvokeRequestDoneDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x498DADF7;
-    public const uint SchemaHash = 0xC6ED7364;
+    public const uint SchemaHash = 0x51C8427B;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InvokeRequestDoneDto value)
@@ -20,10 +20,10 @@ public static class InvokeRequestDoneDtoSerializer
         ___writer.Write(SchemaHash); // Schema identifier
         
         RoutingDtoSerializer.Write(___writer, value.Routing);
-        ___writer.Write(value.StateIsChanged);
-        ___writer.Write(value.StateData != null); 
-        if (value.StateData != null)
-            ___writer.Write(value.StateData);
+        ___writer.Write(value.Cancelled);
+        ___writer.Write(value.ExceptionMessage != null); 
+        if (value.ExceptionMessage != null)
+            ___writer.Write(value.ExceptionMessage);
     }
 
     [IsSerializerRead]

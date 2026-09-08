@@ -10,10 +10,6 @@ public static class SubscribeDtoCreateCopy
     [IsCreateCopy]
     public static SubscribeDto CreateCopy(this SubscribeDto value)
     {
-        var copy = new SubscribeDto();
-        copy.ServiceId = value.ServiceId;
-        copy.UserId = value.UserId;
-        copy.SessionId = value.SessionId;
-        return copy;
+        return new SubscribeDto(value.ServiceId, value.UserId, value.SessionId);
     }
 }

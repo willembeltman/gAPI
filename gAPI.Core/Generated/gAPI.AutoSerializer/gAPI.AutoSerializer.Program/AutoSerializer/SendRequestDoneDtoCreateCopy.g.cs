@@ -10,6 +10,6 @@ public static class SendRequestDoneDtoCreateCopy
     [IsCreateCopy]
     public static SendRequestDoneDto CreateCopy(this SendRequestDoneDto value)
     {
-        return new SendRequestDoneDto(value.Routing, value.StateIsChanged, value.StateData, value.ExceptionMessage);
+        return new SendRequestDoneDto(value.Routing, value.Cancelled, value.ExceptionMessage);
     }
 }

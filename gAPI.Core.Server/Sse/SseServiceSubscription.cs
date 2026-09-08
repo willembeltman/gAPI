@@ -40,15 +40,10 @@ public class SseServiceSubscription : IServiceSubscription
         ClientConnectionId = serverConnectionCollection.AddConnection(this);
     }
 
-    public async Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto sendRequest, CancellationToken ct)
+    public async Task Send_SendRequest_ToClient_Async(SendRequestDto sendRequest, CancellationToken ct)
     {
         var sseEvent = new SseEvent(sendRequest);
         await Channel.Writer.WriteAsync(sseEvent, ct);
-        return new SendRequestDoneDto(
-            sendRequest.Routing,
-            false,
-            null,
-            null);
     }
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
@@ -90,7 +85,7 @@ public class SseServiceSubscription : IServiceSubscription
         }
     }
 
-    IAsyncEnumerable<StreamingResponseDto> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+    IAsyncEnumerable<byte[]> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
     {
         throw new NotSupportedException(
             "You cannot use methods that have return types for SSE, " +
@@ -99,10 +94,10 @@ public class SseServiceSubscription : IServiceSubscription
 
     public bool HasRequest(RequestId requestId) => false;
 
-    public Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct)
+    public Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
         => throw new NotSupportedException();
 
-    public Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct)
+    public Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
         => throw new NotSupportedException();
 
 }

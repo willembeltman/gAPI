@@ -86,12 +86,20 @@ public sealed class FabricHost : IFabricLoggerFactory
         }, actor);
     }
 
-    public async Task Send_SendRequest_ToApiAsync(SendRequestDto message, IActor actor)
+    public async Task Send_SendRequest_ToApiAsync(SendRequestDto request, IActor? actor)
     {
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequest);
-            writer.Write(message);
+            writer.Write(request);
+        }, actor);
+    }
+    public async Task Send_SendRequestCancelled_ToApiAsync(SendRequestCancelledDto cancel, IActor? actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequestCancelled);
+            writer.Write(cancel);
         }, actor);
     }
     public async Task Send_SendRequestDone_ToApiAsync(SendRequestDoneDto done, IActor? actor)
@@ -99,6 +107,37 @@ public sealed class FabricHost : IFabricLoggerFactory
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequestDone);
+            writer.Write(done);
+        }, actor);
+    }
+
+    public async Task Send_InvokeRequest_ToApiAsync(InvokeRequestDto request, IActor actor)
+    {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace("Send_InvokeRequest_ToApiAsync({request})", request);
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequest);
+            writer.Write(request);
+        }, actor);
+    }
+    public async Task Send_InvokeRequestCancelled_ToApiAsync(InvokeRequestCancelledDto cancel, IActor? actor)
+    {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace("Send_InvokeRequestCancelled_ToApiAsync({requestId})", done);
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequestCancelled);
+            writer.Write(cancel);
+        }, actor);
+    }
+    public async Task Send_InvokeRequestDone_ToApiAsync(InvokeRequestDoneDto done, IActor? actor)
+    {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeRequestDoneAsync({{requestId}})", requestId);
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequestDone);
             writer.Write(done);
         }, actor);
     }
@@ -119,35 +158,12 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(response);
         }, actor);
     }
-
-    public async Task Send_InvokeRequest_ToApiAsync(InvokeRequestDto request, IActor actor)
+    private async Task Send_SynchronizeFabricIds_ToApiAsync(SynchronizeFabricIdsDto ids, IActor? actor)
     {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) Send_InvokeRequest_ToFabricAsync({{request}})", request);
         await Enqueue(writer =>
         {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequest);
-            writer.Write(request);
-        }, actor);
-    }
-    //public async Task Send_InvokeResponse_ToApiAsync(InvokeResponseDto response, IActor? actor)
-    //{
-    //    //if (Logger.IsEnabled(LogLevel.Trace))
-    //    //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeResponseAsync({{response}})", response);
-    //    await Enqueue(writer =>
-    //    {
-    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeResponse);
-    //        writer.Write(response);
-    //    }, actor);
-    //}
-    public async Task Send_InvokeRequestDone_ToApiAsync(InvokeRequestDoneDto done, IActor? actor)
-    {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Send({Id}) InvokeRequestDoneAsync({{requestId}})", requestId);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequestDone);
-            writer.Write(done);
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SynchronizeFabricIds);
+            writer.Write(ids);
         }, actor);
     }
 
@@ -156,10 +172,9 @@ public sealed class FabricHost : IFabricLoggerFactory
         using var counter = new CountingDuplexStream(Stream);
         using var writer = new BinaryWriter(counter);
 
-        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SynchronizeFabricIds);
-        writer.Write(new SynchronizeFabricIdsDto(
+        await Send_SynchronizeFabricIds_ToApiAsync(new SynchronizeFabricIdsDto(
             Manager.FabricManagerId,
-            FabricConnectionId));
+            FabricConnectionId), null);
 
         var previous = counter.BytesWritten;
         await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
@@ -258,13 +273,6 @@ public sealed class FabricHost : IFabricLoggerFactory
                             await Manager.Receive_InvokeRequestCancelled_FromApiAsync(this, invokeRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
-                    //case FabricClientToHostMessageEnum.InvokeResponse:
-                    //    {
-                    //        var invokeResponse = reader.ReadInvokeResponseDto();
-                    //        var receiveSize = counter.BytesRead - previous;
-                    //        await Manager.Receive_InvokeResponseAsync(this, invokeResponse, receiveSize, Cts.Token);
-                    //    }
-                    //    break;
                     case FabricClientToHostMessageEnum.InvokeRequestDone:
                         {
                             var invokeResponseDone = reader.ReadInvokeRequestDoneDto();

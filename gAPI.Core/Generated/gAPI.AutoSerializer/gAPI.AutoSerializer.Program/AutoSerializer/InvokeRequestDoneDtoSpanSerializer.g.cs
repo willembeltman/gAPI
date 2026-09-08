@@ -13,7 +13,7 @@ public static class InvokeRequestDoneDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x498DADF7;
-    public const uint SchemaHash = 0xC6ED7364;
+    public const uint SchemaHash = 0x51C8427B;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InvokeRequestDoneDto value)
@@ -23,10 +23,10 @@ public static class InvokeRequestDoneDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.Cancelled);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ExceptionMessage != null);
+        if (value.ExceptionMessage != null)
+            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.ExceptionMessage);
     }
 
     [IsSpanSerializerRead]
@@ -47,10 +47,10 @@ public static class InvokeRequestDoneDtoSpanSerializer
     {
         ___offset += 10;
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.Cancelled);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ExceptionMessage != null);
+        if (value.ExceptionMessage != null)
+            PrimitivesSpanSerializer.LengthString(ref ___offset, value.ExceptionMessage);
         return ___offset;
     }
 }

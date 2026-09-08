@@ -11,8 +11,6 @@ public static class SendRequestDtoComparer
     public static bool IsDifferent(this SendRequestDto value, SendRequestDto otherValue)
     {
         if (value.Routing != otherValue.Routing) return true;
-        if (value.StateIsChanged != otherValue.StateIsChanged) return true;
-        if (value.StateData != otherValue.StateData) return true;
         if (value.BinaryData.AsSpan().SequenceEqual(otherValue.BinaryData) == false) return true;
         return false;
     }

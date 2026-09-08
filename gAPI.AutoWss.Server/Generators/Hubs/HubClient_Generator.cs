@@ -161,12 +161,11 @@ public class {Name}(
             {arg}"))});
 
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
             var task = ___fabricClient.{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? "SendAsync" : "SendAsync")}(
-                ___authenticationService,
                 ___routing,
                 ___payload, 
                 {(ct == null ? "___Cts.Token" : ct.Name)});
@@ -212,12 +211,11 @@ public class {Name}(
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 {(ct == null ? "___Cts.Token" : ct.Name)});

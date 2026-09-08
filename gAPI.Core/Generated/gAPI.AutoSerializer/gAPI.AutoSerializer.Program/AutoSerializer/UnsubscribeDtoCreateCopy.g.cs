@@ -10,10 +10,6 @@ public static class UnsubscribeDtoCreateCopy
     [IsCreateCopy]
     public static UnsubscribeDto CreateCopy(this UnsubscribeDto value)
     {
-        var copy = new UnsubscribeDto();
-        copy.ServiceId = value.ServiceId;
-        copy.UserId = value.UserId;
-        copy.SessionId = value.SessionId;
-        return copy;
+        return new UnsubscribeDto(value.ServiceId, value.UserId, value.SessionId);
     }
 }

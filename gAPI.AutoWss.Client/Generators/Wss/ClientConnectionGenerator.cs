@@ -64,6 +64,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg("System.Buffers.Binary");
         Reg("gAPI.Core.Attributes");
         Reg("gAPI.Core.Serializers");
+        Reg("System.Runtime.CompilerServices");
         Reg(WssClientConnection);
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
@@ -182,12 +183,11 @@ public class {Name}
                 {hub.CleanName.ToMultiple()}Lock.Release();
             }}
 
-            await Send_Subscribe_ToServerAsync(new {SubscribeDto}()
-            {{
-                ServiceId = new ServiceId(""{hub}""),
-                SessionId = HttpClient.SessionId,
-                UserId = HttpClient.UserId
-            }}, ___ct);
+            await Send_Subscribe_ToServerAsync(new {SubscribeDto}(
+                new ServiceId(""{hub}""),
+                HttpClient.UserId,
+                HttpClient.SessionId
+            ), ___ct);
         }}"))}
     }}";
     }
@@ -214,12 +214,11 @@ public class {Name}
                 {hub.CleanName.ToMultiple()}Lock.Release();
             }}
 
-            await Send_Unsubscribe_ToServerAsync(new {UnsubscribeDto}()
-            {{
-                ServiceId = new {ServiceId}(""{hub}""),
-                SessionId = HttpClient.SessionId,
-                UserId = HttpClient.UserId
-            }}, ___ct);
+            await Send_Unsubscribe_ToServerAsync(new {UnsubscribeDto}(
+                new {ServiceId}(""{hub}""),
+                HttpClient.UserId,
+                HttpClient.SessionId
+            ), ___ct);
         }}"))}
     }}";
     }

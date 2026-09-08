@@ -11,8 +11,7 @@ public static class SendRequestDoneDtoComparer
     public static bool IsDifferent(this SendRequestDoneDto value, SendRequestDoneDto otherValue)
     {
         if (value.Routing != otherValue.Routing) return true;
-        if (value.StateIsChanged != otherValue.StateIsChanged) return true;
-        if (value.StateData != otherValue.StateData) return true;
+        if (value.Cancelled != otherValue.Cancelled) return true;
         if (value.ExceptionMessage != otherValue.ExceptionMessage) return true;
         return false;
     }

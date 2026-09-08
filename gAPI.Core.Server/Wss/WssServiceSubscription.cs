@@ -46,13 +46,13 @@ public class WssServiceSubscription
     public SessionId SessionId { get; }
 
     // FabricClient => SignalRConnection
-    public Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct) 
+    public Task Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct) 
         => Connection.Send_SendRequest_ToClientAsync(message, ct);
-    public IAsyncEnumerable<StreamingResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+    public IAsyncEnumerable<byte[]> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
         => Connection.Send_InvokeRequest_ToClientAsync(request, ct);
-    public Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct)
+    public Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
         => Connection.Send_StreamingRequest_ToClientAsync(request, ct);
-    public Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct)
+    public Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
         => Connection.Send_StreamingResponse_ToClientAsync(response, ct);
 
 

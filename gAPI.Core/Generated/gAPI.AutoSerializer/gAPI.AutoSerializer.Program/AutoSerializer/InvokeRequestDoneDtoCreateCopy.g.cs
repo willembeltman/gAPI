@@ -10,6 +10,6 @@ public static class InvokeRequestDoneDtoCreateCopy
     [IsCreateCopy]
     public static InvokeRequestDoneDto CreateCopy(this InvokeRequestDoneDto value)
     {
-        return new InvokeRequestDoneDto(value.Routing, value.StateIsChanged, value.StateData);
+        return new InvokeRequestDoneDto(value.Routing, value.Cancelled, value.ExceptionMessage);
     }
 }

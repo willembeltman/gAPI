@@ -13,9 +13,10 @@ public interface IServiceSubscription
     SessionId SessionId { get; }
     UserId UserId { get; }
 
-    IAsyncEnumerable<StreamingResponseDto> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct);
-    Task<SendRequestDoneDto> Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct);
+    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct);
+    Task Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct);
+    Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct);
+    Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct);
+
     //bool HasRequest(RequestId requestId);
-    Task SendStreamingRequestAsync(StreamingRequestDto request, CancellationToken ct);
-    Task SendStreamingResponseAsync(StreamingResponseDto response, CancellationToken ct);
 }

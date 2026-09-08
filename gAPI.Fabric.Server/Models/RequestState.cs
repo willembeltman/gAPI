@@ -11,14 +11,12 @@ public sealed class RequestState : IDisposable
     public required RoutingDto RequestId { get; init; }
     public required IActor Actor { get; init; }
     public required FabricHost Caller { get; init; }
-    public required HashSet<FabricConnectionId> Targets { get; init; }
+    public required FabricHost[] Targets { get; init; }
 
     public HashSet<FabricConnectionId> CompletedTargets { get; } = [];
     public Dictionary<FabricConnectionId, string> Exceptions { get; } = [];
-    //public List<StreamId> StreamIds { get; private set; } = [];
+    public bool Cancelled { get; set; }
     private ResettableTimeout? Timeout { get; set; }
-    public bool StateIsChanged { get; set; }
-    public string? StateData { get; set; }
 
     private int _completed;
     public bool TryComplete()

@@ -13,7 +13,7 @@ public static class SendRequestDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xF2E06435;
-    public const uint SchemaHash = 0x45CBDBC7;
+    public const uint SchemaHash = 0x9BE5B2CB;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, SendRequestDto value)
@@ -23,10 +23,6 @@ public static class SendRequestDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
         PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.BinaryData);
     }
 
@@ -40,7 +36,7 @@ public static class SendRequestDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new SendRequestDto(RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset), PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
+        return new SendRequestDto(RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
@@ -48,10 +44,6 @@ public static class SendRequestDtoSpanSerializer
     {
         ___offset += 10;
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
-        if (value.StateData != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
         PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.BinaryData);
         return ___offset;
     }

@@ -4,6 +4,7 @@ using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Models;
 using System.Collections.Concurrent;
+using System.Data.SqlTypes;
 using System.Net.Sockets;
 
 namespace gAPI.Fabric.Server.Services;
@@ -54,7 +55,7 @@ public class FabricManager
         string? cookieData = null;
         SessionCache.TryGet(sessionId, out cookieData);
         var getSessionCookieDataResponse = new SendGetSessionCookieDataResponseDto(sessionId, cookieData);
-        await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null); // todo dat actor spul
+        await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null);
     }
 
     public async Task Receive_Subscribe_FromApiAsync(FabricHost caller, SubscribeDto subscribe, long receiveSize, CancellationToken ct)
@@ -72,16 +73,6 @@ public class FabricManager
         OnUpdate?.Invoke(this, new EventArgs());
     }
 
-    //public async Task Send_SendRequest_ToServiceAsync(FabricHost caller, SendRequestDto request, long receiveSize, CancellationToken ct)
-    //{
-    //    (var fabricHosts, var actor) = Services[request.ServiceId].GetFabricHosts(request.UserId, request.SessionId);
-    //    actor.EnqueueReceive(receiveSize);
-    //    foreach (var fabricHost in fabricHosts)
-    //    {
-    //        await fabricHost.Send_SendRequest_ToServiceAsync(request, actor);
-    //    }
-    //}
-
     public async Task Receive_SendRequest_FromApiAsync(FabricHost caller, SendRequestDto request, long receiveSize, CancellationToken ct)
     {
         (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
@@ -96,7 +87,7 @@ public class FabricManager
             RequestId = request.Routing,
             Caller = caller,
             Actor = actor,
-            Targets = [.. fabricHosts.Select(host => host.FabricConnectionId)]
+            Targets = fabricHosts
         };
 
         if (!SendRequests.TryAdd(request.Routing, state))
@@ -111,9 +102,15 @@ public class FabricManager
         foreach (var fabricHost in fabricHosts)
             await fabricHost.Send_SendRequest_ToApiAsync(request, actor);
     }
-    public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost fabricHost, SendRequestCancelledDto sendRequestCancelled, long receiveSize, CancellationToken token)
+    public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost caller, SendRequestCancelledDto cancel, long receiveSize, CancellationToken token)
     {
-        throw new NotImplementedException();
+        if (!SendRequests.TryGetValue(cancel.Routing, out var state))
+            return;
+
+        foreach(var target in state.Targets)
+        {
+            await target.Send_SendRequestCancelled_ToApiAsync(cancel, state.Actor);
+        }
     }
     public async Task Receive_SendRequestDone_FromApiAsync(FabricHost caller, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
@@ -129,14 +126,13 @@ public class FabricManager
             {
                 state.Exceptions.Add(caller.FabricConnectionId, done.ExceptionMessage);
             }
-            if (done.StateIsChanged)
+            if (done.Cancelled)
             {
-                state.StateIsChanged = true;
-                state.StateData = done.StateData;
+                state.Cancelled = true;
             }
         }
 
-        if (state.CompletedTargets.Count == state.Targets.Count)
+        if (state.CompletedTargets.Count == state.Targets.Length)
         {
             await CompleteRequestAsync(state);
         }
@@ -153,8 +149,7 @@ public class FabricManager
             await state.Caller.Send_SendRequestDone_ToApiAsync(
                 new SendRequestDoneDto(
                     state.RequestId,
-                    state.StateIsChanged,
-                    state.StateData,
+                    false,
                     null
                 ), state.Actor);
         }
@@ -164,11 +159,90 @@ public class FabricManager
             await state.Caller.Send_SendRequestDone_ToApiAsync(
                 new SendRequestDoneDto(
                     state.RequestId,
-                    state.StateIsChanged,
-                    state.StateData,
+                    false,
                     exceptionMessage
                 ), state.Actor);
         }
+    }
+
+    public async Task Receive_InvokeRequest_FromApiAsync(FabricHost caller, InvokeRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
+            .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
+        var fabricHosts = fabricHostsEnumerable.ToArray();
+        actor.EnqueueReceive(receiveSize);
+        if (fabricHosts.Length == 0)
+            return;
+
+        var state = new RequestState
+        {
+            RequestId = request.Routing,
+            Actor = actor,
+            Caller = caller,
+            Targets = fabricHosts
+        };
+
+        if (!InvokeRequests.TryAdd(request.Routing, state))
+            return;
+
+        state.StartTimeout(TimeSpan.FromSeconds(60), () =>
+        {
+            state.Exceptions.Add(state.Caller.FabricConnectionId, "Invoke request timed out.");
+            _ = CompleteInvokeAsync(state);
+        });
+
+        foreach (var host in fabricHosts)
+            await host.Send_InvokeRequest_ToApiAsync(request, actor);
+    }
+    public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost fabricHost, InvokeRequestCancelledDto cancel, long receiveSize, CancellationToken token)
+    {
+        if (!SendRequests.TryGetValue(cancel.Routing, out var state))
+            return;
+
+        foreach (var target in state.Targets)
+        {
+            await target.Send_InvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
+        }
+    }
+    public async Task Receive_InvokeRequestDoneAsync(FabricHost caller, InvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        if (!InvokeRequests.TryGetValue(done.Routing, out var state))
+            return;
+
+        state.ResetTimeout();
+        state.Actor?.EnqueueReceive(receiveSize);
+        lock (state)
+        {
+            //state.StreamIds.AddRange(done.StreamIds);
+            state.CompletedTargets.Add(caller.FabricConnectionId);
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.Add(caller.FabricConnectionId, done.ExceptionMessage);
+            }
+            if (done.Cancelled)
+            {
+                state.Cancelled = true;
+            }
+        }
+
+        if (state.CompletedTargets.Count == state.Targets.Length)
+        {
+            await CompleteInvokeAsync(state);
+        }
+    }
+    private async Task CompleteInvokeAsync(RequestState state)
+    {
+        if (!state.TryComplete())
+            return;
+
+        InvokeRequests.TryRemove(state.RequestId, out _);
+
+        await state.Caller.Send_InvokeRequestDone_ToApiAsync(
+            new InvokeRequestDoneDto(
+                state.RequestId,
+                state.Cancelled, 
+                state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
+            ), state.Actor);
     }
 
     public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, StreamingRequestDto request, long receiveSize, CancellationToken ct)
@@ -189,101 +263,13 @@ public class FabricManager
 
         state.ResetTimeout();
         state.Actor?.EnqueueReceive(receiveSize);
-        foreach (var targetId in state.Targets)
+        foreach (var target in state.Targets)
         {
-            var target = Connections.FirstOrDefault(host => host.FabricConnectionId == targetId);
-            if (target != null)
-                await target.Send_StreamingResponse_ToApiAsync(response, state.Actor);
-        }
-
-    }
-
-    public async Task Receive_InvokeRequest_FromApiAsync(FabricHost caller, InvokeRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
-            .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
-        var fabricHosts = fabricHostsEnumerable.ToArray();
-        actor.EnqueueReceive(receiveSize);
-        if (fabricHosts.Length == 0)
-            return;
-
-        var state = new RequestState
-        {
-            RequestId = request.Routing,
-            Actor = actor,
-            Caller = caller,
-            Targets = [.. fabricHosts.Select(host => host.FabricConnectionId)]
-            //PendingHosts = [.. fabricHosts.Select(h => h.Id)]
-        };
-
-        if (!InvokeRequests.TryAdd(request.Routing, state))
-            return;
-
-        state.StartTimeout(TimeSpan.FromSeconds(60), () =>
-        {
-            state.Exceptions.Add(state.Caller.FabricConnectionId, "Invoke request timed out.");
-            _ = CompleteInvokeAsync(state);
-        });
-
-        foreach (var host in fabricHosts)
-            await host.Send_InvokeRequest_ToApiAsync(request, actor);
-    }
-    public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost fabricHost, InvokeRequestCancelledDto invokeRequestCancelled, long receiveSize, CancellationToken token)
-    {
-        throw new NotImplementedException();
-    }
-    //public async Task Receive_InvokeResponseAsync(FabricHost caller, InvokeResponseDto response, long receiveSize, CancellationToken ct)
-    //{
-    //    if (!InvokeRequests.TryGetValue(response.RequestId, out var state))
-    //        return; // timeout / already completed
-    //    state.ResetTimeout();
-    //    state.Actor?.EnqueueReceive(receiveSize);
-    //    if (response.StateIsChanged)
-    //    {
-    //        state.StateIsChanged = true;
-    //        state.StateData = response.StateData;
-    //    }
-    //    // DIRECT doorsluizen
-    //    await state.Caller.Send_InvokeResponse_ToApiAsync(response, state.Actor);
-    //}
-    public async Task Receive_InvokeRequestDoneAsync(FabricHost caller, InvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
-    {
-        if (!InvokeRequests.TryGetValue(done.Routing, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-        lock (state)
-        {
-            //state.StreamIds.AddRange(done.StreamIds);
-            state.CompletedTargets.Add(caller.FabricConnectionId);
-            //if (done.ExceptionMessage != null)
-            //{
-            //    state.Exceptions.Add(caller.FabricConnectionId, done.ExceptionMessage);
-            //}
-        }
-
-        if (state.CompletedTargets.Count == state.Targets.Count)
-        {
-            await CompleteInvokeAsync(state);
+            await target.Send_StreamingResponse_ToApiAsync(response, state.Actor);
         }
     }
 
-    private async Task CompleteInvokeAsync(RequestState state)
-    {
-        if (!state.TryComplete())
-            return;
 
-        InvokeRequests.TryRemove(state.RequestId, out _);
-
-        await state.Caller.Send_InvokeRequestDone_ToApiAsync(
-            new InvokeRequestDoneDto(
-                state.RequestId, 
-                state.StateIsChanged, 
-                state.StateData
-                //[.. state.StreamIds]
-            ), state.Actor);
-    }
 
     public async Task DisconnectAllAsync()
     {

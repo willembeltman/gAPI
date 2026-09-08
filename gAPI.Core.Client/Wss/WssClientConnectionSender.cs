@@ -82,7 +82,7 @@ public class WssClientConnectionSender(
         }, ct);
     }
 
-    public async Task Send_SendRequest_ToServerAsync(SendRequestDto sendRequest, CancellationToken ct)
+    public async Task Send_SendRequest_ToServerAsync(SendRequestClientDto sendRequest, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
@@ -92,7 +92,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_SendRequestDone_ToServerAsync(SendRequestDoneDto sendRequestDone, CancellationToken ct)
+    public async Task Send_SendRequestDone_ToServerAsync(SendRequestDoneClientDto sendRequestDone, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequestDone_ToServerAsync({sendRequestDone})", sendRequestDone);
@@ -105,7 +105,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledDto sendRequestCancelled, CancellationToken ct)
+    public async Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_SendRequestCancelled_ToServerAsync({sendRequestCancelled})", sendRequestCancelled);
@@ -119,8 +119,7 @@ public class WssClientConnectionSender(
         }, ct);
     }
 
-
-    public async Task Send_InvokeRequest_ToServerAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
+    public async Task Send_InvokeRequest_ToServerAsync(InvokeRequestClientDto invokeRequest, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
@@ -130,7 +129,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeCancelled_ToServerAsync(InvokeRequestCancelledDto invokeRequestCancelled, CancellationToken ct)
+    public async Task Send_InvokeCancelled_ToServerAsync(InvokeRequestCancelledClientDto invokeRequestCancelled, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeCancelled_ToServerAsync({invokeRequestCancelled})", invokeRequestCancelled);
@@ -143,7 +142,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneDto invokeResponseDone, CancellationToken ct)
+    public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto invokeResponseDone, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("InvokeRequestDoneAsync({invokeResponseDone})", invokeResponseDone);
@@ -157,7 +156,7 @@ public class WssClientConnectionSender(
         }, ct);
     }
 
-    public async Task Send_StreamingRequest_ToServerAsync(StreamingRequestDto request, CancellationToken ct)
+    public async Task Send_StreamingRequest_ToServerAsync(StreamingRequestClientDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_StreamingRequest_ToServerAsync({request})", request);
@@ -170,7 +169,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_StreamingResponse_ToServerAsync(StreamingResponseDto response, CancellationToken ct)
+    public async Task Send_StreamingResponse_ToServerAsync(StreamingResponseClientDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_StreamingResponse_ToServerAsync({response})", response);

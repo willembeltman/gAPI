@@ -36,6 +36,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg("System.Collections.Concurrent");
         Reg("System.Collections.Immutable");
         Reg("System.Text");
+        Reg("System.Runtime.CompilerServices");
         Reg(IClientConnection);
         Reg(SseClient);
         Reg(IClientAuthenticationService);

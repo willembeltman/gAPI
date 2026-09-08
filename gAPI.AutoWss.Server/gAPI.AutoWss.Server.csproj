@@ -32,4 +32,8 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.9.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" />
+	</ItemGroup>
+
 </Project>
