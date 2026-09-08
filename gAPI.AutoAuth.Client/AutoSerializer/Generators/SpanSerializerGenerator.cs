@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -142,7 +142,7 @@ public static class {Name}
                 var args = ctor.Parameters
                     .Select(p =>
                     {
-                        var prop = Properties.FirstOrDefault(pr => pr.Property.Name == p.Name) ?? Properties[0];
+                        var prop = Properties.FirstOrDefault(pr => string.Equals(pr.Property.Name, p.Name, System.StringComparison.OrdinalIgnoreCase)) ?? Properties[0];
                         return PropertyHelper.GenerateSpanReadCode(prop.Property.Type, prop.IsFromGenericParent, ref functions, functionNames);
                     })
                     .ToArray();
