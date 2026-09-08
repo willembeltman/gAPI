@@ -13,7 +13,7 @@ public static class SendRequestClientDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xA19F2AC0;
-    public const uint SchemaHash = 0x50D5250B;
+    public const uint SchemaHash = 0x45CBDBC7;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, SendRequestClientDto value)
@@ -23,11 +23,11 @@ public static class SendRequestClientDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.BinaryData);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.BinaryData);
     }
 
     [IsSpanSerializerRead]
@@ -48,11 +48,11 @@ public static class SendRequestClientDtoSpanSerializer
     {
         ___offset += 10;
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
-        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.BinaryData);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.BinaryData);
         return ___offset;
     }
 }

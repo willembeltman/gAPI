@@ -15,9 +15,9 @@ public static class StreamingResponseClientDtoComparer
         if (value.StreamId != otherValue.StreamId) return true;
 
         if (value.IsCompleted != otherValue.IsCompleted) return true;
-        if (value.BinaryData.AsSpan().SequenceEqual(otherValue.BinaryData) == false) return true;
         if (value.StateIsChanged != otherValue.StateIsChanged) return true;
         if (value.StateData != otherValue.StateData) return true;
+        if (value.BinaryData.AsSpan().SequenceEqual(otherValue.BinaryData) == false) return true;
         return false;
     }
 }

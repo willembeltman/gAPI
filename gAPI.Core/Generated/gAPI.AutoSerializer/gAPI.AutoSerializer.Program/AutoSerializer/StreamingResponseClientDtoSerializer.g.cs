@@ -11,7 +11,7 @@ public static class StreamingResponseClientDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x657ED668;
-    public const uint SchemaHash = 0x1A4533AA;
+    public const uint SchemaHash = 0xD90A2DDE;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingResponseClientDto value)
@@ -24,12 +24,12 @@ public static class StreamingResponseClientDtoSerializer
         ___writer.Write(value.ArgumentIndex);
         StreamIdSerializer.Write(___writer, value.StreamId);
         ___writer.Write(value.IsCompleted);
-        ___writer.Write(value.BinaryData.Length);
-        ___writer.Write(value.BinaryData);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
+        ___writer.Write(value.BinaryData.Length);
+        ___writer.Write(value.BinaryData);
     }
 
     [IsSerializerRead]

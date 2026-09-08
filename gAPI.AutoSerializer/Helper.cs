@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -112,12 +112,44 @@ public static class Helper
                 p.GetAttributes().Any(a => a.ToString().EndsWith("NotMappedAttribute")) == false)
             .Select(p => new PropertyGeneric(p, typeSymbol.IsGenericType || generic))
             .ToArray();
+
+        PropertyGeneric[] allProps;
         if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "Object")
         {
             var baseProps = GetProperties(typeSymbol.BaseType, true);
-            return baseProps.Concat(props).ToArray();
+            allProps = baseProps.Concat(props).ToArray();
         }
-        return props;
+        else
+        {
+            allProps = props;
+        }
+
+        var ctor = typeSymbol.InstanceConstructors
+            .Where(c => c.Parameters.Length > 0)
+            .OrderByDescending(c => c.Parameters.Length)
+            .FirstOrDefault();
+
+        if (ctor != null && ctor.Parameters.Length > 0)
+        {
+            var orderedProps = new List<PropertyGeneric>();
+            var remainingProps = allProps.ToList();
+
+            foreach (var param in ctor.Parameters)
+            {
+                var match = remainingProps.FirstOrDefault(p =>
+                    string.Equals(p.Property.Name, param.Name, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    orderedProps.Add(match);
+                    remainingProps.Remove(match);
+                }
+            }
+
+            orderedProps.AddRange(remainingProps);
+            return orderedProps.ToArray();
+        }
+
+        return allProps;
     }
 
 

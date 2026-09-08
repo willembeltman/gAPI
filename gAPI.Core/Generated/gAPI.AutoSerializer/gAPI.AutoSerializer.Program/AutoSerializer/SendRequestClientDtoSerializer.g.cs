@@ -10,7 +10,7 @@ public static class SendRequestClientDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xA19F2AC0;
-    public const uint SchemaHash = 0x50D5250B;
+    public const uint SchemaHash = 0x45CBDBC7;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, SendRequestClientDto value)
@@ -20,12 +20,12 @@ public static class SendRequestClientDtoSerializer
         ___writer.Write(SchemaHash); // Schema identifier
         
         RoutingDtoSerializer.Write(___writer, value.Routing);
-        ___writer.Write(value.BinaryData.Length);
-        ___writer.Write(value.BinaryData);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
+        ___writer.Write(value.BinaryData.Length);
+        ___writer.Write(value.BinaryData);
     }
 
     [IsSerializerRead]

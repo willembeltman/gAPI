@@ -16,9 +16,9 @@ public static class SendRequestClientDtoMultipartFormDataContentSerializer
     public static void Write(this MultipartFormDataContent ___content, string ___name, SendRequestClientDto value)
     {
         RoutingDtoMultipartFormDataContentSerializer.Write(___content, "Routing", value.Routing);
-        ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");
         ___content.Add(new StringContent(value.StateIsChanged.ToString()), "StateIsChanged");
         if (value.StateData != null)
             ___content.Add(new StringContent(value.StateData), "StateData");
+        ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");
     }
 }

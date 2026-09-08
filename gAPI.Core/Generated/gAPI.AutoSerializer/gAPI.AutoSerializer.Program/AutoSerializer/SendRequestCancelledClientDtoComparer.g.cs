@@ -11,9 +11,9 @@ public static class SendRequestCancelledClientDtoComparer
     public static bool IsDifferent(this SendRequestCancelledClientDto value, SendRequestCancelledClientDto otherValue)
     {
         if (value.Routing != otherValue.Routing) return true;
-        if (value.Reason != otherValue.Reason) return true;
         if (value.StateIsChanged != otherValue.StateIsChanged) return true;
         if (value.StateData != otherValue.StateData) return true;
+        if (value.Reason != otherValue.Reason) return true;
         return false;
     }
 }
