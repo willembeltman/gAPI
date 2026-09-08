@@ -525,7 +525,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new InvokeRequestClientDto(invokeRequest.Routing, stateIsChanged, stateData, invokeRequest.BinaryData);
+        var sendRequestClient = new InvokeRequestClientDto(invokeRequest.Routing, invokeRequest.BinaryData, stateIsChanged, stateData);
         await Sender.Send_InvokeRequest_ToClientAsync(sendRequestClient, ct);
 
         try

@@ -10,6 +10,6 @@ public static class InvokeRequestClientDtoCreateCopy
     [IsCreateCopy]
     public static InvokeRequestClientDto CreateCopy(this InvokeRequestClientDto value)
     {
-        return new InvokeRequestClientDto(value.Routing, value.StateIsChanged, value.StateData, value.BinaryData.ToArray());
+        return new InvokeRequestClientDto(value.Routing, value.BinaryData.ToArray(), value.StateIsChanged, value.StateData);
     }
 }

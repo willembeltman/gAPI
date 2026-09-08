@@ -38,6 +38,6 @@ public static class InvokeRequestClientDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeRequestClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new InvokeRequestClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBytes(___reader.ReadInt32()), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

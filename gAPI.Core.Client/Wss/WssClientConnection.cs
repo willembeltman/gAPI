@@ -553,7 +553,7 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         var stateIsChanged = HttpClient.IsStateDataChanged();
         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
-        var invokeRequest = new InvokeRequestClientDto(routing, stateIsChanged, stateData, data);
+        var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);
 
         var completion = PendingInvokeRequests.GetOrAdd(
             routing.RequestId,

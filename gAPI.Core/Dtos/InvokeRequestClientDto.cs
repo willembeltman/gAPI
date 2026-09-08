@@ -5,7 +5,7 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public record InvokeRequestClientDto(
     RoutingDto Routing,
+    byte[] BinaryData,
     bool StateIsChanged,
-    string? StateData,
-    byte[] BinaryData)
+    string? StateData)
     : InvokeRequestDto(Routing, BinaryData);
