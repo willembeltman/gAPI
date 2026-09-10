@@ -38,7 +38,10 @@ public static class SynchronizeClientIdsDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new SynchronizeClientIdsDto(FabricManagerIdSpanSerializer.ReadFabricManagerId(___span, ref ___offset), FabricConnectionIdSpanSerializer.ReadFabricConnectionId(___span, ref ___offset), ClientConnectionIdSpanSerializer.ReadClientConnectionId(___span, ref ___offset));
+        return new SynchronizeClientIdsDto(
+            FabricManagerIdSpanSerializer.ReadFabricManagerId(___span, ref ___offset), 
+			FabricConnectionIdSpanSerializer.ReadFabricConnectionId(___span, ref ___offset), 
+			ClientConnectionIdSpanSerializer.ReadClientConnectionId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

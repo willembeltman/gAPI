@@ -44,7 +44,12 @@ public static class RoutingDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new RoutingDto(RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
+        return new RoutingDto(
+            RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), 
+			ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), 
+			ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : UserIdSpanSerializer.ReadUserId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

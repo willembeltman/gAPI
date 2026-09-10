@@ -38,7 +38,10 @@ public static class UnsubscribeDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new UnsubscribeDto(ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), UserIdSpanSerializer.ReadUserId(___span, ref ___offset), SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
+        return new UnsubscribeDto(
+            ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), 
+			UserIdSpanSerializer.ReadUserId(___span, ref ___offset), 
+			SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

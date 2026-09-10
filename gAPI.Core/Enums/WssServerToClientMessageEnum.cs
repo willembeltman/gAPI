@@ -3,13 +3,15 @@
 public enum WssServerToClientMessageEnum
 {
     SynchronizeClientIds,
+    
     SendRequest,
-    SendRequestDone,
     SendRequestCancelled,
-    StreamingRequest,
-    StreamingResponse,
+    SendRequestDone,
+
     InvokeRequest,
-    InvokeCancelled,
-    InvokeResponse,
-    InvokeRequestDone
+    InvokeRequestCancelled,
+    InvokeRequestDone,
+
+    StreamingRequest,
+    StreamingResponse
 }

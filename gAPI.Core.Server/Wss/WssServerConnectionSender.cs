@@ -1,19 +1,11 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
-using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
-using gAPI.Core.Server.Collections;
-using gAPI.Core.Server.Fabric;
-using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Wss;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
-using System.Net;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Wss;
@@ -135,8 +127,21 @@ public class WssServerConnectionSender(
         await EnqueueAsync(writer =>
         {
             var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeCancelled);
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestCancelled);
             writer.Write(ref offset, invokeRequestCancelledDto);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_InvokeReady_ToClientAsync(InvokeRequestDoneClientDto invokeRequestDoneDto, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_InvokeReady_ToClientAsync({invokeRequestDoneDto})", invokeRequestDoneDto);
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestDone);
+            writer.Write(ref offset, invokeRequestDoneDto);
             return offset;
         }, ct);
     }

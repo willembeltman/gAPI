@@ -7,15 +7,15 @@ public enum WssClientToServerMessageEnum
     Unsubscribe,
 
     SendRequest,
-    SendRequestDone,
     SendRequestCancelled,
-    StreamingRequest,
-    StreamingResponse,
+    SendRequestDone,
 
     InvokeRequest,
     InvokeRequestCancelled,
-    //InvokeResponse,
     InvokeRequestDone,
+
+    StreamingRequest,
+    StreamingResponse,
 
     Log
 }

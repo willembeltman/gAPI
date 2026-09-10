@@ -148,7 +148,8 @@ public static class {Name}
                     .ToArray();
 
                 readProps = $@"
-        return new {TypeSymbolName}({string.Join(", ", args)});";
+        return new {TypeSymbolName}(
+            {string.Join(", \r\n\t\t\t", args)});";
             }
             else
             {

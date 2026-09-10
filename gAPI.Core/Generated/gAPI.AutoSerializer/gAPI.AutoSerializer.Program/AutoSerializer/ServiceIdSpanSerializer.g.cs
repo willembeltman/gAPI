@@ -35,7 +35,8 @@ public static class ServiceIdSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new ServiceId(PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
+        return new ServiceId(
+            PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

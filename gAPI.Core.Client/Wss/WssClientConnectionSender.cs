@@ -129,7 +129,7 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeCancelled_ToServerAsync(InvokeRequestCancelledClientDto invokeRequestCancelled, CancellationToken ct)
+    public async Task Send_InvokeRequestCancelled_ToServerAsync(InvokeRequestCancelledClientDto invokeRequestCancelled, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("Send_InvokeCancelled_ToServerAsync({invokeRequestCancelled})", invokeRequestCancelled);
@@ -142,16 +142,16 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto invokeResponseDone, CancellationToken ct)
+    public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto invokeRequestDone, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("InvokeRequestDoneAsync({invokeResponseDone})", invokeResponseDone);
+            Logger.LogTrace("Send_InvokeRequestDone_ToServerAsync({invokeRequestDone})", invokeRequestDone);
 
         await EnqueueAsync(writer =>
         {
             var offset = 0;
             writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequestDone);
-            writer.Write(ref offset, invokeResponseDone);
+            writer.Write(ref offset, invokeRequestDone);
             return offset;
         }, ct);
     }

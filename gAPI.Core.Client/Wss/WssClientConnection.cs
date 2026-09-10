@@ -39,7 +39,6 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<(RequestId RequestId, int ArgumentIndex, StreamId StreamId), Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneClientDto>> PendingInvokeRequests = [];
-    //readonly ConcurrentDictionary<RequestId, ResettableTimeout> Timeouts = [];
     readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
     readonly byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
 
@@ -270,44 +269,36 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
                         break;
 
-
                     case WssServerToClientMessageEnum.SendRequest:
                         var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset);
                         await Received_SendRequest_FromServer(sendArgumentedRequest, ct);
                         break;
-
                     case WssServerToClientMessageEnum.SendRequestDone:
                         var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset);
                         await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
                         break;
-
                     case WssServerToClientMessageEnum.SendRequestCancelled:
                         var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset);
                         await Received_SendRequestCancelled_FromServer(sendRequestCancelled, ct);
                         break;
 
-
                     case WssServerToClientMessageEnum.InvokeRequest:
                         var invokeRequest = span.ReadInvokeRequestClientDto(ref offset);
                         await Received_InvokeRequest_FromServerAsync(invokeRequest, ct);
                         break;
-
-                    case WssServerToClientMessageEnum.InvokeCancelled:
+                    case WssServerToClientMessageEnum.InvokeRequestCancelled:
                         var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset);
-                        await Received_InvokeCancelled_FromServer(invokeRequestCancelled, ct);
+                        await Received_InvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
                         break;
-
                     case WssServerToClientMessageEnum.InvokeRequestDone:
-                        var invokeResponseDone = span.ReadInvokeRequestDoneClientDto(ref offset);
-                        await Received_InvokeRequestDone_FromServerAsync(invokeResponseDone, ct);
+                        var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
+                        await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
                         break;
-
 
                     case WssServerToClientMessageEnum.StreamingRequest:
                         var argumentRequest = span.ReadStreamingRequestClientDto(ref offset);
                         await Received_StreamingRequest_FromServerAsync(argumentRequest, ct);
                         break;
-
                     case WssServerToClientMessageEnum.StreamingResponse:
                         var argumentResponse = span.ReadStreamingResponseClientDto(ref offset);
                         await Received_StreamingResponse_FromServer(argumentResponse, ct);
@@ -374,7 +365,6 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }, ct);
     }
-    //sendRequestCancelled
     private async Task Received_SendRequestCancelled_FromServer(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -450,7 +440,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }, ct);
     }
-    private async Task Received_InvokeCancelled_FromServer(InvokeRequestCancelledClientDto invokeRequestCancelled, CancellationToken ct)
+    private async Task Received_InvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto invokeRequestCancelled, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -478,20 +468,12 @@ public abstract class WssClientConnection : IWssClientConnection
                 ), ct);
         }, ct);
     }
-    private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto invokeResponseDone, CancellationToken ct)
+    private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto invokeRequestDone, CancellationToken ct)
     {
-        if (PendingInvokeRequests.TryRemove(invokeResponseDone.Routing.RequestId, out var ___channel))
-            ___channel.TrySetResult(invokeResponseDone);
+        if (PendingInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var ___channel))
+            ___channel.TrySetResult(invokeRequestDone);
     }
-
-    private async Task Received_StreamingResponse_FromServer(StreamingResponseClientDto argumentResponse, CancellationToken ct)
-    {
-        if (Timeouts.TryGetValue(argumentResponse.Routing.RequestId, out var timeout))
-            timeout.Reset();
-
-        if (StreamingResponseHandlers.TryGetValue((argumentResponse.Routing.RequestId, argumentResponse.ArgumentIndex, argumentResponse.StreamId), out var responseHandler))
-            responseHandler(argumentResponse);
-    }
+    
     private async Task Received_StreamingRequest_FromServerAsync(StreamingRequestClientDto argumentRequest, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -499,11 +481,37 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Timeouts.TryGetValue(argumentRequest.Routing.RequestId, out var timeout))
                 timeout.Reset();
 
-            if (StreamingRequestHandlers.TryGetValue((argumentRequest.Routing.RequestId, argumentRequest.ArgumentIndex), out var argumentHandler))
-                await argumentHandler(argumentRequest.StreamId, ct);
+            if (StreamingRequestHandlers.TryGetValue((argumentRequest.Routing.RequestId, argumentRequest.ArgumentIndex), out var handler))
+            {
+                await handler.Invoke(argumentRequest.StreamId, ct);
+
+                //StreamingResponseHandlers
+                //PendingStreamingResponses.TryRemove((routing.RequestId, argumentIndex, streamId), out response!)
+
+                //if (FabricClient.TryTakeStreamingResponse(
+                //    streamingRequest.Routing,
+                //    streamingRequest.ArgumentIndex,
+                //    streamingRequest.StreamId,
+                //    out var response))
+                //{
+                //    // Terug naar CLIENT!!! (dat is er anders)
+                //    await Send_StreamingResponse_ToClientAsync(response, ct);
+                //}
+            }
         }, ct);
     }
+    private async Task Received_StreamingResponse_FromServer(StreamingResponseClientDto argumentResponse, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Timeouts.TryGetValue(argumentResponse.Routing.RequestId, out var timeout))
+            timeout.Reset();
 
+        if (StreamingResponseHandlers.TryGetValue((argumentResponse.Routing.RequestId, argumentResponse.ArgumentIndex, argumentResponse.StreamId), out var responseHandler))
+            responseHandler(argumentResponse);
+        }, ct);
+    }
+    
     #endregion
 
     #region Calls naar de service

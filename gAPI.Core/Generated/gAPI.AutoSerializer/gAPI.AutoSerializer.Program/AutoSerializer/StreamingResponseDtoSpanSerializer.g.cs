@@ -40,7 +40,12 @@ public static class StreamingResponseDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingResponseDto(RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset), PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
+        return new StreamingResponseDto(
+            RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
+			StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

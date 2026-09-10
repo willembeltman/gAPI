@@ -114,6 +114,10 @@ public class FabricManager
     }
     public async Task Receive_SendRequestDone_FromApiAsync(FabricHost caller, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
+        // Optie 1:
+        // Client
+
+
         if (!SendRequests.TryGetValue(done.Routing, out var state))
             return;
 
