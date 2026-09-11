@@ -36,7 +36,6 @@ public sealed class RequestState : IDisposable
     {
         if (Interlocked.Exchange(ref _ready, 1) == 0)
         {
-            Timeout?.Dispose();
             return true;
         }
 
@@ -47,7 +46,7 @@ public sealed class RequestState : IDisposable
     {
         if (Interlocked.Exchange(ref _completed, 1) == 0)
         {
-            Timeout?.Dispose();
+            Dispose();
             return true;
         }
 

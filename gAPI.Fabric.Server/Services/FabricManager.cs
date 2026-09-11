@@ -190,8 +190,6 @@ public class FabricManager
         if (!state.TryComplete())
             return;
 
-        state.Dispose();
-
         OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
         var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
@@ -353,7 +351,6 @@ public class FabricManager
                 if (state.CompletedTargets.Count == state.Targets.Length &&
                     state.TryComplete())
                 {
-                    state.Dispose();
                     OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
                     response = new StreamingResponseDto(

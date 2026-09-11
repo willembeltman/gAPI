@@ -40,11 +40,14 @@ public sealed class ResettableTimeout : IDisposable
             await Task.Delay(_timeout, ct);
 
             if (!ct.IsCancellationRequested)
+            {
                 _onTimeout();
+                Dispose();
+            }
         }
         catch (OperationCanceledException)
         {
-            // Timer werd gereset of disposed.
+            Dispose();
         }
     }
 
