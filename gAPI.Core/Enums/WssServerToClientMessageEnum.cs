@@ -1,17 +1,20 @@
-﻿namespace gAPI.Core.Enums;
+namespace gAPI.Core.Enums;
 
 public enum WssServerToClientMessageEnum
 {
     SynchronizeClientIds,
     
-    SendRequest,
-    SendRequestCancelled,
+    FabricSendRequest,
+    FabricSendRequestCancelled,
     SendRequestDone,
 
-    InvokeRequest,
-    InvokeRequestCancelled,
+    FabricInvokeRequest,
+    FabricInvokeRequestCancelled,
     InvokeRequestDone,
 
     StreamingRequest,
-    StreamingResponse
+    StreamingResponse,
+
+    FabricStreamingRequest,
+    FabricStreamingResponse
 }

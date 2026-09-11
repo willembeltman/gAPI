@@ -16,10 +16,10 @@ public static class SendRequestCancelledClientDtoMultipartFormDataContentSeriali
     public static void Write(this MultipartFormDataContent ___content, string ___name, SendRequestCancelledClientDto value)
     {
         RoutingDtoMultipartFormDataContentSerializer.Write(___content, "Routing", value.Routing);
+        if (value.Reason != null)
+            ___content.Add(new StringContent(value.Reason), "Reason");
         ___content.Add(new StringContent(value.StateIsChanged.ToString()), "StateIsChanged");
         if (value.StateData != null)
             ___content.Add(new StringContent(value.StateData), "StateData");
-        if (value.Reason != null)
-            ___content.Add(new StringContent(value.Reason), "Reason");
     }
 }

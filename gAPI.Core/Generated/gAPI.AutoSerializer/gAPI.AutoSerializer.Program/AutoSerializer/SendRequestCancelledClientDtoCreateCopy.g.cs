@@ -10,6 +10,6 @@ public static class SendRequestCancelledClientDtoCreateCopy
     [IsCreateCopy]
     public static SendRequestCancelledClientDto CreateCopy(this SendRequestCancelledClientDto value)
     {
-        return new SendRequestCancelledClientDto(value.Routing, value.StateIsChanged, value.StateData, value.Reason);
+        return new SendRequestCancelledClientDto(value.Routing, value.Reason, value.StateIsChanged, value.StateData);
     }
 }

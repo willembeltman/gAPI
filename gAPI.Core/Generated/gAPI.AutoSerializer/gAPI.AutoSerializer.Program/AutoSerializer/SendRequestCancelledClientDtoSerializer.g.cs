@@ -10,7 +10,7 @@ public static class SendRequestCancelledClientDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x02F66839;
-    public const uint SchemaHash = 0xDBEFB21A;
+    public const uint SchemaHash = 0x6BBCD89A;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, SendRequestCancelledClientDto value)
@@ -20,13 +20,13 @@ public static class SendRequestCancelledClientDtoSerializer
         ___writer.Write(SchemaHash); // Schema identifier
         
         RoutingDtoSerializer.Write(___writer, value.Routing);
+        ___writer.Write(value.Reason != null); 
+        if (value.Reason != null)
+            ___writer.Write(value.Reason);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
-        ___writer.Write(value.Reason != null); 
-        if (value.Reason != null)
-            ___writer.Write(value.Reason);
     }
 
     [IsSerializerRead]
@@ -39,6 +39,6 @@ public static class SendRequestCancelledClientDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new SendRequestCancelledClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
+        return new SendRequestCancelledClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

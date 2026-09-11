@@ -22,7 +22,7 @@ public class WssServerConnectionSender(
     {
         try
         {
-            await SendIds(socket, ct);
+            await Send_Ids_ToClientAsync(socket, ct);
 
             await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
@@ -44,18 +44,32 @@ public class WssServerConnectionSender(
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
         }
     }
+    private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
+    {
+        try
+        {
+            await SendQueue.Writer.WriteAsync(write, ct);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 
-    private async Task SendIds(WebSocket socket, CancellationToken ct)
+    private async Task Send_Ids_ToClientAsync(WebSocket socket, CancellationToken ct)
     {
         var offset = 0;
         var span = SendBuffer.AsSpan();
 
         // Send Id's
-        span.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SynchronizeClientIds);
         var ids = new SynchronizeClientIdsDto(
             wssServerConnection.FabricManagerId,
             wssServerConnection.FabricConnectionId,
             wssServerConnection.ClientConnectionId);
+
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_Ids_ToClientAsync({ids})", DateTime.Now.ToString("HH:mm:ss.fff"), ids);
+
+        span.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SynchronizeClientIds);
         span.Write(ref offset, ids);
         await socket.SendAsync(
             new ArraySegment<byte>(SendBuffer, 0, offset),
@@ -64,23 +78,36 @@ public class WssServerConnectionSender(
             ct);
     }
 
-    public async Task Send_SendRequest_ToClientAsync(SendRequestClientDto sendRequest, CancellationToken ct)
+    public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto sendRequest, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_SendRequest_ToClientAsync({sendRequest})", sendRequest);
+            Logger.LogTrace("{now} Send_FabricSendRequest_ToClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
 
         await EnqueueAsync(writer =>
         {
             var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendRequest);
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendRequest);
             writer.Write(ref offset, sendRequest);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({sendRequestCancelled})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestCancelled);
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendRequestCancelled);
+            writer.Write(ref offset, sendRequestCancelled);
             return offset;
         }, ct);
     }
     public async Task Send_SendRequestDone_ToClientAsync(SendRequestDoneClientDto sendRequestDone, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_SendRequestDone_ToClientAsync({sendRequestDone})", sendRequestDone);
+            Logger.LogTrace("{now} Send_SendRequestDone_ToClientAsync({sendRequestDone})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestDone);
 
         await EnqueueAsync(writer =>
         {
@@ -90,65 +117,37 @@ public class WssServerConnectionSender(
             return offset;
         }, ct);
     }
-    public async Task Send_SendRequestCancelled_ToClientAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct)
+
+    public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestClientDto invokeRequest, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_SendRequestCancelled_ToClientAsync({sendRequestCancelled})", sendRequestCancelled);
+            Logger.LogTrace("{now} Send_FabricInvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
         await EnqueueAsync(writer =>
         {
             var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendRequestCancelled);
-            writer.Write(ref offset, sendRequestCancelled);
-            return offset;
-        }, ct);
-    }
-
-    public async Task Send_InvokeRequest_ToClientAsync(InvokeRequestClientDto invokeRequest, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(
-                "Send_InvokeRequest_ToClientAsync({invokeRequest})",
-                invokeRequest);
-
-        await EnqueueAsync(writer =>
-        {
-            var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequest);
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricInvokeRequest);
             writer.Write(ref offset, invokeRequest);
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeCancelled_ToClientAsync(InvokeRequestCancelledClientDto invokeRequestCancelledDto, CancellationToken ct)
+    public async Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledClientDto invokeRequestCancelledDto, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeCancelled_ToClientAsync({invokeRequestCancelledDto})", invokeRequestCancelledDto);
+            Logger.LogTrace("{now} Send_FabricInvokeCancelled_ToClientAsync({invokeRequestCancelledDto})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequestCancelledDto);
 
         await EnqueueAsync(writer =>
         {
             var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestCancelled);
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricInvokeRequestCancelled);
             writer.Write(ref offset, invokeRequestCancelledDto);
-            return offset;
-        }, ct);
-    }
-    public async Task Send_InvokeReady_ToClientAsync(InvokeRequestDoneClientDto invokeRequestDoneDto, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeReady_ToClientAsync({invokeRequestDoneDto})", invokeRequestDoneDto);
-
-        await EnqueueAsync(writer =>
-        {
-            var offset = 0;
-            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestDone);
-            writer.Write(ref offset, invokeRequestDoneDto);
             return offset;
         }, ct);
     }
     public async Task Send_InvokeRequestDone_ToClientAsync(InvokeRequestDoneClientDto invokeResponseDoneDto, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_InvokeRequestDone_ToClientAsync({invokeResponseDoneDto})", invokeResponseDoneDto);
+            Logger.LogTrace("{now} Send_InvokeRequestDone_ToClientAsync({invokeResponseDoneDto})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeResponseDoneDto);
 
         await EnqueueAsync(writer =>
         {
@@ -162,7 +161,7 @@ public class WssServerConnectionSender(
     public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestClientDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_StreamingRequest_ToClientAsync({request})", request);
+            Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
 
         await EnqueueAsync(writer =>
         {
@@ -175,7 +174,7 @@ public class WssServerConnectionSender(
     public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseClientDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Send_StreamingResponse_ToClientAsync({response})", response);
+            Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({response})", DateTime.Now.ToString("HH:mm:ss.fff"), response);
 
         await EnqueueAsync(writer =>
         {
@@ -186,16 +185,33 @@ public class WssServerConnectionSender(
         }, ct);
     }
 
-
-    private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
+    public async Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestClientDto request, CancellationToken ct)
     {
-        try
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
+
+        await EnqueueAsync(writer =>
         {
-            await SendQueue.Writer.WriteAsync(write, ct);
-        }
-        catch (TaskCanceledException)
-        {
-        }
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingRequest);
+            writer.Write(ref offset, request);
+            return offset;
+        }, ct);
     }
+    public async Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseClientDto response, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({response})", DateTime.Now.ToString("HH:mm:ss.fff"), response);
+
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingResponse);
+            writer.Write(ref offset, response);
+            return offset;
+        }, ct);
+    }
+
+
 
 }

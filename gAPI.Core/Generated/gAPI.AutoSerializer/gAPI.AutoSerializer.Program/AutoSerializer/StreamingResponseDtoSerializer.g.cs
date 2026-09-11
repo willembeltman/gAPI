@@ -11,7 +11,7 @@ public static class StreamingResponseDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x170227ED;
-    public const uint SchemaHash = 0xF07099DE;
+    public const uint SchemaHash = 0x27A90465;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingResponseDto value)
@@ -24,6 +24,10 @@ public static class StreamingResponseDtoSerializer
         ___writer.Write(value.ArgumentIndex);
         StreamIdSerializer.Write(___writer, value.StreamId);
         ___writer.Write(value.IsCompleted);
+        ___writer.Write(value.IsCancelled);
+        ___writer.Write(value.ExceptionMessage != null); 
+        if (value.ExceptionMessage != null)
+            ___writer.Write(value.ExceptionMessage);
         ___writer.Write(value.BinaryData.Length);
         ___writer.Write(value.BinaryData);
     }
@@ -38,6 +42,6 @@ public static class StreamingResponseDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingResponseDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new StreamingResponseDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
     }
 }

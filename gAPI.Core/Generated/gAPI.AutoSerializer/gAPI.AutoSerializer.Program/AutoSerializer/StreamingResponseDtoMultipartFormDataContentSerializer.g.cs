@@ -20,6 +20,9 @@ public static class StreamingResponseDtoMultipartFormDataContentSerializer
         ___content.Add(new StringContent(value.ArgumentIndex.ToString()), "ArgumentIndex");
         StreamIdMultipartFormDataContentSerializer.Write(___content, "StreamId", value.StreamId);
         ___content.Add(new StringContent(value.IsCompleted.ToString()), "IsCompleted");
+        ___content.Add(new StringContent(value.IsCancelled.ToString()), "IsCancelled");
+        if (value.ExceptionMessage != null)
+            ___content.Add(new StringContent(value.ExceptionMessage), "ExceptionMessage");
         ___content.Add(new ByteArrayContent(value.BinaryData), "BinaryData", "file");
     }
 }

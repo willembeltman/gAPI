@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Enums;
+namespace gAPI.Core.Enums;
 
 public enum WssClientToServerMessageEnum
 {
@@ -8,14 +8,17 @@ public enum WssClientToServerMessageEnum
 
     SendRequest,
     SendRequestCancelled,
-    SendRequestDone,
+    FabricSendRequestDone,
 
     InvokeRequest,
     InvokeRequestCancelled,
-    InvokeRequestDone,
+    FabricInvokeRequestDone,
 
     StreamingRequest,
     StreamingResponse,
+
+    FabricStreamingRequest,
+    FabricStreamingResponse,
 
     Log
 }

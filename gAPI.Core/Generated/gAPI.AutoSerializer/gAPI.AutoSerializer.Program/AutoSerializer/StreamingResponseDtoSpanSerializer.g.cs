@@ -14,7 +14,7 @@ public static class StreamingResponseDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x170227ED;
-    public const uint SchemaHash = 0xF07099DE;
+    public const uint SchemaHash = 0x27A90465;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, StreamingResponseDto value)
@@ -27,6 +27,10 @@ public static class StreamingResponseDtoSpanSerializer
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Write(ref ___span, ref ___offset, value.StreamId);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.IsCompleted);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.IsCancelled);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ExceptionMessage != null);
+        if (value.ExceptionMessage != null)
+            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.ExceptionMessage);
         PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.BinaryData);
     }
 
@@ -45,6 +49,8 @@ public static class StreamingResponseDtoSpanSerializer
 			PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
 			StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
     }
 
@@ -56,6 +62,10 @@ public static class StreamingResponseDtoSpanSerializer
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Length(ref ___offset, value.StreamId);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.IsCompleted);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.IsCancelled);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ExceptionMessage != null);
+        if (value.ExceptionMessage != null)
+            PrimitivesSpanSerializer.LengthString(ref ___offset, value.ExceptionMessage);
         PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.BinaryData);
         return ___offset;
     }

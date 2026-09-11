@@ -131,6 +131,9 @@ public abstract class WssServerConnection : IWssServerConnection
 
                 var messageType = span.ReadWssClientToServerMessageEnum(ref offset);
 
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now}: ReceiverKernel({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+
                 try
                 {
                     switch (messageType)
@@ -158,9 +161,9 @@ public abstract class WssServerConnection : IWssServerConnection
                             var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset);
                             await Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
                             break;
-                        case WssClientToServerMessageEnum.SendRequestDone:
-                            var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset);
-                            await Receive_SendRequestDone_FromClientAsync(sendArgumentedRequestDone, ct);
+                        case WssClientToServerMessageEnum.FabricSendRequestDone:
+                            var fabricSendRequestDone = span.ReadSendRequestDoneClientDto(ref offset);
+                            await Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeRequest:
@@ -171,10 +174,11 @@ public abstract class WssServerConnection : IWssServerConnection
                             var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset);
                             await Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
                             break;
-                        case WssClientToServerMessageEnum.InvokeRequestDone:
-                            var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
-                            await Receive_InvokeRequestDone_FromClientAsync(invokeRequestDone, ct);
+                        case WssClientToServerMessageEnum.FabricInvokeRequestDone:
+                            var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
+                            await Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
                             break;
+
 
                         case WssClientToServerMessageEnum.StreamingResponse:
                             var argumentResponse = span.ReadStreamingResponseClientDto(ref offset);
@@ -183,6 +187,16 @@ public abstract class WssServerConnection : IWssServerConnection
                         case WssClientToServerMessageEnum.StreamingRequest:
                             var argumentRequest = span.ReadStreamingRequestClientDto(ref offset);
                             await Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
+                            break;
+
+
+                        case WssClientToServerMessageEnum.FabricStreamingResponse:
+                            var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset);
+                            await Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
+                            break;
+                        case WssClientToServerMessageEnum.FabricStreamingRequest:
+                            var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset);
+                            await Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
@@ -203,15 +217,19 @@ public abstract class WssServerConnection : IWssServerConnection
         }
     }
 
+
     private async Task Receive_Initialize_FromClientAsync(PathString path, QueryString queryString, IPAddress? ipAddress, string sessionId, string? cookieData, InitializeDto initialize, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_Initialize_FromClientAsync({path}, {queryString}, {ipAddress}, {sessionId}, {cookieData}, {initialize})", DateTime.Now.ToString("HH:mm:ss.fff"), path, queryString, ipAddress, sessionId, cookieData, initialize);
+
         await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, ct);
     }
 
     private async Task Receive_Subscribe_FromClientAsync(SubscribeDto subscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Receive_Subscribe_FromClientAsync({subscribe})", subscribe);
+            Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({subscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe);
 
         // Voor het geval dat...
         if (ConnectedServiceSubscriptions.TryRemove(subscribe.ServiceId, out var subscription))
@@ -235,7 +253,7 @@ public abstract class WssServerConnection : IWssServerConnection
     private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto unsubscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("Receive_Unsubscribe_FromClientAsync({unsubscribe})", unsubscribe);
+            Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({unsubscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe);
 
         if (ConnectedServiceSubscriptions.TryRemove(unsubscribe.ServiceId, out var subsciption))
         {
@@ -248,7 +266,7 @@ public abstract class WssServerConnection : IWssServerConnection
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_SendRequest_FromClientAsync({sendRequest})", sendRequest);
+                Logger.LogTrace("{now} Receive_SendRequest_FromClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
 
             // Create cancellation token
             var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(30), ct);
@@ -292,7 +310,7 @@ public abstract class WssServerConnection : IWssServerConnection
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_SendRequestCancelled_FromClientAsync({sendRequestCancelled})", sendRequestCancelled);
+                Logger.LogTrace("{now} Receive_SendRequestCancelled_FromClientAsync({sendRequestCancelled})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestCancelled);
 
             if (sendRequestCancelled.StateIsChanged)
                 await AuthenticationService.UpdateStateDataAsync(sendRequestCancelled.StateData, ct);
@@ -315,19 +333,18 @@ public abstract class WssServerConnection : IWssServerConnection
                 ), ct);
         }, ct);
     }
-    private async Task Receive_SendRequestDone_FromClientAsync(SendRequestDoneClientDto sendRequestDone, CancellationToken ct)
+    private async Task Receive_FabricSendRequestDone_FromClientAsync(SendRequestDoneClientDto sendRequestDone, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_SendRequestDone_FromClientAsync({sendRequestDone})", sendRequestDone);
+                Logger.LogTrace("{now} Receive_SendRequestDone_FromClientAsync({sendRequestDone})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestDone);
 
+            // Voor als er geen fabric is
             if (StreamingCache.PendingClientSendRequests.TryRemove(sendRequestDone.Routing.RequestId, out var completion))
                 completion.TrySetResult(sendRequestDone);
-            //else if (FabricClient.IsConnected)
-            //    await FabricClient.Send_InvokeRequestDone_ToFabricAsync(invokeRequestDone, ct); //Moet dit?
-
-            //StreamingCache.ArgumentRoutes.TryRemove(invokeRequestDone.Routing, out _);
+            else
+                await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(sendRequestDone, ct);
         }, ct);
     }
 
@@ -336,7 +353,7 @@ public abstract class WssServerConnection : IWssServerConnection
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_InvokeRequest_FromClientAsync({invokeRequest})", invokeRequest);
+                Logger.LogTrace("{now} Receive_InvokeRequest_FromClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
             // Create cancellation token
             var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(30), ct);
@@ -391,7 +408,7 @@ public abstract class WssServerConnection : IWssServerConnection
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_InvokeCancelled_FromClientAsync({invokeRequestCancelled})", invokeRequestCancelled);
+                Logger.LogTrace("{now} Receive_InvokeCancelled_FromClientAsync({invokeRequestCancelled})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequestCancelled);
 
             if (invokeRequestCancelled.StateIsChanged)
                 await AuthenticationService.UpdateStateDataAsync(invokeRequestCancelled.StateData, ct);
@@ -414,15 +431,18 @@ public abstract class WssServerConnection : IWssServerConnection
                 ), ct);
         }, ct);
     }
-    private async Task Receive_InvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto invokeRequestDone, CancellationToken ct)
+    private async Task Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto invokeRequestDone, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("Receive_InvokeRequestDone_FromClientAsync({invokeResponseDone})", invokeRequestDone);
+                Logger.LogTrace("{now} Receive_InvokeRequestDone_FromClientAsync({invokeResponseDone})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequestDone);
 
-            if (StreamingCache.PendingClientInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var completion1))
-                completion1.TrySetResult(invokeRequestDone);
+            // Voor als er geen fabric is
+            if (StreamingCache.PendingClientInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var completion))
+                completion.TrySetResult(invokeRequestDone);
+            else
+                await FabricClient.Send_FabricInvokeRequestDone_ToFabricAsync(invokeRequestDone, ct);
 
             //if (FabricClient.PendingInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var completion2))
             //    completion2.TrySetResult(invokeRequestDone);
@@ -438,28 +458,19 @@ public abstract class WssServerConnection : IWssServerConnection
     {
         _ = Task.Run(async () =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_StreamingRequest_FromClientAsync({streamingRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingRequest);
+
+            if (streamingRequest.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(streamingRequest.StateData, ct);
+
             if (StreamingCache.Timeouts.TryGetValue(streamingRequest.Routing.RequestId, out var timeout))
                 timeout.Reset();
 
-            if (await FabricClient.Handle_StreamingRequest_FromFabricAsync(streamingRequest, ct))
+            if (StreamingCache.StreamingRequestHandlers.TryGetValue((streamingRequest.Routing.RequestId, streamingRequest.ArgumentIndex), out var handler))
             {
-                if (FabricClient.TryTakeStreamingResponse(
-                    streamingRequest.Routing,
-                    streamingRequest.ArgumentIndex,
-                    streamingRequest.StreamId,
-                    out var response))
-                {
-                    // Terug naar CLIENT!!! (dat is er anders)
-                    await Send_StreamingResponse_ToClientAsync(response, ct);
-                }
-            }
-            else
-            {
-                // Doorsturen
-                if (FabricClient.IsConnected)
-                {
-                    await FabricClient.Send_StreamingRequest_ToFabricAsync(streamingRequest, ct);
-                }
+                var response = await handler.Invoke(streamingRequest.StreamId, ct);
+                await Send_StreamingResponse_ToClientAsync(response, ct);
             }
         }, ct);
     }
@@ -467,13 +478,63 @@ public abstract class WssServerConnection : IWssServerConnection
     {
         _ = Task.Run(async () =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_StreamingResponse_FromClientAsync({streamingResponse})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingResponse);
+
+            if (streamingResponse.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(streamingResponse.StateData, ct);
+
             if (StreamingCache.Timeouts.TryGetValue(streamingResponse.Routing.RequestId, out var timeout))
                 timeout.Reset();
 
             if (StreamingCache.StreamingResponseHandlers.TryGetValue((streamingResponse.Routing.RequestId, streamingResponse.ArgumentIndex, streamingResponse.StreamId), out var responseHandler))
                 responseHandler.Invoke(streamingResponse);
-            else if (FabricClient.IsConnected)
-                await FabricClient.Send_StreamingResponse_ToFabricAsync(streamingResponse, ct);
+        }, ct);
+    }
+
+    private async Task Receive_FabricStreamingRequest_FromClientAsync(StreamingRequestClientDto streamingRequest, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricStreamingRequest_FromClientAsync({streamingRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingRequest);
+
+            if (streamingRequest.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(streamingRequest.StateData, ct);
+
+            // TODO: Misschien kunnen we hier direct doorlussen als het dezelfde server is.
+            if (FabricClient.IsConnected)
+            {
+                var request = new StreamingRequestDto(
+                    streamingRequest.Routing,
+                    streamingRequest.ArgumentIndex,
+                    streamingRequest.StreamId);
+
+                // Doorlussen naar fabric
+                await FabricClient.Send_StreamingRequestClientToServer_ToFabricAsync(request, ct);
+            }
+            else
+            {
+                await Receive_StreamingRequest_FromClientAsync(streamingRequest, ct);
+            }
+        }, ct);
+    }
+    private async Task Receive_FabricStreamingResponse_FromClientAsync(StreamingResponseClientDto streamingResponse, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricStreamingResponse_FromClientAsync({streamingResponse})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingResponse);
+
+            if (streamingResponse.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(streamingResponse.StateData, ct);
+
+            // TODO: Misschien kunnen we hier direct doorlussen als het dezelfde server is.
+            if (FabricClient.IsConnected)
+            {
+                // Doorlussen naar fabric
+                await FabricClient.Send_StreamingResponseClientToServer_ToFabricAsync(streamingResponse, ct);
+            }
         }, ct);
     }
 
@@ -493,12 +554,10 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #region Sender
 
-    public async Task Send_SendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
+    public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(
-                "Send_SendRequest_ToClientAsync({sendRequest})",
-                sendRequest);
+            Logger.LogTrace("{now} Send_SendRequest_ToClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
 
         //StreamingCache.ArgumentRoutes[sendRequest.Routing] = 0; // TODO, is dit nodig?
 
@@ -508,7 +567,7 @@ public abstract class WssServerConnection : IWssServerConnection
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
         var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, stateIsChanged, stateData, sendRequest.BinaryData);
-        await Sender.Send_SendRequest_ToClientAsync(sendRequestClient, ct);
+        await Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
 
         try
         {
@@ -523,20 +582,18 @@ public abstract class WssServerConnection : IWssServerConnection
             StreamingCache.PendingClientSendRequests.TryRemove(sendRequest.Routing.RequestId, out _);
         }
     }
-    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(
-                "Send_InvokeRequest_ToClientAsync({invokeRequest})",
-                invokeRequest);
+            Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
         var completion = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         StreamingCache.PendingClientInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new InvokeRequestClientDto(invokeRequest.Routing, invokeRequest.BinaryData, stateIsChanged, stateData);
-        await Sender.Send_InvokeRequest_ToClientAsync(sendRequestClient, ct);
+        var invokeRequestClient = new InvokeRequestClientDto(invokeRequest.Routing, invokeRequest.BinaryData, stateIsChanged, stateData);
+        await Sender.Send_FabricInvokeRequest_ToClientAsync(invokeRequestClient, ct);
 
         try
         {
@@ -563,8 +620,90 @@ public abstract class WssServerConnection : IWssServerConnection
         }
     }
 
-    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto streamingRequest, CancellationToken ct)
+    // Directe calls
+    public Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricSendRequest_ToClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, stateIsChanged, stateData, sendRequest.BinaryData);
+        return Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
+    }
+
+    public Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricInvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var invokeRequestClient = new InvokeRequestClientDto(invokeRequest.Routing, invokeRequest.BinaryData, stateIsChanged, stateData);
+        return Sender.Send_FabricInvokeRequest_ToClientAsync(invokeRequestClient, ct);
+    }
+
+    public Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledDto cancel, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricInvokeRequestCancelled_ToClientAsync({cancel})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var invokeRequestCancelledClient = new InvokeRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
+        return Sender.Send_FabricInvokeRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
+    }
+
+    public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({cancel})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var invokeRequestCancelledClient = new SendRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
+        return Sender.Send_FabricSendRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
+    }
+
+    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var streamingRequestClient = new StreamingRequestClientDto(
+            request.Routing,
+            request.ArgumentIndex,
+            request.StreamId,
+            stateIsChanged,
+            stateData);
+        await Sender.Send_StreamingRequest_ToClientAsync(streamingRequestClient, ct);
+    }
+    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto request, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var streamingResponseClient = new StreamingResponseClientDto(
+            request.Routing,
+            request.ArgumentIndex,
+            request.StreamId,
+            request.IsCompleted,
+            request.IsCancelled,
+            request.ExceptionMessage,
+            request.BinaryData,
+            stateIsChanged,
+            stateData);
+        await Sender.Send_StreamingResponse_ToClientAsync(streamingResponseClient, ct);
+    }
+    public async Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestDto streamingRequest, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({streamingRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingRequest);
+
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
         var streamingRequestClient = new StreamingRequestClientDto(
@@ -573,10 +712,13 @@ public abstract class WssServerConnection : IWssServerConnection
             streamingRequest.StreamId,
             stateIsChanged,
             stateData);
-        await Sender.Send_StreamingRequest_ToClientAsync(streamingRequestClient, ct);
+        await Sender.Send_FabricStreamingRequest_ToClientAsync(streamingRequestClient, ct);
     }
-    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto streamingResponse, CancellationToken ct)
+    public async Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto streamingResponse, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({streamingResponse})", DateTime.Now.ToString("HH:mm:ss.fff"), streamingResponse);
+
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
         var streamingResponseClient = new StreamingResponseClientDto(
@@ -584,13 +726,13 @@ public abstract class WssServerConnection : IWssServerConnection
             streamingResponse.ArgumentIndex,
             streamingResponse.StreamId,
             streamingResponse.IsCompleted,
+            streamingResponse.IsCancelled,
+            streamingResponse.ExceptionMessage,
+            streamingResponse.BinaryData,
             stateIsChanged,
-            stateData,
-            streamingResponse.BinaryData);
-        await Sender.Send_StreamingResponse_ToClientAsync(streamingResponseClient, ct);
+            stateData);
+        await Sender.Send_FabricStreamingResponse_ToClientAsync(streamingResponseClient, ct);
     }
-
-
 
     #endregion
 
@@ -603,8 +745,39 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #region Calls vanuit gegenereerde code
 
+    //protected IAsyncEnumerable<byte[]> RegisterRemoteFabricAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    //{
+    //    return new RemoteAsyncEnumerable<byte[]>((streamId, push, complete, ct) =>
+    //    {
+    //        var key = (routing.RequestId, argumentIndex, streamId);
+    //        if (!StreamingCache.StreamingResponseHandlers.ContainsKey(key))
+    //        {
+    //            StreamingCache.StreamingResponseHandlers[key] = response =>
+    //            {
+    //                if (response.IsCompleted)
+    //                {
+    //                    StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
+    //                    complete.Invoke(null);
+    //                }
+    //                else
+    //                {
+    //                    push.Invoke(response.BinaryData);
+    //                }
+    //            };
+    //        }
+    //        return Send_FabricStreamingRequest_ToClientAsync(
+    //            new StreamingRequestDto(
+    //                routing,
+    //                argumentIndex,
+    //                streamId
+    //            ), ct);
+    //    });
+    //}
     protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgumentByte({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
+
         return new RemoteAsyncEnumerable<byte[]>((streamId, push, complete, ct) =>
         {
             var key = (routing.RequestId, argumentIndex, streamId);
@@ -633,6 +806,9 @@ public abstract class WssServerConnection : IWssServerConnection
     }
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgument({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
+
         return new RemoteAsyncEnumerable<T>((streamId, push, complete, ct) =>
         {
             var key = (routing.RequestId, argumentIndex, streamId);
@@ -661,7 +837,8 @@ public abstract class WssServerConnection : IWssServerConnection
     }
     protected void UnRegisterRemoteAsyncEnumerableArguments(RoutingDto routing)
     {
-
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} UnRegisterRemoteAsyncEnumerableArguments({routing})", DateTime.Now.ToString("HH:mm:ss.fff"), routing);
     }
 
     #endregion
@@ -688,4 +865,5 @@ public abstract class WssServerConnection : IWssServerConnection
 
         GC.SuppressFinalize(this);
     }
+
 }

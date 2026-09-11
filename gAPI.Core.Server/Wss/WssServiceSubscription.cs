@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
@@ -45,20 +45,28 @@ public class WssServiceSubscription
     public UserId UserId { get; }
     public SessionId SessionId { get; }
 
-    // FabricClient => SignalRConnection
-    public Task Send_SendRequest_ToClient_Async(SendRequestDto message, CancellationToken ct) 
-        => Connection.Send_SendRequest_ToClientAsync(message, ct);
-    public IAsyncEnumerable<byte[]> Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
-        => Connection.Send_InvokeRequest_ToClientAsync(request, ct);
     public Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
         => Connection.Send_StreamingRequest_ToClientAsync(request, ct);
     public Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
         => Connection.Send_StreamingResponse_ToClientAsync(response, ct);
 
+    public Task SendRequestAsync(SendRequestDto message, CancellationToken ct)
+        => Connection.SendRequestAsync(message, ct);
+    public IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct)
+        => Connection.InvokeRequestAsync(request, ct);
 
-    //public bool HasRequest(RequestId requestId)
-    //    => Connection.HasRequest(requestId);
-
+    public Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
+        => Connection.Send_FabricStreamingRequest_ToClientAsync(request, ct);
+    public Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
+        => Connection.Send_FabricStreamingResponse_ToClientAsync(response, ct);
+    public Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
+        => Connection.Send_FabricSendRequest_ToClientAsync(sendRequest, ct);
+    public Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
+        => Connection.Send_FabricInvokeRequest_ToClientAsync(invokeRequest, ct);
+    public Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledDto cancel, CancellationToken ct)
+        => Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(cancel, ct);
+    public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+        => Connection.Send_FabricSendRequestCancelled_ToClientAsync(cancel, ct);
 
     public async ValueTask DisposeAsync()
     {
@@ -72,4 +80,5 @@ public class WssServiceSubscription
         }
         GC.SuppressFinalize(this);
     }
+
 }

@@ -11,7 +11,7 @@ public static class StreamingResponseClientDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x657ED668;
-    public const uint SchemaHash = 0xD90A2DDE;
+    public const uint SchemaHash = 0xAE10D844;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingResponseClientDto value)
@@ -24,12 +24,17 @@ public static class StreamingResponseClientDtoSerializer
         ___writer.Write(value.ArgumentIndex);
         StreamIdSerializer.Write(___writer, value.StreamId);
         ___writer.Write(value.IsCompleted);
+        ___writer.Write(value.Cancelled);
+        ___writer.Write(value.ExceptionMessage != null); 
+        if (value.ExceptionMessage != null)
+            ___writer.Write(value.ExceptionMessage);
+        ___writer.Write(value.BinaryData.Length);
+        ___writer.Write(value.BinaryData);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
-        ___writer.Write(value.BinaryData.Length);
-        ___writer.Write(value.BinaryData);
+        ___writer.Write(value.IsCancelled);
     }
 
     [IsSerializerRead]
@@ -42,6 +47,6 @@ public static class StreamingResponseClientDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingResponseClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new StreamingResponseClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString(), ___reader.ReadBytes(___reader.ReadInt32()), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

@@ -14,6 +14,8 @@ public static class StreamingResponseDtoComparer
         if (value.ArgumentIndex != otherValue.ArgumentIndex) return true;
         if (value.StreamId != otherValue.StreamId) return true;
         if (value.IsCompleted != otherValue.IsCompleted) return true;
+        if (value.IsCancelled != otherValue.IsCancelled) return true;
+        if (value.ExceptionMessage != otherValue.ExceptionMessage) return true;
         if (value.BinaryData.AsSpan().SequenceEqual(otherValue.BinaryData) == false) return true;
         return false;
     }

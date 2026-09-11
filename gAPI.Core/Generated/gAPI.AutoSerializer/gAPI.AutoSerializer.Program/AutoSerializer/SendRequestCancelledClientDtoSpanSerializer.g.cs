@@ -13,7 +13,7 @@ public static class SendRequestCancelledClientDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x02F66839;
-    public const uint SchemaHash = 0xDBEFB21A;
+    public const uint SchemaHash = 0x6BBCD89A;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, SendRequestCancelledClientDto value)
@@ -23,13 +23,13 @@ public static class SendRequestCancelledClientDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.Reason != null);
+        if (value.Reason != null)
+            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.Reason);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.Reason != null);
-        if (value.Reason != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.Reason);
     }
 
     [IsSpanSerializerRead]
@@ -44,8 +44,8 @@ public static class SendRequestCancelledClientDtoSpanSerializer
         
         return new SendRequestCancelledClientDto(
             RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), 
-			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
     }
 
@@ -54,13 +54,13 @@ public static class SendRequestCancelledClientDtoSpanSerializer
     {
         ___offset += 10;
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.Reason != null);
+        if (value.Reason != null)
+            PrimitivesSpanSerializer.LengthString(ref ___offset, value.Reason);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.Reason != null);
-        if (value.Reason != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.Reason);
         return ___offset;
     }
 }

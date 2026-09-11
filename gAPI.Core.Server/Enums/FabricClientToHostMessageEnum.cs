@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Enums;
+namespace gAPI.Core.Server.Enums;
 
 public enum FabricClientToHostMessageEnum
 {
@@ -6,16 +6,17 @@ public enum FabricClientToHostMessageEnum
     Unsubscribe,
 
     SendRequest,
-    SendRequestDone,
     SendRequestCancelled,
-
-    StreamingRequest,
-    StreamingResponse,
+    SendRequestDone,
 
     InvokeRequest,
     InvokeRequestCancelled,
-    InvokeResponse,
     InvokeRequestDone,
+
+    StreamingRequestServerToClient,
+    StreamingResponseServerToClient,
+    StreamingRequestClientToServer,
+    StreamingResponseClientToServer,
 
     UpdateSession,
     ClearSession,

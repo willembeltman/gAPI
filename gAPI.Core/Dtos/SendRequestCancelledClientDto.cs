@@ -5,7 +5,7 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public record SendRequestCancelledClientDto(
     RoutingDto Routing,
+    string? Reason,
     bool StateIsChanged,
-    string? StateData,
-    string? Reason)
+    string? StateData)
     : SendRequestCancelledDto(Routing, Reason);

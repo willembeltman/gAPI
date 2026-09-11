@@ -1,19 +1,21 @@
-﻿namespace gAPI.Core.Server.Enums;
+namespace gAPI.Core.Server.Enums;
 
 public enum FabricHostToClientMessageEnum
 {
-    SynchronizeFabricIds,
-    Log,
-
-    SendRequest,
+    FabricSendRequest,
+    FabricSendRequestCancelled,
     SendRequestDone,
-    SendRequestCancelled,
-    StreamingRequest,
-    StreamingResponse,
-    StreamingRequestCancelled,
-    InvokeRequest,
+
+    FabricInvokeRequest,
+    FabricInvokeRequestCancelled,
     InvokeRequestDone,
-    InvokeRequestCancelled,
+
+    StreamingRequestServerToClient,
+    StreamingResponseServerToClient,
+    StreamingRequestClientToServer,
+    StreamingResponseClientToServer,
 
     GetSessionCookieDataResponse,
+    SynchronizeFabricIds,
+    Log,
 }

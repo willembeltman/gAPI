@@ -85,14 +85,24 @@ public class SseServiceSubscription : IServiceSubscription
         }
     }
 
-    IAsyncEnumerable<byte[]> IServiceSubscription.Send_InvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+    //IAsyncEnumerable<byte[]> IServiceSubscription.Send_FabricInvokeRequest_ToClient_Async(InvokeRequestDto request, CancellationToken ct)
+    //{
+    //    throw new NotSupportedException(
+    //        "You cannot use methods that have return types for SSE, " +
+    //        "it also should be impossible to get here so kuddo's for the hacky bug.");
+    //}
+
+    //public bool HasRequest(RequestId requestId) => false;
+
+    public IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct)
     {
-        throw new NotSupportedException(
-            "You cannot use methods that have return types for SSE, " +
-            "it also should be impossible to get here so kuddo's for the hacky bug.");
+        throw new NotImplementedException();
     }
 
-    public bool HasRequest(RequestId requestId) => false;
+    public Task SendRequestAsync(SendRequestDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 
     public Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
         => throw new NotSupportedException();
@@ -100,4 +110,34 @@ public class SseServiceSubscription : IServiceSubscription
     public Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
         => throw new NotSupportedException();
 
+
+    public Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledDto cancel, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -9,4 +9,6 @@ public record StreamingResponseDto(
     int ArgumentIndex,
     StreamId StreamId,
     bool IsCompleted,
+    bool IsCancelled,
+    string? ExceptionMessage,
     byte[] BinaryData);
