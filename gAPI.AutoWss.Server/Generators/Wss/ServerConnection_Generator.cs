@@ -4,7 +4,6 @@ using gAPI.AutoWss.Server.Models;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 
 namespace gAPI.AutoWss.Server.Generators.Wss;
@@ -162,7 +161,7 @@ public class {Name} : WssServerConnection
 
         code += "\r\n";
 
-        functions2 = functions;
+        functions2 += functions;
         return code;
     }
 
@@ -512,7 +511,7 @@ public class {Name} : WssServerConnection
         }}
         throw new Exception($""Send {{___sendRequest.Routing.ServiceId.Value}}.{{___sendRequest.Routing.MethodId.Value}} not implemented"");
     }}";
-        functions2 = functions;
+        functions2 += functions;
         return code;
     }
     private string GenerateInvokeRequest(ref string functions2, HashSet<string> functionNames)
@@ -537,7 +536,7 @@ public class {Name} : WssServerConnection
         }}
         throw new Exception($""Invoke {{___invokeRequest.Routing.ServiceId.Value}}.{{___invokeRequest.Routing.MethodId.Value}} not implemented"");
     }}";
-        functions2 = functions;
+        functions2 += functions;
         return code;
     }
 
