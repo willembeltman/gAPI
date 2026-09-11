@@ -16,7 +16,7 @@ public sealed class RequestState : IDisposable
 
     public ConcurrentDictionary<FabricConnectionId, byte> ReadyTargets { get; } = [];
     public ConcurrentDictionary<FabricConnectionId, byte> CompletedTargets { get; } = [];
-    public ConcurrentDictionary<StreamId, FabricHost> Routes { get; } = [];
+    public ConcurrentDictionary<StreamId, FabricHost> StreamRoutes { get; } = [];
     public ConcurrentDictionary<FabricConnectionId, string> Exceptions { get; } = [];
 
     private int _cancelled;

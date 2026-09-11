@@ -27,6 +27,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference SseManagerCollection => Context.SharedReferences.SseManagerCollection;
     public SharedReference SseServiceId => Context.SharedReferences.ServiceId;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
+    public SharedReference SendRequestCancelledDto => Context.SharedReferences.SendRequestCancelledDto;
     public SharedReference SseManagerId => Context.SharedReferences.SseManagerId;
     public SharedReference IClientConnection => Context.SharedReferences.ISseClientConnection;
 
@@ -129,7 +130,7 @@ public class {Name} : {IClientConnection.Name}
         }}")}
     }}
 
-    public async Task MessageReceivedAsync({SendRequestDto} message, CancellationToken ct)
+    public async Task SendRequest_ReceivedAsync({SendRequestDto} message, CancellationToken ct)
     {{{(Interfaces.Length > 0 ? $@"
         switch (message.ServiceId.Value)
         {{{string.Join("\r\n", Interfaces
@@ -162,6 +163,11 @@ public class {Name} : {IClientConnection.Name}
                 break;";
         }))}
         }}" : "")}
+    }}
+
+    public async Task SendRequestCancelled_ReceivedAsync({SendRequestCancelledDto} message, CancellationToken ct)
+    {{
+        // Todo
     }}
 
     public void Dispose()

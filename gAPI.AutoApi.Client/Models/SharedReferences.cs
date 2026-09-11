@@ -14,7 +14,7 @@ public class SharedReferences
 
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         SseManagerId = SharedReferenceFinder.Find("gAPI.Core.Ids.SseManagerId", allSymbols);
-        SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
+        SendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledDto", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         ISseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.ISseClientConnection", allSymbols);
 
@@ -46,6 +46,7 @@ public class SharedReferences
     public SharedReference SseManagerCollection { get; }
     public SharedReference ISseClientConnection { get; }
     public SharedReference SseManagerId { get; }
+    public SharedReference SendRequestCancelledDto { get; }
     public SharedReference SseClient { get; }
     public SharedReference? AuthClient_FormFile { get; }
     public SharedReference? AuthClient_ToFormFileExtension { get; }

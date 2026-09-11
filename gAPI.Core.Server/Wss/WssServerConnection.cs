@@ -438,6 +438,9 @@ public abstract class WssServerConnection : IWssServerConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now} Receive_InvokeRequestDone_FromClientAsync({invokeResponseDone})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequestDone);
 
+            if (invokeRequestDone.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(invokeRequestDone.StateData, ct);
+
             // Voor als er geen fabric is
             if (StreamingCache.PendingClientInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var completion))
                 completion.TrySetResult(invokeRequestDone);

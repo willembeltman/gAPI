@@ -360,7 +360,7 @@ public class FabricManager
         state.ResetTimeout();
         state.Actor?.EnqueueReceive(receiveSize);
 
-        if (state.Routes.TryAdd(request.StreamId, caller))
+        if (state.StreamRoutes.TryAdd(request.StreamId, caller))
         {
             await state.Caller.Send_StreamingRequestClientToServer_ToApiAsync(request, state.Actor);
         }
@@ -376,7 +376,7 @@ public class FabricManager
         state.ResetTimeout();
         state.Actor?.EnqueueReceive(receiveSize);
 
-        if (state.Routes.TryRemove(response.StreamId, out var sender))
+        if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
         {
             await sender.Send_StreamingResponseServerToClient_ToApiAsync(response, state.Actor);
         }

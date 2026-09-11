@@ -47,17 +47,35 @@ public class SseClient(
                         if (!ParseFrame(frame, out string eventName, out string eventData))
                             continue;
 
-                        if (eventName == "ServiceSubscriptionId")
+                        switch (eventName)
                         {
-                            if (long.TryParse(eventData, out var id))
-                                ServiceSubscriptionId = new ServiceSubscriptionId(id);
+                            case "ServiceSubscriptionId":
+                                if (long.TryParse(eventData, out var id))
+                                    ServiceSubscriptionId = new ServiceSubscriptionId(id);
+                                break;
+                            case "SendRequestDto":
+                                var sendRequest = JsonSerializer.Deserialize<SendRequestDto>(eventData);
+                                if (sendRequest != null)
+                                    _ = sseManager.SendRequest_ReceivedAsync(sendRequest, Cts.Token);
+                                break;
+                            case "SendRequestCancelledDto":
+                                var sendRequestCancelled = JsonSerializer.Deserialize<SendRequestCancelledDto>(eventData);
+                                if (sendRequestCancelled != null)
+                                    _ = sseManager.SendRequestCancelled_ReceivedAsync(sendRequestCancelled, Cts.Token);
+                                break;
                         }
-                        else if (eventName == "SendRequestDto")
-                        {
-                            var sendRequest = JsonSerializer.Deserialize<SendRequestDto>(eventData);
-                            if (sendRequest != null)
-                                _ = sseManager.MessageReceivedAsync(sendRequest, Cts.Token);
-                        }
+
+                        //if (eventName == "ServiceSubscriptionId")
+                        //{
+                        //    if (long.TryParse(eventData, out var id))
+                        //        ServiceSubscriptionId = new ServiceSubscriptionId(id);
+                        //}
+                        //else if (eventName == "SendRequestDto")
+                        //{
+                        //    var sendRequest = JsonSerializer.Deserialize<SendRequestDto>(eventData);
+                        //    if (sendRequest != null)
+                        //        _ = sseManager.MessageReceivedAsync(sendRequest, Cts.Token);
+                        //}
                     }
                 }
             }
