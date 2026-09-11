@@ -185,10 +185,12 @@ public class FabricManager
     private async Task CompleteRequestAsync(ILogger<FabricManager> logger, RequestState state)
     {
         if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: CompleteRequestAsync({state}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+            logger.LogTrace("{now}: CompleteRequestAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
 
         if (!state.TryComplete())
             return;
+
+        state.Dispose();
 
         OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
@@ -351,6 +353,7 @@ public class FabricManager
                 if (state.CompletedTargets.Count == state.Targets.Length &&
                     state.TryComplete())
                 {
+                    state.Dispose();
                     OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
                     response = new StreamingResponseDto(
