@@ -68,6 +68,7 @@ public class HubClient_Generator : _BaseGenerator
         Reg(ServiceId);
         Reg(ServiceMethodId);
         Reg(IServerAuthenticationService);
+        Reg(RoutingDto);
         Reg("gAPI.Core.Ids");
 
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)

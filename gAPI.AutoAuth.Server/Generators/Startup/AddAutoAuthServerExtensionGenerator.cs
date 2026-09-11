@@ -183,7 +183,7 @@ public static class {Name}
 
             services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }}
-
+        services.AddAuthorization();
         services.AddAuthentication(""gAPI"")
                 .AddScheme<AuthenticationSchemeOptions, {AuthenticationHandler.FullName}>(""gAPI"", _ => {{ }});
 

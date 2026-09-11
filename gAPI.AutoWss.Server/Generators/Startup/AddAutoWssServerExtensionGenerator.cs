@@ -138,8 +138,8 @@ public static class {Name}
     {{
         return AddAutoWssServer(
             services, 
-            config.FrontendUrl,
             config.FabricConnectionString,
+            config.FrontendUrl,
             dateTime);
     }}
 

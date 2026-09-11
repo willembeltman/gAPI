@@ -342,7 +342,7 @@ public class {Name}
                     }}
                     break;
                 }}"))}
-        }}" : "")}
+        }}" : "yield break;")}
 
         throw new Exception($""Service \""{{___invokeRequest.Routing.ServiceId.Value}}\"" / Method \""{{___invokeRequest.Routing.MethodId.Value}}\"" not found"");
     }}";
