@@ -42,121 +42,145 @@ public class FabricManager
         OnUpdate?.Invoke(this, new EventArgs());
     }
 
-    public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken token)
+    public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_UpdateSession_FromApiAsync({updateSession}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), updateSession, receiveSize);
-        SessionCache.AddOrUpdate(updateSession.SessionId, updateSession.CookieData);
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_UpdateSession_FromApiAsync({updateSession}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), updateSession, receiveSize);
+            SessionCache.AddOrUpdate(updateSession.SessionId, updateSession.CookieData);
+        }, ct);
     }
     public async Task Receive_ClearSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendClearSessionDto clearSession, long receiveSize, CancellationToken token)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_ClearSession_FromApiAsync({clearSession}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), clearSession, receiveSize);
-        SessionCache.Remove(clearSession.SessionId);
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_ClearSession_FromApiAsync({clearSession}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), clearSession, receiveSize);
+            SessionCache.Remove(clearSession.SessionId);
+        }, token);
     }
-    public async Task Receive_GetSessionCookieData_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendGetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken token)
+    public async Task Receive_GetSessionCookieData_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendGetSessionCookieDataDto getSessionCookieData, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_GetSessionCookieData_FromApiAsync({getSessionCookieData}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), getSessionCookieData, receiveSize);
-        var sessionId = getSessionCookieData.SessionId;
-        string? cookieData = null;
-        SessionCache.TryGet(sessionId, out cookieData);
-        var getSessionCookieDataResponse = new SendGetSessionCookieDataResponseDto(sessionId, cookieData);
-        await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null);
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_GetSessionCookieData_FromApiAsync({getSessionCookieData}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), getSessionCookieData, receiveSize);
+            var sessionId = getSessionCookieData.SessionId;
+            string? cookieData = null;
+            SessionCache.TryGet(sessionId, out cookieData);
+            var getSessionCookieDataResponse = new SendGetSessionCookieDataResponseDto(sessionId, cookieData);
+            await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null);
+        }, ct);
     }
 
     public async Task Receive_Subscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SubscribeDto subscribe, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
 
-        await Services[subscribe.ServiceId]
-            .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
+            await Services[subscribe.ServiceId]
+                .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
-        OnUpdate?.Invoke(this, new EventArgs());
+            OnUpdate?.Invoke(this, new EventArgs());
+        }, ct);
     }
     public async Task Receive_Unsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_Unsubscribe_FromApiAsync({unsubscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe, receiveSize);
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_Unsubscribe_FromApiAsync({unsubscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe, receiveSize);
 
-        await Services[unsubscribe.ServiceId]
-            .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
+            await Services[unsubscribe.ServiceId]
+                .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
 
-        OnUpdate?.Invoke(this, new EventArgs());
+            OnUpdate?.Invoke(this, new EventArgs());
+        }, ct);
     }
 
     public async Task Receive_SendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestDto request, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_SendRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-        (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
-            .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
-        var fabricHosts = fabricHostsEnumerable.ToArray();
-        actor.EnqueueReceive(receiveSize);
-        if (fabricHosts.Length == 0)
-            return;
-
-        var state = new RequestState
+        _ = Task.Run(async () =>
         {
-            Routing = request.Routing,
-            Caller = caller,
-            Actor = actor,
-            Targets = fabricHosts
-        };
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_SendRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-        if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
-            return;
+            (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
+                .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
+            var fabricHosts = fabricHostsEnumerable.ToArray();
+            actor.EnqueueReceive(receiveSize);
+            if (fabricHosts.Length == 0)
+                return;
 
-        state.StartTimeout(TimeSpan.FromSeconds(60), () =>
-        {
-            state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
-            _ = CompleteRequestAsync(logger, state);
-        });
+            var state = new RequestState
+            {
+                Routing = request.Routing,
+                Caller = caller,
+                Actor = actor,
+                Targets = fabricHosts
+            };
 
-        foreach (var fabricHost in fabricHosts)
-            await fabricHost.Send_SendRequest_ToApiAsync(request, actor);
+            if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
+                return;
+
+            state.StartTimeout(TimeSpan.FromSeconds(60), () =>
+            {
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
+                _ = CompleteRequestAsync(logger, state);
+            });
+
+            foreach (var fabricHost in fabricHosts)
+                await fabricHost.Send_SendRequest_ToApiAsync(request, actor);
+        }, ct);
     }
-    public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestCancelledDto cancel, long receiveSize, CancellationToken token)
+    public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_SendRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
-
-        if (!OpenRequests.TryGetValue(cancel.Routing.RequestId, out var state))
-            return;
-
-        foreach (var target in state.Targets)
+        _ = Task.Run(async () =>
         {
-            await target.Send_SendRequestCancelled_ToApiAsync(cancel, state.Actor);
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_SendRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
+
+            if (!OpenRequests.TryGetValue(cancel.Routing.RequestId, out var state))
+                return;
+
+            foreach (var target in state.Targets)
+            {
+                await target.Send_SendRequestCancelled_ToApiAsync(cancel, state.Actor);
+            }
+        }, ct);
     }
     public async Task Receive_SendRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_SendRequestDone_FromApiAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
-
-        if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor.EnqueueReceive(receiveSize);
-
-        state.CompletedTargets[caller.FabricConnectionId] = 1;
-        if (done.ExceptionMessage != null)
+        _ = Task.Run(async () =>
         {
-            state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
-        }
-        if (done.Cancelled)
-        {
-            state.Cancel();
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_SendRequestDone_FromApiAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            state.CompletedTargets[caller.FabricConnectionId] = 1;
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+            }
+            if (done.Cancelled)
+            {
+                state.Cancel();
+            }
 
 
-        if (state.CompletedTargets.Count == state.Targets.Length)
-        {
-            await CompleteRequestAsync(logger, state);
-        }
+            if (state.CompletedTargets.Count == state.Targets.Length)
+            {
+                await CompleteRequestAsync(logger, state);
+            }
+        }, ct);
     }
     private async Task CompleteRequestAsync(ILogger<FabricManager> logger, RequestState state)
     {
@@ -179,74 +203,83 @@ public class FabricManager
 
     public async Task Receive_InvokeRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestDto request, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_InvokeRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-        (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
-            .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
-        var fabricHosts = fabricHostsEnumerable.ToArray();
-        actor.EnqueueReceive(receiveSize);
-        if (fabricHosts.Length == 0)
-            return;
-
-        var state = new RequestState
+        _ = Task.Run(async () =>
         {
-            Routing = request.Routing,
-            Actor = actor,
-            Caller = caller,
-            Targets = fabricHosts
-        };
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_InvokeRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-        if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
-            return;
+            (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
+                .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
+            var fabricHosts = fabricHostsEnumerable.ToArray();
+            actor.EnqueueReceive(receiveSize);
+            if (fabricHosts.Length == 0)
+                return;
 
-        state.StartTimeout(TimeSpan.FromSeconds(60), () =>
-        {
-            state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
-            _ = ReadyInvokeAsync(logger, state);
-        });
+            var state = new RequestState
+            {
+                Routing = request.Routing,
+                Actor = actor,
+                Caller = caller,
+                Targets = fabricHosts
+            };
 
-        foreach (var host in fabricHosts)
-            await host.Send_InvokeRequest_ToApiAsync(request, actor);
+            if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
+                return;
+
+            state.StartTimeout(TimeSpan.FromSeconds(60), () =>
+            {
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
+                _ = ReadyInvokeAsync(logger, state);
+            });
+
+            foreach (var host in fabricHosts)
+                await host.Send_InvokeRequest_ToApiAsync(request, actor);
+        }, ct);
     }
-    public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost fabricHost, ILogger<FabricManager> logger, InvokeRequestCancelledDto cancel, long receiveSize, CancellationToken token)
+    public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost fabricHost, ILogger<FabricManager> logger, InvokeRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_InvokeRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
-
-        if (!OpenRequests.TryGetValue(cancel.Routing.RequestId, out var state))
-            return;
-
-        foreach (var target in state.Targets)
+        _ = Task.Run(async () =>
         {
-            await target.Send_InvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_InvokeRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
+
+            if (!OpenRequests.TryGetValue(cancel.Routing.RequestId, out var state))
+                return;
+
+            foreach (var target in state.Targets)
+            {
+                await target.Send_InvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
+            }
+        }, ct);
     }
     public async Task Receive_InvokeRequestDoneAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_InvokeRequestDoneAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
-
-        if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-
-        state.ReadyTargets[caller.FabricConnectionId] = 0;
-        if (done.ExceptionMessage != null)
+        _ = Task.Run(async () =>
         {
-            state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
-        }
-        if (done.Cancelled)
-        {
-            state.Cancel();
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_InvokeRequestDoneAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
 
-        if (state.ReadyTargets.Count == state.Targets.Length)
-        {
-            await ReadyInvokeAsync(logger, state);
-        }
+            if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            state.ReadyTargets[caller.FabricConnectionId] = 0;
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+            }
+            if (done.Cancelled)
+            {
+                state.Cancel();
+            }
+
+            if (state.ReadyTargets.Count == state.Targets.Length)
+            {
+                await ReadyInvokeAsync(logger, state);
+            }
+        }, ct);
     }
     private async Task ReadyInvokeAsync(ILogger<FabricManager> logger, RequestState state)
     {
@@ -267,119 +300,131 @@ public class FabricManager
     // De orginele iteratie op de InvokeRequest:
     public async Task Receive_StreamingRequestServerToClient_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_StreamingRequestServerToClient_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-        if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-
-        foreach (var target in state.Targets)
+        _ = Task.Run(async () =>
         {
-            await target.Send_StreamingRequestServerToClient_ToApiAsync(request, state.Actor);
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_StreamingRequestServerToClient_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+
+            if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            foreach (var target in state.Targets)
+            {
+                await target.Send_StreamingRequestServerToClient_ToApiAsync(request, state.Actor);
+            }
+        }, ct);
     }
     public async Task Receive_StreamingResponseClientToServer_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_StreamingResponseClientToServer_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-        if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-
-        if (response.IsCompleted ||
-            response.IsCancelled ||
-            response.ExceptionMessage != null)
+        _ = Task.Run(async () =>
         {
-            state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_StreamingResponseClientToServer_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
 
-            if (response.ExceptionMessage != null)
+            if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            if (response.IsCompleted ||
+                response.IsCancelled ||
+                response.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(
-                    caller.FabricConnectionId,
-                    response.ExceptionMessage);
+                state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
+
+                if (response.ExceptionMessage != null)
+                {
+                    state.Exceptions.TryAdd(
+                        caller.FabricConnectionId,
+                        response.ExceptionMessage);
+                }
+
+                if (response.IsCancelled)
+                {
+                    state.Cancel();
+                }
+
+                if (state.CompletedTargets.Count == state.Targets.Length &&
+                    state.TryComplete())
+                {
+                    OpenRequests.TryRemove(state.Routing.RequestId, out _);
+
+                    response = new StreamingResponseDto(
+                        response.Routing,
+                        response.ArgumentIndex,
+                        response.StreamId,
+                        true,
+                        state.Cancelled,
+                        state.Exceptions.Count == 0
+                            ? null
+                            : string.Join(", ", state.Exceptions.Values),
+                        response.BinaryData);
+
+                    await state.Caller.Send_StreamingResponseClientToServer_ToApiAsync(
+                        response,
+                        state.Actor);
+                }
+
+                return;
             }
 
-            if (response.IsCancelled)
-            {
-                state.Cancel();
-            }
+            response = new StreamingResponseDto(
+                response.Routing,
+                response.ArgumentIndex,
+                response.StreamId,
+                false,
+                false,
+                null,
+                response.BinaryData);
 
-            if (state.CompletedTargets.Count == state.Targets.Length &&
-                state.TryComplete())
-            {
-                OpenRequests.TryRemove(state.Routing.RequestId, out _);
-
-                response = new StreamingResponseDto(
-                    response.Routing,
-                    response.ArgumentIndex,
-                    response.StreamId,
-                    true,
-                    state.Cancelled,
-                    state.Exceptions.Count == 0
-                        ? null
-                        : string.Join(", ", state.Exceptions.Values),
-                    response.BinaryData);
-
-                await state.Caller.Send_StreamingResponseClientToServer_ToApiAsync(
-                    response,
-                    state.Actor);
-            }
-
-            return;
-        }
-
-        response = new StreamingResponseDto(
-            response.Routing,
-            response.ArgumentIndex,
-            response.StreamId,
-            false,
-            false,
-            null,
-            response.BinaryData);
-
-        await state.Caller.Send_StreamingResponseClientToServer_ToApiAsync(
-            response,
-            state.Actor);
+            await state.Caller.Send_StreamingResponseClientToServer_ToApiAsync(
+                response,
+                state.Actor);
+        }, ct);
     }
 
     // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
     public async Task Receive_StreamingRequestClientToServer_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_StreamingRequestClientToServer_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-        if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-
-        if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+        _ = Task.Run(async () =>
         {
-            await state.Caller.Send_StreamingRequestClientToServer_ToApiAsync(request, state.Actor);
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_StreamingRequestClientToServer_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+
+            if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+            {
+                await state.Caller.Send_StreamingRequestClientToServer_ToApiAsync(request, state.Actor);
+            }
+        }, ct);
     }
     public async Task Receive_StreamingResponseServerToClient_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: Receive_StreamingResponseServerToClient_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-        if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
-            return;
-
-        state.ResetTimeout();
-        state.Actor?.EnqueueReceive(receiveSize);
-
-        if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+        _ = Task.Run(async () =>
         {
-            await sender.Send_StreamingResponseServerToClient_ToApiAsync(response, state.Actor);
-        }
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_StreamingResponseServerToClient_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+
+            if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+            {
+                await sender.Send_StreamingResponseServerToClient_ToApiAsync(response, state.Actor);
+            }
+        }, ct);
     }
 
     public async Task DisconnectAllAsync()

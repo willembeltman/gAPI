@@ -1,18 +1,14 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Wss;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace gAPI.Core.Server.Fabric;
 
@@ -28,7 +24,7 @@ public sealed class FabricClient : IAsyncDisposable
         ILoggerFactory loggerFactory,
         string? fabricConnectionString)
     {
-        Sender = new FabricClientSender(loggerFactory);
+        Sender = new FabricClientSender(this, loggerFactory);
 
         LocalSessionCache = sessionCache;
         StreamingCache = requestCache;
@@ -198,7 +194,7 @@ public sealed class FabricClient : IAsyncDisposable
     }
     public async Task ClearSession(SessionId sessionId, CancellationToken ct)
     {
-        if (Host == null)
+        if (Host == null || IsConnected == false)
         {
             LocalSessionCache.Remove(sessionId);
             return;
@@ -212,7 +208,7 @@ public sealed class FabricClient : IAsyncDisposable
         var sessionId = new SessionId(sessionIdString);
 
         // als er geen fabric is
-        if (Host == null)
+        if (Host == null || IsConnected == false)
         {
             if (LocalSessionCache.TryGet(sessionId, out var cookieData))
                 return cookieData;
@@ -766,10 +762,6 @@ public sealed class FabricClient : IAsyncDisposable
                     false,
                     null,
                     hasNext ? enumerator.Current : []);
-                //if (Host == null || IsConnected == false)
-                //StreamingCache.PendingStreamingResponses[(response.Routing.RequestId, response.ArgumentIndex, streamId)] = response;
-                //else
-                //    await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
 
                 if (!hasNext)
                 {
@@ -792,10 +784,6 @@ public sealed class FabricClient : IAsyncDisposable
                     true,
                     null,
                     []);
-                //if (Host != null)
-                //    await Sender.Send_StreamingResponse_ToFabricAsync(response, CancellationToken.None);
-                //else
-                //StreamingCache.PendingStreamingResponses[(response.Routing.RequestId, response.ArgumentIndex, streamId)] = response;
 
                 activeStreams.TryRemove(streamId, out _);
                 await enumerator.DisposeAsync();
@@ -815,10 +803,6 @@ public sealed class FabricClient : IAsyncDisposable
                     false,
                     ex.Message,
                     []);
-                //if (Host != null)
-                //    await Sender.Send_StreamingResponse_ToFabricAsync(response, CancellationToken.None);
-                //else
-                //StreamingCache.PendingStreamingResponses[(response.Routing.RequestId, response.ArgumentIndex, streamId)] = response;
 
                 activeStreams.TryRemove(streamId, out _);
                 await enumerator.DisposeAsync();

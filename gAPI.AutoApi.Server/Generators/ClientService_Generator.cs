@@ -27,6 +27,7 @@ public class ClientService_Generator : BaseGenerator
     public SharedReference UserId => Context.SharedReferences.UserId;
     public SharedReference SessionId => Context.SharedReferences.SessionId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
+    public SharedReference RequestId => Context.SharedReferences.RequestId;
 
     public override void GenerateCode()
     {
@@ -35,6 +36,7 @@ public class ClientService_Generator : BaseGenerator
         Reg(FabricClient);
         Reg(UserId);
         Reg(SessionId);
+        Reg(RequestId);
         Reg(ServiceId);
         Reg(ServiceId);
         Reg(ServiceMethodId);
@@ -132,7 +134,8 @@ public class {Name}(
         var serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
         var json = JsonSerializer.Serialize(payload);
         var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-        await FabricClient.SendAsync(ServiceId, serviceMethodId, UserId, SessionId, bytes{(cancellationToken == null ? ", default" : $", {cancellationToken.Name}")});
+        var requestId = {RequestId}.New();
+        await FabricClient.SendAsync(new (requestId, ServiceId, serviceMethodId, UserId, SessionId), bytes{(cancellationToken == null ? ", default" : $", {cancellationToken.Name}")});
     }}";
             }
             else

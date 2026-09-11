@@ -25,7 +25,7 @@ public record BackendConfig(
     string Extensions_Namespace,
 
     bool OverwriteMappers = true,
-    bool OverwriteServices = false, 
-    bool OverwriteServiceInterfaces = false, 
+    bool OverwriteServices = true, 
+    bool OverwriteServiceInterfaces = true, 
     bool OverwriteUseCases = false
     );

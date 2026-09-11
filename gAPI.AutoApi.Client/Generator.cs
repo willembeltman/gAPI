@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoApi.Client.Generators;
-using gAPI.AutoApi.Client.Generators.Authentication;
 using gAPI.AutoApi.Client.Generators.Clients;
 using gAPI.AutoApi.Client.Generators.Sse;
 using gAPI.AutoApi.Client.Generators.Startup;
@@ -32,7 +31,7 @@ public class Generator
             .Concat(ServiceContext.MinimalApiInterfaces)
             .Select(service => new ApiClientGenerator(this, service, customMultipartFormDataContentSerializers))
             .ToArray();
-        AddAutoClientServices = new AddAutoApiSseClientExtensionGenerator(this);
+        AddAutoClientServices = new AddAutoApiClientExtensionGenerator(this);
 
         ClientConnection = new ClientConnectionGenerator(this);
         IClientConnection = new IClientConnectionGenerator(this);
@@ -40,9 +39,9 @@ public class Generator
         ClientConnection = new ClientConnectionGenerator(this);
         IClientConnection = new IClientConnectionGenerator(this);
 
-        StateParser = new StateParserGenerator(this);
-        IAuthenticatedHttpClient = new IAuthenticatedHttpClientGenerator(this);
-        AuthenticatedHttpClient = new AuthenticatedHttpClientGenerator(this);
+        //StateParser = new StateParserGenerator(this);
+        //IAuthenticatedHttpClient = new IAuthenticatedHttpClientGenerator(this);
+        //AuthenticatedHttpClient = new AuthenticatedHttpClientGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -52,14 +51,14 @@ public class Generator
     public FormFileGenerator FormFile { get; }
     public FormFileExtensionGenerator IsFormFileExtension { get; }
     public ApiClientGenerator[] Clients { get; }
-    public AddAutoApiSseClientExtensionGenerator AddAutoClientServices { get; }
+    public AddAutoApiClientExtensionGenerator AddAutoClientServices { get; }
 
     public ClientConnectionGenerator ClientConnection { get; }
     public IClientConnectionGenerator IClientConnection { get; }
 
-    public StateParserGenerator StateParser { get; }
-    public IAuthenticatedHttpClientGenerator IAuthenticatedHttpClient { get; }
-    public AuthenticatedHttpClientGenerator AuthenticatedHttpClient { get; }
+    //public StateParserGenerator StateParser { get; }
+    //public IAuthenticatedHttpClientGenerator IAuthenticatedHttpClient { get; }
+    //public AuthenticatedHttpClientGenerator AuthenticatedHttpClient { get; }
 
     public void Generate(SourceProductionContext spc)
     {
@@ -114,13 +113,13 @@ public class Generator
         IClientConnection.GenerateCode();
         spc.AddSource(Path.Combine(IClientConnection.Directory, IClientConnection.FileName), SourceText.From(IClientConnection.Code, Encoding.UTF8));
 
-        GenerateItem(spc, StateParser);
+        //GenerateItem(spc, StateParser);
 
-        if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)
-        {
-            GenerateItem(spc, IAuthenticatedHttpClient);
-            GenerateItem(spc, AuthenticatedHttpClient);
-        }
+        //if (SharedReferences.IClientAuthenticatedHttpClientImplementation == null)
+        //{
+        //    GenerateItem(spc, IAuthenticatedHttpClient);
+        //    GenerateItem(spc, AuthenticatedHttpClient);
+        //}
     }
 
     private static void GenerateItem(SourceProductionContext spc, _BaseGenerator generator)

@@ -253,8 +253,9 @@ internal static class SerializerFactory<T>
         if (type == typeof(DateTime)) return "reader.ReadDateTime()";
         if (type == typeof(DateTimeOffset)) return "reader.ReadDateTimeOffset()";
 
-        if (type == typeof(ConnectionId)) return "reader.ReadConnectionId()";
-        if (type == typeof(FabricHostId)) return "reader.ReadFabricHostId()";
+        if (type == typeof(ClientConnectionId)) return "reader.ReadClientConnectionId()";
+        if (type == typeof(FabricConnectionId)) return "reader.ReadFabricConnectionId()";
+        if (type == typeof(ServiceSubscriptionId)) return "reader.ReadServiceSubscriptionId()";
         if (type == typeof(RequestId)) return "reader.ReadRequestId()";
         if (type == typeof(SessionId)) return "reader.ReadSessionId()";
         if (type == typeof(ServiceSubscriptionId)) return "reader.ReadServiceSubscriptionId()";
@@ -409,11 +410,11 @@ internal static class SerializerFactory<T>
         typeof(string),
         typeof(DateTime),
         typeof(DateTimeOffset),
-        typeof(ConnectionId),
-        typeof(FabricHostId),
+        typeof(ClientConnectionId),
+        typeof(FabricConnectionId),
+        typeof(ServiceSubscriptionId),
         typeof(RequestId),
         typeof(SessionId),
-        typeof(ServiceSubscriptionId),
         typeof(SseManagerId),
         typeof(ServiceId),
         typeof(ServiceMethodId),

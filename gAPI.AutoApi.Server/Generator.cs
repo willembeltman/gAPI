@@ -41,7 +41,7 @@ public class Generator
         ClientContext = new ClientContext_Generator(this);
 
 
-        AddAutoApi = new AddAutoApiSseServerExtension_Generator(this);
+        AddAutoApi = new AddAutoApiServerExtension_Generator(this);
         SseEndpointExtension = new SseEndpointExtension_Generator(this);
     }
 
@@ -54,7 +54,7 @@ public class Generator
     public ClientServiceContext_Generator[] ClientContexts { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
-    public AddAutoApiSseServerExtension_Generator AddAutoApi { get; }
+    public AddAutoApiServerExtension_Generator AddAutoApi { get; }
     public SseEndpointExtension_Generator SseEndpointExtension { get; }
 
     public void Generate(SourceProductionContext spc)

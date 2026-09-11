@@ -17,7 +17,7 @@ public class AuthenticationService<TUser, TStateDto>(
     IStateMapping<TUser, TStateDto> stateMapping,
     IStateParser<TStateDto> stateParser,
     IHostEnvironment hostEnvironment,
-    FabricClient fabricClient,
+    IEnumerable<FabricClient> fabricClient,
     AuthenticationOptions authenticationOptions,
     IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks) // optioneel.
     : IAuthenticationService<TUser, TStateDto>
@@ -61,8 +61,8 @@ public class AuthenticationService<TUser, TStateDto>(
     public async Task<AuthenticationInitializeResult> InitializeAsync(
         PathString path,
         QueryString query,
-        IPAddress? ipAddress, 
-        string? cookieData, 
+        IPAddress? ipAddress,
+        string? cookieData,
         string? sessionData,
         string? stateData,
         CancellationToken ct)
@@ -139,8 +139,9 @@ public class AuthenticationService<TUser, TStateDto>(
             }
         }
 
-        if (authenticationOptions.UpdateSession)
-            await fabricClient.UpdateSession(headers.SessionId, headers.CookieData, ct);
+        if (fabricClient.Any())
+            if (authenticationOptions.UpdateSession)
+                await fabricClient.Last().UpdateSession(headers.SessionId, headers.CookieData, ct);
 
         _Result = new AuthenticationInitializeResult()
         {
@@ -237,7 +238,8 @@ public class AuthenticationService<TUser, TStateDto>(
             return false;
         //throw new Exception("Initialize the ServerAuthenticationService first please");
 
-        await fabricClient.ClearSession(_Headers.SessionId, ct);
+        if (fabricClient.Any())
+            await fabricClient.Last().ClearSession(_Headers.SessionId, ct);
 
         _Headers.RemoveCookie();
         await ReInitializeAsync(ct);

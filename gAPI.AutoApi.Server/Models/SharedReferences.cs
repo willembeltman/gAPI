@@ -13,13 +13,16 @@ public class SharedReferences
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Sse.SseServiceSubscription", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
+        RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
-        ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerConfig", allSymbols);
+        ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServerConfig", allSymbols);
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
+        ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
+        StreamingCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
         AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
     }
 
@@ -28,13 +31,16 @@ public class SharedReferences
 
     public SharedReference FabricClient { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
+    public SharedReference ServerConnectionCollection { get; }
     public SharedReference SseServiceSubscription { get; }
     public SharedReference ServiceId { get; }
+    public SharedReference RequestId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }
     public SharedReference SessionId { get; }
     public SharedReference IServerAuthenticationService { get; }
     public SharedReference ServerConfig { get; }
     public SharedReference SessionCache { get; }
+    public SharedReference StreamingCache { get; }
     public SharedReference AuthenticationOptions { get; }
 }

@@ -47,21 +47,21 @@ public class NoDbAuthenticationServiceGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
-        Reg(State);
-        Reg(User);
-        Reg(IAuthenticationCheckT);
-        Reg(IUserTokenFactoryT);
-        Reg(UserId);
-        Reg(SessionCache);
-        Reg(IAuthenticationStateFactoryT);
-        Reg(AuthenticationInitializeResult);
-        Reg(SessionId);
-        Reg(UserId);
-        Reg(NoDbServerAuthenticationServiceT);
-        Reg(AuthenticationHeaders);
-        Reg(IStateParserT);
-        Reg(IAuthenticationService);
-        Reg(FabricClient);
+        //Reg(State);
+        //Reg(User);
+        //Reg(IAuthenticationCheckT);
+        //Reg(IUserTokenFactoryT);
+        //Reg(UserId);
+        //Reg(SessionCache);
+        //Reg(IAuthenticationStateFactoryT);
+        //Reg(AuthenticationInitializeResult);
+        //Reg(SessionId);
+        //Reg(UserId);
+        //Reg(NoDbServerAuthenticationServiceT);
+        //Reg(AuthenticationHeaders);
+        //Reg(IStateParserT);
+        //Reg(IAuthenticationService);
+        //Reg(FabricClient);
         Reg(AuthenticationOptions);
         Reg("Microsoft.Extensions.Primitives");
         Reg("System.Security.Claims");
@@ -72,18 +72,18 @@ public class NoDbAuthenticationServiceGenerator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IStateMappingT}<{User}, {State}> stateMapping,
-    {IStateParserT}<{State}> stateSerializer,
-    {FabricClient} fabricClient,
+    {IStateMappingT.FullName}<{User.FullName}, {State.FullName}> stateMapping,
+    {IStateParserT.FullName}<{State.FullName}> stateSerializer,
+    {FabricClient.FullName} fabricClient,
     {AuthenticationOptions} authenticationOptions,
-    IEnumerable<{IAuthenticationCheckT}<{User}, {State}>> authenticationChecks) 
-    : {NoDbServerAuthenticationServiceT}<{User}, {State}>(
+    IEnumerable<{IAuthenticationCheckT.FullName}<{User.FullName}, {State.FullName}>> authenticationChecks) 
+    : {NoDbServerAuthenticationServiceT.FullName}<{User.FullName}, {State.FullName}>(
         stateMapping,
         stateSerializer,
         fabricClient,
         authenticationOptions,
         authenticationChecks)
-    , {IAuthenticationService}
+    , {IAuthenticationService.FullName}
 {{
 }}";
     }

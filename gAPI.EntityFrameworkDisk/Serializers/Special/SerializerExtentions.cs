@@ -38,12 +38,20 @@ public static class SerializerExtensions
         bw.Write(value.Ticks);              // long
         bw.Write((int)value.Offset.TotalMinutes); // int
     }
-
-    public static ConnectionId ReadConnectionId(this BinaryReader br)
+    public static FabricConnectionId ReadFabricConnectionId(this BinaryReader br)
     {
-        return new ConnectionId(br.ReadInt64());
+        return new FabricConnectionId(br.ReadInt64());
     }
-    public static void Write(this BinaryWriter bw, ConnectionId value)
+    public static void Write(this BinaryWriter bw, FabricConnectionId value)
+    {
+        bw.Write(value.Value);
+    }
+
+    public static ClientConnectionId ReadClientConnectionId(this BinaryReader br)
+    {
+        return new ClientConnectionId(br.ReadInt64());
+    }
+    public static void Write(this BinaryWriter bw, ClientConnectionId value)
     {
         bw.Write(value.Value);
     }
@@ -85,11 +93,11 @@ public static class SerializerExtensions
         bw.Write(value.Value);
     }
 
-    public static FabricHostId ReadFabricHostId(this BinaryReader br)
+    public static ServiceSubscriptionId ReadServiceSubscriptionId(this BinaryReader br)
     {
-        return new FabricHostId(br.ReadInt64());
+        return new ServiceSubscriptionId(br.ReadInt64());
     }
-    public static void Write(this BinaryWriter bw, FabricHostId value)
+    public static void Write(this BinaryWriter bw, ServiceSubscriptionId value)
     {
         bw.Write(value.Value);
     }
@@ -112,14 +120,14 @@ public static class SerializerExtensions
         bw.Write(value.Value);
     }
 
-    public static ServiceSubscriptionId ReadServiceSubscriptionId(this BinaryReader br)
-    {
-        return new ServiceSubscriptionId(br.ReadInt64());
-    }
-    public static void Write(this BinaryWriter bw, ServiceSubscriptionId value)
-    {
-        bw.Write(value.Value);
-    }
+    //public static ServiceSubscriptionId ReadServiceSubscriptionId(this BinaryReader br)
+    //{
+    //    return new ServiceSubscriptionId(br.ReadInt64());
+    //}
+    //public static void Write(this BinaryWriter bw, ServiceSubscriptionId value)
+    //{
+    //    bw.Write(value.Value);
+    //}
 
     public static SseManagerId ReadSseManagerId(this BinaryReader br)
     {

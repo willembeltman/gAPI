@@ -38,6 +38,7 @@ public class AddCrudExtensionsGenerator : BaseGenerator
             var key = entity.KeyProperty.TypeSimpleName;
             Reg(useCase);
             Reg(mapping);
+            Reg("Microsoft.Extensions.DependencyInjection");
             useCaseCode += @$"
         services.AddScoped<{IUseCase}<{entity.FullName}, {dto.FullName}, {key}>, {useCase.Name}>();";
             mappingCode += @$"

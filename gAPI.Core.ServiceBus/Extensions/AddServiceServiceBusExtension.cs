@@ -56,7 +56,7 @@ public static class AddServiceServiceBusExtension
 
         var handlerFullName = typeof(IHandler).FullName;
         if (handlerFullName == null)
-            throw new Exception("Wtf?");
+            throw new Exception($"Cannot find handler without name");
         foreach (var item in handlerTypes)
         {
             if (item == null) continue;

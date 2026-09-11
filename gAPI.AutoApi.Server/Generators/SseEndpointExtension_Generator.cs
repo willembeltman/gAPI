@@ -24,6 +24,7 @@ public class SseEndpointExtension_Generator : BaseGenerator
     
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
+    public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
 
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference SseServiceSubscription => Context.SharedReferences.SseServiceSubscription;
@@ -37,6 +38,7 @@ public class SseEndpointExtension_Generator : BaseGenerator
         Reg(IServerAuthenticationService);
         Reg(FabricClient);
         Reg(ServiceSubscriptionCollection);
+        Reg(ServerConnectionCollection);
         Reg(ServiceId);
         Reg(SseServiceSubscription);
         Code = $@"{GetNamespacesCode()}
@@ -52,13 +54,15 @@ public static class {Name}
         app.MapGet(""/SseServiceSubscription/connect/{{serviceId}}"", async (
             string serviceId,
             [FromHeader(Name = ""X-SessionId"")] string sessionId,
-            {IServerAuthenticationService} authenticationService,
-            {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
-            {FabricClient} fabricClient,
+            [FromServices] {IServerAuthenticationService} authenticationService,
+            [FromServices] {ServerConnectionCollection} serverConnectionCollection,
+            [FromServices] {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
+            [FromServices] {FabricClient} fabricClient,
             CancellationToken ct
         ) =>
         {{
             var SseServiceSubscription = new {SseServiceSubscription}(
+                serverConnectionCollection,
                 ServiceSubscriptionCollection,
                 fabricClient,
                 new {ServiceId}(serviceId),

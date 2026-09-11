@@ -3,9 +3,9 @@ using gAPI.AutoApi.Client.Models;
 
 namespace gAPI.AutoApi.Client.Generators.Startup;
 
-public class AddAutoApiSseClientExtensionGenerator : _BaseGenerator
+public class AddAutoApiClientExtensionGenerator : _BaseGenerator
 {
-    public AddAutoApiSseClientExtensionGenerator(Generator context)
+    public AddAutoApiClientExtensionGenerator(Generator context)
     {
         Context = context;
 
@@ -19,7 +19,8 @@ public class AddAutoApiSseClientExtensionGenerator : _BaseGenerator
     public Generator Context { get; }
     public ApiClientGenerator[] Clients => Context.Clients;
     public SharedReference ClientConnection => Context.ClientConnection;
-    public SharedReference IClientConnection => Context.SharedReferences.ISseClientConnection;
+    public SharedReference IClientConnection => Context.IClientConnection;
+    public SharedReference ISseClientConnection => Context.SharedReferences.ISseClientConnection;
     public SharedReference SseManagerCollection => Context.SharedReferences.SseManagerCollection;
 
     public SharedReference IUriNavigationManager => Context.SharedReferences.IUriNavigationManager;
@@ -28,9 +29,9 @@ public class AddAutoApiSseClientExtensionGenerator : _BaseGenerator
     public SharedReference WithCookiesHandler => Context.SharedReferences.WithCookiesHandler;
 
 
-    public SharedReference? IClientAuthenticatedHttpClientImplementation => Context.SharedReferences.IClientAuthenticatedHttpClientImplementation;
-    public SharedReference AuthenticatedHttpClient => Context.AuthenticatedHttpClient;
-    public SharedReference IAuthenticatedHttpClient => Context.IAuthenticatedHttpClient;
+    //public SharedReference? IClientAuthenticatedHttpClientImplementation => Context.SharedReferences.IClientAuthenticatedHttpClientImplementation;
+    //public SharedReference AuthenticatedHttpClient => Context.AuthenticatedHttpClient;
+    //public SharedReference IAuthenticatedHttpClient => Context.IAuthenticatedHttpClient;
 
     public override void GenerateCode()
     {
@@ -39,7 +40,7 @@ public class AddAutoApiSseClientExtensionGenerator : _BaseGenerator
         Reg("Microsoft.AspNetCore.Components");
         Reg("Microsoft.AspNetCore.Components.Authorization");
         Reg(ClientConnection);
-        Reg(IClientConnection);
+        Reg(ISseClientConnection);
         Reg(SseManagerCollection);
         Reg(DefaultNavigationManager);
         Reg(StaticNavigationManager);
@@ -60,10 +61,11 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static void AddAutoApiSseClient(this IServiceCollection services, string apiUrl)
+    public static void AddAutoApiClient(this IServiceCollection services, string apiUrl)
     {{{propertiesCode}
         services.AddSingleton<{ClientConnection}>();
         services.AddSingleton<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddSingleton<{ISseClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
 
         var sseManagerCollection = new {SseManagerCollection}();
         services.AddSingleton(sseManagerCollection);
@@ -85,19 +87,7 @@ public static class {Name}
         // Register the cookie handler
         services.AddSingleton<{WithCookiesHandler}>();
 
-{(IClientAuthenticatedHttpClientImplementation == null ? $@"
 
-        // Register global client authentication service
-        services.AddSingleton<{AuthenticatedHttpClient}>();
-        services.AddSingleton<{IAuthenticatedHttpClient}>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddSingleton<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddSingleton<AuthenticationStateProvider>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-" : $@"
-
-        // Register global client authentication service
-        services.AddSingleton<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
-        services.AddSingleton<AuthenticationStateProvider>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
-")}
     }}
 }}";
     }

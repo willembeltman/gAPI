@@ -7,7 +7,7 @@ using System.Threading.Channels;
 namespace gAPI.Core.Server.Fabric;
 
 public class FabricClientSender(
-    ILoggerFactory loggerFactory)
+FabricClient fabricClient, ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
@@ -16,7 +16,7 @@ public class FabricClientSender(
     {
         await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
         {
-            while (binaryWriter == null)
+            while (fabricClient.IsConnected == false)
             {
                 await Task.Delay(10, ct);
             }

@@ -29,7 +29,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference SendRequestCancelledDto => Context.SharedReferences.SendRequestCancelledDto;
     public SharedReference SseManagerId => Context.SharedReferences.SseManagerId;
-    public SharedReference IClientConnection => Context.SharedReferences.ISseClientConnection;
+    public SharedReference IClientConnection => Context.IClientConnection;
 
     public override void GenerateCode()
     {
@@ -132,14 +132,14 @@ public class {Name} : {IClientConnection.Name}
 
     public async Task SendRequest_ReceivedAsync({SendRequestDto} message, CancellationToken ct)
     {{{(Interfaces.Length > 0 ? $@"
-        switch (message.ServiceId.Value)
+        switch (message.Routing.ServiceId.Value)
         {{{string.Join("\r\n", Interfaces
         .Select(i =>
         {
             Reg(i);
             return $@"
             case ""{i.Name}"":
-                switch(message.MethodId.Value)
+                switch(message.Routing.MethodId.Value)
                 {{{string.Join("\r\n", i.Methods.Select(m =>
                     {
                         var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");

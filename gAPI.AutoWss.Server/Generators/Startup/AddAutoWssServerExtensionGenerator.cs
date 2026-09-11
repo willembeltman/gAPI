@@ -32,7 +32,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
-    public SharedReference AuthenticationOptions => Context.SharedReferences.AuthenticationOptions;
 
     public override void GenerateCode()
     {
@@ -44,7 +43,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
         Reg(SessionCache);
-        Reg(AuthenticationOptions);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
@@ -152,7 +150,6 @@ public static class {Name}
         TimeProvider? dateTime = null)
     {{
         services.AddSingleton(dateTime ?? TimeProvider.System);
-        services.AddSingleton(new {AuthenticationOptions}(true));
 
         services.AddHttpContextAccessor();
         if (frontendUrl != null)

@@ -32,11 +32,11 @@ public class IAuthenticationServiceGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
-        Reg(State);
-        Reg(User);
-        Reg(IServerAuthenticationService);
-        Reg(AuthenticationState);
-        Reg(IAuthenticationServiceT);
+        //Reg(State);
+        //Reg(User);
+        //Reg(IServerAuthenticationService);
+        //Reg(AuthenticationState);
+        //Reg(IAuthenticationServiceT);
         Reg("Microsoft.Extensions.Primitives");
 
         Code = $@"{GetNamespacesCode()}
@@ -45,8 +45,8 @@ public class IAuthenticationServiceGenerator : _BaseGenerator
 namespace {Namespace};
 
 public interface {Name}
-    : {IAuthenticationServiceT}<{User}, {State}>
-    , {IServerAuthenticationService}
+    : {IAuthenticationServiceT.FullName}<{User.FullName}, {State.FullName}>
+    , {IServerAuthenticationService.FullName}
 {{
 }}
 

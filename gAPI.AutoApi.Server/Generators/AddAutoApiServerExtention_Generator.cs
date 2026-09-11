@@ -5,23 +5,23 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators;
 
-public class AddAutoApiSseServerExtension_Generator : BaseGenerator
+public class AddAutoApiServerExtension_Generator : BaseGenerator
 {
-    public AddAutoApiSseServerExtension_Generator(Generator context)
+    public AddAutoApiServerExtension_Generator(Generator context)
     {
         Context = context;
 
         Directory = "";
         Namespace = "gAPI.Generated";
 
-        Name = "AddAutoApiSseServerExtension";
+        Name = "AddAutoApiServerExtension";
         FileName = $"{Name}.g.cs";
     }
 
     public Generator Context { get; }
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    
+
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
@@ -37,6 +37,8 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
     public SharedReference SseServiceSubscription => Context.SharedReferences.SseServiceSubscription;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference AuthenticationOptions => Context.SharedReferences.AuthenticationOptions;
+    public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
+    public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
 
     public override void GenerateCode()
     {
@@ -48,7 +50,8 @@ public class AddAutoApiSseServerExtension_Generator : BaseGenerator
         Reg(SessionId);
         Reg(SseServiceSubscription);
         Reg(SessionCache);
-        Reg(AuthenticationOptions);
+        Reg(ServerConnectionCollection);
+        //Reg(AuthenticationOptions);
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Builder");
@@ -105,13 +108,13 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static IServiceCollection AddAutoApiSseServer(this IServiceCollection services, {ServerConfig} serverConfig)
+    public static IServiceCollection AddAutoApiServer(this IServiceCollection services, {ServerConfig} serverConfig)
     {{
-        return AddAutoApiSseServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        return AddAutoApiServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
     }}
-    public static IServiceCollection AddAutoApiSseServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString)
+    public static IServiceCollection AddAutoApiServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString)
     {{
-        services.AddSingleton(new {AuthenticationOptions}(false));
+        services.AddSingleton(new {AuthenticationOptions.FullName}(false));
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         services.AddHttpContextAccessor();
@@ -128,12 +131,26 @@ public static class {Name}
             }});
         }});
 
-        services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
+        var serverConnectionCollection = new {ServerConnectionCollection}();
+        services.AddSingleton(serverConnectionCollection);
 
-        var ServiceSubscriptionCollection = new {ServiceSubscriptionCollection}();
-        services.AddSingleton(ServiceSubscriptionCollection);
+        var sessionCache = new {SessionCache}();
+        services.AddSingleton(sessionCache);
 
-        {propertiesCode}
+        var streamingCache = new {StreamingCache}();
+        services.AddSingleton(streamingCache);
+
+        var serviceSubscriptionCollection = new {ServiceSubscriptionCollection}();
+        services.AddSingleton(serviceSubscriptionCollection);
+
+        services.AddSingleton(sp => new {FabricClient}(
+            sessionCache, 
+            streamingCache,
+            serviceSubscriptionCollection,
+            sp.GetRequiredService<ILoggerFactory>(), 
+            fabricConnectionString));
+
+{propertiesCode}
         services.AddAuthorization();
         services.AddControllers();
 
@@ -152,11 +169,6 @@ public static class {Name}
             }});
         }});
 
-        services.AddSingleton(sp => new {FabricClient}(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
-
-        var sessionCache = new {SessionCache}();
-        services.AddSingleton(sessionCache);
-
         services.AddScoped<{IClientContext}, {ClientContext}>();
 
 {string.Join("", Context.ClientContexts.Select(a => $@"
@@ -165,7 +177,7 @@ public static class {Name}
         return services;
     }}
 
-    public static WebApplication MapAutoApiSseServer<TMiddleware>(this WebApplication app)
+    public static WebApplication MapAutoApiServer(this WebApplication app)
     {{
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {{
@@ -173,10 +185,6 @@ public static class {Name}
         }});
 
         app.UseCors(""AllowSpecificOrigin"");
-
-        app.UseMiddleware<TMiddleware>();
-        app.UseAuthentication();
-        app.UseAuthorization();
 
         // 🔥 State handshake endpoint
         app.MapGet(""/__state"", ([FromHeader(Name = ""X-SessionId"")] string sessionId) => {{ }}).AllowAnonymous();
