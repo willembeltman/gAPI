@@ -1,54 +1,124 @@
-﻿# gAPI
+﻿# gAPI.Core
 
-Core library for the gAPI framework – fast, type-safe API generation and data abstraction for .NET.
+Shared contracts, attributes, identifiers, DTOs, serializers, and runtime helpers used by the gAPI source generators and analyzers.
 
-gAPI forms the foundation of the gAPI (Generated API Framework) ecosystem.
-It provides the essential building blocks that power gAPI’s automatic API generation, serialization, and data-mapping systems.
+`gAPI.Core` contains the common building blocks required by the gAPI code-generation ecosystem. It is intentionally lightweight and primarily exists to provide a shared foundation for generated APIs, hubs, serializers, components, and related tooling.
 
 ## 🔧 What’s inside
 
-This package contains the core components that are reused across the gAPI ecosystem:
+### Attributes
 
-### AutoComparer – Deep, type-aware object comparison utilities.
-Supports custom equality logic and recursive comparison for complex models.
+The attributes used to describe and control code generation.
 
-### AutoMapper – A lightweight, reflection-based mapping engine for DTO ↔ Entity conversion.
-Includes type models, factories, and customizable mapping extensions.
+These include attributes for:
 
-### AutoSerializer – Unified serialization infrastructure for efficient, version-safe data exchange.
+- API and Hub generation
+- Minimal API generation
+- Serializer generation
+- Components and pages
+- CRUD operations
+- Authorization and authentication
+- State management
+- Storage files
+- Entity relationships
+- Property metadata and generation behavior
 
-### EntityFrameworkDisk – A local, disk-based implementation of DbContext and DbSet for offline persistence.
-Ideal for caching, testing, or lightweight storage scenarios.
+Examples include:
 
-### Storage – Abstractions for file-based and cloud storage, with implementations for
+```
+[GenerateApi]
+[GenerateHub]
+[GenerateSerializer]
+[IsAuthorized]
+[IsCreate]
+[IsUpdate]
+[IsReadOnly]
+```
 
-Mock (in-memory)
+### DTOs
 
-Azure Blob Storage
+Shared data-transfer contracts used by generated code and gAPI runtime communication.
 
-gAPI StorageServer
+This includes request/response contracts, routing information, streaming messages, session state, subscriptions, synchronization, and cancellation messages.
+
+### Identifiers
+
+Strongly typed identifiers used throughout the generated communication infrastructure.
+
+Examples include:
+
+- `RequestId`
+- `ServiceId`
+- `ServiceMethodId`
+- `SessionId`
+- `StreamId`
+- `UserId`
+- `ClientConnectionId`
+- `FabricConnectionId`
+
+### Serializer infrastructure
+
+Low-level serialization helpers and primitive serializers used by generated serializers and source generators.
+
+This includes serializers for:
+
+- Primitive types
+- `Guid`
+- `DateTime`
+- `DateTimeOffset`
+- `IFormFile`
+- WebSocket message enums
+- Application state
+
+### Runtime helpers
+
+Small runtime components required by generated code, including:
+
+- Remote async enumerable support
+- Remote async enumerators
+- Cancellation and timeout handling
+- Streaming helpers
+- Remote exception handling
+- Data-chunk stream readers
+- Environment/path utilities
+
+### Sse & Wss
+
+Shared types and infrastructure used by generated Server-Sent Events and WebSocket communication.
+
+This includes result types, SSE events, WebSocket converters, logging infrastructure, and related contracts.
 
 ## 🧠 Purpose
 
-gAPI is not a standalone API framework — it’s the common core used by:
+`gAPI.Core` is the common foundation shared by the gAPI source generators, analyzers, and generated code.
 
-gAPI.AutoApi – generated backend APIs
+It does not provide a complete API framework by itself. Instead, it defines the contracts and supporting infrastructure that allow the individual gAPI packages to work together while keeping the actual code-generation logic in their respective analyzer/generator packages.
 
-gAPI.AutoClient – generated client SDKs
+The architecture is intentionally split so that:
 
-gAPI.AutoComponents – generated component SDKs
+- `gAPI.Core` provides shared contracts and helpers
+- gAPI analyzers inspect user code and attributes
+- gAPI source generators produce the required implementation
+- generated code uses the contracts and runtime helpers from `gAPI.Core`
 
-gAPI.CodeGen.* – code generation tools
+This keeps the generated code strongly typed while avoiding a large runtime dependency.
 
-gAPI.StorageServer – storage and persistence services
+## 📦 Part of the gAPI ecosystem
 
-Together, these packages allow developers to generate complete, type-safe, fully linked client–server systems with minimal boilerplate.
+`gAPI.Core` is used by packages such as:
+
+- `gAPI.AutoApi`
+- `gAPI.AutoWss`
+- `gAPI.AutoSerializer`
+- `gAPI.AutoComponents`
+- `gAPI.CodeGen.*`
+
+Each package builds on the same core contracts and conventions.
 
 ## 🚀 Status
 
-This project is part of the early-stage development of gAPI.
-The first pre-release version (v0.0.1) will become available soon.
+`gAPI.Core` is part of the ongoing development of the gAPI framework.
 
-Stay tuned for documentation and samples.
+The API and internal contracts may still change while the framework is under active development.
 
 — Willem-Jan Beltman

@@ -5,7 +5,7 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 
-		<Version>0.0.1-alpha</Version>
+		<Version>0.0.1-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 
@@ -22,26 +22,25 @@
 
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<Copyright>Copyright © 2026 Willem Beltman</Copyright>
+		<PackageReleaseNotes>Improved record support with inheritance.</PackageReleaseNotes>
+
+		<!-- Dit zorgt ervoor dat de DLL niet in de standaard 'lib' map terechtkomt -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Common"
-                          Version="5.9.0"
-                          PrivateAssets="all" />
+		<!-- Up-to-date en specifieke packages voor C# Source Generators -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="README.md"
-              Pack="true"
-              PackagePath="" />
-	</ItemGroup>
+		<!-- Zorgt dat je README netjes meegaat in het NuGet-pakket -->
+		<None Include="README.md" Pack="true" PackagePath="" />
 
-	<Target Name="PackAnalyzer" BeforeTargets="Pack">
-		<ItemGroup>
-			<None Include="$(TargetPath)"
-                  Pack="true"
-                  PackagePath="analyzers/dotnet/cs" />
-		</ItemGroup>
-	</Target>
+		<!-- Plaatst je gecompileerde generator DLL exact in de juiste analyzer-map voor de compiler -->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
 
 </Project>
