@@ -7,4 +7,5 @@ namespace gAPI.Core.Dtos;
 public record StreamingRequestDto(
     RoutingDto Routing,
     int ArgumentIndex,
-    StreamId StreamId);
+    StreamId StreamId,
+    bool Cancelled);

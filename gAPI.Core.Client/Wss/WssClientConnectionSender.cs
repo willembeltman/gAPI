@@ -239,5 +239,4 @@ public class WssClientConnectionSender(IClientLoggerFactory LoggerFactory)
         {
         }
     }
-
 }

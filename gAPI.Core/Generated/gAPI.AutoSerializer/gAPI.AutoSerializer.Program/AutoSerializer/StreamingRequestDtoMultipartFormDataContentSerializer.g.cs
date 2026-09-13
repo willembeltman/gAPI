@@ -19,5 +19,6 @@ public static class StreamingRequestDtoMultipartFormDataContentSerializer
         RoutingDtoMultipartFormDataContentSerializer.Write(___content, "Routing", value.Routing);
         ___content.Add(new StringContent(value.ArgumentIndex.ToString()), "ArgumentIndex");
         StreamIdMultipartFormDataContentSerializer.Write(___content, "StreamId", value.StreamId);
+        ___content.Add(new StringContent(value.Cancelled.ToString()), "Cancelled");
     }
 }

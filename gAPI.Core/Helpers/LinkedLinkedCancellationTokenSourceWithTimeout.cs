@@ -8,6 +8,9 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
     private bool _disposed;
     private readonly object _lock = new();
 
+    public Action? OnTimeout { get; set; }
+    public Action? OnDispose { get; set; }
+
     public LinkedCancellationTokenSourceWithTimeout(
         TimeSpan timeoutDuration,
         CancellationToken ct = default)
@@ -19,6 +22,21 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
         _timeout = new ResettableTimeout(
             timeoutDuration,
             Cancel);
+    }
+    public LinkedCancellationTokenSourceWithTimeout(
+        TimeSpan timeoutDuration,
+        Action onTimeout,
+        CancellationToken ct = default) : this(timeoutDuration, ct)
+    {
+        OnTimeout = onTimeout;
+    }
+    public LinkedCancellationTokenSourceWithTimeout(
+        TimeSpan timeoutDuration,
+        Action onTimeout,
+        Action onDispose,
+        CancellationToken ct = default) : this(timeoutDuration, onTimeout, ct)
+    {
+        OnDispose = onDispose;
     }
 
     public CancellationToken Token => _cts.Token;
@@ -35,6 +53,7 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
                 return;
 
             _cts.Cancel();
+            OnTimeout?.Invoke();
         }
     }
     public void Reset()
@@ -59,6 +78,8 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
 
             _timeout.Dispose();
             _cts.Dispose();
+
+            OnDispose?.Invoke();
         }
     }
 }

@@ -42,7 +42,7 @@ public class HubClient_Generator : _BaseGenerator
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
-    public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
+    public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
     public SharedReference? OwnImplementation { get; }
 
@@ -107,7 +107,6 @@ public class HubClient_Generator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IServerAuthenticationService} ___authenticationService,
     {FabricClient} ___fabricClient,
     ILoggerFactory ___loggerFactory,
     {SessionId}? ___sessionId,
@@ -145,7 +144,7 @@ public class {Name}(
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
-    public Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
+    public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
@@ -166,29 +165,14 @@ public class {Name}(
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
-            var task = ___fabricClient.SendAsync(
+            await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
                 {(ct == null ? "___Cts.Token" : ct.Name)});
-            return {method.Name}_Task(___routing, task, {(ct == null ? "___Cts.Token" : ct.Name)});
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
-        {{
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
-        }}" : "")}
-    }}
-    public async Task {method.Name}_Task({RoutingDto} ___routing, Task ___task, CancellationToken ___ct)
-    {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{method.Name}_Task({{___routing}}, {{___task}})"", ___routing, ___task);
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
-        {{
-            await ___task;
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        finally
-        {{
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
     }}";
     }
@@ -233,8 +217,8 @@ public class {Name}(
             }}
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
-        {{
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
     }}";
     }

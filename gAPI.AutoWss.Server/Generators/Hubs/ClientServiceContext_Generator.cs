@@ -45,17 +45,16 @@ public class ClientServiceContext_Generator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IServerAuthenticationService} authenticationService,
     {FabricClient} fabricClient,
     ILoggerFactory loggerFactory)
     : {IClientContext}
 {{
     public {IClient} ToAll
-        => new {Client}(authenticationService, fabricClient, loggerFactory, null, null);
+        => new {Client}(fabricClient, loggerFactory, null, null);
     public {IClient} ToUser({UserId} userId)
-        => new {Client}(authenticationService, fabricClient, loggerFactory, null, userId);
+        => new {Client}(fabricClient, loggerFactory, null, userId);
     public {IClient} ToSession({SessionId} sessionId)
-        => new {Client}(authenticationService, fabricClient, loggerFactory, sessionId, null);
+        => new {Client}(fabricClient, loggerFactory, sessionId, null);
 }}";
     }
 }

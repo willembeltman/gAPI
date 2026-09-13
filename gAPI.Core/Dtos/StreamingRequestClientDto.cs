@@ -8,6 +8,7 @@ public record StreamingRequestClientDto(
     RoutingDto Routing,
     int ArgumentIndex,
     StreamId StreamId,
+    bool Cancelled,
     bool StateIsChanged,
     string? StateData) 
-    : StreamingRequestDto(Routing, ArgumentIndex, StreamId);
+    : StreamingRequestDto(Routing, ArgumentIndex, StreamId, Cancelled);

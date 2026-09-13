@@ -14,7 +14,7 @@ public static class StreamingRequestClientDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x4E22B154;
-    public const uint SchemaHash = 0xC68458E4;
+    public const uint SchemaHash = 0x98951C27;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, StreamingRequestClientDto value)
@@ -26,6 +26,7 @@ public static class StreamingRequestClientDtoSpanSerializer
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Write(ref ___span, ref ___offset, value.StreamId);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.Cancelled);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
         if (value.StateData != null)
@@ -47,6 +48,7 @@ public static class StreamingRequestClientDtoSpanSerializer
 			PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
 			StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset));
     }
 
@@ -57,6 +59,7 @@ public static class StreamingRequestClientDtoSpanSerializer
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Length(ref ___offset, value.StreamId);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.Cancelled);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateIsChanged);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
         if (value.StateData != null)

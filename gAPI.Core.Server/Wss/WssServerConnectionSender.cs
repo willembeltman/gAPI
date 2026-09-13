@@ -171,6 +171,7 @@ public class WssServerConnectionSender(
             return offset;
         }, ct);
     }
+
     public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseClientDto response, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -211,7 +212,4 @@ public class WssServerConnectionSender(
             return offset;
         }, ct);
     }
-
-
-
 }

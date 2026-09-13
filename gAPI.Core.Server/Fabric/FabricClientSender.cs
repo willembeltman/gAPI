@@ -150,7 +150,7 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }, ct);
     }
 
-    public async Task Send_StreamingRequestServerToClient_ToFabricAsync(StreamingRequestDto request, CancellationToken ct)
+    public async Task Send_StreamingRequestServerToClient_ToFabricAsync(StreamingRequestDto request, CancellationToken ct = default)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Send_StreamingRequestServerToClient_ToFabricAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
@@ -172,7 +172,8 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(response);
         }, ct);
     }
-    public async Task Send_StreamingRequestClientToServer_ToFabricAsync(StreamingRequestDto request, CancellationToken ct)
+
+    public async Task Send_StreamingRequestClientToServer_ToFabricAsync(StreamingRequestDto request, CancellationToken ct = default)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Send_StreamingRequestClientToServer_ToFabricAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
@@ -205,5 +206,4 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         {
         }
     }
-
 }

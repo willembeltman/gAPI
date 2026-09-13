@@ -13,6 +13,7 @@ public static class StreamingRequestDtoComparer
         if (value.Routing != otherValue.Routing) return true;
         if (value.ArgumentIndex != otherValue.ArgumentIndex) return true;
         if (value.StreamId != otherValue.StreamId) return true;
+        if (value.Cancelled != otherValue.Cancelled) return true;
         return false;
     }
 }

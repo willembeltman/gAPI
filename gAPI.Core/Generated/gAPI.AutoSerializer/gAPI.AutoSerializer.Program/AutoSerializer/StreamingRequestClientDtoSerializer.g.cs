@@ -11,7 +11,7 @@ public static class StreamingRequestClientDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x4E22B154;
-    public const uint SchemaHash = 0xC68458E4;
+    public const uint SchemaHash = 0x98951C27;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, StreamingRequestClientDto value)
@@ -23,6 +23,7 @@ public static class StreamingRequestClientDtoSerializer
         RoutingDtoSerializer.Write(___writer, value.Routing);
         ___writer.Write(value.ArgumentIndex);
         StreamIdSerializer.Write(___writer, value.StreamId);
+        ___writer.Write(value.Cancelled);
         ___writer.Write(value.StateIsChanged);
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
@@ -39,6 +40,6 @@ public static class StreamingRequestClientDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new StreamingRequestClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
+        return new StreamingRequestClientDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadInt32(), StreamIdSerializer.ReadStreamId(___reader), ___reader.ReadBoolean(), ___reader.ReadBoolean(), ___reader.ReadBoolean() == false ? null : ___reader.ReadString());
     }
 }

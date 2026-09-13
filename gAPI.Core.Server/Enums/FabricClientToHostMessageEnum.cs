@@ -15,8 +15,12 @@ public enum FabricClientToHostMessageEnum
 
     StreamingRequestServerToClient,
     StreamingResponseServerToClient,
+    //StreamingCancelledServerToClient, 
+
     StreamingRequestClientToServer,
     StreamingResponseClientToServer,
+    //StreamingCancelledClientToServer,
+
 
     UpdateSession,
     ClearSession,

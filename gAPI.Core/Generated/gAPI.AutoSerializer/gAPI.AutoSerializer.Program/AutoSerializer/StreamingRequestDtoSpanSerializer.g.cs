@@ -14,7 +14,7 @@ public static class StreamingRequestDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x8BF49449;
-    public const uint SchemaHash = 0x00C88240;
+    public const uint SchemaHash = 0x6995693F;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, StreamingRequestDto value)
@@ -26,6 +26,7 @@ public static class StreamingRequestDtoSpanSerializer
         RoutingDtoSpanSerializer.Write(ref ___span, ref ___offset, value.Routing);
         PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Write(ref ___span, ref ___offset, value.StreamId);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.Cancelled);
     }
 
     [IsSpanSerializerRead]
@@ -41,7 +42,8 @@ public static class StreamingRequestDtoSpanSerializer
         return new StreamingRequestDto(
             RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
-			StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset));
+			StreamIdSpanSerializer.ReadStreamId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
@@ -51,6 +53,7 @@ public static class StreamingRequestDtoSpanSerializer
         RoutingDtoSpanSerializer.Length(ref ___offset, value.Routing);
         PrimitivesSpanSerializer.LengthInt32(ref ___offset, value.ArgumentIndex);
         StreamIdSpanSerializer.Length(ref ___offset, value.StreamId);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.Cancelled);
         return ___offset;
     }
 }

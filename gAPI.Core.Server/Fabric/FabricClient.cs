@@ -3,6 +3,7 @@ using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Enums;
+using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
@@ -115,7 +116,7 @@ public sealed class FabricClient : IAsyncDisposable
     public async Task ReconnectAsync(CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Error))
-            Logger.LogError($"Reconnecting FabricClient ....");
+            Logger.LogError("{now} Reconnecting FabricClient ....", DateTime.Now.ToString("HH:mm:ss.fff"));
 
         await DisconnectAsync();
         await ConnectAsync();
@@ -125,7 +126,8 @@ public sealed class FabricClient : IAsyncDisposable
             {
                 if (Logger.IsEnabled(LogLevel.Warning))
                     Logger.LogWarning(
-                        "Resubscribe IServiceSubscription {HostId} to {ServiceId} (userId {UserId}, sessionId {SessionId})",
+                        "{now} Resubscribe IServiceSubscription {HostId} to {ServiceId} (userId {UserId}, sessionId {SessionId})",
+                        DateTime.Now.ToString("HH:mm:ss.fff"),
                         SseServiceSubscription.ServiceSubscriptionId,
                         SseServiceSubscription.ServiceId,
                         SseServiceSubscription.UserId,
@@ -139,7 +141,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
         }
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + $" Reconnecting FabricClient DONE");
+            Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
     }
     public async Task DisconnectAsync()
     {
@@ -307,7 +309,7 @@ public sealed class FabricClient : IAsyncDisposable
         try
         {
             if (Logger.IsEnabled(LogLevel.Warning))
-                Logger.LogTrace("{now} FabricClient {Id.Value} started", DateTime.Now.ToString("HH:mm:ss.fff"), FabricConnectionId.Value);
+                Logger.LogWarning("{now} FabricClient {Id.Value} started", DateTime.Now.ToString("HH:mm:ss.fff"), FabricConnectionId.Value);
 
             while (!ct.IsCancellationRequested)
             {
@@ -517,9 +519,6 @@ public sealed class FabricClient : IAsyncDisposable
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now} Receive_InvokeRequestDone_FromFabricAsync({invokeResponseDone})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeResponseDone);
 
-            if (StreamingCache.Timeouts.TryRemove(invokeResponseDone.Routing.RequestId, out var timeout))
-                timeout.Dispose();
-
             if (StreamingCache.PendingFabricInvokeRequests.TryRemove(invokeResponseDone.Routing.RequestId, out var completion))
                 completion.TrySetResult(invokeResponseDone);
         }, ct);
@@ -551,6 +550,7 @@ public sealed class FabricClient : IAsyncDisposable
                 await SseServiceSubscription.Send_FabricStreamingResponse_ToClientAsync(response, ct);
         }, ct);
     }
+
     private async Task Receive_StreamingRequest_ClientToServer_FromFabricAsync(StreamingRequestDto request, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -561,9 +561,9 @@ public sealed class FabricClient : IAsyncDisposable
             if (StreamingCache.Timeouts.TryGetValue(request.Routing.RequestId, out var timeout))
                 timeout.Reset();
 
-            if (StreamingCache.StreamingRequestHandlers.TryGetValue((request.Routing.RequestId, request.ArgumentIndex), out var handler))
+            if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(request.Routing.RequestId, request.ArgumentIndex), out var handler))
             {
-                var response = await handler.Invoke(request.StreamId, ct);
+                var response = await handler.Invoke(request.StreamId, false, ct);
                 await Sender.Send_StreamingResponseServerToClient_ToFabricAsync(response, ct);
             }
         }, ct);
@@ -578,7 +578,7 @@ public sealed class FabricClient : IAsyncDisposable
             if (StreamingCache.Timeouts.TryGetValue(response.Routing.RequestId, out var timeout))
                 timeout.Reset();
 
-            var key = (response.Routing.RequestId, response.ArgumentIndex, response.StreamId);
+            var key = new RequestArgumentIndexStreamDto(response.Routing.RequestId, response.ArgumentIndex, response.StreamId);
             if (StreamingCache.StreamingResponseHandlers.TryGetValue(key, out var responseHandler))
             {
                 responseHandler.Invoke(response);
@@ -612,6 +612,8 @@ public sealed class FabricClient : IAsyncDisposable
     private async Task Receive_Log_FromFabricAsync(WssLoggerLogDto log, CancellationToken ct)
     {
         // niet loggen ;)
+#pragma warning disable CA2254 // Template should be a static expression
+#pragma warning disable CA1873 // Avoid potentially expensive logging
         _ = Task.Run(async () =>
         {
             if (log.Data == null)
@@ -619,6 +621,8 @@ public sealed class FabricClient : IAsyncDisposable
             else
                 Logger.Log(log.Level, log.Message, log.Data.Select(a => a.Value));
         }, ct);
+#pragma warning restore CA2254 // Template should be a static expression
+#pragma warning restore CA1873 // Avoid potentially expensive logging
     }
 
     #endregion
@@ -656,6 +660,7 @@ public sealed class FabricClient : IAsyncDisposable
         await Sender.Send_StreamingResponseClientToServer_ToFabricAsync(response, ct);
     }
 
+
     #endregion
 
     #region Call's vanuit gegenereerde code
@@ -665,207 +670,244 @@ public sealed class FabricClient : IAsyncDisposable
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
 
-        var activeStreams = new ConcurrentDictionary<StreamId, (IAsyncEnumerator<T> enumerator, SemaphoreSlim gate, CancellationTokenSource linkedCts)>();
-        StreamingCache.StreamingRequestHandlers[(routing.RequestId, argumentIndex)] = async (streamId, ct) =>
-        {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
-                streamId,
-                _ =>
+        StreamingCache.StreamingRequestHandlers.TryAdd(
+            new(routing.RequestId, argumentIndex),
+            new AsyncEnumerableRegistration<T>(
+                async (activeStreams, streamId, cancelled, ct) =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                    return (source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
-                });
+                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                        streamId,
+                        _ =>
+                        {
+                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                            return new AsyncEnumerableRegistrationInstance<T>(
+                                source.GetAsyncEnumerator(linked.Token),
+                                new SemaphoreSlim(1, 1),
+                                linked);
+                        });
 
-            await gate.WaitAsync(ct);
+                    async Task Cleanup()
+                    {
+                        activeStreams.TryRemove(streamId, out _);
+                        await enumerator.DisposeAsync();
+                        linkedCts.Dispose();
+                    }
 
-            try
-            {
-                var hasNext = await enumerator.MoveNextAsync();
-                var response = new StreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    !hasNext,
-                    false,
-                    null,
-                    hasNext ? serializer(enumerator.Current) : []);
-                //if (Host != null)
-                //    await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
-                //else
-                //StreamingCache.PendingStreamingResponses[(response.Routing.RequestId, response.ArgumentIndex, streamId)] = response;
+                    var entered = false;
+                    try
+                    {
+                        await gate.WaitAsync(ct);
+                        entered = true;
 
-                if (!hasNext)
-                {
-                    activeStreams.TryRemove(streamId, out _);
-                    await enumerator.DisposeAsync();
-                    linkedCts.Dispose();
-                }
+                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
 
-                return response;
-            }
-            catch (OperationCanceledException)
-            {
-                if (!ct.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
-                    throw;
+                        var response = new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            !hasNext,
+                            cancelled,
+                            null,
+                            hasNext ? serializer(enumerator.Current) : []);
 
-                var response = new StreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    true,
-                    null,
-                    []);
-                //if (Host != null)
-                //    await Sender.Send_StreamingResponse_ToFabricAsync(response, CancellationToken.None);
-                //else
-                //StreamingCache.PendingStreamingResponses[(response.Routing.RequestId, response.ArgumentIndex, streamId)] = response;
+                        if (!hasNext)
+                            await Cleanup();
 
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
+                        return response;
+                    }
+                    catch (OperationCanceledException ex) when (
+                        ct.IsCancellationRequested ||
+                        cancellationToken.IsCancellationRequested)
+                    {
+                        await Cleanup();
 
-                return response;
-            }
-            finally
-            {
-                gate.Release();
-            }
-        };
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            true,
+                            ex.Message,
+                            []);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Cleanup();
+
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            false,
+                            ex.Message,
+                            []);
+                    }
+                    finally
+                    {
+                        if (entered)
+                            gate.Release();
+                    }
+                }));
     }
     public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
+            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
 
-        var activeStreams = new ConcurrentDictionary<StreamId, (IAsyncEnumerator<byte[]> enumerator, SemaphoreSlim gate, CancellationTokenSource linkedCts)>();
-        StreamingCache.StreamingRequestHandlers[(routing.RequestId, argumentIndex)] = async (streamId, ct) =>
-        {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
-                streamId,
-                _ =>
+        StreamingCache.StreamingRequestHandlers.TryAdd(
+            new(routing.RequestId, argumentIndex),
+            new AsyncEnumerableRegistration<byte[]>(
+                async (activeStreams, streamId, cancelled, ct) =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                    return (source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
-                });
+                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                        streamId,
+                        _ =>
+                        {
+                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                            return new AsyncEnumerableRegistrationInstance<byte[]>(
+                                source.GetAsyncEnumerator(linked.Token),
+                                new SemaphoreSlim(1, 1),
+                                linked);
+                        });
 
-            await gate.WaitAsync(ct);
+                    async Task Cleanup()
+                    {
+                        activeStreams.TryRemove(streamId, out _);
+                        await enumerator.DisposeAsync();
+                        linkedCts.Dispose();
+                    }
 
-            try
-            {
-                var hasNext = await enumerator.MoveNextAsync();
-                var response = new StreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    !hasNext,
-                    false,
-                    null,
-                    hasNext ? enumerator.Current : []);
+                    var entered = false;
+                    try
+                    {
+                        await gate.WaitAsync(ct);
+                        entered = true;
 
-                if (!hasNext)
-                {
-                    activeStreams.TryRemove(streamId, out _);
-                    await enumerator.DisposeAsync();
-                    linkedCts.Dispose();
-                }
-                return response;
-            }
-            catch (OperationCanceledException)
-            {
-                if (!ct.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
-                    throw;
+                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
 
-                var response = new StreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    true,
-                    null,
-                    []);
+                        var response = new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            !hasNext,
+                            cancelled,
+                            null,
+                            hasNext ? enumerator.Current : []);
 
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                if (!ct.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
-                    throw;
+                        if (!hasNext)
+                            await Cleanup();
 
-                var response = new StreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    false,
-                    ex.Message,
-                    []);
+                        return response;
+                    }
+                    catch (OperationCanceledException ex) when (
+                        ct.IsCancellationRequested ||
+                        cancellationToken.IsCancellationRequested)
+                    {
+                        await Cleanup();
 
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                return response;
-            }
-            finally
-            {
-                gate.Release();
-            }
-        };
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            true,
+                            ex.Message,
+                            []);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Cleanup();
+
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            false,
+                            ex.Message,
+                            []);
+                    }
+                    finally
+                    {
+                        if (entered)
+                            gate.Release();
+                    }
+                }));
     }
-    public void UnRegisterAsyncEnumerableArguments(RoutingDto routing)
+    public async Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} UnRegisterAsyncEnumerableArguments({routing})", DateTime.Now.ToString("HH:mm:ss.fff"), routing);
+            Logger.LogTrace("{now} UnRegisterAsyncEnumerableArgument({routing})", DateTime.Now.ToString("HH:mm:ss.fff"), routing);
 
+        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
+        {
+            await registration.DisposeAsync();
+        }
     }
 
-    private IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    private RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgumentByte({routing}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing, argumentIndex);
+            Logger.LogTrace(
+                "RegisterRemoteAsyncEnumerableArgumentByte({routing})",
+                routing);
 
-        return new RemoteAsyncEnumerable<byte[]>((streamId, push, complete, ct) =>
-        {
-            var key = (routing.RequestId, argumentIndex, streamId);
-            if (!StreamingCache.StreamingResponseHandlers.ContainsKey(key))
+        return new RemoteAsyncEnumerable<byte[]>(
+            construct: (streamId, enumerator, ct) =>
             {
-                StreamingCache.StreamingResponseHandlers[key] = response =>
+                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
+                StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
                 {
+                    if (response.IsCancelled)
+                    {
+                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
+                        return;
+                    }
+
+                    if (response.ExceptionMessage != null)
+                    {
+                        enumerator.Complete(new RemoteException(response.ExceptionMessage));
+                        return;
+                    }
+
                     if (response.IsCompleted)
                     {
-                        StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
-                        complete.Invoke(null);
+                        enumerator.Complete();
+                        return;
                     }
-                    else
-                    {
-                        push.Invoke(response.BinaryData);
-                    }
-                };
-            }
-            //if (argumentIndex < 0)
-            //    return Sender.Send_StreamingRequestClientToServer_ToFabricAsync(
-            //        new StreamingRequestDto(
-            //            routing,
-            //            argumentIndex,
-            //            streamId
-            //        ), ct);
-            //else
-            return Sender.Send_StreamingRequestServerToClient_ToFabricAsync(
-                new StreamingRequestDto(
-                    routing,
-                    argumentIndex,
-                    streamId
-                ), ct);
-        });
-    }
-    private void UnRegisterRemoteAsyncEnumerableArguments(RoutingDto routing)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} UnRegisterRemoteAsyncEnumerableArguments({routing})", DateTime.Now.ToString("HH:mm:ss.fff"), routing);
 
+                    enumerator.Push(response.BinaryData);
+                });
+            },
+
+            requestNext: (streamId, enumerator, ct) =>
+            {
+                return Sender.Send_StreamingRequestServerToClient_ToFabricAsync(
+                    new StreamingRequestDto(
+                        routing,
+                        -1,
+                        streamId,
+                        false),
+                    ct);
+            },
+
+            cancelled: (streamId, enumerator) =>
+            {
+                return Sender.Send_StreamingRequestServerToClient_ToFabricAsync(
+                    new StreamingRequestDto(
+                        routing,
+                        -1,
+                        streamId,
+                        true));
+
+            },
+
+            dispose: streamId =>
+            {
+                var key = new RequestArgumentIndexStreamDto(routing.RequestId, -1, streamId);
+                StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
+            });
     }
 
     public Task SendAsync(RoutingDto routing, byte[] data, CancellationToken ct)
@@ -896,8 +938,7 @@ public sealed class FabricClient : IAsyncDisposable
 
         try
         {
-            var done = await completion.Task.WaitAsync(//TimeSpan.FromSeconds(60), ct);
-                ct);
+            var done = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
             return;
         }
         finally
@@ -952,17 +993,10 @@ public sealed class FabricClient : IAsyncDisposable
         {
             var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
 
-            try
+            var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1);
+            await foreach (var item in enumerable)
             {
-                var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1);
-                await foreach (var item in enumerable)
-                {
-                    yield return item;
-                }
-            }
-            finally
-            {
-                UnRegisterRemoteAsyncEnumerableArguments(request.Routing);
+                yield return item;
             }
         }
         finally
@@ -1002,7 +1036,9 @@ public sealed class FabricClient : IAsyncDisposable
                 // Mogelijkheid 2: Naar session: Session not null
                 (routing.SessionId != null && SseServiceSubscription.SessionId == routing.SessionId) ||
                 // Mogelijkheid 3: Naar user: User not null
-                (routing.UserId != null && SseServiceSubscription.UserId == routing.UserId));
+                (routing.UserId != null && SseServiceSubscription.UserId == routing.UserId))
+            .GroupBy(a => a.ClientConnectionId)
+            .Select(a => a.First());
     }
 
 
@@ -1017,8 +1053,11 @@ public sealed class FabricClient : IAsyncDisposable
                 FabricConnectionId);
         }
         await DisconnectAsync();
-        await SenderCts.CancelAsync();
-        SenderCts.Dispose();
+        if (SenderCts != null)
+        {
+            await SenderCts.CancelAsync();
+            SenderCts.Dispose();
+        }
     }
 
 }

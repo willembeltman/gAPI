@@ -47,21 +47,6 @@ public class NoDbAuthenticationServiceGenerator : _BaseGenerator
 
     public override void GenerateCode()
     {
-        //Reg(State);
-        //Reg(User);
-        //Reg(IAuthenticationCheckT);
-        //Reg(IUserTokenFactoryT);
-        //Reg(UserId);
-        //Reg(SessionCache);
-        //Reg(IAuthenticationStateFactoryT);
-        //Reg(AuthenticationInitializeResult);
-        //Reg(SessionId);
-        //Reg(UserId);
-        //Reg(NoDbServerAuthenticationServiceT);
-        //Reg(AuthenticationHeaders);
-        //Reg(IStateParserT);
-        //Reg(IAuthenticationService);
-        //Reg(FabricClient);
         Reg(AuthenticationOptions);
         Reg("Microsoft.Extensions.Primitives");
         Reg("System.Security.Claims");
@@ -75,14 +60,12 @@ public class {Name}(
     {IStateMappingT.FullName}<{User.FullName}, {State.FullName}> stateMapping,
     {IStateParserT.FullName}<{State.FullName}> stateSerializer,
     {FabricClient.FullName} fabricClient,
-    {AuthenticationOptions} authenticationOptions,
-    IEnumerable<{IAuthenticationCheckT.FullName}<{User.FullName}, {State.FullName}>> authenticationChecks) 
+    {AuthenticationOptions} authenticationOptions) 
     : {NoDbServerAuthenticationServiceT.FullName}<{User.FullName}, {State.FullName}>(
         stateMapping,
         stateSerializer,
         fabricClient,
-        authenticationOptions,
-        authenticationChecks)
+        authenticationOptions)
     , {IAuthenticationService.FullName}
 {{
 }}";

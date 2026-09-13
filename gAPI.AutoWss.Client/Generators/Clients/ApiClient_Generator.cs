@@ -40,9 +40,9 @@ public class ApiClient_Generator : _BaseGenerator
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
 
-    public List<INamedTypeSymbol> NeededSpanSerializerTypes { get; private set; } = new();
+    public List<INamedTypeSymbol> NeededSpanSerializerTypes { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
-    public SharedReference OwnImplementation { get; }
+    public SharedReference? OwnImplementation { get; }
 
     public override void GenerateCode()
     {
@@ -107,7 +107,7 @@ public sealed class {Name}(
         var code = "";
 
         if (method.ResponseType.IsTask)
-            code += GenerateMethodForTask(method, ref functions, functionNames) ;
+            code += GenerateMethodForTask(method) ;
         if (method.ResponseType.IsTaskT)
             code += GenerateMethodForTaskT(method, ref functions, functionNames) ;
         if (method.ResponseType.IsIAsyncEnumerable)
@@ -118,7 +118,7 @@ public sealed class {Name}(
         return code;
     }
 
-    private string GenerateMethodForTask(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
+    private string GenerateMethodForTask(InterfaceMethod method)
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
@@ -151,8 +151,8 @@ public sealed class {Name}(
                 ___activityCts.Token);
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
-        {{
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
     }}";
     }
@@ -200,8 +200,8 @@ public sealed class {Name}(
             }}
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
-        {{
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
 
         return ___result;
@@ -248,8 +248,8 @@ public sealed class {Name}(
             }}
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
-        {{
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
     }}";
     }

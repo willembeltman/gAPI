@@ -17,8 +17,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
     IStateMapping<TUser, TStateDto> stateMapping,
     IStateParser<TStateDto> stateParser,
     FabricClient fabricClient,
-    AuthenticationOptions authenticationOptions,
-    IEnumerable<IAuthenticationCheck<TUser, TStateDto>> authenticationChecks)
+    AuthenticationOptions authenticationOptions)
     : IAuthenticationService<TUser, TStateDto>
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
