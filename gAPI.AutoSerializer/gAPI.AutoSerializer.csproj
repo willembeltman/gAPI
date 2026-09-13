@@ -5,17 +5,14 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 
-		<Version>0.0.1-beta</Version>
+		<Version>0.0.1-alpha</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 
 		<PackageId>gAPI.AutoSerializer</PackageId>
-		<Title>gAPI AutoSerializer</Title>
-		<Description>
-			gAPI source analyzer and generator for automatic serialization code generation.
-		</Description>
+		<Description>gAPI AutoSerializer source generator.</Description>
+		<PackageTags>gapi;roslyn;source-generator;analyzer;codegen;dotnet</PackageTags>
 
-		<PackageTags>gapi;api;rpc;codegen;dotnet;source-generator;roslyn;analyzer</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
@@ -23,25 +20,28 @@
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
-		<IncludeSymbols>false</IncludeSymbols>
-		<IncludeSource>false</IncludeSource>
-
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-
-		<IncludeBuildOutput>true</IncludeBuildOutput>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common"
-						  Version="5.9.0"
-						  PrivateAssets="all" />
+                          Version="5.9.0"
+                          PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="README.md"
-			  Pack="true"
-			  PackagePath="" />
+              Pack="true"
+              PackagePath="" />
 	</ItemGroup>
+
+	<Target Name="PackAnalyzer" BeforeTargets="Pack">
+		<ItemGroup>
+			<None Include="$(TargetPath)"
+                  Pack="true"
+                  PackagePath="analyzers/dotnet/cs" />
+		</ItemGroup>
+	</Target>
 
 </Project>
