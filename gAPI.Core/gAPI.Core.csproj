@@ -21,6 +21,7 @@
 		<IncludeSource>false</IncludeSource>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Title>gAPI commen library</Title>
+		
 		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
