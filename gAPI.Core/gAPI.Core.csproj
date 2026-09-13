@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.1-alpha2</Version>
+		<Version>0.0.1-beta2</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI</PackageId>

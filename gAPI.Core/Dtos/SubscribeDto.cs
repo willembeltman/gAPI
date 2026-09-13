@@ -11,7 +11,6 @@ public record SubscribeDto(
 {
     public override string ToString()
     {
-        // This string is a key
         return $"{ServiceId} #{SessionId} ({UserId})";
     }
 }

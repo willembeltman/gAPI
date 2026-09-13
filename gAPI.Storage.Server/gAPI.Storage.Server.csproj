@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.1-alpha</Version>
+		<Version>0.0.1-beta</Version>
 
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
