@@ -8,19 +8,19 @@ The serializer is designed around explicit C# types and their structure. When a 
 
 ### FEATURES
 
-• Roslyn source generation
-• No runtime reflection
-• Binary serialization using BinaryWriter / BinaryReader
-• High-performance Span<byte> serialization
-• MultipartFormDataContent serialization
-• Deep CreateCopy()
-• Deep IsDifferent()
-• Nested objects are automatically supported
-• List<T> and arrays are supported
-• Classes are supported
-• Records are supported when they follow the normal immutable-record pattern
-• Custom serializers can be added for special types
-• Schema and type identifiers are embedded in binary serialization
+- Roslyn source generation
+- No runtime reflection
+- Binary serialization using BinaryWriter / BinaryReader
+- High-performance Span<byte> serialization
+- MultipartFormDataContent serialization
+- Deep CreateCopy()
+- Deep IsDifferent()
+- Nested objects are automatically supported
+- List<T> and arrays are supported
+- Classes are supported
+- Records are supported when they follow the normal immutable-record pattern
+- Custom serializers can be added for special types
+- Schema and type identifiers are embedded in binary serialization
 
 ## GETTING STARTED
 
@@ -57,10 +57,10 @@ var value = reader.ReadAuthStateDto();
 
 The binary format contains:
 
-• A gAPI magic value
-• A type identifier
-• A schema hash
-• The serialized object data
+- A gAPI magic value
+- A type identifier
+- A schema hash
+- The serialized object data
 
 The generated serializer contains constants such as:
 
@@ -219,10 +219,10 @@ The important requirement is that the record can be reconstructed through its co
 
 Records work best when they are used as records are intended to be used:
 
-• Immutable
-• Values supplied through the constructor
-• No hidden mutable state
-• Properties correspond to constructor parameters
+- Immutable
+- Values supplied through the constructor
+- No hidden mutable state
+- Properties correspond to constructor parameters
 
 For example:
 
@@ -256,12 +256,12 @@ The generated deserializer creates the object and assigns its properties.
 
 The serializer currently supports primitive and framework types implemented by the built-in serializers, together with:
 
-• Generated classes
-• Generated records
-• Nullable values
-• Nested objects
-• List<T>
-• T[]
+- Generated classes
+- Generated records
+- Nullable values
+- Nested objects
+- List<T>
+- T[]
 
 Support is determined by the available serializer extensions.
 
