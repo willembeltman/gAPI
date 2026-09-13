@@ -52,7 +52,7 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
             var @interface = client.Interface;
             Reg(@interface);
             Reg(client);
-            propertiesCode += $"\r\n        services.AddSingleton<{@interface.Name}, {client.Name}>();";
+            propertiesCode += $"\r\n        services.AddScoped<{@interface.Name}, {client.Name}>();";
         }
 
         Code = $@"{GetNamespacesCode()}
@@ -63,15 +63,15 @@ public static class {Name}
 {{
     public static void AddAutoApiClient(this IServiceCollection services, string apiUrl)
     {{{propertiesCode}
-        services.AddSingleton<{ClientConnection}>();
-        services.AddSingleton<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
-        services.AddSingleton<{ISseClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddScoped<{ClientConnection}>();
+        services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddScoped<{ISseClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
 
         var sseManagerCollection = new {SseManagerCollection}();
         services.AddSingleton(sseManagerCollection);
 
         // Het kan helaas niet anders
-        services.AddSingleton<{IUriNavigationManager}>(sp =>
+        services.AddScoped<{IUriNavigationManager}>(sp =>
         {{
             var navigationManager = sp.GetService<NavigationManager>();
             if (navigationManager != null)

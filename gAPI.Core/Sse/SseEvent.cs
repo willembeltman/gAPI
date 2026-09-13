@@ -5,12 +5,12 @@ namespace gAPI.Core.Sse;
 
 public class SseEvent
 {
-    public SseEvent(SendRequestDto request)
+    public SseEvent(SendRequestClientDto request)
     {
         EventName = "SendRequestDto";
         EventData = JsonSerializer.Serialize(request);
     }
-    public SseEvent(SendRequestCancelledDto cancel)
+    public SseEvent(SendRequestCancelledClientDto cancel)
     {
         EventName = "SendRequestCancelledDto";
         EventData = JsonSerializer.Serialize(cancel);

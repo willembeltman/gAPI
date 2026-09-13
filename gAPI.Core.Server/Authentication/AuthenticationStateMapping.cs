@@ -16,10 +16,12 @@ public class AuthenticationStateMapping<TUser, TStateDto>
         TStateDto? receivedClientState, 
         CancellationToken ct)
     {
-        return new TStateDto
+        receivedClientState ??= new TStateDto
         {
             User = dbUser != null ? await ToDtoAsync(dbUser, new AuthStateUserDto(), ct) : null
         };
+        receivedClientState.User = dbUser != null ? await ToDtoAsync(dbUser, new AuthStateUserDto(), ct) : null;
+        return receivedClientState;
     }
     public async Task<AuthStateUserDto> ToDtoAsync(
         TUser dbUser,

@@ -1,9 +1,11 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -14,6 +16,9 @@ public class SseServiceSubscription : IServiceSubscription
     , IServerConnection
 {
     private byte closed;
+
+    public IServerAuthenticationService AuthenticationService { get; }
+
     private readonly ServiceSubscriptionCollection ServiceSubscriptionCollection;
     private readonly FabricClient FabricClient;
     private readonly CancellationTokenSource Cts = new();
@@ -26,6 +31,7 @@ public class SseServiceSubscription : IServiceSubscription
     public UserId UserId { get; }
 
     public SseServiceSubscription(
+        IServerAuthenticationService authenticationService,
         ServerConnectionCollection serverConnectionCollection,
         ServiceSubscriptionCollection serviceSubscriptionCollection,
         FabricClient fabricClient,
@@ -33,6 +39,7 @@ public class SseServiceSubscription : IServiceSubscription
         UserId userId,
         SessionId sessionId)
     {
+        AuthenticationService = authenticationService;
         ServiceSubscriptionCollection = serviceSubscriptionCollection;
         FabricClient = fabricClient;
         ServiceId = serviceId;
@@ -46,7 +53,14 @@ public class SseServiceSubscription : IServiceSubscription
 
     public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
-        var sseEvent = new SseEvent(sendRequest);
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(
+            sendRequest.Routing,
+            sendRequest.BinaryData,
+            stateIsChanged,
+            stateData);
+        var sseEvent = new SseEvent(sendRequestClient);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
@@ -55,7 +69,14 @@ public class SseServiceSubscription : IServiceSubscription
         if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
             return;
 
-        var sseEvent = new SseEvent(sendRequest);
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(
+            sendRequest.Routing,
+            sendRequest.BinaryData,
+            stateIsChanged,
+            stateData);
+        var sseEvent = new SseEvent(sendRequestClient);
         if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
             return;
         
@@ -73,7 +94,14 @@ public class SseServiceSubscription : IServiceSubscription
     {
         if (Requests.TryRemove(cancel.Routing.RequestId, out _))
         {
-            var sseEvent = new SseEvent(cancel);
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            var cancelClient = new SendRequestCancelledClientDto(
+                cancel.Routing,
+                null,
+                stateIsChanged,
+                stateData);
+            var sseEvent = new SseEvent(cancelClient);
             await Channel.Writer.WriteAsync(sseEvent, ct);
             var done = new SendRequestDoneDto(cancel.Routing, true, null);
             await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, ct);
