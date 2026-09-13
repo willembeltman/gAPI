@@ -5,7 +5,7 @@ namespace gAPI.Core.Dtos;
 [GenerateSerializer]
 public record SendRequestClientDto(
     RoutingDto Routing,
+    byte[] BinaryData,
     bool StateIsChanged,
-    string? StateData,
-    byte[] BinaryData) 
+    string? StateData) 
     : SendRequestDto(Routing, BinaryData);

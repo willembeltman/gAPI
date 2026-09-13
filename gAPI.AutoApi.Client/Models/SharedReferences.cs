@@ -12,9 +12,11 @@ public class SharedReferences
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
 
-        SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         SseManagerId = SharedReferenceFinder.Find("gAPI.Core.Ids.SseManagerId", allSymbols);
+        SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         SendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledDto", allSymbols);
+        SendRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestClientDto", allSymbols);
+        SendRequestCancelledClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledClientDto", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         ISseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.ISseClientConnection", allSymbols);
 
@@ -30,6 +32,7 @@ public class SharedReferences
         WithCookiesHandler = SharedReferenceFinder.Find("gAPI.Core.Client.Razor.WithCookiesHandler", allSymbols);
         StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
 
+        SseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Sse.SseClientConnection", allSymbols);
 
 
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
@@ -47,6 +50,8 @@ public class SharedReferences
     public SharedReference ISseClientConnection { get; }
     public SharedReference SseManagerId { get; }
     public SharedReference SendRequestCancelledDto { get; }
+    public SharedReference SendRequestClientDto { get; }
+    public SharedReference SendRequestCancelledClientDto { get; }
     public SharedReference SseClient { get; }
     public SharedReference? AuthClient_FormFile { get; }
     public SharedReference? AuthClient_ToFormFileExtension { get; }
@@ -55,6 +60,7 @@ public class SharedReferences
     public SharedReference StaticNavigationManager { get; }
     public SharedReference WithCookiesHandler { get; }
     public SharedReference StateChangedHandler { get; }
+    public SharedReference SseClientConnection { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference? IClientAuthenticatedHttpClientImplementation { get; }

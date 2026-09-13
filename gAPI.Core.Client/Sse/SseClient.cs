@@ -9,7 +9,7 @@ namespace gAPI.Core.Client.Sse;
 
 public class SseClient(
     IClientAuthenticatedHttpClient clientAuthenticationService,
-    ISseClientConnection sseManager,
+    ISseClientConnection sseClientConnection,
     ServiceId serviceId)
     : IDisposable
 {
@@ -17,6 +17,7 @@ public class SseClient(
 
     public ServiceId ServiceId { get; } = serviceId;
     public ServiceSubscriptionId? ServiceSubscriptionId { get; private set; }
+    public bool Initialized { get; private set; }
 
     public async Task ConnectAsync()
     {
@@ -51,17 +52,32 @@ public class SseClient(
                         {
                             case "ServiceSubscriptionId":
                                 if (long.TryParse(eventData, out var id))
+                                {
                                     ServiceSubscriptionId = new ServiceSubscriptionId(id);
+                                    Initialized = true;
+                                }
                                 break;
                             case "SendRequestDto":
-                                var sendRequest = JsonSerializer.Deserialize<SendRequestDto>(eventData);
+                                var sendRequest = JsonSerializer.Deserialize<SendRequestClientDto>(eventData);
                                 if (sendRequest != null)
-                                    _ = sseManager.SendRequest_ReceivedAsync(sendRequest, Cts.Token);
+                                {
+                                    _ = Task.Run(async () =>
+                                    {
+                                        if (sendRequest.StateIsChanged)
+                                            await clientAuthenticationService.UpdateStateDataAsync(sendRequest.StateData, Cts.Token);
+                                        await sseClientConnection.SendRequest_ReceivedAsync(sendRequest, Cts.Token);
+                                    }, Cts.Token);
+                                }
                                 break;
                             case "SendRequestCancelledDto":
-                                var sendRequestCancelled = JsonSerializer.Deserialize<SendRequestCancelledDto>(eventData);
+                                var sendRequestCancelled = JsonSerializer.Deserialize<SendRequestCancelledClientDto>(eventData);
                                 if (sendRequestCancelled != null)
-                                    _ = sseManager.SendRequestCancelled_ReceivedAsync(sendRequestCancelled, Cts.Token);
+                                    _ = Task.Run(async () =>
+                                    {
+                                        if (sendRequestCancelled.StateIsChanged)
+                                            await clientAuthenticationService.UpdateStateDataAsync(sendRequestCancelled.StateData, Cts.Token);
+                                        await sseClientConnection.SendRequestCancelled_ReceivedAsync(sendRequestCancelled, Cts.Token);
+                                    }, Cts.Token);
                                 break;
                         }
 
@@ -131,6 +147,7 @@ public class SseClient(
 
     public void Dispose()
     {
+        Initialized = false;
         Cts.Cancel();
         Cts.Dispose();
     }

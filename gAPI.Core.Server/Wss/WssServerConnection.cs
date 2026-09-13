@@ -288,24 +288,29 @@ public abstract class WssServerConnection : IWssServerConnection
 
                 await AuthenticationService.UpdateStateDataAsync(sendRequest.StateData, cts.Token);
                 await Send_SendRequest_ToServiceAsync(sendRequest, cts.Token);
+
+                var stateIsChanged = AuthenticationService.IsStateDataChanged();
+                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
                 await Sender.Send_SendRequestDone_ToClientAsync(
                     new SendRequestDoneClientDto(
                         sendRequest.Routing,
                         false,
                         null,
-                        sendRequest.StateIsChanged,
-                        sendRequest.StateData
+                        stateIsChanged,
+                        stateData
                     ), ct);
             }
             catch (Exception ex)
             {
+                var stateIsChanged = AuthenticationService.IsStateDataChanged();
+                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
                 await Sender.Send_SendRequestDone_ToClientAsync(
                     new SendRequestDoneClientDto(
                         sendRequest.Routing,
                         false,
                         ex.Message,
-                        sendRequest.StateIsChanged,
-                        sendRequest.StateData
+                        stateIsChanged,
+                        stateData
                     ), ct);
 
                 cts.Dispose();
@@ -579,7 +584,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, stateIsChanged, stateData, sendRequest.BinaryData);
+        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
         await Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
 
         try
@@ -634,7 +639,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, stateIsChanged, stateData, sendRequest.BinaryData);
+        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
         return Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
     }
     public Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)

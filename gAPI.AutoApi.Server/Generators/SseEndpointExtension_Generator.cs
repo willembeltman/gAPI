@@ -62,6 +62,7 @@ public static class {Name}
         ) =>
         {{
             var SseServiceSubscription = new {SseServiceSubscription}(
+                authenticationService,
                 serverConnectionCollection,
                 ServiceSubscriptionCollection,
                 fabricClient,
