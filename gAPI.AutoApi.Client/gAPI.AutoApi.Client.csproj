@@ -4,32 +4,41 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		
+
 		<Version>0.0.1-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
-		<PackageId>gAPI.AutoClient</PackageId>
-		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET 10.</Description>
-		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
+
+		<PackageId>gAPI.AutoApi.Client</PackageId>
+		<Description>gAPI AutoApi client source generator for automatic REST and SSE client generation.</Description>
+		<PackageTags>gapi;api;rest;sse;roslyn;source-generator;analyzer;codegen;dotnet</PackageTags>
+
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<IncludeSymbols>false</IncludeSymbols>
-		<IncludeSource>false</IncludeSource>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		
-		<!-- Critical for analyzers -->
+
 		<DevelopmentDependency>true</DevelopmentDependency>
-		<IncludeBuildOutput>true</IncludeBuildOutput>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.9.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+
+		<None Include="$(OutputPath)\$(AssemblyName).dll"
+			  Pack="true"
+			  PackagePath="analyzers/dotnet/cs"
+			  Visible="false" />
 	</ItemGroup>
 
 </Project>

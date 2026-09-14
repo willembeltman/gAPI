@@ -1,12 +1,12 @@
 # gAPI.AutoWss.Client
 
-Automatic REST and SSE client generation for gAPI client applications.
+Automatic WebSocket client generation for gAPI client applications.
 
 ## Introduction
 
-`gAPI.AutoWss.Client` is the client-side part of gAPI's original API system.
+`gAPI.AutoWss.Client` is the client-side part of gAPI's WebSocket communication system.
 
-AutoWss provides traditional client-to-server communication over HTTP using REST and JSON, while also providing server-to-client communication through Server-Sent Events (SSE).
+AutoWss provides strongly typed client-to-server and server-to-client communication over WebSockets.
 
 The two communication directions use separate interfaces:
 
@@ -17,9 +17,7 @@ For client-to-server communication, gAPI generates a strongly typed client imple
 
 For server-to-client communication, gAPI generates the client-side Hub infrastructure for the `[GenerateHub]` interface. The server accesses this Hub through `IClientContext`.
 
-This keeps the two communication directions explicit while allowing both sides to use strongly typed C# interfaces.
-
-___
+```
                  Shared Interfaces
                        │
               ┌────────┴────────┐
@@ -30,14 +28,14 @@ ___
         Client → Server    Server → Client
               │                 │
               ▼                 ▼
-        REST / JSON          SSE / JSON
-___
+          WebSocket          WebSocket
+```
 
 ### Client-to-server
 
 A client-to-server API is defined using `[GenerateApi]`:
 
-___
+```
 namespace Shared.Interfaces
 
 [GenerateApi]
@@ -45,21 +43,38 @@ public interface IServerApi
 {
     Task DoSomething(CancellationToken ct);
     Task<string> GetSomething(CancellationToken ct);
+
+    IAsyncEnumerable<string> GetList(
+        string value,
+        IAsyncEnumerable<string> first,
+        IAsyncEnumerable<string> second,
+        CancellationToken ct);
 }
-___
+```
 
 The client receives a generated strongly typed implementation:
 
-___
+```
 @inject IServerApi api
 
 await api.DoSomething(ct);
+
 var result = await api.GetSomething(ct);
-___
 
-On the server, the same interface is implemented. The implementation is automatically wired into the generated API infrastructure:
+var list = api.GetList(
+    "test",
+    GetFirst(),
+    GetSecond(),
+    ct);
 
-___
+await foreach (var item in list)
+{
+}
+```
+
+On the server, the same interface is implemented. The implementation is automatically wired into the generated WebSocket API infrastructure:
+
+```
 namespace Server.Services
 
 public class ServerApi : IServerApi
@@ -73,16 +88,37 @@ public class ServerApi : IServerApi
     {
         return "hello world";
     }
-}
-___
 
-No manually written REST client or controller endpoint is required for the generated API communication.
+    public async IAsyncEnumerable<string> GetList(
+        string value,
+        IAsyncEnumerable<string> first,
+        IAsyncEnumerable<string> second,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        await foreach (var item in first)
+        {
+        }
+
+        await foreach (var item in second)
+        {
+        }
+
+        yield return "1";
+        yield return "2";
+        yield return "3";
+    }
+}
+```
+
+No manually written WebSocket client, endpoint or message dispatching infrastructure is required for the generated API communication.
+
+Client-to-server communication is always one-to-one.
 
 ### Server-to-client
 
 Server-to-client communication uses `[GenerateHub]`:
 
-___
+```
 namespace Shared.Interfaces
 
 [GenerateHub]
@@ -96,11 +132,11 @@ public interface IClientHub
         IAsyncEnumerable<string> second,
         CancellationToken ct);
 }
-___
+```
 
-The client implements the Hub interface and registers the implementation with `IClientConnection`:
+The client implements the Hub interface and registers the instance with `IClientConnection`:
 
-___
+```
 namespace Client.Services
 
 public class ClientHub(
@@ -138,11 +174,11 @@ public class ClientHub(
         yield return "3";
     }
 }
-___
+```
 
 The server accesses the generated Hub through `IClientContext`:
 
-___
+```
 public class ServerApi(
     IAuthenticationService authentication,
     IClientContext clientContext)
@@ -150,19 +186,7 @@ public class ServerApi(
 {
     public async Task DoSomething(CancellationToken ct)
     {
-        var list = await clientContext.HostHub.ToAll.GetList(
-            "test",
-            GetFirst(),
-            GetSecond(),
-            ct);
-
-        await foreach (var item in list)
-        {
-        }
-
-        // ToAll invokes all connected clients.
-        // For a one-to-one invocation, use ToSession with
-        // the SessionId from IAuthenticationService.
+        await clientContext.HostHub.ToAll.DoSomething(ct);
     }
 
     public async Task<string> GetSomething(CancellationToken ct)
@@ -170,44 +194,49 @@ public class ServerApi(
         return "hello world";
     }
 }
-___
+```
 
-`IClientContext` provides access to the generated client Hubs and their routing targets.
+`IClientConnection` is the client-side connection used to register and unregister Hub implementations.
+
+`IClientContext` provides the server-side access to generated client Hubs.
 
 `ToAll` targets all matching connected clients.
 
-`ToSession` targets a specific authenticated session. The `SessionId` can be obtained through `IAuthenticationService`.
+`ToSession` targets a specific authenticated session.
 
-The underlying server-to-client transport is Server-Sent Events (SSE). For multiple API instances behind a load balancer, server-to-client communication can be routed through `gAPI.Fabric.Server`.
+For server-to-client streaming, an `IAsyncEnumerable<T>` supplied to a `ToAll` invocation can be consumed independently by multiple clients. Applications should therefore take this into account when supplying enumerables for one-to-many communication.
+
+For one-to-one communication, use `ToSession` with the appropriate `SessionId`.
 
 ## How to Install
 
 Install the required packages from NuGet:
 
-___
+```
+dotnet add package gAPI.Core.Client
 dotnet add package gAPI.AutoWss.Client
 dotnet add package gAPI.AutoAuth.Client
-___
+```
 
-Register the generated API client and authentication infrastructure during application startup:
+Register AutoWss and authentication infrastructure during application startup:
 
-___
+```
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddAutoWssClient("https://127.0.0.1:7087");
+builder.Services.AddAutoWssClient("https://localhost:7087");
 builder.Services.AddAutoAuthClient("https://localhost:7087");
 
 var app = builder.Build();
 app.Run();
-___
+```
 
-`AddAutoWssClient` configures the generated REST and SSE client infrastructure.
+`AddAutoWssClient` configures the generated WebSocket client infrastructure.
 
 `AddAutoAuthClient` configures authenticated HTTP communication and authentication state handling.
 
 ## Communication Model
 
-AutoWss uses asynchronous communication because the generated API performs I/O.
+AutoWss uses WebSockets for both communication directions.
 
 ### Client → Server
 
@@ -215,76 +244,132 @@ AutoWss uses asynchronous communication because the generated API performs I/O.
 
 - `Task`
 - `Task<T>`
+- `IAsyncEnumerable<T>` response
+- Multiple `IAsyncEnumerable<T>` parameters
 
 Methods can also accept `CancellationToken` parameters.
 
-Client-to-server communication uses normal HTTP REST endpoints. The generated server endpoints are regular ASP.NET Core endpoints and can be exposed through OpenAPI and used with Swagger tooling like a traditional JSON API.
+Client-to-server communication is always one-to-one.
 
 ### Server → Client
 
 `[GenerateHub]` supports:
 
 - `Task`
-- `IAsyncEnumerable<T>`
+- `IAsyncEnumerable<T>` response
+- Multiple `IAsyncEnumerable<T>` parameters
 
-A server-to-client `Task<T>` is not supported because SSE is a one-way communication channel and does not provide a return channel for the invocation.
+`Task<T>` is not supported for server-to-client communication.
 
-`IAsyncEnumerable<T>` can be used for server-to-client streaming.
+The server can target one or multiple clients through `IClientContext`.
+
+For one-to-one communication, use `ToSession`.
+
+When targeting multiple clients, an `IAsyncEnumerable<T>` supplied as an argument can be enumerated independently for each client.
+
+## Streaming
+
+AutoWss supports bidirectional streaming with `IAsyncEnumerable<T>`.
+
+An `IAsyncEnumerable<T>` can be used as a response and as a method argument.
+
+Multiple `IAsyncEnumerable<T>` arguments are supported.
+
+`IAsyncEnumerable<T>` arguments must be top-level arguments. Nested `IAsyncEnumerable<T>` values are not supported.
+
+Streaming uses backpressure between the producer and consumer.
+
+AutoWss handles the streaming protocol without requiring the application to manually coordinate the order of streaming operations.
 
 ## Serialization
 
-REST and SSE API payloads use normal .NET JSON serialization.
+AutoWss uses `AutoSerializer` for communication payload serialization.
 
-API parameters and return values therefore follow the normal rules of the configured JSON serializer.
+`AutoSerializer` is built into the AutoWss communication infrastructure and does not need to be referenced separately.
 
-AutoWss does not use `AutoSerializer` for normal REST or SSE API payloads.
+AutoWss uses a binary serialization format optimized for the generated communication protocol.
 
-Authentication and session state are handled separately from normal API payload serialization.
+The maximum frame size is 10 MB, limiting a single call to a maximum payload of 10 MB.
 
 ## Authentication
 
-Authentication uses normal HTTP cookies.
+Authentication and session state are handled through the AutoAuth infrastructure.
 
-`gAPI.AutoAuth.Client` provides the authenticated HTTP communication and authentication state infrastructure used by AutoWss.Client.
+Authentication is established through HTTP cookies.
 
-Authentication and session information are handled through the normal HTTP communication infrastructure rather than being part of the API payload.
+The WebSocket connection is associated with the authenticated session when the connection is established.
 
 ## Session and State
 
-AutoWss uses the HTTP authentication and session infrastructure provided by AutoAuth.
+AutoWss associates WebSocket connections with authenticated HTTP sessions.
 
-The state parser can be customized through `IStateParser<AuthStateDto>` or through a custom type derived from `AuthStateDto`.
+AutoAuth provides the HTTP state endpoint used to establish and maintain the session state.
 
-The state serialization can therefore be customized independently from the JSON serialization used for normal REST and SSE API payloads.
+A session is identified by a 256-bit `SessionId`.
+
+A time-limited token associated with the session is used when establishing the WebSocket connection so the server can identify the session.
+
+Session state can be managed locally by the API instance or through Fabric when multiple API instances are used.
+
+## Fabric
+
+`gAPI.Fabric.Server` can be used to route server-to-client communication between multiple AutoWss API instances behind a load balancer.
+
+Fabric is required for server-to-client communication when the target client is connected to another API instance.
+
+Client-to-server communication does not require Fabric for multi-instance deployments.
+
+## Performance
+
+AutoWss is designed around a lightweight WebSocket communication model.
+
+Messages are constructed using deferred execution over `Span<byte>` rather than building large intermediate object graphs.
+
+The protocol avoids the additional communication and abstraction layers required by frameworks such as SignalR.
+
+The result is substantially lower communication overhead and higher throughput for generated API calls.
 
 ## Automatic Code Generation
 
 `gAPI.AutoWss.Client` generates the client-side communication infrastructure from the shared interfaces.
 
-For `[GenerateApi]`, gAPI generates the strongly typed client implementation used for client-to-server REST communication.
+For `[GenerateApi]`, gAPI generates the strongly typed client implementation used for client-to-server WebSocket communication.
 
-For `[GenerateHub]`, gAPI generates the client-side Hub infrastructure used for server-to-client SSE communication.
+For `[GenerateHub]`, gAPI generates the client-side Hub infrastructure used for server-to-client WebSocket communication.
 
-The generated infrastructure handles the communication details required by the interfaces, including:
+The generated infrastructure handles:
 
-- HTTP request generation
-- JSON parameter serialization
-- JSON response deserialization
-- Authentication
-- Session handling
-- SSE connection handling
-- Hub message dispatching
+- WebSocket communication
+- Serialization
+- Deserialization
+- `IAsyncEnumerable<T>` streaming
+- Streaming backpressure
+- Cancellation
+- Exceptions
 - Hub registration
+- Incoming Hub dispatching
+- Session information
 
-Application code can therefore work directly with the generated strongly typed C# interfaces.
+Application code can therefore work directly with strongly typed C# interfaces.
 
 ## Requirements
 
 AutoWss is an asynchronous I/O system.
 
-`[GenerateApi]` methods use `Task` or `Task<T>`.
+`[GenerateApi]` supports:
 
-`[GenerateHub]` methods use `Task` or `IAsyncEnumerable<T>` for server-to-client communication.
+- `Task`
+- `Task<T>`
+- `IAsyncEnumerable<T>`
+
+`[GenerateHub]` supports:
+
+- `Task`
+- `IAsyncEnumerable<T>`
+
+`Task<T>` is not supported for `[GenerateHub]`.
+
+`IAsyncEnumerable<T>` arguments must be top-level method arguments and cannot be nested.
 
 Synchronous API methods are not supported.
 

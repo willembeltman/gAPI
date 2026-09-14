@@ -8,20 +8,24 @@
 		<Version>0.0.1-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
+		
 		<PackageId>gAPI.AutoAuth.Server</PackageId>
 		<Title>gAPI AutoAuth Server</Title>
 		<Description>Server-side authentication infrastructure for gAPI, providing authentication services, authentication state, database integration, and automatic configuration for gAPI server applications.</Description>
 		<PackageTags>gapi;dotnet;aspnetcore;authentication;auth;server;api;rpc;codegen;source-generator;analyzer</PackageTags>
+		
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+		
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
-
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
