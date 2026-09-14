@@ -12,24 +12,20 @@ It implements the `IServerAuthenticationService` interface and takes care of the
 
 `gAPI.AutoAuth.Server` provides the implementation behind that interface.
 
-```
-AutoApi.Server / AutoWss.Server
-              │
-              ▼
-IServerAuthenticationService
-              │
-              ▼
-       AutoAuth.Server
-```
+    AutoApi.Server / AutoWss.Server
+                  │
+                  ▼
+    IServerAuthenticationService
+                  │
+                  ▼
+           AutoAuth.Server
 
 Application code uses the generated `IAuthenticationService`.
 
-```
-IAuthenticationService
-        │
-        ├── State
-        └── Authentication
-```
+    IAuthenticationService
+            │
+            ├── State
+            └── Authentication
 
 The authentication state is available directly through `State`.
 
@@ -39,12 +35,10 @@ The default authentication state is `AuthStateDto`.
 
 Applications can provide their own state by inheriting from it:
 
-```
-public class MyAuthState : AuthStateDto
-{
-    public string SomeValue { get; set; }
-}
-```
+    public class MyAuthState : AuthStateDto
+    {
+        public string SomeValue { get; set; }
+    }
 
 AutoAuth automatically uses the derived type as the authentication state for the generated `IAuthenticationService`.
 
