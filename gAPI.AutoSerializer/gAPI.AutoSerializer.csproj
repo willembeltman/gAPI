@@ -26,6 +26,7 @@
 
 		<!-- Dit zorgt ervoor dat de DLL niet in de standaard 'lib' map terechtkomt -->
 		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
 	</PropertyGroup>
 
 	<ItemGroup>
