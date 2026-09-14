@@ -4,6 +4,24 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<InvariantGlobalization>true</InvariantGlobalization>
+
+		<Version>0.0.1-beta</Version>
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
+		<PackageId>gAPI.Core.Server</PackageId>
+		<Title>gAPI Core Server</Title>
+		<Description>Server-side infrastructure, services, authentication, storage, WebSocket, SSE, and Fabric components used by the gAPI ecosystem.</Description>
+		<PackageTags>gapi;dotnet;aspnetcore;server;api;rpc;websocket;sse;authentication;storage;entityframework;fabric</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageReleaseNotes>Initial beta release of gAPI.Core.Server.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -20,7 +38,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
+		<PackageReference Include="gAPI.Core" Version="0.0.1-beta" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>

@@ -22,7 +22,6 @@
 
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-		<Copyright>Copyright © 2026 Willem Beltman</Copyright>
 		<PackageReleaseNotes>Improved record support with inheritance.</PackageReleaseNotes>
 
 		<!-- Dit zorgt ervoor dat de DLL niet in de standaard 'lib' map terechtkomt -->

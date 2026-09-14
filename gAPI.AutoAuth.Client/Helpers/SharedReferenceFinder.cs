@@ -25,31 +25,31 @@ public static class SharedReferenceFinder
                 return new SharedReference(symbol);
         }
 
-        throw new Exception($"Cannot find type '{typeFullName}', please add gAPI reference to your project.");
+        throw new Exception($"Cannot find type '{typeFullName}', please add gAPI.Core.Client reference to your project.");
     }
     public static bool IsExactType(INamedTypeSymbol symbol, string fullName)
     {
         return symbol.ToDisplayString(FullNameFormat) == fullName;
     }
 
-    public static SharedReference FindByAttribute(string attributeName, IEnumerable<INamedTypeSymbol> allSymbols)
-    {
-        return allSymbols
-             .Where(t =>
-                 t.TypeKind == TypeKind.Interface &&
-                 t.HasAttribute(attributeName))
-             .Select(interfaceSymbol => new SharedReference(interfaceSymbol))
-             .FirstOrDefault()
-             ?? throw new Exception($"Cannot find type with attribute `{attributeName}`");
-    }
+    //public static SharedReference FindByAttribute(string attributeName, IEnumerable<INamedTypeSymbol> allSymbols)
+    //{
+    //    return allSymbols
+    //         .Where(t =>
+    //             t.TypeKind == TypeKind.Interface &&
+    //             t.HasAttribute(attributeName))
+    //         .Select(interfaceSymbol => new SharedReference(interfaceSymbol))
+    //         .FirstOrDefault()
+    //         ?? throw new Exception($"Cannot find type with attribute `{attributeName}`");
+    //}
 
-    public static SharedReference? TryFindByAttribute(string attributeName, IEnumerable<INamedTypeSymbol> allSymbols)
-    {
-        return allSymbols
-             .Where(t => t.HasAttribute(attributeName))
-             .Select(interfaceSymbol => new SharedReference(interfaceSymbol))
-             .FirstOrDefault();
-    }
+    //public static SharedReference? TryFindByAttribute(string attributeName, IEnumerable<INamedTypeSymbol> allSymbols)
+    //{
+    //    return allSymbols
+    //         .Where(t => t.HasAttribute(attributeName))
+    //         .Select(interfaceSymbol => new SharedReference(interfaceSymbol))
+    //         .FirstOrDefault();
+    //}
 
     public static readonly SymbolDisplayFormat FullNameFormat =
         new SymbolDisplayFormat(

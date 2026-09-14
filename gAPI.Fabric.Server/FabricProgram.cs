@@ -8,12 +8,17 @@ namespace gAPI.Fabric.Server;
 
 public class FabricProgram
 {
-    public static async Task StartAsync()
+    public static async Task StartAsync(int port = 9494)
     {
         Thread.Sleep(200);
 
         Console.WriteLine("Getting the config...");
-        var config = await FabricConfig.LoadAsync();
+        //var config = await FabricConfig.LoadAsync();
+
+        var config = new FabricConfig()
+        {
+            Port = port
+        };
 
         //WssLoggerConfig.MinimumLevel = LogLevel.Trace;
 

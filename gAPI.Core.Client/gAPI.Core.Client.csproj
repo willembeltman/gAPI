@@ -1,13 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-
+	
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<InvariantGlobalization>true</InvariantGlobalization>
+
+		<Version>0.0.1-beta</Version>
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
+		<PackageId>gAPI.Core.Client</PackageId>
+		<Title>gAPI Core Client</Title>
+		<Description>Client-side infrastructure, services, navigation, HTTP, WebSocket, SSE, and Blazor components used by the gAPI ecosystem.</Description>
+		<PackageTags>gapi;dotnet;blazor;webassembly;client;api;rpc;http;websocket;sse;navigation</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageReleaseNotes>Initial beta release of gAPI.Core.Client.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
+		<PackageReference Include="gAPI.Core" Version="0.0.1-beta" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -18,4 +36,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.11" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
 </Project>

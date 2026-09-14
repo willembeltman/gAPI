@@ -25,7 +25,7 @@ public static class SharedReferenceFinder
                 return new SharedReference(symbol);
         }
 
-        throw new Exception($"Cannot find type '{typeFullName}', please add gAPI reference to your project.");
+        throw new Exception($"Cannot find type '{typeFullName}', please add gAPI.Core.Server reference to your project.");
     }
     public static bool IsExactType(INamedTypeSymbol symbol, string fullName)
     {

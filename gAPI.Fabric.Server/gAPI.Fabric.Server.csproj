@@ -1,19 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-  <ItemGroup>
-    <Compile Remove="Types\**" />
-    <EmbeddedResource Remove="Types\**" />
-    <None Remove="Types\**" />
-  </ItemGroup>
+		<Version>0.0.1-beta</Version>
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
 
-  <ItemGroup>
-    <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
-  </ItemGroup>
+		<PackageId>gAPI.Fabric.Server</PackageId>
+		<Title>gAPI Fabric Server</Title>
+		<Description>Internal distributed communication and routing infrastructure for gAPI API and server hosts.</Description>
+
+		<PackageTags>gapi;dotnet;distributed;communication;routing;rpc;api;server;fabric;tcp;streaming</PackageTags>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+		<PackageReleaseNotes>Initial beta release of gAPI.Fabric.Server.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Types\**" />
+		<EmbeddedResource Remove="Types\**" />
+		<None Remove="Types\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="gAPI.Core.Server" Version="0.0.1-beta" />
+		<!--<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />-->
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 </Project>
