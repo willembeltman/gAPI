@@ -5,43 +5,43 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 
-		<Version>0.0.1-alpha</Version>
+		<Version>0.0.1-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
-		
+
 		<PackageId>gAPI.AutoAuth.Client</PackageId>
-		<Description>gAPI - a fast, smart, auto-generated API and RPC system for .NET 10.</Description>
-		<PackageTags>api;rpc;codegen;dotnet;blazor;aspnetcore;tooling</PackageTags>
-		
+		<Title>gAPI AutoAuth Client</Title>
+		<Description>Client-side authentication infrastructure for gAPI, providing authenticated HTTP communication, authentication state, state synchronization, and automatic configuration for gAPI client applications.</Description>
+		<PackageTags>gapi;dotnet;blazor;webassembly;client;authentication;auth;http;api;rpc;codegen;source-generator;analyzer</PackageTags>
+
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		
+
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-		<!-- Zorgt dat de generator in de juiste node van VS komt en onderdrukt NU5128 -->
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Up-to-date en specifieke packages voor C# Source Generators -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- README toevoegen aan pakket -->
 		<None Include="README.md" Pack="true" PackagePath="" />
 
-		<!-- Plaatst de generator DLL exact in de juiste analyzer-map -->
-		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)\$(AssemblyName).dll"
+			  Pack="true"
+			  PackagePath="analyzers/dotnet/cs"
+			  Visible="false" />
 	</ItemGroup>
 
 </Project>

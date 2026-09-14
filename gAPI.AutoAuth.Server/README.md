@@ -2,30 +2,49 @@
 
 Automatic authentication infrastructure for gAPI server applications.
 
-`gAPI.AutoAuth.Server` provides the server-side authentication implementation used by `gAPI.AutoApi.Server` and `gAPI.AutoWss.Server`.
+# How It Works
 
-It implements the `IServerAuthenticationService` interface and takes care of the authentication services, database integration, authentication state, serialization, and dependency injection.
+gAPI.AutoAuth.Server provides the server-side authentication implementation used by gAPI.AutoApi.Server and gAPI.AutoWss.Server.
 
-## How It Works
+The analyzers communicate with authentication through IServerAuthenticationService, while AutoAuth takes care of the underlying authentication infrastructure, database configuration, authentication state, state serialization, synchronization, and dependency injection.
+
+Add AutoAuth to the server during application startup:
+
+```
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddAutoAuthServer();
+
+var app = builder.Build();
+app.MapAutoAuthServer();
+
+```
+
+## How It Really Works
 
 `gAPI.AutoApi.Server` and `gAPI.AutoWss.Server` use `IServerAuthenticationService` as their authentication connection point.
 
 `gAPI.AutoAuth.Server` provides the implementation behind that interface.
 
-    AutoApi.Server / AutoWss.Server
-                  │
-                  ▼
-    IServerAuthenticationService
-                  │
-                  ▼
-           AutoAuth.Server
+```
+AutoApi.Server / AutoWss.Server
+                │
+                ▼
+IServerAuthenticationService
+                │
+                ▼
+        AutoAuth.Server
+```
 
 Application code uses the generated `IAuthenticationService`.
 
-    IAuthenticationService
-            │
-            ├── State
-            └── Authentication
+```
+IAuthenticationService
+        │
+        ├── State
+        ├── SessionId
+        └── Authentication
+```
 
 The authentication state is available directly through `State`.
 
@@ -35,10 +54,12 @@ The default authentication state is `AuthStateDto`.
 
 Applications can provide their own state by inheriting from it:
 
-    public class MyAuthState : AuthStateDto
-    {
-        public string SomeValue { get; set; }
-    }
+```
+public class MyAuthState : AuthStateDto
+{
+    public string SomeValue { get; set; }
+}
+```
 
 AutoAuth automatically uses the derived type as the authentication state for the generated `IAuthenticationService`.
 

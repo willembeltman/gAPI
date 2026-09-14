@@ -2,17 +2,28 @@
 
 Automatic authentication infrastructure for gAPI client applications.
 
-`gAPI.AutoAuth.Client` provides the client-side authentication implementation used by `gAPI.AutoApi.Client` and `gAPI.AutoWss.Client`.
-
-It implements the `IClientAuthenticatedHttpClient` interface and takes care of authenticated HTTP communication, authentication state, serialization, synchronization, and dependency injection.
-
 ## How It Works
+
+gAPI.AutoAuth.Client provides the client-side authentication implementation used by gAPI.AutoApi.Client and gAPI.AutoWss.Client.
+
+The analyzers communicate with authentication through IClientAuthenticatedHttpClient, while AutoAuth takes care of authenticated HTTP communication, authentication state, state serialization, synchronization, and dependency injection.
+
+Add AutoAuth to the client during application startup:
+
+```
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.Services.AddAutoAuthClient("https://localhost:7087"); // or builder.Configuration
+
+```
+
+## How It Really Works
 
 `gAPI.AutoApi.Client` and `gAPI.AutoWss.Client` use `IClientAuthenticatedHttpClient` as their authentication connection point.
 
 `gAPI.AutoAuth.Client` provides the implementation behind that interface.
 
-___
+```
 AutoApi.Client / AutoWss.Client
               │
               ▼
@@ -20,17 +31,17 @@ IClientAuthenticatedHttpClient
               │
               ▼
        AutoAuth.Client
-___
+```
 
 Application code uses the generated `IAuthenticatedHttpClient`.
 
-___
+```
 IAuthenticatedHttpClient
         │
-        ├── State
         ├── GetStateAsync()
+        ├── SessionId
         └── Authenticated HTTP
-___
+```
 
 ## Authentication State
 
@@ -38,12 +49,12 @@ The default authentication state is `AuthStateDto`.
 
 Applications can provide their own state by inheriting from it:
 
-___
+```
 public class MyAuthState : AuthStateDto
 {
     public string SomeValue { get; set; }
 }
-___
+```
 
 AutoAuth automatically uses the derived type as the authentication state for the generated `IAuthenticatedHttpClient`.
 
@@ -53,19 +64,15 @@ The state is serialized and synchronized with the server as part of the gAPI aut
 
 The generated `IAuthenticatedHttpClient` provides application code with access to the authenticated client and its current authentication state.
 
-The state can be accessed directly:
+The state can be retrieved asynchronously:
 
-___
-var state = authenticatedHttpClient.State;
-___
-
-or retrieved asynchronously:
-
-___
+```
 var state = await authenticatedHttpClient.GetStateAsync();
-___
+```
 
 The returned state is an `AuthStateDto`, or the application's own derived state type.
+
+If you change this state object, these changes will automatically be synchronised with the server.
 
 ## Automatic Configuration
 
@@ -98,7 +105,7 @@ Application code can therefore work with the strongly typed authentication state
 
 The generated `IAuthenticatedHttpClient` can be injected directly into application services:
 
-___
+```
 public class MyService
 {
     private readonly IAuthenticatedHttpClient _authentication;
@@ -115,7 +122,7 @@ public class MyService
         // Use the authentication state...
     }
 }
-___
+```
 
 When the current state is already available, the `State` property can be used directly.
 
