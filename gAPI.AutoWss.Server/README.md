@@ -1,3 +1,5 @@
+<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
 # gAPI.AutoWss.Server
 
 Automatic WebSocket API and Hub generation for gAPI server applications.

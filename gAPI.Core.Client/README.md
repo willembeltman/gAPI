@@ -1,3 +1,5 @@
+<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
 # gAPI.Core.Client
 
 Client-side infrastructure, services, navigation, HTTP, WebSocket, SSE, and Blazor components used by the gAPI ecosystem.

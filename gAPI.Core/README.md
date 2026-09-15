@@ -1,4 +1,6 @@
-﻿# gAPI.Core
+﻿<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
+# gAPI.Core
 
 Shared contracts, attributes, identifiers, DTOs, serializers, and runtime helpers used by the gAPI source generators and analyzers.
 

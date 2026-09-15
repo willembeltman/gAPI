@@ -1,4 +1,6 @@
-﻿# gAPI
+﻿<img src="gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
+# gAPI
 
 > Experimental full-stack .NET ecosystem focused on strongly typed APIs, source generation, code generation, automatic UI generation, and real-time communication.
 

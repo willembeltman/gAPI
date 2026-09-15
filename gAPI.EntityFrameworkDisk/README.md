@@ -1,3 +1,5 @@
+<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
 # gAPI.EntityFrameworkDisk.EntityFrameworkDisk
 
 A high-performance, file-based database engine for .NET Standard 2.0, designed as a full replacement for Entity Framework — but without a traditional RDBMS.

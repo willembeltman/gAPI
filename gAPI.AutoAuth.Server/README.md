@@ -1,4 +1,6 @@
-﻿# gAPI.AutoAuth.Server
+﻿<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
+# gAPI.AutoAuth.Server
 
 Automatic authentication infrastructure for gAPI server applications.
 

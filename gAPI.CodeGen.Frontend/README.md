@@ -1,4 +1,6 @@
-﻿# gAPI.CodeGen.Frontend
+﻿<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
+# gAPI.CodeGen.Frontend
 
 ## Generate your entire Blazor frontend from your backend.
 

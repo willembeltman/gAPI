@@ -1,3 +1,5 @@
+<img src="../gAPI_logo.png" alt="gAPI by Willem-Jan Beltman - Logo" width="300">
+
 # gAPI.Core.Server
 
 Server-side infrastructure, services, authentication, storage, WebSocket, SSE, and Fabric components used by the gAPI ecosystem.
