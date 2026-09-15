@@ -5,7 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
-		<Version>0.0.1-beta</Version>
+		<Version>0.0.2-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 
@@ -37,8 +37,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="gAPI.Core.Server" Version="0.0.1-beta" />
-		<!--<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />-->
+		<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
+		<!--<PackageReference Include="gAPI.Core.Server" Version="0.0.2-beta" />-->
+	
 	</ItemGroup>
 
 	<ItemGroup>

@@ -78,5 +78,5 @@ Change your backend → regenerate → your UI updates automatically.
 
 Status
 
-Version 0.0.1-beta
+Version 0.0.2-beta
 Active development – core generation pipelines are in place.

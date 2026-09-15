@@ -15,5 +15,9 @@
     <Project Path="gAPI.Core/gAPI.Core.csproj" />
     <Project Path="gAPI.EntityFrameworkDisk/gAPI.EntityFrameworkDisk.csproj" />
     <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
+    <Project Path="gAPI.Storage.LanCloud.Api.Proxy/gAPI.Storage.LanCloud.Api.Proxy.csproj" />
+    <Project Path="gAPI.Storage.LanCloud.Api/gAPI.Storage.LanCloud.Api.csproj" />
+    <Project Path="gAPI.Storage.LanCloud.Host/gAPI.Storage.LanCloud.Host.csproj" />
+    <Project Path="gAPI.Storage.LanCloud.Shared/gAPI.Storage.LanCloud.Shared.csproj" />
     <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
 </Solution>

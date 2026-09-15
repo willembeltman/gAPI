@@ -8,11 +8,15 @@ namespace gAPI.Core.ServiceBus.Extensions;
 
 public static class AddServiceServiceBusExtension
 {
-    public static IServiceCollection AddServiceBus(this IServiceCollection services)
+    public static IServiceCollection AddServiceBus(this IServiceCollection services, string queueName)
     {
+        var config = new ServiceBusConfig(queueName);
+
+        services.AddSingleton(config);
+        services.AddHostedService<ServiceBusReceiver>();
+
         services.AddSingleton<IRabbitServiceBusConnectionProvider, RabbitServiceBusConnectionProvider>();
         services.AddSingleton<IServiceBusHandlerRegistry, ServiceBusHandlerRegistry>();
-        services.AddSingleton<IServiceBusReceiver, ServiceBusReceiver>();
         services.AddSingleton<IServiceBusSender, ServiceBusSender>();
         services.AddSingleton<IConsoleService, ConsoleService>();
 

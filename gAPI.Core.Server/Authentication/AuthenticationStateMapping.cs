@@ -31,7 +31,6 @@ public class AuthenticationStateMapping<TUser, TStateDto>
         dto.Id = dbUser.Id;
         dto.UserName = dbUser.UserName;
         dto.Email = dbUser.Email;
-        //dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync($"User/{dto.Id}", ct);
         return dto;
     }
 }

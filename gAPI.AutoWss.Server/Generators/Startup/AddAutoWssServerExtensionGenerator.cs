@@ -51,6 +51,8 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg("Microsoft.AspNetCore.Http");
         Reg("Microsoft.Extensions.DependencyInjection");
         Reg("Microsoft.Extensions.Logging");
+        Reg("Microsoft.Extensions.Hosting");
+        Reg("Microsoft.Extensions.Configuration");
         Reg("gAPI.Core.Server.Extensions");
 
         foreach (var mini in Context.MinimalApis)

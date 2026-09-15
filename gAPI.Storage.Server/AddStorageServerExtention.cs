@@ -62,92 +62,9 @@ public static class AddStorageServerExtension
     {
         app.MapControllers();
 
-        //#region Auth controller
-
-        //app.MapPost("/Auth/Login", (IOptions<LocalStorageServerConfig> config, [FromBody] LoginRequest request) =>
-        //{
-        //    //Console.WriteLine($"gAPI.Storage.Server.Controllers.AuthController / Login UserName={config.Value.Credentials.UserName} token={config.Value.SuperSecretKeyArray}");
-        //    var cred = config.Value.Credentials.UserName == request.Username && config.Value.Credentials.Password == request.Password;
-
-        //    if (!cred)
-        //        return Results.Unauthorized();
-        //    var key = new SymmetricSecurityKey(config.Value.SuperSecretKeyArray);
-        //    var tokenHandler = new JwtSecurityTokenHandler();
-        //    var tokenDescriptor = new SecurityTokenDescriptor
-        //    {
-        //        Expires = DateTime.UtcNow.AddHours(1),
-        //        SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature)
-        //    };
-
-        //    var token = tokenHandler.CreateToken(tokenDescriptor);
-        //    var jwt = tokenHandler.WriteToken(token);
-
-        //    return Results.Ok(new { token = jwt });
-        //});
-
-        //#endregion
-        //#region Storage controller
-
-        //app.MapPost("/Storage/GetStorageFileInfo", (LocalStorageService storageService, [FromBody] GetStorageFileInfoRequest model) =>
-        //{
-        //    return storageService.GetStorageFileUrl(model);
-        //})
-        //.RequireAuthorization(); 
-
-        //app.MapPost("/Storage/SaveStorageFile", (LocalStorageService storageService, [FromForm] SaveRequest model, IFormFile file) =>
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return new SaveResponse { Success = false, Message = "No file uploaded" };
-
-        //    var stream = file.OpenReadStream();
-        //    return storageService.SaveStorageFile(model, stream);
-        //})
-        //.RequireAuthorization();
-
-        //app.MapPost("/Storage/DeleteStorageFile", (LocalStorageService storageService, [FromBody] DeleteRequest model) =>
-        //{
-        //    return storageService.DeleteStorageFile(model);
-        //})
-        //.RequireAuthorization();
-
-        //#endregion
-        //#region Content controller
-
-        //// GET /Content/{*path}?token=...
-        //app.MapGet("/Content/{*path}", (
-        //    LocalStorageService storageService,
-        //    ApplicationDbContext db,
-        //    string path,
-        //    string token
-        //) =>
-        //{
-        //    if (string.IsNullOrWhiteSpace(token))
-        //        return Results.Unauthorized();
-
-        //    if (string.IsNullOrWhiteSpace(path))
-        //        return Results.NotFound($"File '{path}' not found.");
-
-        //    var split = path.Split('/', 2, StringSplitOptions.RemoveEmptyEntries);
-        //    if (split.Length < 2)
-        //        return Results.NotFound($"File '{path}' not found.");
-
-        //    var directoryName = split[0];
-        //    var fileName = split[1];
-
-        //    if (!storageService.TryGetFile(path, token, directoryName, fileName, out string fullName, out StorageFile file, out string denyReason))
-        //        return Results.NotFound(denyReason);
-
-        //    return Results.File(
-        //        path: fullName,
-        //        contentType: file.MimeType,
-        //        fileDownloadName: file.FileName
-        //    );
-        //});
-
-        //#endregion
-
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseHttpsRedirection();
 
         return app;
     }

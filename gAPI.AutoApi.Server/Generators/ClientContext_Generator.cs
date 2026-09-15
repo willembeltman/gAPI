@@ -29,6 +29,8 @@ public class ClientContext_Generator : BaseGenerator
     {
         Reg(IClientContext);
         Reg(FabricClient);
+        Reg("Microsoft.Extensions.Hosting");
+        Reg("Microsoft.Extensions.Configuration");
         var properties = string.Join(
             "\r\n",
             ClientContexts

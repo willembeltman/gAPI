@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		
+		<Version>0.0.2-beta</Version>
+		
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
+
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Storage.LanCloud.Shared\gAPI.Storage.LanCloud.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Core.Client\gAPI.Core.Client.csproj" />
+		<!--<PackageReference Include="gAPI.Core.Client" Version="0.0.2-beta" />-->
+
+		<ProjectReference Include="..\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<!--<PackageReference Include="gAPI.AutoWss.Client" Version="0.0.2-beta">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>-->
+
+		<ProjectReference Include="..\gAPI.AutoAuth.Client\gAPI.AutoAuth.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<!--<PackageReference Include="gAPI.AutoAuth.Client" Version="0.0.2-beta">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>-->
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+	</ItemGroup>
+
+</Project>

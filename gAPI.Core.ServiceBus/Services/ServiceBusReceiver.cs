@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.ServiceBus.Interfaces;
 using gAPI.Core.ServiceBus.Messages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -9,18 +10,25 @@ using System.Text.Json;
 namespace gAPI.Core.ServiceBus.Services;
 
 public class ServiceBusReceiver(
+    ServiceBusConfig config,
     IRabbitServiceBusConnectionProvider provider,
     IServiceScopeFactory scopeFactory,
     IConsoleService console)
-    : IServiceBusReceiver
+    : IHostedService
 {
-    public async Task StartAsync(string busName, CancellationToken ct)
+    private CancellationTokenSource? Cts;
+
+    public async Task StartAsync(CancellationToken parentCt)
     {
+        Cts = CancellationTokenSource.CreateLinkedTokenSource(parentCt);
+
+        var ct = Cts.Token;
+        var queueName = config.QueueName;
         var connection = await provider.GetConnectionAsync();
         var channel = await connection.CreateChannelAsync();
 
         await channel.QueueDeclareAsync(
-            busName,
+            queueName,
             durable: true,
             exclusive: false,
             autoDelete: false);
@@ -50,6 +58,16 @@ public class ServiceBusReceiver(
             }
         };
 
-        await channel.BasicConsumeAsync(busName!, false, consumer);
+        await channel.BasicConsumeAsync(queueName!, false, consumer);
     }
+
+    public async Task StopAsync(CancellationToken parentCt)
+    {
+        if (Cts != null)
+        {
+            await Cts.CancelAsync();
+            Cts.Dispose();
+        }
+    }
+
 }

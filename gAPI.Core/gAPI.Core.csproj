@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.1-beta</Version>
+		<Version>0.0.2-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.Core</PackageId>
@@ -39,17 +39,17 @@
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
 	</ItemGroup>
 
-	<!--<ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" 
 			OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-	</ItemGroup>-->
+	</ItemGroup>
 	
-	<ItemGroup>
-		<PackageReference Include="gAPI.AutoSerializer" Version="0.0.1-beta">
+	<!--<ItemGroup>
+		<PackageReference Include="gAPI.AutoSerializer" Version="0.0.2-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-	</ItemGroup>
+	</ItemGroup>-->
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.12" />

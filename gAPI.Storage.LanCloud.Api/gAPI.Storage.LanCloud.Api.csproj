@@ -1,0 +1,91 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<InvariantGlobalization>true</InvariantGlobalization>
+
+		<Version>0.0.2-beta</Version>
+
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
+
+		<PackageId>gAPI.Storage.Server</PackageId>
+
+		<Title>
+			gAPI.Storage.Server – Zero-config embedded file &amp; database server for ASP.NET Core
+		</Title>
+
+		<Description>
+			gAPI.Storage.Server turns any ASP.NET Core WebAPI into a fully working file and database server with zero configuration.
+			When referenced, it automatically provisions a local /Files and /Database folder inside your project and exposes them through secure HTTP endpoints.
+
+			Designed for ultra-fast prototyping, microservices and serverless-style deployments.
+			Perfect for deploying small but powerful storage services on free Azure App Service plans.
+		</Description>
+
+		<PackageTags>
+			storage;fileserver;database;embedded;aspnetcore;webapi;azure;serverless;microservice;rpc;gapi
+		</PackageTags>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		
+		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
+	
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
+		<!--<PackageReference Include="gAPI.Core.Server" Version="0.0.2-beta" />-->
+		
+		<ProjectReference Include="..\gAPI.AutoWss.Server\gAPI.AutoWss.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<!--<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.2-beta">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>-->
+		
+		<ProjectReference Include="..\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<!--<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.2-beta">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>-->
+	
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\gAPI.Storage.LanCloud.Shared\gAPI.Storage.LanCloud.Shared.csproj" />
+	</ItemGroup>
+
+</Project>
