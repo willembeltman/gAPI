@@ -88,6 +88,7 @@ public static class {Name}
         services.AddScoped<{ClientConnection}>(sp => 
             new {ClientConnection}(sp.GetRequiredService<{IClientAuthenticatedHttpClient}>(), wssBackendUrl));
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
+        services.AddScoped<{IWssClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         
         // Api clients{string.Join("", Context.Apis.Select(api => $@"

@@ -11,7 +11,7 @@ namespace gAPI.Storage.LanCloud.Api.Controllers;
 
 [ApiController]
 [Route("dav")]
-internal class WebDavController(
+public class WebDavController(
     IFileSystemDirect fileSystem,
     ILogger<WebDavController> logger)
     : ControllerBase

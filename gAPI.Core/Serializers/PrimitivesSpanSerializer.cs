@@ -137,7 +137,7 @@ public static class PrimitivesSpanSerializer
         BinaryPrimitives.WriteInt32LittleEndian(span.Slice(offset, 4), bits);
         offset += 4;
     }
-    public static float ReadSingle(Span<byte> span, ref int offset)
+    public static float ReadSingle(ReadOnlySpan<byte> span, ref int offset)
     {
         int bits = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(offset, 4));
         offset += 4;
@@ -146,5 +146,22 @@ public static class PrimitivesSpanSerializer
     public static void LengthSingle(ref int offset, float value)
     {
         offset += 4;
+    }
+
+    public static void WriteDouble(ref Span<byte> span, ref int offset, double value)
+    {
+        long bits = BitConverter.DoubleToInt64Bits(value);
+        BinaryPrimitives.WriteInt64LittleEndian(span.Slice(offset, 8), bits);
+        offset += 8;
+    }
+    public static double ReadDouble(ReadOnlySpan<byte> span, ref int offset)
+    {
+        long bits = BinaryPrimitives.ReadInt64LittleEndian(span.Slice(offset, 8));
+        offset += 8;
+        return BitConverter.Int64BitsToDouble(bits);
+    }
+    public static void LengthDouble(ref int offset, double value)
+    {
+        offset += 8;
     }
 }
