@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
@@ -49,8 +50,18 @@ public class ListDataSource<T, TKey>(
 
     public async Task InitialiseAsync()
     {
-        await RegisterAsync();
-        await LoadMoreAsync();
+        try
+        {
+            await RegisterAsync();
+            await LoadMoreAsync();
+        }
+        catch
+        {
+            Response = new BaseListResponseT<T>()
+            {
+                Error = BaseResponseErrorEnum.ErrorInApp
+            };
+        }
     }
     public async Task OnHandleFileSelected(ItemDataSource<T, TKey> item, InputFileChangeEventArgs e)
     {

@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Enums;
 using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
@@ -46,9 +47,19 @@ public class ItemDataSource<T, TKey>(
         {
             return;
         }
-        Response = await Read(key.Value, Cts.Token);
-        StatusResponse = Response;
-        NewModelFlag = false;
+        try
+        {
+            Response = await Read(key.Value, Cts.Token);
+            StatusResponse = Response;
+            NewModelFlag = false;
+        }
+        catch
+        {
+            Response = new BaseResponseT<T>()
+            {
+                Error = BaseResponseErrorEnum.ErrorInApp
+            };
+        }
     }
 
     public async Task HandleFileSelected(InputFileChangeEventArgs e)

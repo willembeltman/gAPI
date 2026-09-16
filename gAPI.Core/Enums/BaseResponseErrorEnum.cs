@@ -18,5 +18,6 @@ public enum BaseResponseErrorEnum
     ErrorPasswordsDoNotMatch,
     ErrorUsernameInUse,
     ErrorEmailInUse,
-    ErrorNotSpecified
+    ErrorNotSpecified,
+    ErrorInApp
 }
