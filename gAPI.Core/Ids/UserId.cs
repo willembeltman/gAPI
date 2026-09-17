@@ -6,4 +6,10 @@ public record UserId(string? Value)
     {
         return Value ?? string.Empty;
     }
+    public Guid ToGuid()
+    {
+        if (Guid.TryParse(Value, out Guid id) == false)
+            throw new Exception("Cannot parse user id");
+        return id;
+    }
 }

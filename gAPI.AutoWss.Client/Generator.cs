@@ -72,6 +72,7 @@ public class Generator
     private void GenerateSpanSerializers(SourceProductionContext spc)
     {
         var generatedItems = new HashSet<string>();
+        var fileNames = new HashSet<string>();
 
         foreach (var api in Apis)
         {
@@ -85,9 +86,15 @@ public class Generator
                 if (generatedItems.Contains(name)) continue;
                 generatedItems.Add(name);
 
-                var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
-                serializerGenerator.Namespace = api.Namespace!;
+                var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers)
+                {
+                    Namespace = api.Namespace!
+                };
                 var code = serializerGenerator.Generate();
+
+                if (fileNames.Contains(serializerGenerator.FileName)) continue;
+                fileNames.Add(serializerGenerator.FileName);
+
                 spc.AddSource(
                     serializerGenerator.FileName,
                     SourceText.From(code, Encoding.UTF8));
@@ -107,6 +114,10 @@ public class Generator
             var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
             serializerGenerator.Namespace = ClientConnection.Namespace!;
             var code = serializerGenerator.Generate();
+
+            if (fileNames.Contains(serializerGenerator.FileName)) continue;
+            fileNames.Add(serializerGenerator.FileName);
+
             spc.AddSource(
                 serializerGenerator.FileName,
                 SourceText.From(code, Encoding.UTF8));
@@ -115,6 +126,7 @@ public class Generator
     private void GenerateMultipartSerializers(SourceProductionContext spc)
     {
         var generatedItems = new HashSet<string>();
+        var fileNames = new HashSet<string>();
 
         foreach (var api in MinimalApis)
         {
@@ -132,6 +144,10 @@ public class Generator
                     CustomMultipartFormDataContents);
                 serializerGenerator.Namespace = api.Namespace!;
                 var code = serializerGenerator.Generate();
+
+                if (fileNames.Contains(serializerGenerator.FileName)) continue;
+                fileNames.Add(serializerGenerator.FileName);
+
                 spc.AddSource(
                     serializerGenerator.FileName,
                     SourceText.From(code, Encoding.UTF8));
