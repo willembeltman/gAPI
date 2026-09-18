@@ -110,111 +110,111 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         Code = $"{GetNamespacesCode()}{Code}";
     }
 
-    private string GenerateSubscribe()
-    {
-        return $@"
-    public void SubscribeAsync(object implementation)
-    {{
-        {string.Join("\r\n        else ", Interfaces.Select(i => @$"if (implementation is {i.Name} _{i.Name})
-        {{
-            var serviceId = new {SseServiceId}(nameof({i.Name}));
-            var client = ServiceClients.AddOrUpdate(
-                serviceId,
-                serviceId =>
-                {{
-                    var client = new SseClient(ClientAuthenticatedHttpClient, this, serviceId);
-                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
-                    _ = Task.Run(client.ConnectAsync);
-                    return client;
-                }},
-                (service, client) =>
-                {{
-                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
-                    return client;
-                }});
-        }}"))}{(Interfaces.Length == 0 ? "" : $@"
-        else 
-        {{
-            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to register, please add the [GenerateHub] attribute to the interface you are trying to register."");
-        }}")}
-    }}
-    public async Task UnsubscribeAsync(object implementation)
-    {{
-        {string.Join("\r\n        else ", Interfaces.Select(i => @$"if (implementation is {i.Name} _{i.Name})
-        {{
-            var serviceId = new {SseServiceId}(nameof({i.Name}));
-            ImmutableInterlocked.Update(ref {i.Title}s, list => list.Remove(_{i.Name}));
-            if ({i.Title}s.Length == 0 &&
-                ServiceClients.TryRemove(serviceId, out var client))
-            {{
-                client.Dispose();
-            }}
-        }}"))}{(Interfaces.Length == 0 ? "" : $@"
-        else 
-        {{
-            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to unregister, please add the [GenerateHub] attribute to the interface you are trying to unregister."");
-        }}")}
-    }}
+//    private string GenerateSubscribe()
+//    {
+//        return $@"
+//    public void SubscribeAsync(object implementation)
+//    {{
+//        {string.Join("\r\n        else ", Interfaces.Select(i => @$"if (implementation is {i.Name} _{i.Name})
+//        {{
+//            var serviceId = new {SseServiceId}(nameof({i.Name}));
+//            var client = ServiceClients.AddOrUpdate(
+//                serviceId,
+//                serviceId =>
+//                {{
+//                    var client = new SseClient(ClientAuthenticatedHttpClient, this, serviceId);
+//                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
+//                    _ = Task.Run(client.ConnectAsync);
+//                    return client;
+//                }},
+//                (service, client) =>
+//                {{
+//                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
+//                    return client;
+//                }});
+//        }}"))}{(Interfaces.Length == 0 ? "" : $@"
+//        else 
+//        {{
+//            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to register, please add the [GenerateHub] attribute to the interface you are trying to register."");
+//        }}")}
+//    }}
+//    public async Task UnsubscribeAsync(object implementation)
+//    {{
+//        {string.Join("\r\n        else ", Interfaces.Select(i => @$"if (implementation is {i.Name} _{i.Name})
+//        {{
+//            var serviceId = new {SseServiceId}(nameof({i.Name}));
+//            ImmutableInterlocked.Update(ref {i.Title}s, list => list.Remove(_{i.Name}));
+//            if ({i.Title}s.Length == 0 &&
+//                ServiceClients.TryRemove(serviceId, out var client))
+//            {{
+//                client.Dispose();
+//            }}
+//        }}"))}{(Interfaces.Length == 0 ? "" : $@"
+//        else 
+//        {{
+//            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to unregister, please add the [GenerateHub] attribute to the interface you are trying to unregister."");
+//        }}")}
+//    }}
 
-    public async Task SendRequest_ReceivedAsync({SendRequestClientDto} message, CancellationToken ct)
-    {{{(Interfaces.Length > 0 ? $@"
-        switch (message.Routing.ServiceId.Value)
-        {{{string.Join("\r\n", Interfaces
-        .Select(i =>
-        {
-            Reg(i);
-            return $@"
-            case ""{i.Name}"":
-                switch(message.Routing.MethodId.Value)
-                {{{string.Join("\r\n", i.Methods.Select(m =>
-            {
-                var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");
-                return $@"
-                    case ""{m.Name}"":
-                        var {m.Name.ToLower()} = 
-                            JsonSerializer.Deserialize<{i.Title}_{m.Name}>(
-                                Encoding.UTF8.GetString(message.BinaryData));
-                        if ({m.Name.ToLower()} == null) return;
-                        foreach (var item in {i.Title}s)
-                        {{
-                            await item.{m.Name}({string.Join(",", m.Arguments
-                                .Where(a => a.ParameterType.Name != "CancellationToken")
-                                .Select(a => $@"
-                                {m.Name.ToLower()}.{a.Name}"))}{(hasCancellationToken ? $@",
-                                ct" : "")});
-                        }}
-                        break;";
-            }))}
-                }}
-                break;";
-        }))}
-        }}" : "")}
-    }}
-    public async Task SendRequestCancelled_ReceivedAsync({SendRequestCancelledClientDto} message, CancellationToken ct)
-    {{
-        // TODO
-    }}{string.Join("", Interfaces
-        .Select(i =>
-        {
-            Reg(i);
-            return string.Join("", i.Methods
-                .Select(m =>
-                {
-                    return @$"
+//    public async Task SendRequest_ReceivedAsync({SendRequestClientDto} message, CancellationToken ct)
+//    {{{(Interfaces.Length > 0 ? $@"
+//        switch (message.Routing.ServiceId.Value)
+//        {{{string.Join("\r\n", Interfaces
+//        .Select(i =>
+//        {
+//            Reg(i);
+//            return $@"
+//            case ""{i.Name}"":
+//                switch(message.Routing.MethodId.Value)
+//                {{{string.Join("\r\n", i.Methods.Select(m =>
+//            {
+//                var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");
+//                return $@"
+//                    case ""{m.Name}"":
+//                        var {m.Name.ToLower()} = 
+//                            JsonSerializer.Deserialize<{i.Title}_{m.Name}>(
+//                                Encoding.UTF8.GetString(message.BinaryData));
+//                        if ({m.Name.ToLower()} == null) return;
+//                        foreach (var item in {i.Title}s)
+//                        {{
+//                            await item.{m.Name}({string.Join(",", m.Arguments
+//                                .Where(a => a.ParameterType.Name != "CancellationToken")
+//                                .Select(a => $@"
+//                                {m.Name.ToLower()}.{a.Name}"))}{(hasCancellationToken ? $@",
+//                                ct" : "")});
+//                        }}
+//                        break;";
+//            }))}
+//                }}
+//                break;";
+//        }))}
+//        }}" : "")}
+//    }}
+//    public async Task SendRequestCancelled_ReceivedAsync({SendRequestCancelledClientDto} message, CancellationToken ct)
+//    {{
+//        // TODO
+//    }}{string.Join("", Interfaces
+//        .Select(i =>
+//        {
+//            Reg(i);
+//            return string.Join("", i.Methods
+//                .Select(m =>
+//                {
+//                    return @$"
 
-    public class {i.Title}_{m.Name}
-    {{{string.Join("", m.Arguments
-    .Where(a => a.ParameterType.Name != "CancellationToken")
-    .Select(p =>
-                    {
-                        RegRange(p.ParameterType.Namespaces);
-                        return @$"
-        public {p.ParameterType.Name} {p.Name} {{ get; set; }}{(p.ParameterType.IsNullable || !p.ParameterType.IsReferenceType ? "" : " = null!;")}";
-                    }))}
-    }}";
-                }));
-        }))}
-}}";
-        Code = $"{GetNamespacesCode()}{Code}";
-    }
+//    public class {i.Title}_{m.Name}
+//    {{{string.Join("", m.Arguments
+//    .Where(a => a.ParameterType.Name != "CancellationToken")
+//    .Select(p =>
+//                    {
+//                        RegRange(p.ParameterType.Namespaces);
+//                        return @$"
+//        public {p.ParameterType.Name} {p.Name} {{ get; set; }}{(p.ParameterType.IsNullable || !p.ParameterType.IsReferenceType ? "" : " = null!;")}";
+//                    }))}
+//    }}";
+//                }));
+//        }))}
+//}}";
+//        Code = $"{GetNamespacesCode()}{Code}";
+//    }
 }

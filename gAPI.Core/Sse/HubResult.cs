@@ -7,12 +7,12 @@ public class HubResult
     /// <summary>
     /// Not required, will be set by the framework
     /// </summary>
-    public required UserId UserId { get; set; }
+    public UserId UserId { get; set; } = default!;
 
     /// <summary>
     /// Not required, will be set by the framework
     /// </summary>
-    public required SessionId SessionId { get; set; }
+    public SessionId SessionId { get; set; } = default!;
 
     /// <summary>
     /// Optional, can be used to return state/session data after an invoke
