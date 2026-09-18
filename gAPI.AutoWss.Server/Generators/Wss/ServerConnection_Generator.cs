@@ -123,13 +123,77 @@ public class {Name} : WssServerConnection
     {functions}
 }}";
         Code = $"{GetNamespacesCode()}{Code}";
-
-        //{GenerateTaskCalls()}
-        //{GenerateTaskTCalls()}
-        //{GenerateIAsyncEnumerableCalls()}
-        //{GenerateSerializers()}
-        //{GenerateArgumentDeserializers(ref functions, functionNames)}
     }
+
+
+    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    {
+        var functions = "";
+        var code = $@"
+    protected override Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
+    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+        var ___offset = 0;
+        var ___span = new Span<byte>(___sendRequest.BinaryData);
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)).Select(@interface => $@"
+            case ""{@interface}"":
+                switch (___sendRequest.Routing.MethodId.Value)
+                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
+        {
+            return $@"
+                    case ""{method}"":
+                        return {@interface}_{method}(
+                            ___sendRequest,{string.Join("", method.Arguments
+                                .Select((arg, index) => (arg, index))
+                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                    ? $@"
+                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                    : $@"
+                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                            ___ct);";
+        })))}
+                }}
+                break;")))}
+        }}" : "")}
+        throw new Exception($""Send {{___sendRequest.Routing.ServiceId.Value}}.{{___sendRequest.Routing.MethodId.Value}} not implemented"");
+    }}";
+        functions2 += functions;
+        return code;
+    }
+    private string GenerateInvokeRequest(ref string functions2, HashSet<string> functionNames)
+    {
+        var functions = "";
+        var code = $@"
+    protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
+    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)) ? $@"
+        var ___offset = 0;
+        var ___span = new Span<byte>(___invokeRequest.BinaryData);
+        switch (___invokeRequest.Routing.ServiceId.Value)
+        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)).Select(@interface => $@"
+            case ""{@interface}"":
+                switch (___invokeRequest.Routing.MethodId.Value)
+                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask == false).Select(method => $@"
+                    case ""{method}"":
+                        return {@interface}_{method}(
+                            ___invokeRequest,{string.Join("", method.Arguments
+                                .Select((arg, index) => (arg, index))
+                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                    ? $@"
+                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                    : $@"
+                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                            ___ct);")))}
+                }}
+                break;")))}
+        }}" : "")}
+        throw new Exception($""Invoke {{___invokeRequest.Routing.ServiceId.Value}}.{{___invokeRequest.Routing.MethodId.Value}} not implemented"");
+    }}";
+        functions2 += functions;
+        return code;
+    }
+
 
     private string GenerateMethod(Interface @interface, InterfaceMethod method, ref string functions2, HashSet<string> functionNames)
     {
@@ -234,74 +298,6 @@ public class {Name} : WssServerConnection
         return {PropertyHelper.GenerateSpanReadCode(innerType.Type, false, ref functions, functionNames)};
     }}";
         }
-        return code;
-    }
-
-    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
-    {
-        var functions = "";
-        var code = $@"
-    protected override Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{
-        var ___offset = 0;
-        var ___span = new Span<byte>(___sendRequest.BinaryData);
-        switch (___sendRequest.Routing.ServiceId.Value)
-        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)).Select(@interface => $@"
-            case ""{@interface}"":
-                switch (___sendRequest.Routing.MethodId.Value)
-                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
-        {
-            return $@"
-                    case ""{method}"":
-                        return {@interface}_{method}(
-                            ___sendRequest,{string.Join("", method.Arguments
-                                .Select((arg, index) => (arg, index))
-                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                                    ? $@"
-                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
-                                    : $@"
-                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
-                            ___ct);";
-        })))}
-                }}
-                break;")))}
-        }}
-        throw new Exception($""Send {{___sendRequest.Routing.ServiceId.Value}}.{{___sendRequest.Routing.MethodId.Value}} not implemented"");
-    }}";
-        functions2 += functions;
-        return code;
-    }
-    private string GenerateInvokeRequest(ref string functions2, HashSet<string> functionNames)
-    {
-        var functions = "";
-        var code = $@"
-    protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
-    {{
-        var ___offset = 0;
-        var ___span = new Span<byte>(___invokeRequest.BinaryData);
-        switch (___invokeRequest.Routing.ServiceId.Value)
-        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)).Select(@interface => $@"
-            case ""{@interface}"":
-                switch (___invokeRequest.Routing.MethodId.Value)
-                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask == false).Select(method => $@"
-                    case ""{method}"":
-                        return {@interface}_{method}(
-                            ___invokeRequest,{string.Join("", method.Arguments
-                                .Select((arg, index) => (arg, index))
-                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                                    ? $@"
-                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
-                                    : $@"
-                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
-                            ___ct);")))}
-                }}
-                break;")))}
-        }}
-        throw new Exception($""Invoke {{___invokeRequest.Routing.ServiceId.Value}}.{{___invokeRequest.Routing.MethodId.Value}} not implemented"");
-    }}";
-        functions2 += functions;
         return code;
     }
 }
