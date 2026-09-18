@@ -60,7 +60,7 @@ public class BackendGenerator
         // Api
         //AddCommenServicesExtension = new AddCommenServicesExtensionGenerator(this);
         AddCrudExtension = new AddCrudExtensionsGenerator(this);
-        AddDatabaseExtension = new AddDatabaseExtensionGenerator(this);
+        //AddDatabaseExtension = new AddDatabaseExtensionGenerator(this);
         //AddRemainingAuthenticationServicesExtension = new AddRemainingAuthenticationServicesExtensionGenerator(this);
         //Program = new ProgramGenerator(this);
         //ServerAuthenticationMiddleware = new ServerAuthenticationMiddlewareGenerator(this);
@@ -104,7 +104,7 @@ public class BackendGenerator
     //public UserIpSessionTokenRouteRequestGenerator UserIpSessionTokenRouteRequest { get; }
     ///public AddCommenServicesExtensionGenerator AddCommenServicesExtension { get; }
     public AddCrudExtensionsGenerator AddCrudExtension { get; }
-    public AddDatabaseExtensionGenerator AddDatabaseExtension { get; }
+    //public AddDatabaseExtensionGenerator AddDatabaseExtension { get; }
     //public AddRemainingAuthenticationServicesExtensionGenerator AddRemainingAuthenticationServicesExtension { get; }
     //public ProgramGenerator Program { get; }
     //public ServerAuthenticationServiceGenerator ServerAuthenticationService { get; }
@@ -151,7 +151,7 @@ public class BackendGenerator
         //UserIpSessionTokenRouteRequest.GenerateCode();
         //AddCommenServicesExtension.GenerateCode();
         AddCrudExtension.GenerateCode();
-        AddDatabaseExtension.GenerateCode();
+        //AddDatabaseExtension.GenerateCode();
         //AddRemainingAuthenticationServicesExtension.GenerateCode();
         //Program.GenerateCode();
         //ServerAuthenticationService.GenerateCode();

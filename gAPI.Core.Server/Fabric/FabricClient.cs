@@ -227,7 +227,7 @@ public sealed class FabricClient : IAsyncDisposable
             await Sender.Send_GetSession_ToFabricAsync(getSessionDto, ct);
 
             // Maak een time-out van 30 seconden aan
-            using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(100));
             // Koppel de time-out aan de meegegeven CancellationToken van de gebruiker
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, ctsTimeout.Token);
 
@@ -938,7 +938,7 @@ public sealed class FabricClient : IAsyncDisposable
 
         try
         {
-            var done = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+            var done = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             return;
         }
         finally
@@ -991,7 +991,7 @@ public sealed class FabricClient : IAsyncDisposable
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
 
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1);
             await foreach (var item in enumerable)

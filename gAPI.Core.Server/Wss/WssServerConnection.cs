@@ -277,7 +277,7 @@ public abstract class WssServerConnection : IWssServerConnection
                 Logger.LogTrace("{now} Receive_SendRequest_FromClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
 
             // Create cancellation token
-            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(30), ct);
+            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
             StreamingCache.Timeouts[sendRequest.Routing.RequestId] = cts;
 
             try
@@ -369,7 +369,7 @@ public abstract class WssServerConnection : IWssServerConnection
                 Logger.LogTrace("{now} Receive_InvokeRequest_FromClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
             // Create cancellation token
-            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(30), ct);
+            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
             StreamingCache.Timeouts[invokeRequest.Routing.RequestId] = cts;
 
             try
@@ -589,7 +589,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
             if (response.Cancelled)
@@ -615,7 +615,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(60), ct);
+            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.Cancelled)
                 throw new TaskCanceledException();
             if (response.ExceptionMessage != null)

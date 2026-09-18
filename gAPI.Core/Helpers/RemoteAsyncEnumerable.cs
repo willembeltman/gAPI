@@ -59,7 +59,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
             _cancellationToken = cancellationToken;
 
             _timeout = new ResettableTimeout(
-                TimeSpan.FromSeconds(60),
+                TimeSpan.FromSeconds(100),
                 () => Complete(
                     new TimeoutException(
                         "Remote async enumerable timed out.")));

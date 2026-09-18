@@ -362,7 +362,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now}: Received_SendRequest_FromServer({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
 
-            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(30), ct);
+            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
             Timeouts[sendRequest.Routing.RequestId] = cts;
 
             try
@@ -449,7 +449,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
             var cts = new LinkedCancellationTokenSourceWithTimeout(
-                TimeSpan.FromSeconds(60),
+                TimeSpan.FromSeconds(100),
                 ct);
             Timeouts[invokeRequest.Routing.RequestId] = cts;
 
@@ -648,7 +648,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(30), ct);
+            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
@@ -678,7 +678,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(30), ct);
+            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,

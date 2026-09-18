@@ -126,7 +126,7 @@ public class FabricManager
             if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(60), () =>
+            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
                 _ = CompleteRequestAsync(logger, state);
@@ -226,7 +226,7 @@ public class FabricManager
             if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(60), () =>
+            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
                 _ = ReadyInvokeAsync(logger, state);
