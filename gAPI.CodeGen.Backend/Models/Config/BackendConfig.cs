@@ -8,6 +8,7 @@ public record BackendConfig(
 
     DirectoryInfo Shared_CrudInterfacesDirectory,
     string Shared_CrudInterfacesNamespace,
+    string Shared_CrudInterfacesEnd,
 
     DirectoryInfo Shared_StateDtosDirectory,
     string Shared_StateDtosNamespace,
@@ -20,6 +21,7 @@ public record BackendConfig(
 
     DirectoryInfo Core_CrudServicesDirectory,
     string Core_CrudServicesNamespace,
+    string Core_CrudServicesEnd,
 
     DirectoryInfo Extensions_Directory,
     string Extensions_Namespace,
@@ -27,5 +29,4 @@ public record BackendConfig(
     bool OverwriteMappers = true,
     bool OverwriteServices = true, 
     bool OverwriteServiceInterfaces = true, 
-    bool OverwriteUseCases = false
-    );
+    bool OverwriteUseCases = false);

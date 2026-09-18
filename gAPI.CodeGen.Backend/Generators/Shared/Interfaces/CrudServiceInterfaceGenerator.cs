@@ -20,7 +20,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"I{Entity.Name.ToMultiple()}CrudService";
+        Name = $"I{Entity.Name.ToMultiple()}{context.Config.Shared_CrudInterfacesEnd}";
         FileName = $"{Name}.cs";
     }
 
@@ -30,8 +30,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
     public MappingGenerator CrudMapping => Dto.CrudMapping;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
-    //public IServerAuthenticationServiceGenerator IServerAuthenticationService => Context.IServerAuthenticationService;
-    //public ServerAuthenticationStateGenerator AuthenticationState => Context.ServerAuthenticationState;
+
     public SharedReference BaseListResponseT => Context.SharedReferences.BaseListResponseT;
     public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
     public StateGenerator State => Context.State;
