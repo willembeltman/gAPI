@@ -6,17 +6,14 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
+		<!-- NuGet Versiebeheer -->
 		<Version>0.0.2-beta</Version>
-
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
-
 		<PackageId>gAPI.Storage.Server</PackageId>
 
-		<Title>
-			gAPI.Storage.Server – Zero-config embedded file &amp; database server for ASP.NET Core
-		</Title>
-
+		<!-- Metadata voor NuGet functionaliteit -->
+		<Title>gAPI.Storage.Server – Zero-config embedded file &amp; database server for ASP.NET Core</Title>
 		<Description>
 			gAPI.Storage.Server turns any ASP.NET Core WebAPI into a fully working file and database server with zero configuration.
 			When referenced, it automatically provisions a local /Files and /Database folder inside your project and exposes them through secure HTTP endpoints.
@@ -24,21 +21,21 @@
 			Designed for ultra-fast prototyping, microservices and serverless-style deployments.
 			Perfect for deploying small but powerful storage services on free Azure App Service plans.
 		</Description>
-
-		<PackageTags>
-			storage;fileserver;database;embedded;aspnetcore;webapi;azure;serverless;microservice;rpc;gapi
-		</PackageTags>
-
+		<PackageTags>storage;fileserver;database;embedded;aspnetcore;webapi;azure;serverless;microservice;rpc;gapi</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+		<!-- Links naar je GitHub repository -->
 		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
+		<!-- Zorgt ervoor dat de README.md correct wordt ingebakken -->
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
-		<IncludeSymbols>false</IncludeSymbols>
-		<IncludeSource>false</IncludeSource>
+		<!-- Optioneel maar aanbevolen voor betere debugging door consumenten -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
