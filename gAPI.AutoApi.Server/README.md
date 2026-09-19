@@ -105,7 +105,7 @@ public class ServerApi(
 {
     public async Task DoSomething(CancellationToken ct)
     {
-        await clientContext.HostHub.ToAll.DoSomething(ct);
+        await clientContext.ClientHub.ToAll.DoSomething(ct);
     }
 
     public async Task<string> GetSomething(CancellationToken ct)
@@ -156,6 +156,59 @@ app.Run();
 `MapAutoApiServer` maps the generated REST and SSE endpoints.
 
 `AddAutoAuthServer` and `MapAutoAuthServer` configure the authentication and session infrastructure used by AutoApi.
+
+## Configuration
+
+AutoAuth can be configured using an `IConfiguration` instance passed to `MapAutoAuthServer`.
+
+For example:
+
+```
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAutoAuthServer();
+
+var app = builder.Build();
+
+app.MapAutoAuthServer(builder.Configuration);
+
+```
+
+The configuration can be provided through the application's `appsettings.json`.
+
+The following settings are supported:
+
+```
+
+{
+  "FrontendUrl": "https://localhost:1234",
+  "UseMemoryDatabase": "false",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=SERVER;Database=DBNAME;Integrated Security=True;TrustServerCertificate=True",
+    "FabricConnection": "Server=localhost;Port=9494;"
+  }
+}
+
+```
+
+`FrontendUrl` specifies the URL of the client application.
+
+`UseMemoryDatabase` can be used to configure AutoAuth to use an in-memory database instead of the configured SQL Server database.
+
+`ConnectionStrings:DefaultConnection` specifies the database connection used by the authentication database.
+
+Other gAPI components can use additional connection strings, such as `StorageConnection` and `FabricConnection`. These are not required by AutoAuth itself, but can be provided through the same application configuration.
+
+### Database Configuration
+
+When `UseMemoryDatabase` is enabled, AutoAuth uses an in-memory database for authentication.
+
+When it is disabled, AutoAuth uses `ConnectionStrings:DefaultConnection`.
+
+If no `DefaultConnection` is configured, AutoAuth falls back to dummy authentication instead of requiring a database.
+
+This makes it possible to use the same AutoAuth infrastructure during development, testing, and production without changing the application code.
 
 ## Communication Model
 
@@ -282,3 +335,110 @@ Synchronous API methods are not supported.
 ## Status
 
 Beta
+
+# Example code
+
+### Shared
+``` CSharp
+	[GenerateApi]
+	public interface ITestApi
+	{
+		Task TestCallAsync(string text, CancellationToken ct);
+	}
+
+	[GenerateHub]
+	public interface ITestHub
+	{
+		Task TestCallAsync(string text, CancellationToken ct);
+	}
+
+	public class StateDto : AuthStateDto
+	{
+		public int TestNumber { get; set; }
+	}
+```
+
+### Backend
+``` CSharp
+	public class TestApi(
+		IAuthenticationService authenticationService,
+		ITestHubContext testHub, // Option 1
+		IClientContext clientContext, // Option 2
+		ILoggerFactory loggerFactory)
+		: ITestApi
+	{
+		readonly ILogger Logger = loggerFactory.CreateLogger<TestApi>();
+
+		public async Task TestCallAsync(string text, CancellationToken ct)
+		{
+			if (Logger.IsEnabled(LogLevel.Trace))
+				Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendLocationAsync({location})", "hoi2");
+
+			authenticationService.State.TestNumber++;
+			await testHub.ToAll.TestCallAsync("Hello world", ct); // Option 1
+			await clientContext.TestHub.ToAll.TestCallAsync("Hello world", ct); // Option 2
+		}
+	}
+```
+
+### Frontend
+``` Razor
+	@page "/Test"
+	@implements IAsyncDisposable
+	@implements ITestHub // Inherits from Shared interface
+	@inject ITestApi server
+	@inject IClientConnection connection
+	@inject IAuthenticatedHttpClient authentication
+
+	<PageTitle>Test</PageTitle>
+
+	<button @onclick="DoTestCall">Send heen en terug</button>
+
+	<h1>@(Wait1.ToString("F1"))ms heen</h1>
+	<h1>@(Wait2.ToString("F1"))ms heen en terug</h1>
+	<h3>@(TestNumber) hop counter</h3>
+
+	@code {
+		CancellationTokenSource Cts = new();
+		CancellationToken Ct => Cts.Token;
+		Stopwatch stopwatch = new();
+		double Wait1;
+		double Wait2;
+		int TestNumber;
+
+		protected override async Task OnInitializedAsync()
+		{
+			var authorized = await authentication.IsAuthenticatedAsync(Ct);
+			if (authorized == false) { }
+			await connection.SubscribeAsync(this, Ct);
+		}
+
+		async Task DoTestCall()
+		{
+			var state = await authentication.GetStateAsync(false, Ct);
+			state.TestNumber++;
+			TestNumber = state.TestNumber;
+			StateHasChanged();
+
+			stopwatch.Restart();
+			await server.TestCallAsync("Hello world", Ct);
+			Wait1 = stopwatch.Elapsed.TotalMilliseconds;
+
+			state = await authentication.GetStateAsync();
+			TestNumber = state.TestNumber;
+			StateHasChanged();
+		}
+
+		public async Task TestCallAsync(string text, CancellationToken ct)
+		{
+			Wait2 = stopwatch.Elapsed.TotalMilliseconds;
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			await connection.UnsubscribeAsync(this);
+			await Cts.CancelAsync();
+			Cts.Dispose();
+		}
+	}
+```

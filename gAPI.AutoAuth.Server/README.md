@@ -45,10 +45,64 @@ IAuthenticationService
         │
         ├── State
         ├── SessionId
+        ├── UserId
         └── Authentication
 ```
 
 The authentication state is available directly through `State`.
+
+## Configuration
+
+AutoAuth can be configured using an `IConfiguration` instance passed to `MapAutoAuthServer`.
+
+For example:
+
+```
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAutoAuthServer();
+
+var app = builder.Build();
+
+app.MapAutoAuthServer(builder.Configuration);
+
+```
+
+The configuration can be provided through the application's `appsettings.json`.
+
+The following settings are supported:
+
+```
+
+{
+  "FrontendUrl": "https://localhost:1234",
+  "UseMemoryDatabase": "false",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=SERVER;Database=DBNAME;Integrated Security=True;TrustServerCertificate=True",
+    "FabricConnection": "Server=localhost;Port=9494;"
+  }
+}
+
+```
+
+`FrontendUrl` specifies the URL of the client application.
+
+`UseMemoryDatabase` can be used to configure AutoAuth to use an in-memory database instead of the configured SQL Server database.
+
+`ConnectionStrings:DefaultConnection` specifies the database connection used by the authentication database.
+
+Other gAPI components can use additional connection strings, such as `StorageConnection` and `FabricConnection`. These are not required by AutoAuth itself, but can be provided through the same application configuration.
+
+### Database Configuration
+
+When `UseMemoryDatabase` is enabled, AutoAuth uses an in-memory database for authentication.
+
+When it is disabled, AutoAuth uses `ConnectionStrings:DefaultConnection`.
+
+If no `DefaultConnection` is configured, AutoAuth falls back to dummy authentication instead of requiring a database.
+
+This makes it possible to use the same AutoAuth infrastructure during development, testing, and production without changing the application code.
 
 ## Authentication State
 
@@ -57,7 +111,7 @@ The default authentication state is `AuthStateDto`.
 Applications can provide their own state by inheriting from it:
 
 ```
-public class MyAuthState : AuthStateDto
+public class MyState : AuthStateDto
 {
     public string SomeValue { get; set; }
 }
@@ -95,6 +149,103 @@ where `TUser` inherits from `AuthUser`.
 AutoAuth automatically registers the database context with dependency injection.
 
 The context can be injected directly or accessed through a factory.
+
+## Extending Authentication State
+
+The authentication state can be extended by inheriting from `AuthStateDto`. When custom state serialization or comparison behavior is required, the `IStateParser<TState>` interface can also be implemented for the derived state type.
+
+For example:
+
+```
+
+public class StateParser : IStateParser<MyState>
+{
+    public MyState? CreateCopy(MyState? value)
+    {
+        return value?.CreateCopy(); // Use gAPI.AutoSerializer
+    }
+
+    public bool IsDifferent(MyState? value1, MyState? value2)
+    {
+        if (value1 == null && value2 == null) return false;
+        if (value1 == null || value2 == null) return true;
+
+        return value1.IsDifferent(value2); // Use gAPI.AutoSerializer
+    }
+
+    public string? ToStringBase64(MyState? value)
+    {
+        if (value == null)
+            value = new MyState();
+
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+        return Convert.ToBase64String(bytes);
+    }
+
+    public bool TryParse(string? value, out MyState state)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            state = new MyState();
+            return false;
+        }
+
+        try
+        {
+            byte[] bytes = Convert.FromBase64String(value);
+            var deserialized = JsonSerializer.Deserialize<MyState>(bytes);
+
+            if (deserialized != null)
+            {
+                state = deserialized;
+                return true;
+            }
+        }
+        catch (Exception)
+        {
+        }
+
+        state = new MyState();
+        return false;
+    }
+}
+
+```
+
+The `CreateCopy` and `IsDifferent` implementations can use `gAPI.AutoSerializer` to provide automatic deep-copying and state comparison. Or you can of course implement the serialization and comparison logic yourself.
+
+### Extending Authentication State Mapping
+
+The server-side mapping between the authenticated user, token, IP information, and authentication state can also be extended by inheriting from `AuthenticationStateMapping<TUser, TState>`.
+
+```
+
+public class MyStateMapping
+    : AuthenticationStateMapping<MyUser, MyState>
+{
+    public override async Task<MyState> ToDtoAsync(
+        MyUser? dbUser,
+        UserToken<MyUser>? dbToken,
+        Ip<MyUser>? dbIp,
+        MyState? receivedClientState,
+        CancellationToken ct)
+    {
+        var state = await base.ToDtoAsync(
+            dbUser,
+            dbToken,
+            dbIp,
+            receivedClientState,
+            ct);
+
+        return state;
+    }
+}
+
+```
+
+By inheriting from the base mapping, an application can customize how authentication information is converted into its authentication state while retaining the default gAPI behavior through `base.ToDtoAsync(...)`.
+
+This allows authentication behavior to be extended without replacing the complete AutoAuth infrastructure.
 
 ## Database or Dummy Authentication
 

@@ -188,7 +188,7 @@ public class ServerApi(
 {
     public async Task DoSomething(CancellationToken ct)
     {
-        await clientContext.HostHub.ToAll.DoSomething(ct);
+        await clientContext.ClientHub.ToAll.DoSomething(ct);
     }
 
     public async Task<string> GetSomething(CancellationToken ct)
@@ -378,3 +378,110 @@ Synchronous API methods are not supported.
 ## Status
 
 Beta
+
+# Example code
+
+### Shared
+``` CSharp
+	[GenerateApi]
+	public interface ITestApi
+	{
+		Task TestCallAsync(string text, CancellationToken ct);
+	}
+
+	[GenerateHub]
+	public interface ITestHub
+	{
+		Task TestCallAsync(string text, CancellationToken ct);
+	}
+
+	public class StateDto : AuthStateDto
+	{
+		public int TestNumber { get; set; }
+	}
+```
+
+### Backend
+``` CSharp
+	public class TestApi(
+		IAuthenticationService authenticationService,
+		ITestHubContext testHub, // Option 1
+		IClientContext clientContext, // Option 2
+		ILoggerFactory loggerFactory)
+		: ITestApi
+	{
+		readonly ILogger Logger = loggerFactory.CreateLogger<TestApi>();
+
+		public async Task TestCallAsync(string text, CancellationToken ct)
+		{
+			if (Logger.IsEnabled(LogLevel.Trace))
+				Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendLocationAsync({location})", "hoi2");
+
+			authenticationService.State.TestNumber++;
+			await testHub.ToAll.TestCallAsync("Hello world", ct); // Option 1
+			await clientContext.TestHub.ToAll.TestCallAsync("Hello world", ct); // Option 2
+		}
+	}
+```
+
+### Frontend
+``` Razor
+	@page "/Test"
+	@implements IAsyncDisposable
+	@implements ITestHub // Inherits from Shared interface
+	@inject ITestApi server
+	@inject IClientConnection connection
+	@inject IAuthenticatedHttpClient authentication
+
+	<PageTitle>Test</PageTitle>
+
+	<button @onclick="DoTestCall">Send heen en terug</button>
+
+	<h1>@(Wait1.ToString("F1"))ms heen</h1>
+	<h1>@(Wait2.ToString("F1"))ms heen en terug</h1>
+	<h3>@(TestNumber) hop counter</h3>
+
+	@code {
+		CancellationTokenSource Cts = new();
+		CancellationToken Ct => Cts.Token;
+		Stopwatch stopwatch = new();
+		double Wait1;
+		double Wait2;
+		int TestNumber;
+
+		protected override async Task OnInitializedAsync()
+		{
+			var authorized = await authentication.IsAuthenticatedAsync(Ct);
+			if (authorized == false) { }
+			await connection.SubscribeAsync(this, Ct);
+		}
+
+		async Task DoTestCall()
+		{
+			var state = await authentication.GetStateAsync(false, Ct);
+			state.TestNumber++;
+			TestNumber = state.TestNumber;
+			StateHasChanged();
+
+			stopwatch.Restart();
+			await server.TestCallAsync("Hello world", Ct);
+			Wait1 = stopwatch.Elapsed.TotalMilliseconds;
+
+			state = await authentication.GetStateAsync();
+			TestNumber = state.TestNumber;
+			StateHasChanged();
+		}
+
+		public async Task TestCallAsync(string text, CancellationToken ct)
+		{
+			Wait2 = stopwatch.Elapsed.TotalMilliseconds;
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			await connection.UnsubscribeAsync(this);
+			await Cts.CancelAsync();
+			Cts.Dispose();
+		}
+	}
+```
