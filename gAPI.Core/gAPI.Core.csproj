@@ -30,12 +30,12 @@
 		<Title>gAPI Core</Title>
 		<PackageReleaseNotes>Initial beta release of gAPI.Core.</PackageReleaseNotes>
 
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 
 	</PropertyGroup>
 
-	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -45,7 +45,7 @@
 	
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
