@@ -18,8 +18,19 @@
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<IncludeSymbols>false</IncludeSymbols>
-		<IncludeSource>false</IncludeSource>
+
+		<!-- Instellingen voor Source Link en Debugging -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<!-- Zorg dat alle bronbestanden direct in de PDB worden ingebed -->
+		<EmbedAllSources>true</EmbedAllSources>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+		<!-- Deterministische builds voor GitHub Actions / CI -->
+		<ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageReleaseNotes>Initial beta release of gAPI.Core.Server.</PackageReleaseNotes>
 	</PropertyGroup>

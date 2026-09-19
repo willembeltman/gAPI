@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
@@ -17,17 +16,26 @@
 		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<IncludeSymbols>false</IncludeSymbols>
-		<IncludeSource>false</IncludeSource>
+
+		<!-- 1. Schakel symboolgeneratie in en kies voor embedded PDB's -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedAllSources>true</EmbedAllSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<!-- 2. Zorg voor deterministische builds in CI-omgevingen -->
+		<ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Title>gAPI Core</Title>
 		<PackageReleaseNotes>Initial beta release of gAPI.Core.</PackageReleaseNotes>
-		
-		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
+
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+
 	</PropertyGroup>
 
-	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -37,7 +45,7 @@
 	
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>-->
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
