@@ -249,7 +249,10 @@ public class {Name} : WssServerConnection
             ___ct" : $@"
             {arg}"))});
 
-        yield return {@interface}_{method}_Serializer(await ___responseTask);
+        var ___responseTaskResult = await ___responseTask;
+        if (___responseTaskResult == null) yield break;
+
+        yield return {@interface}_{method}_Serializer(___responseTaskResult);
     }}";
     }
     private string GenerateIAsyncEnumerableMethod(Interface @interface, InterfaceMethod method)

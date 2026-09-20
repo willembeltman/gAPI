@@ -407,7 +407,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
 
             if (!called)
-                Sender.Send_SendRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
+                await Sender.Send_SendRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
 
             //try
             //{
@@ -478,7 +478,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
 
             if (!called)
-                Sender.Send_InvokeRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
+                await Sender.Send_InvokeRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
 
             //try
             //{
@@ -550,7 +550,7 @@ public sealed class FabricClient : IAsyncDisposable
             }
 
             if (!called)
-                Sender.Send_StreamingResponseClientToServer_ToFabricAsync(new(request.Routing, request.ArgumentIndex, request.StreamId, true, false, null, []), ct);
+                await Sender.Send_StreamingResponseClientToServer_ToFabricAsync(new(request.Routing, request.ArgumentIndex, request.StreamId, true, false, null, []), ct);
 
         }, ct);
     }
