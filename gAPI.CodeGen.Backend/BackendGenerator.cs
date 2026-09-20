@@ -35,7 +35,7 @@ public class BackendGenerator
         //UserIpSessionTokenRoute = new UserIpSessionTokenRouteGenerator(this);
         //UserIpSessionTokenRouteRequest = new UserIpSessionTokenRouteRequestGenerator(this);
 
-        // Bsd.Shared.Public.Dtos 
+        // Shared.Dtos 
         Dtos = [.. DbContext.DbSets
             .Where(a => !a.Entity.IsHidden)
             .Select(dbSet => new DtoGenerator(this, dbSet))];
