@@ -398,11 +398,16 @@ public sealed class FabricClient : IAsyncDisposable
                 Logger.LogTrace("{now} Receive_SendRequest_FromFabricAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
 
             // Routeren naar client(s)
+            var called = false;
             var SseServiceSubscriptions = GetServiceSubscriptions(request.Routing);
             foreach (var serviceSubscription in SseServiceSubscriptions)
             {
                 await serviceSubscription.Send_FabricSendRequest_ToClientAsync(request, ct);
+                called = true;
             }
+
+            if (!called)
+                Sender.Send_SendRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
 
             //try
             //{
@@ -464,11 +469,16 @@ public sealed class FabricClient : IAsyncDisposable
                 Logger.LogTrace("{now} Receive_InvokeRequest_FromFabricAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
 
             // Routeren naar client(s)
+            var called = false;
             var SseServiceSubscriptions = GetServiceSubscriptions(request.Routing);
             foreach (var serviceSubscription in SseServiceSubscriptions)
             {
                 await serviceSubscription.Send_FabricInvokeRequest_ToClientAsync(request, ct);
+                called = true;
             }
+
+            if (!called)
+                Sender.Send_InvokeRequestDone_ToFabricAsync(new(request.Routing, false, null), ct);
 
             //try
             //{
@@ -531,11 +541,17 @@ public sealed class FabricClient : IAsyncDisposable
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now} Receive_StreamingRequestServerToClient_FromFabricAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
 
+            var called = false;
             var serviceSubscriptions = GetServiceSubscriptions(request.Routing);
             foreach (var SseServiceSubscription in serviceSubscriptions)
             {
                 await SseServiceSubscription.Send_FabricStreamingRequest_ToClientAsync(request, ct);
+                called = true;
             }
+
+            if (!called)
+                Sender.Send_StreamingResponseClientToServer_ToFabricAsync(new(request.Routing, request.ArgumentIndex, request.StreamId, true, false, null, []), ct);
+
         }, ct);
     }
     private async Task Receive_StreamingResponse_ServerToClient_FromFabricAsync(StreamingResponseDto response, CancellationToken ct)
@@ -547,7 +563,10 @@ public sealed class FabricClient : IAsyncDisposable
 
             var serviceSubscriptions = GetServiceSubscriptions(response.Routing);
             foreach (var SseServiceSubscription in serviceSubscriptions)
+            {
                 await SseServiceSubscription.Send_FabricStreamingResponse_ToClientAsync(response, ct);
+            }
+
         }, ct);
     }
 
