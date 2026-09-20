@@ -8,12 +8,16 @@ namespace gAPI.Storage.LanCloud.Shared.Models;
 
 public class LocalShare
 {
+    public LocalShare()
+    {
+
+    }
     public LocalShare(string localFullName)
     {
-        LocalFullName = Path.GetFullPath(localFullName);
+        FullName = Path.GetFullPath(localFullName);
     }
 
-    public string LocalFullName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
 
     public async IAsyncEnumerable<HubEntryDto> ListDirectory(
         string relativePath,
@@ -213,7 +217,10 @@ public class LocalShare
 
         await incomingStream.CopyToAsync(diskStream, ct);
     }
-    public async Task Append(string path, Stream incomingStream, CancellationToken ct)
+    public async Task Append(
+        string path, 
+        Stream incomingStream,
+        CancellationToken ct)
     {
         var fullName = CreateLocalFullName(path);
 
@@ -241,7 +248,7 @@ public class LocalShare
             .Replace('\\', '/')
             .Trim('/');
 
-        var root = Path.GetFullPath(LocalFullName);
+        var root = Path.GetFullPath(FullName);
 
         var fullPath = Path.GetFullPath(
             Path.Combine(

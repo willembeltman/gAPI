@@ -1,13 +1,18 @@
 ﻿using gAPI.Core.Server.Config;
+using gAPI.Storage.LanCloud.Api;
+using gAPI.Storage.LanCloud.Shared.Models;
 using Microsoft.Extensions.Configuration;
 
-namespace gAPI.Core.Server.Extensions;
+namespace gAPI.Storage.LanCloud.Host;
 
-public static class CreateServerConfigExtension
+public static class CreateLanCloudServerConfigExtention
 {
-    public static ServerConfig CreateServerConfig(this IConfigurationManager m)
+    public static LanCloudApiConfig CreateLanCloudApiConfig(this IConfigurationManager m)
     {
-        var config = new ServerConfig(
+        var config = new LanCloudApiConfig(
+            m.GetSection("LocalShare").Get<LocalShare>()
+                ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData")),
+            m["CertificateFilename"] ?? "",
             m["FrontendUrl"] ?? "",
             m.GetConnectionString("DefaultConnection"),// ?? throw new Exception("no default db connectionstring?"),
             m.GetConnectionString("StorageConnection"),// ?? throw new Exception("no storage connectionstring?"),
