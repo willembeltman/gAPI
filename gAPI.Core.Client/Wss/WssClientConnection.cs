@@ -1069,7 +1069,9 @@ public abstract class WssClientConnection : IWssClientConnection
         HttpClient.OnStateHasChanged -= HttpClient_OnStateHasChanged;
         Cts?.Cancel();
         Cts?.Dispose();
+        Cts = null;
         Ws?.Dispose();
+        Ws = null;
         GC.SuppressFinalize(this);
     }
 }

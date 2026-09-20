@@ -176,127 +176,20 @@ else
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
               );
     }}
-}}";
 
-        //var razorCode = Imports.GetRazorNamespacesCode() + "\r\n" + Code;
-        //RazorCompiler.CompileRazorToComponent(razorCode, Namespace!, Name, Context.ServiceContext.Components);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {{
+        if (!firstRender || DataSource == null)
+            return;
+        await DataSource.AfterRenderAsync();
+    }}
+}}";
     }
 
     private string GetPropertyCellMarkup(ICrudProperty p)
     {
         var modelPrefix = "item.Model!";
-        //    string id = p.Name.ToCamelCase();
-
-        //    // Foreign key dropdown
-        //    if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
-        //    {
-        //        var dsName = p.ForeignKeyType.Name.ToMultiple();
-        //        string bindAttr = p.PropertyType.IsNullable ? "bind-NullableValue" : "bind-Value";
-        //        string bindTypeAttr = p.PropertyType.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
-        //        string valueType = p.TypeSimpleName;
-
-        //        return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.ForeignKeyType.Name}</label>
-        //        <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{modelPrefix}.{p.Name}"" {bindTypeAttr}=""{valueType}""
-        //            @bind-ForeignName=""{modelPrefix}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?""
-        //            DataSource=""{dsName}"" id=""{id}"" />
-        //    </div>
-        //}}";
-        //    }
-
-        //    if (p.IsNumber)
-        //    {
-        //        return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <InputNumber @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-        //            id=""{id}"" class=""form-control"" />
-        //    </div>
-        //}}";
-        //    }
-
-        //    if (p.IsGuid)
-        //    {
-        //        return $@"
-        //@if (!HideColumnNames.Contains(""{p.Name}""))
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <input type=""text"" 
-        //               id=""{id}"" 
-        //               class=""form-control"" 
-        //               value=""@DataSource.Model.{p.Name}.ToString()"" 
-        //               bindtype_Value=""{p.TypeSimpleName}"" test=""{p.Name}""
-        //               @onchange=""@((ChangeEventArgs e) => {{ 
-        //                   if (Guid.TryParse(e.Value?.ToString(), out var parsedGuid)) 
-        //                   {{ 
-        //                       DataSource.Model.{p.Name} = parsedGuid; 
-        //                   }} 
-        //               }})"" />
-        //    </div>
-        //}}";
-        //    }
-
-        //    if (p.IsDateTime)
-        //    {
-        //        return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <InputDate @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-        //            id=""{id}"" class=""form-control"" />
-        //    </div>
-        //}}";
-        //    }
-
-        //    if (p.IsCheckbox)
-        //    {
-        //        return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <InputCheckbox @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-        //            id=""{id}"" class=""form-check-input"" />
-        //    </div>
-        //}}";
-        //    }
-
-        //    if (p.IsEnum)
-        //    {
-        //        return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <InputSelect @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-        //            id=""{id}"" class=""form-select"">
-        //            @foreach (var value in Enum.GetValues(typeof({p.TypeDigger.FullName})).Cast<{p.TypeDigger.FullName}>())
-        //            {{
-        //                <option value=""@(value)"">@(value.ToString())</option>
-        //            }}
-        //        </InputSelect>
-        //    </div>
-        //}}";
-        //    }
-
-        //    // Default: InputText
-        //    return $@"
-        //@if (HideColumnNames.Contains(""{p.Name}"") == false)
-        //{{
-        //    <div class=""mb-3"">
-        //        <label for=""{id}"" class=""form-label"">{p.Name}</label>
-        //        <InputText @bind-Value=""{modelPrefix}.{p.Name}"" bindtype_Value=""{p.TypeSimpleName}""
-        //            id=""{id}"" class=""form-control"" />
-        //    </div>
-        //}}";
-
+        
         if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
         {
             var drop = p.PropertyType.IsNullable

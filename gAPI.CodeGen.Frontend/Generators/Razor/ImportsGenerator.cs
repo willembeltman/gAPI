@@ -27,6 +27,7 @@ public class ImportsGenerator : BaseGenerator
         Reg("gAPI.Core.Interfaces");
         Reg("gAPI.Core.Dtos");
         Reg("gAPI.Core.Client");
+        Reg("gAPI.Generated");
         Reg(Config.ComponentsNamespace);
         //Reg(Config.HelpersNamespace);
 

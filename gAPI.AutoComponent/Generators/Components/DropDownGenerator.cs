@@ -112,6 +112,13 @@ else
     [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple().ToLower()} available."";
     [Parameter] public string LoadingMoreText {{ get; set; }} = ""Loading more..."";
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {{
+        if (!firstRender || DataSource == null)
+            return;
+        await DataSource.AfterRenderAsync();
+    }}
+
     private async Task SelectItem(ItemDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? item)
     {{
         if (DataSource == null) return;

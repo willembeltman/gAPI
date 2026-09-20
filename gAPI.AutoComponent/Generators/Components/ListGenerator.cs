@@ -158,13 +158,6 @@ else
                             </td>
                         </tr>
                     }}
-                    @if (DataSource.HasMore)
-                    {{
-                        <!-- sentinel om ook op desktop te laden -->
-                        <tr id=""@DataSource.SentinelId"">
-                            <td colspan=""@SentinelWidth"" class=""text-center text-muted"">@(LoadingModeText)</td>
-                        </tr>
-                    }}
                 </tbody>
             </table>
         </div>
@@ -229,13 +222,13 @@ else
                         </div>
                     </div>
                 }}
-
-                @if (DataSource.HasMore)
-                {{
-                    <div id=""@DataSource.SentinelId"" class=""sentinel"">@(LoadingModeText)</div>
-                }}
             </div>
         </div>
+
+        @if (DataSource.HasMore)
+        {{
+            <div id=""@DataSource.SentinelId"" class=""sentinel"">@(LoadingModeText)</div>
+        }}
     </div>
 }}
 
@@ -266,6 +259,13 @@ else
                 ',',
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
               );
+    }}
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {{
+        if (!firstRender || DataSource == null)
+            return;
+        await DataSource.AfterRenderAsync();
     }}
 
     {string.Join("", orderableProps.Select(p => $@"

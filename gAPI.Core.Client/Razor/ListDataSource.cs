@@ -48,11 +48,13 @@ public class ListDataSource<T, TKey>(
             ? null
             : [$"{OrderByColumn} {(OrderByDirectionDesc ? "desc" : "asc")}"];
 
+    public bool Registered { get; private set; }
+
     public async Task InitialiseAsync()
     {
         try
         {
-            await RegisterAsync();
+            //await RegisterAsync();
             await LoadMoreAsync();
         }
         catch
@@ -63,6 +65,13 @@ public class ListDataSource<T, TKey>(
             };
         }
     }
+    public async Task AfterRenderAsync()
+    {
+        await RegisterAsync();
+        Registered = true;
+        await EnsureVisibleAsync();
+    }
+
     public async Task OnHandleFileSelected(ItemDataSource<T, TKey> item, InputFileChangeEventArgs e)
     {
         await item.HandleFileSelected(e);
@@ -130,6 +139,7 @@ public class ListDataSource<T, TKey>(
         Items.Clear();
         await LoadMoreAsync();
     }
+
     [JSInvokable]
     public async Task OnIntersect()
     {
@@ -146,6 +156,18 @@ public class ListDataSource<T, TKey>(
             IsRegistrated = true;
         }
     }
+
+    private async Task EnsureVisibleAsync()
+    {
+        if (DotNetRef != null)
+        {
+            await JS.InvokeVoidAsync(
+                "intersectionObserver.ensureVisible",
+                DotNetRef,
+                SentinelId);
+        }
+    }
+
     private async Task UnRegisterAsync()
     {
         if (IsRegistrated)
@@ -183,7 +205,9 @@ public class ListDataSource<T, TKey>(
             StateHasChanged();
 
             // Fallback: als pagina korter is dan viewport, nog een keer proberen
-            await JS.InvokeVoidAsync("intersectionObserver.ensureVisible", DotNetRef, SentinelId);
+            //await JS.InvokeVoidAsync("intersectionObserver.ensureVisible", DotNetRef, SentinelId);
+            if (Registered)
+                await EnsureVisibleAsync();
         }
     }
     private async IAsyncEnumerable<ItemDataSource<T, TKey>> ListItems(int? skip, int? take, string[]? orderBy, [EnumeratorCancellation] CancellationToken ct)
@@ -225,4 +249,5 @@ public class ListDataSource<T, TKey>(
         Cts.Dispose();
         GC.SuppressFinalize(this);
     }
+
 }

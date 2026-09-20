@@ -258,6 +258,13 @@ else
               );
     }}
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {{
+        if (!firstRender || DataSource == null)
+            return;
+        await DataSource.AfterRenderAsync();
+    }}
+
     private async Task SelectItem(ItemDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}> item)
     {{
         if (OnSelect.HasDelegate)
