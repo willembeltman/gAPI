@@ -15,5 +15,6 @@ public static class StartupHelper
         Console.WriteLine("## ##    ##   ## ######  ##   ##  ##   ####  ##");
         Console.WriteLine("##                                           ##");
         Console.WriteLine("###############################################");
+        Console.WriteLine($"Port: {port}");
     }
 }

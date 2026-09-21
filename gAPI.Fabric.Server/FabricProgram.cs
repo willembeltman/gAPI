@@ -29,6 +29,7 @@ public class FabricProgram
         textArea.SetItems(
         [
             new ColorLine () { Text = "Server started!"},
+            new ColorLine () { Text = $"Port: {port}" },
             new ColorLine () { Text = "" },
             new ColorLine () { Text = "press q to exit..." },
             new ColorLine () { Text = "press r to restart all connections..." }
@@ -49,8 +50,9 @@ public class FabricProgram
         if (windowwidth < 10)
         {
             await server.StartAsync();
-            return;
+            return; /////////////////////////////// STOP //////////////////////////////////
         }
+
         _ = Task.Run(server.StartAsync);
 
         var width = 0;

@@ -4,7 +4,6 @@ using gAPI.Storage.LanCloud.Api.Ftp;
 using gAPI.Storage.LanCloud.Api.Interfaces;
 using gAPI.Storage.LanCloud.Api.Services;
 using gAPI.Storage.LanCloud.Host;
-using gAPI.Storage.LanCloud.Shared.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
