@@ -195,8 +195,32 @@ public class LocalShare
         return Task.CompletedTask;
     }
 
+    //public async Task Write(
+    //    string path,
+    //    long startOffset,
+    //    Stream incomingStream,
+    //    CancellationToken ct)
+    //{
+    //    var fullName = CreateLocalFullName(path);
+
+    //    var directory = Path.GetDirectoryName(fullName);
+
+    //    if (directory is not null)
+    //        Directory.CreateDirectory(directory);
+
+    //    await using var diskStream = new FileStream(
+    //        fullName,
+    //        FileMode.Create,
+    //        FileAccess.Write,
+    //        FileShare.None,
+    //        bufferSize: 8 * 1024 * 1024,
+    //        options: FileOptions.Asynchronous);
+
+    //    await incomingStream.CopyToAsync(diskStream, ct);
+    //}
     public async Task Write(
         string path,
+        long startOffset, 
         Stream incomingStream,
         CancellationToken ct)
     {
@@ -207,16 +231,25 @@ public class LocalShare
         if (directory is not null)
             Directory.CreateDirectory(directory);
 
+        // 1. Gebruik OpenOrCreate, zodat een bestaand bestand NIET wordt leeggeveegd
         await using var diskStream = new FileStream(
             fullName,
-            FileMode.Create,
+            FileMode.OpenOrCreate,
             FileAccess.Write,
             FileShare.None,
             bufferSize: 8 * 1024 * 1024,
             options: FileOptions.Asynchronous);
 
+        // 2. Als de offset groter is dan 0, springen we direct naar de juiste plek op schijf
+        if (startOffset > 0)
+        {
+            diskStream.Seek(startOffset, SeekOrigin.Begin);
+        }
+
+        // De 8MB buffer van gAPI wordt nu keurig vanaf de juiste offset naar de schijf gepompt
         await incomingStream.CopyToAsync(diskStream, ct);
     }
+
     public async Task Append(
         string path, 
         Stream incomingStream,

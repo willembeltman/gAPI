@@ -346,16 +346,16 @@ public sealed class FileSystemApi(
         return ___buffer;
     }
 
-    public async IAsyncEnumerable<byte[]> OpenRead(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<byte[]> OpenReadByteArray(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("OpenRead({path}, {startOffset})", path, startOffset);
+            ___Logger.LogTrace("OpenReadByteArray({path}, {startOffset})", path, startOffset);
 
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
             ___requestId,
             ___ServiceId,
-            new("OpenRead"),
+            new("OpenReadByteArray"),
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
@@ -368,7 +368,7 @@ public sealed class FileSystemApi(
         {
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
-                ___OpenRead_Serializer(path, startOffset),
+                ___OpenReadByteArray_Serializer(path, startOffset),
                 ___activityCts.Token);
 
             await foreach (var item in ___responses)
@@ -379,7 +379,7 @@ public sealed class FileSystemApi(
             }
         }
     }
-    private byte[] ___OpenRead_Serializer(string path, long startOffset)
+    private byte[] ___OpenReadByteArray_Serializer(string path, long startOffset)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, path);
@@ -395,17 +395,180 @@ public sealed class FileSystemApi(
         return ___buffer;
     }
 
-    public async Task Write(string path, long startOffset, byte[] buffer, CancellationToken ct = default)
+    public async IAsyncEnumerable<ReadOnlyMemory<byte>> OpenReadReadOnlyMemoryByte(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Write({path}, {startOffset}, {buffer})", path, startOffset, buffer);
+            ___Logger.LogTrace("OpenReadReadOnlyMemoryByte({path}, {startOffset})", path, startOffset);
+
+        var ___requestId = RequestId.New();
+        var ___routing = new RoutingDto(
+            ___requestId,
+            ___ServiceId,
+            new("OpenReadReadOnlyMemoryByte"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        
+        {
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___OpenReadReadOnlyMemoryByte_Serializer(path, startOffset),
+                ___activityCts.Token);
+
+            await foreach (var item in ___responses)
+            {
+                var ___offset = 0;
+                var ___span = new Span<byte>(item);
+                yield return PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset);
+            }
+        }
+    }
+    private byte[] ___OpenReadReadOnlyMemoryByte_Serializer(string path, long startOffset)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, startOffset);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, startOffset);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
+    public async Task WriteAsyncEnumerableByte(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("WriteAsyncEnumerableByte({path}, {startOffset}, {stream})", path, startOffset, stream);
         
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
             RequestId.New(),
             ___ServiceId,
-            new("Write"),
+            new("WriteAsyncEnumerableByte"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 2, stream, ___WriteAsyncEnumerableByte_2_Serializer, ___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        try
+        {
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___WriteAsyncEnumerableByte_Serializer(path, startOffset),
+                ___activityCts.Token);
+        }
+        finally
+        {
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 2);
+        }
+    }
+    private byte[] ___WriteAsyncEnumerableByte_Serializer(string path, long startOffset)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, startOffset);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, startOffset);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    private byte[] ___WriteAsyncEnumerableByte_2_Serializer(byte[] value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public async Task AppendAsyncEnumerableByte(string path, IAsyncEnumerable<byte[]> stream, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("AppendAsyncEnumerableByte({path}, {stream})", path, stream);
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("AppendAsyncEnumerableByte"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 1, stream, ___AppendAsyncEnumerableByte_1_Serializer, ___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        try
+        {
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___AppendAsyncEnumerableByte_Serializer(path),
+                ___activityCts.Token);
+        }
+        finally
+        {
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 1);
+        }
+    }
+    private byte[] ___AppendAsyncEnumerableByte_Serializer(string path)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    private byte[] ___AppendAsyncEnumerableByte_1_Serializer(byte[] value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public async Task WriteByteArray(string path, long startOffset, byte[] buffer, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("WriteByteArray({path}, {startOffset}, {buffer})", path, startOffset, buffer);
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("WriteByteArray"),
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
@@ -415,11 +578,11 @@ public sealed class FileSystemApi(
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___Write_Serializer(path, startOffset, buffer),
+                ___WriteByteArray_Serializer(path, startOffset, buffer),
                 ___activityCts.Token);
         }
     }
-    private byte[] ___Write_Serializer(string path, long startOffset, byte[] buffer)
+    private byte[] ___WriteByteArray_Serializer(string path, long startOffset, byte[] buffer)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, path);
@@ -437,131 +600,99 @@ public sealed class FileSystemApi(
         return ___buffer;
     }
 
-    public async Task Write(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct = default)
+    public async Task AppendByteArray(string path, byte[] buffer, CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Write({path}, {startOffset}, {stream})", path, startOffset, stream);
+            ___Logger.LogTrace("AppendByteArray({path}, {buffer})", path, buffer);
         
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
             RequestId.New(),
             ___ServiceId,
-            new("Write"),
+            new("AppendByteArray"),
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
         
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 2, stream, ___Write_2_Serializer, ___activityCts.Token);
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         
-        try
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___Write_Serializer(path, startOffset),
+                ___AppendByteArray_Serializer(path, buffer),
                 ___activityCts.Token);
         }
-        finally
+    }
+    private byte[] ___AppendByteArray_Serializer(string path, byte[] buffer)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, buffer);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, buffer);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
+    public async Task WriteReadOnlyMemory(string path, long startOffset, ReadOnlyMemory<byte> buffer, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("WriteReadOnlyMemory({path}, {startOffset}, {buffer})", path, startOffset, buffer);
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("WriteReadOnlyMemory"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
         {
-            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 2);
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___WriteReadOnlyMemory_Serializer(path, startOffset, buffer),
+                ___activityCts.Token);
         }
     }
-    private byte[] ___Write_Serializer(string path, long startOffset)
+    private byte[] ___WriteReadOnlyMemory_Serializer(string path, long startOffset, ReadOnlyMemory<byte> buffer)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, path);
         PrimitivesSpanSerializer.LengthInt64(ref ___offset, startOffset);
+        PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, buffer);
         var ___buffer = new byte[___offset];
         var ___span = new Span<byte>(___buffer);
         var ___length = ___offset;
         ___offset = 0;
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
         PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, startOffset);
+        PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, buffer);
         if (___length != ___offset)
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
     }
-    private byte[] ___Write_2_Serializer(byte[] value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
 
-    public async Task Append(string path, IAsyncEnumerable<byte[]> stream, CancellationToken ct = default)
+    public async Task AppendReadOnlyMemory(string path, ReadOnlyMemory<byte> buffer, CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Append({path}, {stream})", path, stream);
+            ___Logger.LogTrace("AppendReadOnlyMemory({path}, {buffer})", path, buffer);
         
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
             RequestId.New(),
             ___ServiceId,
-            new("Append"),
-            ___httpClient.UserId,
-            ___httpClient.SessionId
-        );
-        
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 1, stream, ___Append_1_Serializer, ___activityCts.Token);
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-        
-        try
-        {
-            await ___clientConnection.Send_SendRequest_ToServerAsync(
-                ___routing,
-                ___Append_Serializer(path),
-                ___activityCts.Token);
-        }
-        finally
-        {
-            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 1);
-        }
-    }
-    private byte[] ___Append_Serializer(string path)
-    {
-        var ___offset = 0;
-        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        var ___length = ___offset;
-        ___offset = 0;
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
-        if (___length != ___offset)
-            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
-        return ___buffer;
-    }
-    private byte[] ___Append_1_Serializer(byte[] value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-
-    public async Task Append(string path, byte[] stream, CancellationToken ct = default)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Append({path}, {stream})", path, stream);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
-
-        var ___routing = new RoutingDto(
-            RequestId.New(),
-            ___ServiceId,
-            new("Append"),
+            new("AppendReadOnlyMemory"),
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
@@ -571,21 +702,21 @@ public sealed class FileSystemApi(
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___Append_Serializer(path, stream),
+                ___AppendReadOnlyMemory_Serializer(path, buffer),
                 ___activityCts.Token);
         }
     }
-    private byte[] ___Append_Serializer(string path, byte[] stream)
+    private byte[] ___AppendReadOnlyMemory_Serializer(string path, ReadOnlyMemory<byte> buffer)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, path);
-        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, stream);
+        PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, buffer);
         var ___buffer = new byte[___offset];
         var ___span = new Span<byte>(___buffer);
         var ___length = ___offset;
         ___offset = 0;
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
-        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, stream);
+        PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, buffer);
         if (___length != ___offset)
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;

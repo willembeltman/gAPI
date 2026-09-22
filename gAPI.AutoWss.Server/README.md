@@ -311,6 +311,8 @@ AutoWss uses WebSockets for both communication directions.
 - `Task<T>`
 - `IAsyncEnumerable<T>` response
 - Multiple `IAsyncEnumerable<T>` parameters
+- `ReadOnlyMemory<byte>` response
+- Multiple `ReadOnlyMemory<byte>` parameters
 
 Methods can also accept `CancellationToken` parameters.
 
@@ -325,6 +327,8 @@ No Fabric backplane is required for client-to-server communication when multiple
 - `Task`
 - `IAsyncEnumerable<T>` response
 - Multiple `IAsyncEnumerable<T>` parameters
+- `ReadOnlyMemory<byte>` response
+- Multiple `ReadOnlyMemory<byte>` parameters
 
 `Task<T>` is not supported for server-to-client communication.
 

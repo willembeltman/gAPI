@@ -82,6 +82,19 @@ public class GeneratePropertyHelper(
 {indent}if ({propName} != null) 
 {indent}    ___writer.Write({propName}.Value.ToUnixTimeMilliseconds());" : $@"
 {indent}___writer.Write({propName}.ToUnixTimeMilliseconds());";
+            case "System.ReadOnlyMemory<byte>":
+                return isNullable
+                    ? $@"
+{indent}___writer.Write({propName}.HasValue); 
+{indent}if ({propName}.HasValue) 
+{indent}{{
+{indent}    ___writer.Write({propName}.Value.Length);
+{indent}    ___writer.Write({propName}.Value.Span);
+{indent}}}"
+                    : $@"
+{indent}___writer.Write({propName}.Length);
+{indent}___writer.Write({propName}.Span);";
+
         }
 
         // Array !!!!!
@@ -195,6 +208,7 @@ public class GeneratePropertyHelper(
             case "decimal": return start + "___reader.ReadDecimal()";
             case "System.DateTime": return start + "System.DateTime.FromBinary(___reader.ReadInt64())";
             case "System.DateTimeOffset": return start + "System.DateTimeOffset.FromUnixTimeMilliseconds(___reader.ReadInt64())";
+            case "System.ReadOnlyMemory<byte>": return start + "new System.ReadOnlyMemory<byte>(___reader.ReadBytes(___reader.ReadInt32()))";
         }
 
         // Array !!!!!
@@ -274,6 +288,14 @@ public class GeneratePropertyHelper(
 {indent}PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, {propName} != null);
 {indent}if ({propName} != null)
 {indent}    PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, {propName});";
+            case "System.ReadOnlyMemory<byte>":
+                return isNullable
+                    ? $@"
+{indent}PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, {propName} != null);
+{indent}if ({propName} != null)
+{indent}    PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, {propName}{(isNullableT ? ".Value" : "")});"
+                    : $@"
+{indent}PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, {propName});";
         }
 
 
@@ -387,6 +409,7 @@ public class GeneratePropertyHelper(
             case "System.DateTimeOffset": return SpanNullableRead("DateTimeOffset", isNullable);
             case "string": return $"PrimitivesSpanSerializer.ReadString(___span, ref ___offset)";
             case "string?": return start + $"PrimitivesSpanSerializer.ReadString(___span, ref ___offset)";
+            case "System.ReadOnlyMemory<byte>": return start + "PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset)";
         }
 
         // Array !!!!!
@@ -513,6 +536,14 @@ public class GeneratePropertyHelper(
 {indent}PrimitivesSpanSerializer.LengthBoolean(ref ___offset, {propName} != null);
 {indent}if ({propName} != null)
 {indent}    PrimitivesSpanSerializer.LengthString(ref ___offset, {propName});";
+            case "System.ReadOnlyMemory<byte>":
+                return isNullable
+                    ? $@"
+{indent}PrimitivesSpanSerializer.LengthBoolean(ref ___offset, {propName} != null);
+{indent}if ({propName} != null)
+{indent}    PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, {propName}{(isNullableT ? ".Value" : "")});"
+                    : $@"
+{indent}PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, {propName});";
         }
 
 
@@ -658,6 +689,13 @@ public class GeneratePropertyHelper(
                 return $@"
 {indent}if ({propName} != null)
 {indent}    ___content.Add(new StringContent({propName}), {name});";
+            case "System.ReadOnlyMemory<byte>":
+                return isNullable
+                    ? $@"
+{indent}if ({propName}.HasValue)
+{indent}    ___content.Add(new ByteArrayContent({propName}.Value.ToArray()), {name}, ""file"");"
+                    : $@"
+{indent}___content.Add(new ByteArrayContent({propName}.ToArray()), {name}, ""file"");";
         }
 
         // Array !!!!! 

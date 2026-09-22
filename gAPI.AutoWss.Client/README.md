@@ -273,13 +273,12 @@ When targeting multiple clients, an `IAsyncEnumerable<T>` supplied as an argumen
 
 AutoWss supports bidirectional streaming with `IAsyncEnumerable<T>`.
 
-An `IAsyncEnumerable<T>` can be used as a response and as a method argument.
-
-Multiple `IAsyncEnumerable<T>` arguments are supported.
-
-`IAsyncEnumerable<T>` arguments must be top-level arguments. Nested `IAsyncEnumerable<T>` values are not supported.
-
-Streaming uses backpressure between the producer and consumer.
+- An `IAsyncEnumerable<T>` can be used as a response and as a method argument.
+- Multiple `IAsyncEnumerable<T>` arguments are supported.
+- `IAsyncEnumerable<T>` arguments must be top-level arguments. Nested `IAsyncEnumerable<T>` values are not supported.
+- Streaming uses backpressure between the producer and consumer.
+- `ReadOnlyMemory<byte>` response
+- Multiple `ReadOnlyMemory<byte>` parameters
 
 AutoWss handles the streaming protocol without requiring the application to manually coordinate the order of streaming operations.
 

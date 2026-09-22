@@ -156,54 +156,65 @@ internal class FileSystem(
 
     public async Task<Stream?> OpenRead(string path, CancellationToken ct)
     {
-        if (!entryCollection.TryGet(path, out var entry) ||
-            entry == null)
+        if (!entryCollection.TryGet(path, out var entry) || entry == null)
         {
             var fetched = await Get(path, ct);
-
-            if (fetched == null ||
-                !entryCollection.TryGet(path, out entry) ||
-                entry == null)
+            if (fetched == null || !entryCollection.TryGet(path, out entry) || entry == null)
             {
                 return null;
             }
         }
 
-        IAsyncEnumerable<DataChunkDto> OpenChunks(
-            long startOffset,
-            CancellationToken streamCt)
+        IAsyncEnumerable<DataChunkDto> OpenChunks(long startOffset, CancellationToken streamCt)
         {
             if (entry.ShareEntryDto.SessionId == null)
             {
-                return LocalShare.ReadFile(
-                    entry.Path,
-                    startOffset,
-                    streamCt);
+                return LocalShare.ReadFile(entry.Path, startOffset, streamCt);
             }
 
             return clientContext.HostHub
                 .ToSession(entry.ShareEntryDto.SessionId)
-                .ReadFile(
-                    entry.Path,
-                    startOffset,
-                    streamCt);
+                .ReadFile(entry.Path, startOffset, streamCt);
         }
 
-        return new DataChunkStreamSeekableReader(
-            OpenChunks,
-            entry.FileSystemEntry.Size,
-            ct);
+        return new DataChunkStreamSeekableReader(OpenChunks, entry.FileSystemEntry.Size, ct);
     }
-    public Task Write(string path, Stream stream, CancellationToken ct)
+    public Task Write(string path, long startOffset, Stream stream, CancellationToken ct)
     {
-        return LocalShare.Write(path, stream, ct);
+        return LocalShare.Write(path, startOffset, stream, ct);
     }
     public Task Append(string path, Stream stream, CancellationToken ct)
     {
         return LocalShare.Append(path, stream, ct);
     }
 
-    async IAsyncEnumerable<byte[]> IFileSystemApi.OpenRead(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<ReadOnlyMemory<byte>> OpenReadReadOnlyMemoryByte(
+        string path,
+        long startOffset,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        // Deze 8MB array wordt EXACT één keer aangemaakt voor de gehele stream
+        var buffer = new byte[8 * 1024 * 1024];
+
+        using var stream = await OpenRead(path, ct);
+        if (stream == null)
+            yield break;
+
+        while (!ct.IsCancellationRequested)
+        {
+            // We lezen direct in het Memory-venster van onze vaste buffer
+            var read = await stream.ReadAsync(buffer.AsMemory(), ct);
+            if (read <= 0)
+                yield break;
+
+            // MAGIE: buffer.AsMemory(0, read) maakt GEEN kopie van de bytes! 
+            // Het geeft gAPI puur een 'kijkgat' (pointer + lengte) in de bestaande array.
+            yield return buffer.AsMemory(0, read);
+        }
+    }
+
+
+    public async IAsyncEnumerable<byte[]> OpenReadByteArray(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct)
     {
         var buffer = new byte[8 * 1024 * 1024];
         using var stream = await OpenRead(path, ct);
@@ -215,17 +226,75 @@ internal class FileSystem(
             if (read <= 0)
                 yield break;
 
+            // Let op: we returnen hier een slice. Voor gAPI is het vaak veiliger 
+            // om buffer[..read] te kopiëren als gAPI de array asynchroon vasthoudt, 
+            // maar als gAPI hem direct wegschrijft is dit prima!
             yield return buffer[..read];
         }
     }
-    Task IFileSystemApi.Write(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct)
+    public async Task WriteAsyncEnumerableByte(string path, long startOffset, IAsyncEnumerable<byte[]> buffer, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var pipe = new System.IO.Pipelines.Pipe();
+        var writeTask = LocalShare.Write(path, startOffset, pipe.Reader.AsStream(), ct);
+
+        try
+        {
+            await foreach (var chunk in buffer.WithCancellation(ct))
+            {
+                await pipe.Writer.WriteAsync(chunk, ct);
+            }
+            await pipe.Writer.CompleteAsync();
+        }
+        catch (Exception ex)
+        {
+            await pipe.Writer.CompleteAsync(ex);
+            throw;
+        }
+
+        await writeTask;
     }
-    Task IFileSystemApi.Append(string path, IAsyncEnumerable<byte[]> stream, CancellationToken ct)
+    public async Task AppendAsyncEnumerableByte(string path, IAsyncEnumerable<byte[]> buffer, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var pipe = new System.IO.Pipelines.Pipe();
+        var appendTask = LocalShare.Append(path, pipe.Reader.AsStream(), ct);
+
+        try
+        {
+            await foreach (var chunk in buffer.WithCancellation(ct))
+            {
+                await pipe.Writer.WriteAsync(chunk, ct);
+            }
+            await pipe.Writer.CompleteAsync();
+        }
+        catch (Exception ex)
+        {
+            await pipe.Writer.CompleteAsync(ex);
+            throw;
+        }
+
+        await appendTask;
     }
+
+    public Task WriteByteArray(string path, long startOffset, byte[] buffer, CancellationToken ct)
+    {
+        return WriteReadOnlyMemory(path, startOffset, buffer.AsMemory(), ct);
+    }
+    public Task AppendByteArray(string path, byte[] buffer, CancellationToken ct)
+    {
+        return AppendReadOnlyMemory(path, buffer.AsMemory(), ct);
+    }
+
+    public async Task WriteReadOnlyMemory(string path, long startOffset, ReadOnlyMemory<byte> buffer, CancellationToken ct)
+    {
+        using var memStream = new ReadOnlyMemoryStream(buffer);
+        await LocalShare.Write(path, startOffset, memStream, ct);
+    }
+    public async Task AppendReadOnlyMemory(string path, ReadOnlyMemory<byte> buffer, CancellationToken ct)
+    {
+        using var memStream = new ReadOnlyMemoryStream(buffer);
+        await LocalShare.Append(path, memStream, ct);
+    }
+
 
     private async Task<FileSystemEntry> CreateFileSystemEntry(
         string visiblePath,
@@ -253,6 +322,59 @@ internal class FileSystem(
 
         var slash = path.LastIndexOf('/');
         return slash < 0 ? path : path[(slash + 1)..];
+    }
+    private sealed class ReadOnlyMemoryStream : Stream
+    {
+        private readonly ReadOnlyMemory<byte> _memory;
+        private int _position;
+
+        public ReadOnlyMemoryStream(ReadOnlyMemory<byte> memory) => _memory = memory;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => false;
+        public override long Length => _memory.Length;
+        public override long Position { get => _position; set => _position = (int)value; }
+
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+        public override int Read(Span<byte> buffer)
+        {
+            var remaining = _memory.Length - _position;
+            if (remaining <= 0) return 0;
+
+            var toRead = Math.Min(buffer.Length, (int)remaining);
+            _memory.Span.Slice(_position, toRead).CopyTo(buffer);
+            _position += toRead;
+            return toRead;
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            var remaining = _memory.Length - _position;
+            if (remaining <= 0) return ValueTask.FromResult(0);
+
+            var toRead = Math.Min(buffer.Length, (int)remaining);
+            _memory.Slice(_position, toRead).CopyTo(buffer);
+            _position += toRead;
+            return ValueTask.FromResult(toRead);
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            _position = origin switch
+            {
+                SeekOrigin.Begin => (int)offset,
+                SeekOrigin.Current => _position + (int)offset,
+                SeekOrigin.End => _memory.Length + (int)offset,
+                _ => _position
+            };
+            return _position;
+        }
+
+        public override void Flush() { }
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
 }

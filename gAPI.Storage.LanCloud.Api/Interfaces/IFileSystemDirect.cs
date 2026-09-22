@@ -15,5 +15,5 @@ public interface IFileSystemDirect
     IAsyncEnumerable<FileSystemEntry> ListDirectory(string path, CancellationToken ct);
     Task Move(string sourcePath, string destinationPath, CancellationToken ct);
     Task<Stream?> OpenRead(string path, CancellationToken ct);
-    Task Write(string path, Stream stream, CancellationToken ct);
+    Task Write(string path, long startOffset, Stream stream, CancellationToken ct);
 }

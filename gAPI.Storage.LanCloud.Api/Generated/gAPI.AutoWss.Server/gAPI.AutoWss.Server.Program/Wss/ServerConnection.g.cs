@@ -72,31 +72,44 @@ public class ServerConnection : WssServerConnection
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             ___ct);
-                    case "Write":
-                        return IFileSystemApi_Write(
+                    case "WriteAsyncEnumerableByte":
+                        return IFileSystemApi_WriteAsyncEnumerableByte(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 2, IFileSystemApi_WriteAsyncEnumerableByte_2_Deserializer),
+                            ___ct);
+                    case "AppendAsyncEnumerableByte":
+                        return IFileSystemApi_AppendAsyncEnumerableByte(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 1, IFileSystemApi_AppendAsyncEnumerableByte_1_Deserializer),
+                            ___ct);
+                    case "WriteByteArray":
+                        return IFileSystemApi_WriteByteArray(
                             ___sendRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
                             ___ct);
-                    case "Write":
-                        return IFileSystemApi_Write(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 2, IFileSystemApi_Write_2_Deserializer),
-                            ___ct);
-                    case "Append":
-                        return IFileSystemApi_Append(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 1, IFileSystemApi_Append_1_Deserializer),
-                            ___ct);
-                    case "Append":
-                        return IFileSystemApi_Append(
+                    case "AppendByteArray":
+                        return IFileSystemApi_AppendByteArray(
                             ___sendRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
+                            ___ct);
+                    case "WriteReadOnlyMemory":
+                        return IFileSystemApi_WriteReadOnlyMemory(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
+                            ___ct);
+                    case "AppendReadOnlyMemory":
+                        return IFileSystemApi_AppendReadOnlyMemory(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
                             ___ct);
                 }
                 break;
@@ -133,8 +146,14 @@ public class ServerConnection : WssServerConnection
                             ___invokeRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             ___ct);
-                    case "OpenRead":
-                        return IFileSystemApi_OpenRead(
+                    case "OpenReadByteArray":
+                        return IFileSystemApi_OpenReadByteArray(
+                            ___invokeRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                            ___ct);
+                    case "OpenReadReadOnlyMemoryByte":
+                        return IFileSystemApi_OpenReadReadOnlyMemoryByte(
                             ___invokeRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
@@ -260,21 +279,21 @@ public class ServerConnection : WssServerConnection
         return FileSystemApi.Move(sourcePath, destinationPath, ___ct);
     }
 
-    public async IAsyncEnumerable<byte[]> IFileSystemApi_OpenRead(InvokeRequestDto ___invokeRequest, string path, long startOffset, [EnumeratorCancellation] CancellationToken ___ct)
+    public async IAsyncEnumerable<byte[]> IFileSystemApi_OpenReadByteArray(InvokeRequestDto ___invokeRequest, string path, long startOffset, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_OpenRead({___invokeRequest})", ___invokeRequest);
+            ___logger.LogTrace("IFileSystemApi_OpenReadByteArray({___invokeRequest})", ___invokeRequest);
 
-        var ___responseList = FileSystemApi.OpenRead(
+        var ___responseList = FileSystemApi.OpenReadByteArray(
             path,
             startOffset,
             ___ct);
         await foreach (var response in ___responseList)
         {
-            yield return IFileSystemApi_OpenRead_Serializer(response);
+            yield return IFileSystemApi_OpenReadByteArray_Serializer(response);
         }
     }
-    public byte[] IFileSystemApi_OpenRead_Serializer(byte[] value)
+    public byte[] IFileSystemApi_OpenReadByteArray_Serializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -282,48 +301,86 @@ public class ServerConnection : WssServerConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public Task IFileSystemApi_Write(SendRequestDto ___sendRequest, string path, long startOffset, byte[] buffer, CancellationToken ___ct)
+    public async IAsyncEnumerable<byte[]> IFileSystemApi_OpenReadReadOnlyMemoryByte(InvokeRequestDto ___invokeRequest, string path, long startOffset, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Write({___sendRequest})", ___sendRequest);
-       
-        return FileSystemApi.Write(path, startOffset, buffer, ___ct);
+            ___logger.LogTrace("IFileSystemApi_OpenReadReadOnlyMemoryByte({___invokeRequest})", ___invokeRequest);
+
+        var ___responseList = FileSystemApi.OpenReadReadOnlyMemoryByte(
+            path,
+            startOffset,
+            ___ct);
+        await foreach (var response in ___responseList)
+        {
+            yield return IFileSystemApi_OpenReadReadOnlyMemoryByte_Serializer(response);
+        }
+    }
+    public byte[] IFileSystemApi_OpenReadReadOnlyMemoryByte_Serializer(ReadOnlyMemory<byte> value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, value);   
+        return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public Task IFileSystemApi_Write(SendRequestDto ___sendRequest, string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
+    public Task IFileSystemApi_WriteAsyncEnumerableByte(SendRequestDto ___sendRequest, string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Write({___sendRequest})", ___sendRequest);
+            ___logger.LogTrace("IFileSystemApi_WriteAsyncEnumerableByte({___sendRequest})", ___sendRequest);
        
-        return FileSystemApi.Write(path, startOffset, stream, ___ct);
+        return FileSystemApi.WriteAsyncEnumerableByte(path, startOffset, stream, ___ct);
     }
-    public byte[] IFileSystemApi_Write_2_Deserializer(byte[] value)
+    public byte[] IFileSystemApi_WriteAsyncEnumerableByte_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
     }
 
-    public Task IFileSystemApi_Append(SendRequestDto ___sendRequest, string path, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
+    public Task IFileSystemApi_AppendAsyncEnumerableByte(SendRequestDto ___sendRequest, string path, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Append({___sendRequest})", ___sendRequest);
+            ___logger.LogTrace("IFileSystemApi_AppendAsyncEnumerableByte({___sendRequest})", ___sendRequest);
        
-        return FileSystemApi.Append(path, stream, ___ct);
+        return FileSystemApi.AppendAsyncEnumerableByte(path, stream, ___ct);
     }
-    public byte[] IFileSystemApi_Append_1_Deserializer(byte[] value)
+    public byte[] IFileSystemApi_AppendAsyncEnumerableByte_1_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
     }
 
-    public Task IFileSystemApi_Append(SendRequestDto ___sendRequest, string path, byte[] stream, CancellationToken ___ct)
+    public Task IFileSystemApi_WriteByteArray(SendRequestDto ___sendRequest, string path, long startOffset, byte[] buffer, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Append({___sendRequest})", ___sendRequest);
+            ___logger.LogTrace("IFileSystemApi_WriteByteArray({___sendRequest})", ___sendRequest);
        
-        return FileSystemApi.Append(path, stream, ___ct);
+        return FileSystemApi.WriteByteArray(path, startOffset, buffer, ___ct);
+    }
+
+    public Task IFileSystemApi_AppendByteArray(SendRequestDto ___sendRequest, string path, byte[] buffer, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IFileSystemApi_AppendByteArray({___sendRequest})", ___sendRequest);
+       
+        return FileSystemApi.AppendByteArray(path, buffer, ___ct);
+    }
+
+    public Task IFileSystemApi_WriteReadOnlyMemory(SendRequestDto ___sendRequest, string path, long startOffset, ReadOnlyMemory<byte> buffer, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IFileSystemApi_WriteReadOnlyMemory({___sendRequest})", ___sendRequest);
+       
+        return FileSystemApi.WriteReadOnlyMemory(path, startOffset, buffer, ___ct);
+    }
+
+    public Task IFileSystemApi_AppendReadOnlyMemory(SendRequestDto ___sendRequest, string path, ReadOnlyMemory<byte> buffer, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IFileSystemApi_AppendReadOnlyMemory({___sendRequest})", ___sendRequest);
+       
+        return FileSystemApi.AppendReadOnlyMemory(path, buffer, ___ct);
     }
 
     

@@ -842,7 +842,7 @@ internal class FtpConnection(
             var stopWatch = Stopwatch.StartNew();
             long bytes = 0;
 
-            await fileSystem.Write(pathname, dataStream, ct);
+            await fileSystem.Write(pathname, 0, dataStream, ct);
 
             //using (var fs = await FileSystem.Write(pathname))
             //{

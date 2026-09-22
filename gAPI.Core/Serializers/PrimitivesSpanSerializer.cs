@@ -92,6 +92,28 @@ public static class PrimitivesSpanSerializer
         offset += byteCount;
     }
 
+    public static void WriteByteReadOnlyMemory(ref Span<byte> span, ref int offset, ReadOnlyMemory<byte> value)
+    {
+        var byteCount = value.Length;
+        WriteInt32(ref span, ref offset, byteCount);
+        value.Span.CopyTo(span.Slice(offset, byteCount));
+        offset += byteCount;
+    }
+    public static ReadOnlyMemory<byte> ReadByteReadOnlyMemory(ReadOnlySpan<byte> span, ref int offset)
+    {
+        var len = ReadInt32(span, ref offset);
+        var s = new ReadOnlyMemory<byte>(span.Slice(offset, len).ToArray());
+        offset += len;
+        return s;
+    }
+    public static void LengthByteReadOnlyMemory(ref int offset, ReadOnlyMemory<byte> value)
+    {
+        var byteCount = value.Length;
+        LengthInt32(ref offset, byteCount);
+        offset += byteCount;
+    }
+
+
     public static void WriteUShort(ref Span<byte> span, ref int offset, ushort value)
     {
         span[offset++] = (byte)(value & 0xFF);       // low byte

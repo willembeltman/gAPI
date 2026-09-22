@@ -175,6 +175,7 @@ public class WebDavController(
         {
             await fileSystem.Write(
                 path,
+                0,
                 Request.Body,
                 ct);
 
