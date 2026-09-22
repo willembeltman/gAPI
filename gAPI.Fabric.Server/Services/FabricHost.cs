@@ -385,7 +385,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         TcpClient.Dispose();
     }
 
-    public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct = default)
+    public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct)
     {
         // Do not add logging lol
         await Enqueue(writer =>

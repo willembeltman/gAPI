@@ -13,7 +13,7 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
 
     public LinkedCancellationTokenSourceWithTimeout(
         TimeSpan timeoutDuration,
-        CancellationToken ct = default)
+        CancellationToken ct)
     {
         _cts = ct.CanBeCanceled
             ? CancellationTokenSource.CreateLinkedTokenSource(ct)
@@ -26,7 +26,7 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
     public LinkedCancellationTokenSourceWithTimeout(
         TimeSpan timeoutDuration,
         Action onTimeout,
-        CancellationToken ct = default) : this(timeoutDuration, ct)
+        CancellationToken ct) : this(timeoutDuration, ct)
     {
         OnTimeout = onTimeout;
     }
@@ -34,7 +34,7 @@ public sealed class LinkedCancellationTokenSourceWithTimeout : IDisposable
         TimeSpan timeoutDuration,
         Action onTimeout,
         Action onDispose,
-        CancellationToken ct = default) : this(timeoutDuration, onTimeout, ct)
+        CancellationToken ct) : this(timeoutDuration, onTimeout, ct)
     {
         OnDispose = onDispose;
     }

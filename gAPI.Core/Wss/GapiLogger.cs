@@ -3,7 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Wss;
 
-public sealed class ClientLoggerFactory(string category, IClientLoggerFactory hub) : ILogger
+public sealed class ClientLoggerFactory(
+    string category,
+    IClientLoggerFactory hub)
+    : ILogger
 {
     public string Category { get; } = category;
 
@@ -44,17 +47,20 @@ public sealed class ClientLoggerFactory(string category, IClientLoggerFactory hu
         if (!IsEnabled(level))
             return;
 
-        var dto = new WssLoggerLogDto
+        _ = Task.Run(async () =>
         {
-            Level = level,
-            Message = message,
-            Category = Category,
-            Timestamp = DateTimeOffset.UtcNow,
-            StackTrace = exception?.ToString(),
-            Data = data?.Select(a => new SignalRLogDataDto() { Key = a.Key, Value = a.Value?.ToString() }).ToArray()
-        };
+            var dto = new WssLoggerLogDto
+            {
+                Level = level,
+                Message = message,
+                Category = Category,
+                Timestamp = DateTimeOffset.UtcNow,
+                StackTrace = exception?.ToString(),
+                Data = data?.Select(a => new SignalRLogDataDto() { Key = a.Key, Value = a.Value?.ToString() }).ToArray()
+            };
 
-        hub.Send_Log_ToServerAsync(dto).GetAwaiter().GetResult();
+            await hub.Send_Log_ToServerAsync(dto, default);
+        });
     }
 
     // Kleine private scope-implementatie
@@ -109,17 +115,20 @@ public sealed class FabricLogger(string category, IFabricLoggerFactory hub) : IL
         if (!IsEnabled(level))
             return;
 
-        var dto = new WssLoggerLogDto
+        _ = Task.Run(async () =>
         {
-            Level = level,
-            Message = message,
-            Category = Category,
-            Timestamp = DateTimeOffset.UtcNow,
-            StackTrace = exception?.ToString(),
-            Data = data?.Select(a => new SignalRLogDataDto() { Key = a.Key, Value = a.Value?.ToString() }).ToArray()
-        };
+            var dto = new WssLoggerLogDto
+            {
+                Level = level,
+                Message = message,
+                Category = Category,
+                Timestamp = DateTimeOffset.UtcNow,
+                StackTrace = exception?.ToString(),
+                Data = data?.Select(a => new SignalRLogDataDto() { Key = a.Key, Value = a.Value?.ToString() }).ToArray()
+            };
 
-        hub.Send_Log_ToServerAsync(dto).GetAwaiter().GetResult();
+            await hub.Send_Log_ToServerAsync(dto, default);
+        });
     }
 
     // Kleine private scope-implementatie

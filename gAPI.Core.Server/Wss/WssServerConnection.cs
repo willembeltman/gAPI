@@ -673,7 +673,7 @@ public abstract class WssServerConnection : IWssServerConnection
         return Sender.Send_FabricSendRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
     }
 
-    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct = default)
+    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
@@ -808,7 +808,8 @@ public abstract class WssServerConnection : IWssServerConnection
                         routing,
                         argumentIndex,
                         streamId,
-                        true));
+                        true),
+                    default);
                 //return Send_StreamingCancelled_ToClientAsync(
                 //    new StreamingCancelledDto(
                 //        routing,
@@ -885,7 +886,8 @@ public abstract class WssServerConnection : IWssServerConnection
                         routing,
                         argumentIndex,
                         streamId,
-                        true));
+                        true),
+                    default);
             },
 
             dispose: (StreamId streamId) =>
