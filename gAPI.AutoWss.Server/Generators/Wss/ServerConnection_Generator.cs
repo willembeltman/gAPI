@@ -215,7 +215,7 @@ public class {Name} : WssServerConnection
         }
         else
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException($"{@interface}.{method} returns {method.ResponseType}, which is not supported. Please only use Task, Task<T> or IAsyncEnumerable<T>");
         }
 
         code += GenerateArgumentDeserializer(@interface, method, functionNames, ref functions);
