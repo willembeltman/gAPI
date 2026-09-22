@@ -77,6 +77,13 @@ public class ServerConnection : WssServerConnection
                             ___sendRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
+                            ___ct);
+                    case "Write":
+                        return IFileSystemApi_Write(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
                             RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 2, IFileSystemApi_Write_2_Deserializer),
                             ___ct);
                     case "Append":
@@ -84,6 +91,12 @@ public class ServerConnection : WssServerConnection
                             ___sendRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 1, IFileSystemApi_Append_1_Deserializer),
+                            ___ct);
+                    case "Append":
+                        return IFileSystemApi_Append(
+                            ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
                             ___ct);
                 }
                 break;
@@ -269,6 +282,14 @@ public class ServerConnection : WssServerConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
+    public Task IFileSystemApi_Write(SendRequestDto ___sendRequest, string path, long startOffset, byte[] buffer, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IFileSystemApi_Write({___sendRequest})", ___sendRequest);
+       
+        return FileSystemApi.Write(path, startOffset, buffer, ___ct);
+    }
+
     public Task IFileSystemApi_Write(SendRequestDto ___sendRequest, string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
@@ -295,6 +316,14 @@ public class ServerConnection : WssServerConnection
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
+    }
+
+    public Task IFileSystemApi_Append(SendRequestDto ___sendRequest, string path, byte[] stream, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IFileSystemApi_Append({___sendRequest})", ___sendRequest);
+       
+        return FileSystemApi.Append(path, stream, ___ct);
     }
 
     

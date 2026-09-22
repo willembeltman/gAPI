@@ -395,6 +395,48 @@ public sealed class FileSystemApi(
         return ___buffer;
     }
 
+    public async Task Write(string path, long startOffset, byte[] buffer, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Write({path}, {startOffset}, {buffer})", path, startOffset, buffer);
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Write"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        {
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___Write_Serializer(path, startOffset, buffer),
+                ___activityCts.Token);
+        }
+    }
+    private byte[] ___Write_Serializer(string path, long startOffset, byte[] buffer)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, startOffset);
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, buffer);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, startOffset);
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, buffer);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
     public async Task Write(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
@@ -507,6 +549,46 @@ public sealed class FileSystemApi(
         
         PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public async Task Append(string path, byte[] stream, CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Append({path}, {stream})", path, stream);
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Append"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        {
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___Append_Serializer(path, stream),
+                ___activityCts.Token);
+        }
+    }
+    private byte[] ___Append_Serializer(string path, byte[] stream)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, path);
+        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, stream);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, path);
+        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, stream);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
     }
     
     

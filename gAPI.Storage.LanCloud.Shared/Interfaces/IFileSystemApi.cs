@@ -17,6 +17,8 @@ public interface IFileSystemApi
     Task Move(string sourcePath, string destinationPath, CancellationToken ct);
 
     IAsyncEnumerable<byte[]> OpenRead(string path, long startOffset, CancellationToken ct);
+    Task Write(string path, long startOffset, byte[] buffer, CancellationToken ct);
     Task Write(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct);
     Task Append(string path, IAsyncEnumerable<byte[]> stream, CancellationToken ct);
+    Task Append(string path, byte[] stream, CancellationToken ct);
 }

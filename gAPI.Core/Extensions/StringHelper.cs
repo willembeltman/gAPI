@@ -31,4 +31,11 @@ public static class StringHelper
         var result = Encoding.UTF8.GetString(buffer);
         return result;
     }
+    public static string GenerateRandomString(int length)
+    {
+        var bytes = new byte[length];
+        RandomNumberGenerator.Fill(bytes);
+        var result = Encoding.UTF8.GetString(bytes);
+        return result;
+    }
 }
