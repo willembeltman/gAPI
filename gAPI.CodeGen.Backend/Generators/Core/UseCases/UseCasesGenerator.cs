@@ -73,7 +73,7 @@ namespace {Namespace};
 
 public class {Name}(
     {DbContext.Name} db,
-    IAuthenticationService<{User.FullName}, {StateDto.FullName}> authenticationService)
+    {IAuthenticationService}<{User.FullName}, {StateDto.FullName}> authenticationService)
     : {IUseCase.FullName}<{Entity.FullName}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
     public async Task<bool> IsAllowedAsync(CancellationToken ct) => {authenticated};

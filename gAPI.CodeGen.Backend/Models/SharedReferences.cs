@@ -15,6 +15,6 @@ public class SharedReferences()
     public SharedReference ApplyOrderByExtension { get; } = new SharedReference("gAPI.Core.Server.Extensions.ApplyOrderBy");
     public SharedReference IsStorageFileUrlProperty { get; } = new SharedReference("gAPI.Core.Attributes.IsStorageFileUrlProperty");
     public SharedReference IStorageFileDto { get; } = new SharedReference("gAPI.Storage.IStorageFileDto");
-    public SharedReference IAuthenticationService { get; } = new SharedReference("gAPI.Core.Server.IAuthenticationService");
+    public SharedReference IAuthenticationService { get; } = new SharedReference("gAPI.Core.Server.Interfaces.IAuthenticationService");
     public SharedReference BaseResponseErrorEnum { get; } = new SharedReference("gAPI.Core.Enums.BaseResponseErrorEnum");
 }
