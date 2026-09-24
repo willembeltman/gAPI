@@ -22,7 +22,7 @@ public class UserToken<TUser>
 
     [StringLength(280)]
     public string TokenHash { get; set; } = string.Empty;
-    public DateTime Date { get; set; } = DateTime.Now;
+    public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
 
     public virtual ICollection<UserIpSessionToken<TUser>>? UserIpSessionTokens { get; set; }
 }

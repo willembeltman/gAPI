@@ -2,6 +2,7 @@
 using gAPI.Core.Server.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
@@ -95,190 +96,283 @@ public class AuthenticationStateFactory<TUser>(
     public async Task<RequestIds> DoTheRest_StoredProcedure(
         Guid? userId, long? tokenId, long ipId, string sessionCode, string routePath, CancellationToken ct)
     {
-        var sql = @"
-        DECLARE @SessionCode NVARCHAR(256) = @pSessionCode;
-        DECLARE @RoutePath NVARCHAR(256) = @pRoutePath;
-
-        DECLARE @UserId UNIQUEIDENTIFIER = @pUserId;
-        DECLARE @TokenId BIGINT = @pTokenId;
-        DECLARE @IpId BIGINT = @pIpId;
-        DECLARE @Now DATETIMEOFFSET = @pNow;
-
-        DECLARE @SessionId BIGINT;
-        DECLARE @RouteId BIGINT;
-        DECLARE @UserIpId BIGINT;
-        DECLARE @UserIpSessionId BIGINT;
-        DECLARE @UserIpSessionTokenId BIGINT;
-        DECLARE @UserIpSessionTokenRouteId BIGINT;
-        DECLARE @UserIpSessionTokenRouteRequestId BIGINT;
-
-        DECLARE @Counter INT
-
-        SET @Counter = 0;
-
-        -- =========================
-        -- Session
-        -- =========================
-        SELECT @SessionId = Id
-        FROM Sessions
-        WHERE SessionId = @SessionCode;
-
-        IF (@SessionId IS NULL)
-        BEGIN
-            INSERT INTO Sessions (SessionId)
-            VALUES (@SessionCode);
-
-            SET @SessionId = SCOPE_IDENTITY();
-        END       
-
-        -- =========================
-        -- Route
-        -- =========================
-        SELECT @RouteId = Id
-        FROM Routes
-        WHERE RouteName = @RoutePath;
-
-        IF (@RouteId IS NULL)
-        BEGIN
-            INSERT INTO Routes (RouteName)
-            VALUES (@RoutePath);
-
-            SET @RouteId = SCOPE_IDENTITY();
-        END
-
-        -- =========================
-        -- UserIp
-        -- =========================
-        SELECT @UserIpId = Id
-        FROM UserIps
-        WHERE UserId = @UserId
-          AND IpId = @IpId;
-
-        IF (@UserIpId IS NULL)
-        BEGIN
-            INSERT INTO UserIps (UserId, IpId)
-            VALUES (@UserId, @IpId);
-
-            SET @UserIpId = SCOPE_IDENTITY();
-        END
-
-        -- =========================
-        -- UserIpSession
-        -- =========================
-        SELECT @UserIpSessionId = Id
-        FROM UserIpSessions
-        WHERE UserIpId = @UserIpId
-          AND SessionId = @SessionId;
-
-        IF (@UserIpSessionId IS NULL)
-        BEGIN
-            INSERT INTO UserIpSessions (UserIpId, SessionId)
-            VALUES (@UserIpId, @SessionId);
-
-            SET @UserIpSessionId = SCOPE_IDENTITY();
-        END
-
-        -- =========================
-        -- UserIpSessionToken
-        -- =========================
-        SELECT @UserIpSessionTokenId = Id
-        FROM UserIpSessionTokens
-        WHERE UserIpSessionId = @UserIpSessionId
-          AND TokenId = @TokenId;
-
-        IF (@UserIpSessionTokenId IS NULL)
-        BEGIN
-            INSERT INTO UserIpSessionTokens
-                (UserIpSessionId, TokenId)
-            VALUES
-                (@UserIpSessionId, @TokenId);
-
-            SET @UserIpSessionTokenId = SCOPE_IDENTITY();
-        END
-
-        -- =========================
-        -- UserIpSessionTokenRoute
-        -- =========================
-        SELECT @UserIpSessionTokenRouteId = Id
-        FROM UserIpSessionTokenRoutes
-        WHERE UserIpSessionTokenId = @UserIpSessionTokenId
-          AND RouteId = @RouteId;
-
-        IF (@UserIpSessionTokenRouteId IS NULL)
-        BEGIN
-            INSERT INTO UserIpSessionTokenRoutes
-                (UserIpSessionTokenId, RouteId)
-            VALUES
-                (@UserIpSessionTokenId, @RouteId);
-
-            SET @UserIpSessionTokenRouteId = SCOPE_IDENTITY();
-        END
-
-        -- =========================
-        -- UserIpSessionTokenRouteRequest (ALTIJD NIEUW)
-        -- =========================
-        SELECT @UserIpSessionTokenRouteRequestId = Id, @Counter = [Count]
-        FROM UserIpSessionTokenRouteRequests
-        WHERE UserIpSessionTokenRouteId = @UserIpSessionTokenRouteId
-        AND [Year] = YEAR(@Now)
-        AND [Month] = MONTH(@Now)
-        AND [Day] = DAY(@Now)
-        AND [Hour] = DATEPART(HOUR, @Now);
-
-        IF (@UserIpSessionTokenRouteRequestId IS NULL)
-        BEGIN
-            INSERT INTO UserIpSessionTokenRouteRequests
-                (UserIpSessionTokenRouteId, [Year], [Month], [Day], [Hour], [Count])
-            VALUES
-                (@UserIpSessionTokenRouteId, YEAR(@Now), MONTH(@Now), DAY(@Now), DATEPART(HOUR, @Now), 1);
-
-            SET @UserIpSessionTokenRouteRequestId = SCOPE_IDENTITY();
-        END
-        ELSE
-        BEGIN
-            UPDATE UserIpSessionTokenRouteRequests
-            SET 
-                [Count] = @Counter + 1
-            WHERE Id = @UserIpSessionTokenRouteRequestId;        
-        END        
-        
-        SELECT
-            @SessionId AS SessionId,
-            @RouteId AS RouteId,
-            @UserIpId AS UserIpId,
-            @UserIpSessionId AS UserIpSessionId,
-            @UserIpSessionTokenId AS UserIpSessionTokenId,
-            @UserIpSessionTokenRouteId AS UserIpSessionTokenRouteId,
-            @UserIpSessionTokenRouteRequestId AS UserIpSessionTokenRouteRequestId,
-            @Counter + 1 AS Counter;
-
-        ";
-
-        var parameters = new SqlParameter[]
-        {
-            new("@pSessionCode", SqlDbType.NVarChar) { Value = sessionCode },
-            new("@pRoutePath", SqlDbType.NVarChar) { Value = routePath },
-
-            new("@pUserId", SqlDbType.UniqueIdentifier) { Value = (object?)userId ?? DBNull.Value },
-            new("@pTokenId", SqlDbType.BigInt) { Value = (object?)tokenId ?? DBNull.Value },
-            new("@pIpId", SqlDbType.BigInt) { Value = ipId },
-            new("@pNow", SqlDbType.DateTimeOffset) { Value = dateTime.GetUtcNow() }
-        };
-
         var db = await dbFactory.CreateDbContextAsync(ct);
-        var result = db.Database
-            .SqlQueryRaw<RequestIds>(sql, parameters)
-            .AsEnumerable()
-            .Single();
+        var now = dateTime.GetUtcNow().UtcDateTime;
 
-        return result;
+        // Deze query is 100% geldig in Postgres en voert alles in één transactie/roundtrip uit
+        var sql = @"
+    WITH 
+    ins_session AS (
+        INSERT INTO ""Sessions"" (""SessionId"") VALUES (@pSessionCode)
+        ON CONFLICT (""SessionId"") DO UPDATE SET ""SessionId"" = EXCLUDED.""SessionId"" RETURNING ""Id""
+    ),
+    ins_route AS (
+        INSERT INTO ""Routes"" (""RouteName"") VALUES (@pRoutePath)
+        ON CONFLICT (""RouteName"") DO UPDATE SET ""RouteName"" = EXCLUDED.""RouteName"" RETURNING ""Id""
+    ),
+    ins_userip AS (
+        INSERT INTO ""UserIps"" (""UserId"", ""IpId"") VALUES (@pUserId, @pIpId)
+        ON CONFLICT (""UserId"", ""IpId"") DO UPDATE SET ""UserId"" = EXCLUDED.""UserId"" RETURNING ""Id""
+    ),
+    ins_useripsession AS (
+        INSERT INTO ""UserIpSessions"" (""UserIpId"", ""SessionId"") 
+        SELECT ins_userip.""Id"", ins_session.""Id"" FROM ins_userip, ins_session
+        ON CONFLICT (""UserIpId"", ""SessionId"") DO UPDATE SET ""UserIpId"" = EXCLUDED.""UserIpId"" RETURNING ""Id""
+    ),
+    ins_useripsessiontoken AS (
+        INSERT INTO ""UserIpSessionTokens"" (""UserIpSessionId"", ""TokenId"") 
+        SELECT ins_useripsession.""Id"", @pTokenId FROM ins_useripsession
+        ON CONFLICT (""UserIpSessionId"", ""TokenId"") DO UPDATE SET ""UserIpSessionId"" = EXCLUDED.""UserIpSessionId"" RETURNING ""Id""
+    ),
+    ins_useripsessiontokenroute AS (
+        INSERT INTO ""UserIpSessionTokenRoutes"" (""UserIpSessionTokenId"", ""RouteId"") 
+        SELECT ins_useripsessiontoken.""Id"", ins_route.""Id"" FROM ins_useripsessiontoken, ins_route
+        ON CONFLICT (""UserIpSessionTokenId"", ""RouteId"") DO UPDATE SET ""UserIpSessionTokenId"" = EXCLUDED.""UserIpSessionTokenId"" RETURNING ""Id""
+    ),
+    ins_request AS (
+        INSERT INTO ""UserIpSessionTokenRouteRequests"" (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"", ""Count"")
+        SELECT ins_useripsessiontokenroute.""Id"", EXTRACT(YEAR FROM @pNow)::int, EXTRACT(MONTH FROM @pNow)::int, EXTRACT(DAY FROM @pNow)::int, EXTRACT(HOUR FROM @pNow)::int, 1
+        FROM ins_useripsessiontokenroute
+        ON CONFLICT (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"") 
+        DO UPDATE SET ""Count"" = ""UserIpSessionTokenRouteRequests"".""Count"" + 1 RETURNING ""Id"", ""Count""
+    )
+    SELECT 
+        (SELECT ""Id"" FROM ins_session) AS SessionId,
+        (SELECT ""Id"" FROM ins_route) AS RouteId,
+        (SELECT ""Id"" FROM ins_userip) AS UserIpId,
+        (SELECT ""Id"" FROM ins_useripsession) AS UserIpSessionId,
+        (SELECT ""Id"" FROM ins_useripsessiontoken) AS UserIpSessionTokenId,
+        (SELECT ""Id"" FROM ins_useripsessiontokenroute) AS UserIpSessionTokenRouteId,
+        (SELECT ""Id"" FROM ins_request) AS UserIpSessionTokenRouteRequestId,
+        (SELECT ""Count"" FROM ins_request) AS Counter;";
+
+        // We openen de connectie handmatig en maken een command aan om EF te passeren
+        var connection = db.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(ct);
+        }
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.CommandType = CommandType.Text;
+
+        // Parameters toevoegen
+        cmd.Parameters.Add(new NpgsqlParameter("@pSessionCode", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = sessionCode });
+        cmd.Parameters.Add(new NpgsqlParameter("@pRoutePath", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = routePath });
+        cmd.Parameters.Add(new NpgsqlParameter("@pUserId", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = (object?)userId ?? DBNull.Value });
+        cmd.Parameters.Add(new NpgsqlParameter("@pTokenId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (object?)tokenId ?? DBNull.Value });
+        cmd.Parameters.Add(new NpgsqlParameter("@pIpId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = ipId });
+        cmd.Parameters.Add(new NpgsqlParameter("@pNow", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = now });
+
+        // Voer uit en lees direct uit in één roundtrip
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (await reader.ReadAsync(ct))
+        {
+            return new RequestIds
+            {
+                SessionId = reader.GetInt64(reader.GetOrdinal("SessionId")),
+                RouteId = reader.GetInt64(reader.GetOrdinal("RouteId")),
+                UserIpId = reader.GetInt64(reader.GetOrdinal("UserIpId")),
+                UserIpSessionId = reader.GetInt64(reader.GetOrdinal("UserIpSessionId")),
+                UserIpSessionTokenId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenId")),
+                UserIpSessionTokenRouteId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteId")),
+                UserIpSessionTokenRouteRequestId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteRequestId")),
+                Counter = reader.GetInt32(reader.GetOrdinal("Counter"))
+            };
+        }
+
+        throw new InvalidOperationException("PostgreSQL keerde geen resultaat terug.");
     }
 
+
+    //public async Task<RequestIds> DoTheRest_StoredProcedure(
+    //    Guid? userId, long? tokenId, long ipId, string sessionCode, string routePath, CancellationToken ct)
+    //{
+    //    var sql = @"
+    //    DECLARE @SessionCode NVARCHAR(256) = @pSessionCode;
+    //    DECLARE @RoutePath NVARCHAR(256) = @pRoutePath;
+
+    //    DECLARE @UserId UNIQUEIDENTIFIER = @pUserId;
+    //    DECLARE @TokenId BIGINT = @pTokenId;
+    //    DECLARE @IpId BIGINT = @pIpId;
+    //    DECLARE @Now DATETIMEOFFSET = @pNow;
+
+    //    DECLARE @SessionId BIGINT;
+    //    DECLARE @RouteId BIGINT;
+    //    DECLARE @UserIpId BIGINT;
+    //    DECLARE @UserIpSessionId BIGINT;
+    //    DECLARE @UserIpSessionTokenId BIGINT;
+    //    DECLARE @UserIpSessionTokenRouteId BIGINT;
+    //    DECLARE @UserIpSessionTokenRouteRequestId BIGINT;
+
+    //    DECLARE @Counter INT
+
+    //    SET @Counter = 0;
+
+    //    -- =========================
+    //    -- Session
+    //    -- =========================
+    //    SELECT @SessionId = Id
+    //    FROM Sessions
+    //    WHERE SessionId = @SessionCode;
+
+    //    IF (@SessionId IS NULL)
+    //    BEGIN
+    //        INSERT INTO Sessions (SessionId)
+    //        VALUES (@SessionCode);
+
+    //        SET @SessionId = SCOPE_IDENTITY();
+    //    END       
+
+    //    -- =========================
+    //    -- Route
+    //    -- =========================
+    //    SELECT @RouteId = Id
+    //    FROM Routes
+    //    WHERE RouteName = @RoutePath;
+
+    //    IF (@RouteId IS NULL)
+    //    BEGIN
+    //        INSERT INTO Routes (RouteName)
+    //        VALUES (@RoutePath);
+
+    //        SET @RouteId = SCOPE_IDENTITY();
+    //    END
+
+    //    -- =========================
+    //    -- UserIp
+    //    -- =========================
+    //    SELECT @UserIpId = Id
+    //    FROM UserIps
+    //    WHERE UserId = @UserId
+    //      AND IpId = @IpId;
+
+    //    IF (@UserIpId IS NULL)
+    //    BEGIN
+    //        INSERT INTO UserIps (UserId, IpId)
+    //        VALUES (@UserId, @IpId);
+
+    //        SET @UserIpId = SCOPE_IDENTITY();
+    //    END
+
+    //    -- =========================
+    //    -- UserIpSession
+    //    -- =========================
+    //    SELECT @UserIpSessionId = Id
+    //    FROM UserIpSessions
+    //    WHERE UserIpId = @UserIpId
+    //      AND SessionId = @SessionId;
+
+    //    IF (@UserIpSessionId IS NULL)
+    //    BEGIN
+    //        INSERT INTO UserIpSessions (UserIpId, SessionId)
+    //        VALUES (@UserIpId, @SessionId);
+
+    //        SET @UserIpSessionId = SCOPE_IDENTITY();
+    //    END
+
+    //    -- =========================
+    //    -- UserIpSessionToken
+    //    -- =========================
+    //    SELECT @UserIpSessionTokenId = Id
+    //    FROM UserIpSessionTokens
+    //    WHERE UserIpSessionId = @UserIpSessionId
+    //      AND TokenId = @TokenId;
+
+    //    IF (@UserIpSessionTokenId IS NULL)
+    //    BEGIN
+    //        INSERT INTO UserIpSessionTokens
+    //            (UserIpSessionId, TokenId)
+    //        VALUES
+    //            (@UserIpSessionId, @TokenId);
+
+    //        SET @UserIpSessionTokenId = SCOPE_IDENTITY();
+    //    END
+
+    //    -- =========================
+    //    -- UserIpSessionTokenRoute
+    //    -- =========================
+    //    SELECT @UserIpSessionTokenRouteId = Id
+    //    FROM UserIpSessionTokenRoutes
+    //    WHERE UserIpSessionTokenId = @UserIpSessionTokenId
+    //      AND RouteId = @RouteId;
+
+    //    IF (@UserIpSessionTokenRouteId IS NULL)
+    //    BEGIN
+    //        INSERT INTO UserIpSessionTokenRoutes
+    //            (UserIpSessionTokenId, RouteId)
+    //        VALUES
+    //            (@UserIpSessionTokenId, @RouteId);
+
+    //        SET @UserIpSessionTokenRouteId = SCOPE_IDENTITY();
+    //    END
+
+    //    -- =========================
+    //    -- UserIpSessionTokenRouteRequest (ALTIJD NIEUW)
+    //    -- =========================
+    //    SELECT @UserIpSessionTokenRouteRequestId = Id, @Counter = [Count]
+    //    FROM UserIpSessionTokenRouteRequests
+    //    WHERE UserIpSessionTokenRouteId = @UserIpSessionTokenRouteId
+    //    AND [Year] = YEAR(@Now)
+    //    AND [Month] = MONTH(@Now)
+    //    AND [Day] = DAY(@Now)
+    //    AND [Hour] = DATEPART(HOUR, @Now);
+
+    //    IF (@UserIpSessionTokenRouteRequestId IS NULL)
+    //    BEGIN
+    //        INSERT INTO UserIpSessionTokenRouteRequests
+    //            (UserIpSessionTokenRouteId, [Year], [Month], [Day], [Hour], [Count])
+    //        VALUES
+    //            (@UserIpSessionTokenRouteId, YEAR(@Now), MONTH(@Now), DAY(@Now), DATEPART(HOUR, @Now), 1);
+
+    //        SET @UserIpSessionTokenRouteRequestId = SCOPE_IDENTITY();
+    //    END
+    //    ELSE
+    //    BEGIN
+    //        UPDATE UserIpSessionTokenRouteRequests
+    //        SET 
+    //            [Count] = @Counter + 1
+    //        WHERE Id = @UserIpSessionTokenRouteRequestId;        
+    //    END        
+
+    //    SELECT
+    //        @SessionId AS SessionId,
+    //        @RouteId AS RouteId,
+    //        @UserIpId AS UserIpId,
+    //        @UserIpSessionId AS UserIpSessionId,
+    //        @UserIpSessionTokenId AS UserIpSessionTokenId,
+    //        @UserIpSessionTokenRouteId AS UserIpSessionTokenRouteId,
+    //        @UserIpSessionTokenRouteRequestId AS UserIpSessionTokenRouteRequestId,
+    //        @Counter + 1 AS Counter;
+
+    //    ";
+
+    //    var parameters = new SqlParameter[]
+    //    {
+    //        new("@pSessionCode", SqlDbType.NVarChar) { Value = sessionCode },
+    //        new("@pRoutePath", SqlDbType.NVarChar) { Value = routePath },
+
+    //        new("@pUserId", SqlDbType.UniqueIdentifier) { Value = (object?)userId ?? DBNull.Value },
+    //        new("@pTokenId", SqlDbType.BigInt) { Value = (object?)tokenId ?? DBNull.Value },
+    //        new("@pIpId", SqlDbType.BigInt) { Value = ipId },
+    //        new("@pNow", SqlDbType.DateTimeOffset) { Value = dateTime.GetUtcNow() }
+    //    };
+
+    //    var db = await dbFactory.CreateDbContextAsync(ct);
+    //    var result = db.Database
+    //        .SqlQueryRaw<RequestIds>(sql, parameters)
+    //        .AsEnumerable()
+    //        .Single();
+
+    //    return result;
+    //}
+
     public async Task<RequestIds> DoTheRest_EFCore(
-        AuthenticationHeaders headers,
-        Guid? userId, long? authenticationTokenId,
-        TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
-        CancellationToken ct)
+                AuthenticationHeaders headers,
+                Guid? userId, long? authenticationTokenId,
+                TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
+                CancellationToken ct)
     {
         var db = await dbFactory.CreateDbContextAsync(ct);
         var dbSession = await db.Sessions

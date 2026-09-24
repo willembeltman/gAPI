@@ -127,6 +127,10 @@ public static class AddAutoAuthServerExtension
         {
             options.UseInMemoryDatabase("InMemoryDb");
         }
+        else if (dbConnectionString != null && dbConnectionString.StartsWith("Host=", System.StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseNpgsql(dbConnectionString);
+        }
         else
         {
             options.UseSqlServer(

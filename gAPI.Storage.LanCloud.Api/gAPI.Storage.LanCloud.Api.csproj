@@ -41,13 +41,13 @@
 		<IncludeSource>false</IncludeSource>
 
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		
+
 		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
 		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
-	
+
 	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
@@ -60,32 +60,38 @@
 		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
 		<!--<PackageReference Include="gAPI.Core.Server" Version="0.0.2-beta" />-->
-		
+
 		<ProjectReference Include="..\gAPI.AutoWss.Server\gAPI.AutoWss.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<!--<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.2-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>-->
-		
+
 		<ProjectReference Include="..\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<!--<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.2-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>-->
-	
+
 	</ItemGroup>
-	
+
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
-	  <ProjectReference Include="..\gAPI.Storage.LanCloud.Shared\gAPI.Storage.LanCloud.Shared.csproj" />
+		<ProjectReference Include="..\gAPI.Storage.LanCloud.Shared\gAPI.Storage.LanCloud.Shared.csproj" />
 	</ItemGroup>
 
 </Project>
