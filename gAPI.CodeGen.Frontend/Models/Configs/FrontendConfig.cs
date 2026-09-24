@@ -22,7 +22,9 @@ public record FrontendConfig(
     DirectoryInfo? ComponentsDirectory,
     string? ComponentsNamespace,
     bool GenerateIsPage = true
-    )
+,
+    bool GenerateComponents = false,
+    string[] SkipFiles = null)
 {
     //public Assembly[] Assemblies { get; } = AssembliesToSearch;
     //public string[] BaseNamespaces { get; set; } = BaseNamespacesToFilter;

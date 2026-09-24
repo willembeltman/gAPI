@@ -30,6 +30,18 @@ public class CrudType : ICrudType
 
         HasIStorageFileDtoInterface = responseType.TypeSymbol.Interfaces.Any(a => a.ToDisplayString() == "gAPI.Core.Interfaces.IStorageFileDto");
         HasIReadonlyStorageFileDtoInterface = responseType.TypeSymbol.Interfaces.Any(a => a.ToDisplayString() == "gAPI.Core.Interfaces.IReadonlyStorageFileDto");
+
+        //HasLinkAttributes = responseType.TypeSymbol.GetAttributes().Where(a => a.ToString() == "gAPI.Core.Attributes.HasLinkAttribute").ToArray();
+        HasLinks = responseType.TypeSymbol
+            .GetAttributes()
+            .Where(a =>
+                a.AttributeClass?.ToDisplayString() ==
+                "gAPI.Core.Attributes.HasLinkAttribute")
+            .Select(a => new HasLink(
+                (string)a.ConstructorArguments[0].Value!,
+                (string)a.ConstructorArguments[1].Value!,
+                (string?)a.ConstructorArguments[2].Value))
+            .ToArray();
     }
 
     public CrudContext Context { get; }
@@ -38,6 +50,7 @@ public class CrudType : ICrudType
     public CrudProperty[] Properties { get; }
     public bool HasIStorageFileDtoInterface { get; }
     public bool HasIReadonlyStorageFileDtoInterface { get; }
+    public HasLink[] HasLinks { get; }
 
     public string Name => ResponseTypeBase?.Name ?? string.Empty;
     public string Namespace => ResponseTypeBase?.Namespace ?? string.Empty;

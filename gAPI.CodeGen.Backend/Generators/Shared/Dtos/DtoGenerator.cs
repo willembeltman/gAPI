@@ -91,6 +91,17 @@ public class DtoGenerator : BaseGenerator
         {
             propertiesCode += $"[IsEntryPoint]\r\n";
         }
+        foreach (var link in Entity.HasLinkAttributes)
+        {
+            if (link.Action == null)
+            {
+                propertiesCode += $"[HasLink(\"{link.Text}\", \"{link.Controller}\")]\r\n";
+            }
+            else
+            {
+                propertiesCode += $"[HasLink(\"{link.Text}\", \"{link.Controller}, \"{link.Action}\"\")]\r\n";
+            }
+        }
         propertiesCode += $"public class {Name} : ICrudEntity{(Entity.HasIStorageFileInterface 
             ?   Entity.HasIReadonlyStorageFileInterface 
                 ? ", IReadonlyStorageFileDto" 

@@ -19,6 +19,9 @@ public class Entity : SharedReference
         IsHidden = type
             .GetCustomAttribute<IsHiddenAttribute>() != null;
 
+        HasLinkAttributes = type
+            .GetCustomAttributes<HasLinkAttribute>();
+
         Properties = type
             .GetProperties()
             .Where(p => p.CanRead)
@@ -40,6 +43,7 @@ public class Entity : SharedReference
     public bool HasIStorageFileInterface { get; }
     public bool HasIReadonlyStorageFileInterface { get; }
     public bool IsHidden { get; }
+    public IEnumerable<HasLinkAttribute> HasLinkAttributes { get; }
     public bool IsUser { get; }
     public bool IsEntryPoint { get; }
     public bool IsAuthorize { get; }

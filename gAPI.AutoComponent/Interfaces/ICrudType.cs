@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using gAPI.AutoComponent.Models.CrudModels;
+using System.Collections.Generic;
 
 namespace gAPI.AutoComponent.Interfaces;
 
@@ -30,4 +31,5 @@ public interface ICrudType : ISharedReference
     string? IsPageResponseText { get; }
     bool IsNotAuthorized { get; }
     bool HasStorageFileUrlProperty { get; }
+    HasLink[] HasLinks { get; }
 }

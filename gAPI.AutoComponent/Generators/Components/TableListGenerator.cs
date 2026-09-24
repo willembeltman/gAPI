@@ -15,7 +15,7 @@ public class TableListGenerator : BaseGenerator
         string directory,
         string @namespace)
     {
-        CrudType = dto;
+        Dto = dto;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseListResponse = baseListResponse;
@@ -28,7 +28,7 @@ public class TableListGenerator : BaseGenerator
         FileName = $"{Name}.razor";
     }
 
-    public ICrudType CrudType { get; }
+    public ICrudType Dto { get; }
     public IBaseGenerator Imports { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
@@ -36,7 +36,7 @@ public class TableListGenerator : BaseGenerator
 
     public void GenerateCode()
     {
-        if (CrudType.ListMethod == null) return;
+        if (Dto.ListMethod == null) return;
 
         // Imports
         Imports.RegRange(
@@ -47,18 +47,18 @@ public class TableListGenerator : BaseGenerator
             "System.Threading.Tasks",
             "System.Collections.Generic"
         ]);
-        Imports.Reg(CrudType);
+        Imports.Reg(Dto);
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(BaseListResponse);
 
         // Genereer dynamisch de kolommen
 
-        var storageFileProps = CrudType.Properties
+        var storageFileProps = Dto.Properties
             .Where(p => p.IsStorageFileUrlProperty)
             .ToArray();
 
-        var orderableProps = CrudType.Properties
+        var orderableProps = Dto.Properties
             .Where(p => !p.IsStorageFileUrlProperty)// && !p.IsReadOnly) //p.IsName || p.IsForeignName)
             .OrderByDescending(a => a.IsKey)
             .ThenByDescending(a => a.IsName)
@@ -152,12 +152,14 @@ else
                             <td>
                                 @if (item.Model!.CanUpdate)
                                 {{
-                                    <a class=""btn btn-sm btn-primary"" href=""/{CrudType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">✏️</a>
+                                    <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">✏️</a>
                                 }}
                                 @if (item.Model!.CanDelete)
                                 {{
-                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">🗑️</a>
-                                }}
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">🗑️</a>
+                                }}{string.Join("", Dto.HasLinks.Select(link => link.Action == null ? $@"   
+                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@item.Model!.Id"">{link.Text}</a>" : $@"   
+                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@item.Model!.Id"">{link.Text}</a>"))}
                             </td>
                         </tr>
                     }}
@@ -214,12 +216,14 @@ else
                                 <div class=""mt-2"">
                                     @if (item.Model!.CanUpdate)
                                     {{
-                                        <a class=""btn btn-sm btn-primary"" href=""/{CrudType.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">@EditText</a>
+                                        <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">@EditText</a>
                                     }}
                                     @if (item.Model!.CanDelete)
                                     {{
-                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{CrudType.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">@DeleteText</a>
-                                    }}
+                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">@DeleteText</a>
+                                    }}{string.Join("", Dto.HasLinks.Select(link => link.Action == null ? $@"   
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@item.Model!.Id"">{link.Text}</a>" : $@"   
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@item.Model!.Id"">{link.Text}</a>"))}
                                 </div>
                             </div>
                         </div>
@@ -237,9 +241,9 @@ else
 
 @code {{
     [Parameter, EditorRequired]
-    public ListDataSource<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
+    public ListDataSource<{Dto.Name}, {Dto.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 
-    [Parameter] public string Id {{ get; set; }} = $""{CrudType.Name.ToLower()}TableList_{{Guid.NewGuid()}}"";
+    [Parameter] public string Id {{ get; set; }} = $""{Dto.Name.ToLower()}TableList_{{Guid.NewGuid()}}"";
     [Parameter] public string EmptyText {{ get; set; }} = ""Order by..."";
     [Parameter] public string AscText {{ get; set; }} = ""▲ asc"";
     [Parameter] public string DescText {{ get; set; }} = ""▼ desc"";
@@ -247,7 +251,7 @@ else
     [Parameter] public string DeleteText {{ get; set; }} = ""🗑️ Delete"";
     [Parameter] public string LoadingText {{ get; set; }} = ""Loading, please wait..."";
     [Parameter] public string LoadingModeText {{ get; set; }} = ""Loading more..."";
-    [Parameter] public string NoItemsText {{ get; set; }} = ""No {CrudType.Name.ToMultiple()} to display."";
+    [Parameter] public string NoItemsText {{ get; set; }} = ""No {Dto.Name.ToMultiple()} to display."";
     
     private string[] HideColumnNames = [];
 

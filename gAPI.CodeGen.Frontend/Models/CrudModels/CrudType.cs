@@ -1,7 +1,9 @@
 ﻿using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models.CrudModels;
 using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
+using gAPI.Core.Attributes;
 using gAPI.Core.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
@@ -27,6 +29,7 @@ public class CrudType : ICrudType
         HasStorageFileUrlProperty = Properties.Any(a => a.IsStorageFileUrlProperty);
         HasIStorageFileDtoInterface = responseType.GetInterface(typeof(IStorageFileDto).FullName!) != null;
         HasIReadonlyStorageFileDtoInterface = responseType.GetInterface(typeof(IReadonlyStorageFileDto).FullName!) != null;
+        HasLinks = responseType.GetCustomAttributes<HasLinkAttribute>().Select(a => new HasLink(a.Text, a.Controller, a.Action)).ToArray();
     }
 
     public CrudContext CrudContext { get; }
@@ -36,6 +39,7 @@ public class CrudType : ICrudType
     public bool HasStorageFileUrlProperty { get; }
     public bool HasIStorageFileDtoInterface { get; }
     public bool HasIReadonlyStorageFileDtoInterface { get; }
+    public HasLink[] HasLinks { get; }
 
     public string Name => Dto.Name!;
     public string Namespace => Dto.Namespace!;
