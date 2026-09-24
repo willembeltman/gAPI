@@ -27,9 +27,7 @@ public record FrontendConfig(
 
     bool OverwritePages,
     bool OverwriteComponents,
-    bool OverwriteImports,
-
-    string[]? SkipFiles)
+    bool OverwriteImports)
 {
     //public Assembly[] Assemblies { get; } = AssembliesToSearch;
     //public string[] BaseNamespaces { get; set; } = BaseNamespacesToFilter;
