@@ -22,6 +22,8 @@ public record FrontendConfig(
     DirectoryInfo? ComponentsDirectory,
     string? ComponentsNamespace,
 
+    bool UseAutoComponents,
+
     bool GenerateIsPage,
     bool GenerateComponents,
 

@@ -55,10 +55,10 @@ public class IndexViewGenerator : BaseGenerator
         if (CrudType.ListMethod == null) return;
 
         // Imports registreren
-        if (Config.GenerateComponents)
-            Imports.Reg(ListView);
-        else
+        if (Config.UseAutoComponents)
             Imports.Reg("gAPI.Generated.Components");
+        else
+            Imports.Reg(ListView);
         Imports.Reg(LoaderView);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg(ListDataSource);
@@ -91,7 +91,7 @@ public class IndexViewGenerator : BaseGenerator
             {{
                 <a id=""createnew"" href=""/{pluralName}/create"">➕ Create a new {entityName.ToLower()}</a>
             }}
-            <{(Config.GenerateComponents ? "" : "Auto")}{ListView.Name} DataSource=""{entityName.ToMultiple()}"" />
+            <{(Config.UseAutoComponents ? "Auto" : "")}{ListView.Name} DataSource=""{entityName.ToMultiple()}"" />
         </{LoaderView.Name}>
     </Authorized>
     <NotAuthorized>

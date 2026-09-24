@@ -76,10 +76,10 @@ public class EditViewGenerator : BaseGenerator
         Imports.Reg("Microsoft.AspNetCore.Components");
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
-        if (Config.GenerateComponents)
-            Imports.Reg(FormView);
-        else
+        if (Config.UseAutoComponents)
             Imports.Reg("gAPI.Generated.Components");
+        else
+            Imports.Reg(FormView);
 
         var entityName = CrudType.Name;
         var keyType = CrudType.KeyProperty.TypeSimpleName;
@@ -121,7 +121,7 @@ public class EditViewGenerator : BaseGenerator
             <EditForm Model=""{entityName}!.Model"" OnValidSubmit=""{entityName}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{(Config.GenerateComponents ? "" : "Auto")}{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
+                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
                 .Where(p => p.IsImmutable)
                 .Select(p => p.Name))}""" : "")} />
                 <{ErrorView.Name} Response=""{entityName}.StatusResponse"" />

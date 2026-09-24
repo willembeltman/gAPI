@@ -28,7 +28,7 @@ public class ImportsGenerator : BaseGenerator
         Reg("gAPI.Core.Dtos");
         Reg("gAPI.Core.Client");
         Reg("gAPI.Generated");
-        Reg(Config.ComponentsNamespace);
+        //Reg(Config.ComponentsNamespace);
         //Reg(Config.HelpersNamespace);
 
         Code = GetRazorNamespacesCode();

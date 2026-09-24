@@ -70,10 +70,11 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg(BaseResponse);
         Imports.Reg(BaseResponseT);
         Imports.Reg(BaseListResponseT);
-        if (Config.GenerateComponents)
-            Imports.Reg(FormView);
-        else
+        if (Config.UseAutoComponents)
             Imports.Reg("gAPI.Generated.Components");
+        else
+            Imports.Reg(FormView);
+
         Imports.Reg(LoaderView);
         Imports.Reg(ErrorView);
         Imports.Reg(RedirectToLoginView);
@@ -115,7 +116,7 @@ public class CreateViewGenerator : BaseGenerator
             <EditForm Model=""{name}!.Model"" OnValidSubmit=""{name}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{(Config.GenerateComponents ? "" : "Auto")}{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType!.Name.ToMultiple()}"""))} />
+                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType!.Name.ToMultiple()}"""))} />
                 <{ErrorView.Name} Response=""{name}.StatusResponse"" />
                 <button id=""create"" class=""btn btn-primary"" type=""submit"">➕ Create</button>
                 <button id=""cancel"" class=""btn btn-secondary ms-2"" @onclick=""{name}.Cancel"">Cancel</button>

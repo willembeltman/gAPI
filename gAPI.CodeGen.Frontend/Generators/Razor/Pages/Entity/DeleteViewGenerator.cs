@@ -64,10 +64,10 @@ public class DeleteViewGenerator : BaseGenerator
             return;
 
         Imports.Reg(CrudType);
-        if (Config.GenerateComponents)
-            Imports.Reg(DetailsView);
-        else
+        if (Config.UseAutoComponents)
             Imports.Reg("gAPI.Generated.Components");
+        else
+            Imports.Reg(DetailsView);
         Imports.Reg(BaseResponseT);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg(RedirectToLoginView);
@@ -115,7 +115,7 @@ public class DeleteViewGenerator : BaseGenerator
                 Are you sure you want to delete this {entityName}
             </div>
 
-            <{(Config.GenerateComponents ? "" : "Auto")}{DetailsView.Name} DataSource=""{entityName}"" />
+            <{(Config.UseAutoComponents ? "Auto" : "")}{DetailsView.Name} DataSource=""{entityName}"" />
             <ErrorView Response=""{entityName}!.StatusResponse"" />
 
             <button id=""delete"" class=""btn btn-danger"" @onclick=""{entityName}.HandleDelete"">🗑️ Delete</button>

@@ -178,24 +178,31 @@ public class CrudGenerator
         IndexViewGenerator.Save(Config.OverwritePages);
 
         FormGenerator.GenerateCode();
-        FormGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+        FormGenerator.Save(Config.OverwriteComponents);
 
         DetailsGenerator.GenerateCode();
-        DetailsGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            DetailsGenerator.Save(Config.OverwriteComponents);
 
         ListGenerator.GenerateCode();
-        ListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            ListGenerator.Save(Config.OverwriteComponents);
 
         DropDownGenerator.GenerateCode();
-        DropDownGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            DropDownGenerator.Save(Config.OverwriteComponents);
 
         GridEditGenerator.GenerateCode();
-        GridEditGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            GridEditGenerator.Save(Config.OverwriteComponents);
 
         SelectListGenerator.GenerateCode();
-        SelectListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            SelectListGenerator.Save(Config.OverwriteComponents);
 
         TableListGenerator.GenerateCode();
-        TableListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
+        if (Config.GenerateComponents)
+            TableListGenerator.Save(Config.OverwriteComponents);
     }
 }
