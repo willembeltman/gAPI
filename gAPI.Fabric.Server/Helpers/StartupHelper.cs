@@ -4,17 +4,17 @@ public static class StartupHelper
 {
     public static void ShowFabricNodeStarted(int port)
     {
-        Console.WriteLine("###############################################");
-        Console.WriteLine("##                                           ##");
-        Console.WriteLine("## #####   ###   ######  ######   ##   ####  ##");
-        Console.WriteLine("## ##     ## ##  ##   ## ##   ##  ##  ##  ## ##");
-        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
-        Console.WriteLine("## ####  ####### ######  #####    ##  ##     ##");
-        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
-        Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##  ## ##");
-        Console.WriteLine("## ##    ##   ## ######  ##   ##  ##   ####  ##");
-        Console.WriteLine("##                                           ##");
-        Console.WriteLine("###############################################");
-        Console.WriteLine($"Port: {port}");
+        //Console.WriteLine("###############################################");
+        //Console.WriteLine("##                                           ##");
+        //Console.WriteLine("## #####   ###   ######  ######   ##   ####  ##");
+        //Console.WriteLine("## ##     ## ##  ##   ## ##   ##  ##  ##  ## ##");
+        //Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
+        //Console.WriteLine("## ####  ####### ######  #####    ##  ##     ##");
+        //Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##     ##");
+        //Console.WriteLine("## ##    ##   ## ##   ## ##   ##  ##  ##  ## ##");
+        //Console.WriteLine("## ##    ##   ## ######  ##   ##  ##   ####  ##");
+        //Console.WriteLine("##                                           ##");
+        //Console.WriteLine("###############################################");
+        Console.WriteLine($"FABRIC Port: {port}");
     }
 }
