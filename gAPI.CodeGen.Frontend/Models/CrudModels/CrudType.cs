@@ -30,6 +30,7 @@ public class CrudType : ICrudType
         HasIStorageFileDtoInterface = responseType.GetInterface(typeof(IStorageFileDto).FullName!) != null;
         HasIReadonlyStorageFileDtoInterface = responseType.GetInterface(typeof(IReadonlyStorageFileDto).FullName!) != null;
         HasLinks = responseType.GetCustomAttributes<HasLinkAttribute>().Select(a => new HasLink(a.Text, a.Controller, a.Action)).ToArray();
+        IsHidden = responseType.GetCustomAttribute<IsHiddenAttribute>() != null;
     }
 
     public CrudContext CrudContext { get; }
@@ -40,6 +41,7 @@ public class CrudType : ICrudType
     public bool HasIStorageFileDtoInterface { get; }
     public bool HasIReadonlyStorageFileDtoInterface { get; }
     public HasLink[] HasLinks { get; }
+    public bool IsHidden { get; }
 
     public string Name => Dto.Name!;
     public string Namespace => Dto.Namespace!;

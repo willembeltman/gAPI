@@ -106,8 +106,8 @@ public class EditViewGenerator : BaseGenerator
 
         Code = $@"@page ""/{entityName.ToLower().ToMultiple()}/edit/{{id{paramRouteType}}}""
 @implements IAsyncDisposable{GetRazorNamespacesCode()}{string.Join("", clients.Select(p => $@"
-@inject {p.ListMethod!.Interface.Name} {p.ListMethod.Name.ToCamelCase()}"))}
-@inject {CrudType.UpdateMethod.Interface.Name} {CrudType.UpdateMethod.Name.ToCamelCase()}
+@inject {p.ListMethod!.Interface.Name} {p.ListMethod.Interface.Name.ToCamelCase()}"))}
+@inject {CrudType.UpdateMethod.Interface.Name} {CrudType.UpdateMethod.Interface.Name.ToCamelCase()}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -162,12 +162,12 @@ public class EditViewGenerator : BaseGenerator
             GetPrimaryKey: e => e.{CrudType.KeyProperty.Name},
             AfterSaveAction: e => NavigationManager.NavigateTo(""/{entityName.ToLower().ToMultiple()}""),
             AfterCancelAction: e => NavigationManager.NavigateTo(""/{entityName.ToLower().ToMultiple()}""),
-            Create: {CrudType.UpdateMethod.Name.ToCamelCase()}.Create,
-            Read: {CrudType.UpdateMethod.Name.ToCamelCase()}.Read,
-            Update: {CrudType.UpdateMethod.Name.ToCamelCase()}.Update,
-            Delete: {CrudType.UpdateMethod.Name.ToCamelCase()}.Delete,
-            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
-            FileDelete: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Name.ToCamelCase()}.FileDelete" : "null")}
+            Create: {CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.Create,
+            Read: {CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.Read,
+            Update: {CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.Update,
+            Delete: {CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.Delete,
+            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.FileUpdate" : "null")},
+            FileDelete: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $"{CrudType.UpdateMethod.Interface.Name.ToCamelCase()}.FileDelete" : "null")}
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 
@@ -175,14 +175,14 @@ public class EditViewGenerator : BaseGenerator
             JS,
             StateHasChanged,
             GetPrimaryKey: x => x.{p.ForeignKeyType.KeyProperty.Name},
-            List: (int? skip, int? take, string[]? orderBy, CancellationToken ct) => {p.ListMethod!.Name.ToCamelCase()}.List(skip, take, orderBy, ct),
+            List: (int? skip, int? take, string[]? orderBy, CancellationToken ct) => {p.ListMethod!.Interface.Name.ToCamelCase()}.List(skip, take, orderBy, ct),
             SetForeignKey: null,
             AfterSaveAction: null,
             AfterCancelAction: null,
-            Create: {p.ListMethod.Name.ToCamelCase()}.Create,
-            Read: {p.ListMethod.Name.ToCamelCase()}.Read,
-            Update: {p.ListMethod.Name.ToCamelCase()}.Update,
-            Delete: {p.ListMethod.Name.ToCamelCase()}.Delete
+            Create: {p.ListMethod.Interface.Name.ToCamelCase()}.Create,
+            Read: {p.ListMethod.Interface.Name.ToCamelCase()}.Read,
+            Update: {p.ListMethod.Interface.Name.ToCamelCase()}.Update,
+            Delete: {p.ListMethod.Interface.Name.ToCamelCase()}.Delete
         );
         await {p.ForeignKeyType.Name.ToMultiple()}.InitialiseAsync();"))}
     }}

@@ -101,8 +101,8 @@ public class CreateViewGenerator : BaseGenerator
 
         Code = $@"@page ""/{nameLowerPlural}/create""
 @implements IAsyncDisposable{string.Join("", clients.Select(p => $@"
-@inject {p.ListMethod!.Interface.Name} {p.ListMethod!.Name.ToCamelCase()}"))}
-@inject {CrudType.CreateMethod.Interface.Name} {CrudType.CreateMethod.Name.ToCamelCase()}
+@inject {p.ListMethod!.Interface.Name} {p.ListMethod!.Interface.Name.ToCamelCase()}"))}
+@inject {CrudType.CreateMethod.Interface.Name} {CrudType.CreateMethod.Interface.Name.ToCamelCase()}
 @inject {IClientAuthenticatedHttpClient.Name} ClientAuthenticatedHttpClient
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -150,11 +150,11 @@ public class CreateViewGenerator : BaseGenerator
             GetPrimaryKey: {CrudType.Name.ToLower()} => {CrudType.Name.ToLower()}.{CrudType.KeyProperty.Name},
             AfterSaveAction: {CrudType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
             AfterCancelAction: {CrudType.Name.ToLower()} => NavigationManager.NavigateTo(""/{nameLowerPlural}""),
-            Create: {CrudType.CreateMethod.Name.ToCamelCase()}.Create,
+            Create: {CrudType.CreateMethod.Interface.Name.ToCamelCase()}.Create,
             Read: null,
             Update: null,
             Delete: null,{(CrudType.HasIStorageFileDtoInterface ? $@"
-            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $@"{CrudType.CreateMethod.Name.ToCamelCase()}.FileUpdate" : "null")},
+            FileUpdate: {(CrudType.HasIStorageFileDtoInterface && !CrudType.HasIReadonlyStorageFileDtoInterface ? $@"{CrudType.CreateMethod.Interface.Name.ToCamelCase()}.FileUpdate" : "null")},
             FileDelete: null" : $@"
             FileUpdate: null,
             FileDelete: null")}
@@ -165,7 +165,7 @@ public class CreateViewGenerator : BaseGenerator
             JS,
             StateHasChanged,
             GetPrimaryKey: {p.ForeignKeyType.Name.ToLower()} => {p.ForeignKeyType.Name.ToLower()}.{p.ForeignKeyType.KeyProperty.Name},
-            List: {p.ListMethod!.Name.ToCamelCase()}.List,
+            List: {p.ListMethod!.Interface.Name.ToCamelCase()}.List,
             SetForeignKey: null,
             AfterSaveAction: null,
             AfterCancelAction: null,
