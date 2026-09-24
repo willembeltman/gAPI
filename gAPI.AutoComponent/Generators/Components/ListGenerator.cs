@@ -149,14 +149,14 @@ else
                             <td>
                                 @if (item.Model!.CanUpdate)
                                 {{
-                                    <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">✏️</a>
+                                    <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@(item.Model!.Id)"">✏️</a>
                                 }}
                                 @if (item.Model!.CanDelete)
                                 {{
-                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">🗑️</a>
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@(item.Model!.Id)"">🗑️</a>
                                 }}{string.Join("", Dto.HasLinks.Select(link => link.Action == null ? $@"   
-                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@item.Model!.Id"">{link.Text}</a>" : $@"   
-                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@item.Model!.Id"">{link.Text}</a>"))}
+                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@(item.Model!.Id)"">{link.Text}</a>" : $@"   
+                                <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@(item.Model!.Id)"">{link.Text}</a>"))}
                             </td>
                         </tr>
                     }}
@@ -213,14 +213,14 @@ else
                                 <div class=""mt-2"">
                                     @if (item.Model!.CanUpdate)
                                     {{
-                                        <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@item.Model!.Id"">@EditText</a>
+                                        <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@(item.Model!.Id)"">@EditText</a>
                                     }}
                                     @if (item.Model!.CanDelete)
                                     {{
-                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@item.Model!.Id"">@DeleteText</a>
+                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@(item.Model!.Id)"">@DeleteText</a>
                                     }}{string.Join("", Dto.HasLinks.Select(link => link.Action == null ? $@"   
-                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@item.Model!.Id"">{link.Text}</a>" : $@"   
-                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@item.Model!.Id"">{link.Text}</a>"))}
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@(item.Model!.Id)"">{link.Text}</a>" : $@"   
+                                    <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@(item.Model!.Id)"">{link.Text}</a>"))}
                                 </div>
                             </div>
                         </div>
