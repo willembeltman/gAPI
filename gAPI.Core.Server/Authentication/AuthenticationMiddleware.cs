@@ -16,7 +16,9 @@ public class AuthenticationMiddleware
         IServerAuthenticationService authentication,
         IHostEnvironment hostEnvironment)
     {
-        if (ctx.Request.Path == "/fabricr")
+        if (ctx.Request.Path.ToString().ToLower() == "/fabricr" ||
+            ctx.Request.Path.ToString().ToLower().StartsWith("/scalar") ||
+            ctx.Request.Path.ToString().ToLower().StartsWith("/openapi"))
         {
             await _next(ctx);
             return;
