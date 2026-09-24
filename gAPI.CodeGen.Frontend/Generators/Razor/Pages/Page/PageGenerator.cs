@@ -203,7 +203,7 @@ public class PageGenerator : BaseGenerator
     }}
 }}";
 
-        Save(false);
+        Save(ClientConfig.OverwritePages && ClientConfig.GenerateIsPage);
     }
 
     private static string GenerateInputForType(string space, string propertyName, string name, Type type, bool isPassword)

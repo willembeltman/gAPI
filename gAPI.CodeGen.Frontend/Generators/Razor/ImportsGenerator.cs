@@ -33,6 +33,6 @@ public class ImportsGenerator : BaseGenerator
 
         Code = GetRazorNamespacesCode();
 
-        Save();
+        Save(Config.OverwriteImports);
     }
 }

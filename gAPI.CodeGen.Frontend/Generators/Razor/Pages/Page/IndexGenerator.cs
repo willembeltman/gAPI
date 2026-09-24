@@ -13,6 +13,7 @@ public class IndexGenerator : BaseGenerator
     {
         RoutePath = routePath;
         Imports = imports;
+        ClientConfig = clientConfig;
         Pages = pages;
 
         Name = "Index";
@@ -36,6 +37,7 @@ public class IndexGenerator : BaseGenerator
 
     public string RoutePath { get; }
     public ImportsGenerator Imports { get; }
+    public FrontendConfig ClientConfig { get; }
     public PageGenerator[] Pages { get; }
     public string Route { get; }
     public string[] NameParts { get; }
@@ -77,6 +79,6 @@ public class IndexGenerator : BaseGenerator
 </AuthorizeView>
 ";
 
-        Save(false);
+        Save(ClientConfig.OverwritePages && ClientConfig.GenerateIsPage);
     }
 }

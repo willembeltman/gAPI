@@ -21,6 +21,8 @@ public class CrudGenerator
         ISharedReference IClientAuthenticatedHttpClient
         )
     {
+        Config = config;
+
         var directoryFullName = config!.ComponentsDirectory!.FullName;
         var @namespace = config.ComponentsNamespace!;
 
@@ -82,6 +84,7 @@ public class CrudGenerator
 
         CreateViewGenerator = new CreateViewGenerator(
             crud,
+            config,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -97,6 +100,7 @@ public class CrudGenerator
             @namespace);
         EditViewGenerator = new EditViewGenerator(
             crud,
+            config,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -112,6 +116,7 @@ public class CrudGenerator
             @namespace);
         DeleteViewGenerator = new DeleteViewGenerator(
             crud,
+            config,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -127,6 +132,7 @@ public class CrudGenerator
             @namespace);
         IndexViewGenerator = new IndexViewGenerator(
             crud,
+            config,
             ItemDataSource,
             ListDataSource,
             sharedReferences.BaseResponse,
@@ -142,6 +148,9 @@ public class CrudGenerator
             @namespace);
     }
 
+    public FrontendConfig Config { get; }
+
+
     public CreateViewGenerator CreateViewGenerator { get; }
     public EditViewGenerator EditViewGenerator { get; }
     public DeleteViewGenerator DeleteViewGenerator { get; }
@@ -156,30 +165,37 @@ public class CrudGenerator
 
     public void GenerateCode()
     {
-        CreateViewGenerator.GenerateCode();
+        CreateViewGenerator.GenerateCode(); 
+        CreateViewGenerator.Save(Config.OverwritePages);
+
         EditViewGenerator.GenerateCode();
+        EditViewGenerator.Save(Config.OverwritePages);
+
         DeleteViewGenerator.GenerateCode();
+        DeleteViewGenerator.Save(Config.OverwritePages);
+
         IndexViewGenerator.GenerateCode();
+        IndexViewGenerator.Save(Config.OverwritePages);
 
         FormGenerator.GenerateCode();
-        FormGenerator.Save();
+        FormGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         DetailsGenerator.GenerateCode();
-        DetailsGenerator.Save();
+        DetailsGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         ListGenerator.GenerateCode();
-        ListGenerator.Save();
+        ListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         DropDownGenerator.GenerateCode();
-        DropDownGenerator.Save();
+        DropDownGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         GridEditGenerator.GenerateCode();
-        GridEditGenerator.Save();
+        GridEditGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         SelectListGenerator.GenerateCode();
-        SelectListGenerator.Save();
+        SelectListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
 
         TableListGenerator.GenerateCode();
-        TableListGenerator.Save();
+        TableListGenerator.Save(Config.OverwriteComponents && Config.GenerateComponents);
     }
 }

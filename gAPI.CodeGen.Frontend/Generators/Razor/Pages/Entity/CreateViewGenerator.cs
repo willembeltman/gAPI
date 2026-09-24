@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
@@ -8,6 +9,7 @@ public class CreateViewGenerator : BaseGenerator
 {
     public CreateViewGenerator(
         CrudType crudType,
+        FrontendConfig config,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -23,6 +25,7 @@ public class CreateViewGenerator : BaseGenerator
         string? @namespace)
     {
         CrudType = crudType;
+        Config = config;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponse = baseResponse;
@@ -43,6 +46,7 @@ public class CreateViewGenerator : BaseGenerator
     }
 
     public CrudType CrudType { get; }
+    public FrontendConfig Config { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference BaseResponse { get; }
@@ -66,7 +70,10 @@ public class CreateViewGenerator : BaseGenerator
         Imports.Reg(BaseResponse);
         Imports.Reg(BaseResponseT);
         Imports.Reg(BaseListResponseT);
-        Imports.Reg(FormView);
+        if (Config.GenerateComponents)
+            Imports.Reg(FormView);
+        else
+            Imports.Reg("gAPI.Generated.Components");
         Imports.Reg(LoaderView);
         Imports.Reg(ErrorView);
         Imports.Reg(RedirectToLoginView);
@@ -108,7 +115,7 @@ public class CreateViewGenerator : BaseGenerator
             <EditForm Model=""{name}!.Model"" OnValidSubmit=""{name}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType!.Name.ToMultiple()}"""))} />
+                <{(Config.GenerateComponents ? "" : "Auto")}{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType!.Name.ToMultiple()}"""))} />
                 <{ErrorView.Name} Response=""{name}.StatusResponse"" />
                 <button id=""create"" class=""btn btn-primary"" type=""submit"">➕ Create</button>
                 <button id=""cancel"" class=""btn btn-secondary ms-2"" @onclick=""{name}.Cancel"">Cancel</button>
@@ -183,6 +190,5 @@ public class CreateViewGenerator : BaseGenerator
     }}
 }}";
 
-        Save();
     }
 }

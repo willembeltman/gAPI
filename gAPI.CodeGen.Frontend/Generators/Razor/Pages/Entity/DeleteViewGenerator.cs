@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
@@ -8,6 +9,7 @@ public class DeleteViewGenerator : BaseGenerator
 {
     public DeleteViewGenerator(
         CrudType crudType,
+        FrontendConfig config,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -23,6 +25,7 @@ public class DeleteViewGenerator : BaseGenerator
         string? @namespace)
     {
         CrudType = crudType;
+        Config = config;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponseT = baseResponseT;
@@ -42,6 +45,7 @@ public class DeleteViewGenerator : BaseGenerator
     }
 
     public CrudType CrudType { get; }
+    public FrontendConfig Config { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference DetailsView { get; }
@@ -60,7 +64,10 @@ public class DeleteViewGenerator : BaseGenerator
             return;
 
         Imports.Reg(CrudType);
-        Imports.Reg(DetailsView);
+        if (Config.GenerateComponents)
+            Imports.Reg(DetailsView);
+        else
+            Imports.Reg("gAPI.Generated.Components");
         Imports.Reg(BaseResponseT);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg(RedirectToLoginView);
@@ -108,7 +115,7 @@ public class DeleteViewGenerator : BaseGenerator
                 Are you sure you want to delete this {entityName}
             </div>
 
-            <{DetailsView.Name} DataSource=""{entityName}"" />
+            <{(Config.GenerateComponents ? "" : "Auto")}{DetailsView.Name} DataSource=""{entityName}"" />
             <ErrorView Response=""{entityName}!.StatusResponse"" />
 
             <button id=""delete"" class=""btn btn-danger"" @onclick=""{entityName}.HandleDelete"">🗑️ Delete</button>
@@ -169,7 +176,7 @@ public class DeleteViewGenerator : BaseGenerator
     }}
 }}";
 
-        Save();
+        
     }
 
 }

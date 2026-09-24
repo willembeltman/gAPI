@@ -21,10 +21,15 @@ public record FrontendConfig(
 
     DirectoryInfo? ComponentsDirectory,
     string? ComponentsNamespace,
-    bool GenerateIsPage = true
-,
-    bool GenerateComponents = false,
-    string[] SkipFiles = null)
+
+    bool GenerateIsPage,
+    bool GenerateComponents,
+
+    bool OverwritePages,
+    bool OverwriteComponents,
+    bool OverwriteImports,
+
+    string[]? SkipFiles)
 {
     //public Assembly[] Assemblies { get; } = AssembliesToSearch;
     //public string[] BaseNamespaces { get; set; } = BaseNamespacesToFilter;

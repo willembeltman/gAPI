@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
@@ -8,6 +9,7 @@ public class IndexViewGenerator : BaseGenerator
 {
     public IndexViewGenerator(
         CrudType crudType,
+        FrontendConfig config,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -23,6 +25,7 @@ public class IndexViewGenerator : BaseGenerator
         string? @namespace)
     {
         CrudType = crudType;
+        Config = config;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         IClientAuthenticatedHttpClient = iClientAuthenticatedHttpClient;
@@ -38,6 +41,7 @@ public class IndexViewGenerator : BaseGenerator
     }
 
     public CrudType CrudType { get; }
+    public FrontendConfig Config { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference IClientAuthenticatedHttpClient { get; }
@@ -51,7 +55,10 @@ public class IndexViewGenerator : BaseGenerator
         if (CrudType.ListMethod == null) return;
 
         // Imports registreren
-        Imports.Reg(ListView);
+        if (Config.GenerateComponents)
+            Imports.Reg(ListView);
+        else
+            Imports.Reg("gAPI.Generated.Components");
         Imports.Reg(LoaderView);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg(ListDataSource);
@@ -84,7 +91,7 @@ public class IndexViewGenerator : BaseGenerator
             {{
                 <a id=""createnew"" href=""/{pluralName}/create"">➕ Create a new {entityName.ToLower()}</a>
             }}
-            <{ListView.Name} DataSource=""{entityName.ToMultiple()}"" />
+            <{(Config.GenerateComponents ? "" : "Auto")}{ListView.Name} DataSource=""{entityName.ToMultiple()}"" />
         </{LoaderView.Name}>
     </Authorized>
     <NotAuthorized>
@@ -140,6 +147,6 @@ public class IndexViewGenerator : BaseGenerator
     }}
 }}";
 
-        Save();
+        
     }
 }

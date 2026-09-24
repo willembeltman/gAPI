@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
+using gAPI.CodeGen.Frontend.Models.Configs;
 using gAPI.CodeGen.Frontend.Models.CrudsModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
@@ -8,6 +9,7 @@ public class EditViewGenerator : BaseGenerator
 {
     public EditViewGenerator(
         CrudType crudType,
+        FrontendConfig config,
         ISharedReference itemDataSource,
         ISharedReference listDataSource,
         ISharedReference baseResponse,
@@ -23,6 +25,7 @@ public class EditViewGenerator : BaseGenerator
         string? @namespace)
     {
         CrudType = crudType;
+        Config = config;
         ItemDataSource = itemDataSource;
         ListDataSource = listDataSource;
         BaseResponse = baseResponse;
@@ -43,6 +46,7 @@ public class EditViewGenerator : BaseGenerator
     }
 
     public CrudType CrudType { get; }
+    public FrontendConfig Config { get; }
     public ISharedReference ItemDataSource { get; }
     public ISharedReference ListDataSource { get; }
     public ISharedReference FormView { get; }
@@ -66,13 +70,16 @@ public class EditViewGenerator : BaseGenerator
         Imports.Reg(ItemDataSource);
         Imports.Reg(ListDataSource);
         Imports.Reg(LoaderView);
-        Imports.Reg(FormView);
         Imports.Reg(ErrorView);
         Imports.Reg(RedirectToLoginView);
         Imports.Reg(IClientAuthenticatedHttpClient);
         Imports.Reg("Microsoft.AspNetCore.Components");
         Imports.Reg("Microsoft.AspNetCore.Components.Forms");
         Imports.Reg("Microsoft.JSInterop");
+        if (Config.GenerateComponents)
+            Imports.Reg(FormView);
+        else
+            Imports.Reg("gAPI.Generated.Components");
 
         var entityName = CrudType.Name;
         var keyType = CrudType.KeyProperty.TypeSimpleName;
@@ -114,7 +121,7 @@ public class EditViewGenerator : BaseGenerator
             <EditForm Model=""{entityName}!.Model"" OnValidSubmit=""{entityName}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
+                <{(Config.GenerateComponents ? "" : "Auto")}{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
                 .Where(p => p.IsImmutable)
                 .Select(p => p.Name))}""" : "")} />
                 <{ErrorView.Name} Response=""{entityName}.StatusResponse"" />
@@ -194,6 +201,6 @@ public class EditViewGenerator : BaseGenerator
     }}
 }}";
 
-        Save();
+        
     }
 }
