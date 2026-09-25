@@ -27,6 +27,12 @@ await gAPI.Fabric.Server.StartAsync();
 
 The Fabric server manages the connections between the different API hosts in your application.
 
+## Monitoring
+
+The runtime is independent from the commandline dashboard. When Fabric is hosted by an API, use `FabricServer.GetDashboardSnapshot()` to obtain an immutable, UI-neutral view of connections, services, throughput, sessions, and users. The returned `FabricDashboardSnapshot` can be serialized directly from an API endpoint or consumed by another frontend.
+
+The commandline started through `FabricProgram.StartAsync()` uses that same snapshot, so the terminal and a future API frontend stay aligned without sharing presentation code.
+
 ## Communication Flow
 
 A client normally connects to an API through gAPI.

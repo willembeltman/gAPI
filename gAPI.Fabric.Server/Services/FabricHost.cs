@@ -31,7 +31,7 @@ public sealed class FabricHost : IFabricLoggerFactory
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceiveLogger = new();
 
-    private string GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    private long GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
         var interval = 1.0;
         var now = Stopwatch.Elapsed.TotalSeconds;
@@ -40,22 +40,28 @@ public sealed class FabricHost : IFabricLoggerFactory
         while (queue.TryPeek(out var entry) && entry.time < now - interval)
             queue.TryDequeue(out _);
 
-        var bytes = queue.Sum(x => x.bytes);
-
-        return bytes switch
-        {
-            < 1024 => $"{bytes}b/sec",
-            < 1024 * 1024 => $"{bytes / 1024}kb/sec",
-            < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)}mb/sec",
-            < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)}gb/sec",
-            _ => $"{bytes / (1024L * 1024 * 1024 * 1024)}tb/sec"
-        };
+        return queue.Sum(x => x.bytes);
     }
-    public string GetSendSpeed() => GetSpeed(SendLogger);
-    public string GetReceiveSpeed() => GetSpeed(ReceiveLogger);
+    public long GetSendBytesPerSecond() => GetSpeed(SendLogger);
+    public long GetReceiveBytesPerSecond() => GetSpeed(ReceiveLogger);
+
+    [Obsolete("Use GetSendBytesPerSecond instead.")]
+    public string GetSendSpeed() => FormatSpeed(GetSendBytesPerSecond());
+
+    [Obsolete("Use GetReceiveBytesPerSecond instead.")]
+    public string GetReceiveSpeed() => FormatSpeed(GetReceiveBytesPerSecond());
+
+    private static string FormatSpeed(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes}b/sec",
+        < 1024 * 1024 => $"{bytes / 1024}kb/sec",
+        < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)}mb/sec",
+        < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)}gb/sec",
+        _ => $"{bytes / (1024L * 1024 * 1024 * 1024)}tb/sec"
+    };
 
     private FabricHostCollection Connections => Manager.Connections;
-    private IConsole Console => Manager.Console;
+    private IFabricStatusSink StatusSink => Manager.StatusSink;
 
     public FabricHost(
         FabricManager manager,
@@ -232,9 +238,7 @@ public sealed class FabricHost : IFabricLoggerFactory
 
     private async Task ReceiveLoop()
     {
-        Console.WriteLine();
-        Console.WriteLine($"FabricHost {FabricConnectionId} started");
-        Console.WriteLine();
+        StatusSink.WriteInfo($"FabricHost {FabricConnectionId} started");
 
         try
         {
@@ -364,16 +368,11 @@ public sealed class FabricHost : IFabricLoggerFactory
         catch (Exception ex)
         {
             Logger.LogError(ex, "ReceiveLoop");
-            Console.WriteLine();
-            Console.WriteLine($"FabricClient #{FabricConnectionId.Value}: Exception occured, restarting fabric client", ConsoleColor.Red);
-            Console.WriteLine($"{ex}");
-            Console.WriteLine();
+            StatusSink.WriteError($"FabricClient #{FabricConnectionId.Value}: receive loop failed.", ex);
         }
         Dispose();
 
-        Console.WriteLine();
-        Console.WriteLine($"!FabricHost {FabricConnectionId} stopped");
-        Console.WriteLine();
+        StatusSink.WriteInfo($"FabricHost {FabricConnectionId} stopped");
     }
 
     public void Dispose()

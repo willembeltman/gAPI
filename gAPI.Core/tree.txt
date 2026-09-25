@@ -1,0 +1,199 @@
+Folder PATH listing for volume Storage space
+Volume serial number is 5247-44A6
+D:.
+¦   gAPI.Core.csproj
+¦   README.md
+¦   servers.dgml
+¦   test.dgml
+¦   tree.txt
+¦   
++---Attributes
+¦       GenerateApiAttribute.cs
+¦       GenerateHubAttribute.cs
+¦       GenerateMinimalApiAttribute.cs
+¦       GenerateSerializerAttribute.cs
+¦       HasLinkAttribute.cs
+¦       IsAuthorizedAttribute.cs
+¦       IsCompareAttribute.cs
+¦       IsComparerAttribute.cs
+¦       IsComponentAttribute.cs
+¦       IsCreateAttribute.cs
+¦       IsDeleteAttribute.cs
+¦       IsEntryPointAttribute.cs
+¦       IsFileDeleteAttribute.cs
+¦       IsFileUpdateAttribute.cs
+¦       IsForeignKeyAttribute.cs
+¦       IsForeignNameAttribute.cs
+¦       IsFormFileAttribute.cs
+¦       IsFormFileExtentionAttribute.cs
+¦       IsHiddenAttribute.cs
+¦       IsImmutableAttribute.cs
+¦       IsJunctionTableAttribute.cs
+¦       IsListAttribute.cs
+¦       IsListByAttribute.cs
+¦       IsListNotByAttribute.cs
+¦       IsLoginPageAttribute.cs
+¦       IsLogoffPageAttribute.cs
+¦       IsNameAttribute.cs
+¦       IsNotAuthorizedAttribute.cs
+¦       IsPageAttribute.cs
+¦       IsPasswordAttribute.cs
+¦       IsReadAttribute.cs
+¦       IsReadOnlyAttribute.cs
+¦       IsStateAttribute.cs
+¦       IsStateDtoAttribute.cs
+¦       IsStateManagedAttribute.cs
+¦       IsStorageFileUrlPropertyAttribute.cs
+¦       IsUpdateAttribute.cs
+¦       IsUserAttribute.cs
+¦       TitleAttribute.cs
+¦       
++---AttributesSerializers
+¦       IsCreateCopyAttribute.cs
+¦       IsMultipartFormDataContentSerializerAttribute.cs
+¦       IsSerializerReadAttribute.cs
+¦       IsSerializerWriteAttribute.cs
+¦       IsSpanSerializerLengthAttribute.cs
+¦       IsSpanSerializerReadAttribute.cs
+¦       IsSpanSerializerWriteAttribute.cs
+¦       
++---bin
+¦   +---Debug
+¦       +---net10.0
+¦               gAPI.Core.deps.json
+¦               gAPI.Core.dll
+¦               gAPI.Core.pdb
+¦               
++---Delegates
+¦       StateChangedHandler.cs
+¦       
++---Dtos
+¦       AuthStateDto.cs
+¦       AuthStateUserDto.cs
+¦       BaseListResponseT.cs
+¦       BaseResponse.cs
+¦       BaseResponseT.cs
+¦       DataChunkDto.cs
+¦       InitializeDto.cs
+¦       InvokeRequestCancelledClientDto.cs
+¦       InvokeRequestCancelledDto.cs
+¦       InvokeRequestClientDto.cs
+¦       InvokeRequestDoneClientDto.cs
+¦       InvokeRequestDoneDto.cs
+¦       InvokeRequestDto.cs
+¦       RequestArgumentIndexDto.cs
+¦       RequestArgumentIndexStreamDto.cs
+¦       RoutingDto.cs
+¦       SendClearSessionDto.cs
+¦       SendGetSessionCookieDataDto.cs
+¦       SendGetSessionCookieDataResponseDto.cs
+¦       SendRequestCancelledClientDto.cs
+¦       SendRequestCancelledDto.cs
+¦       SendRequestClientDto.cs
+¦       SendRequestDoneClientDto.cs
+¦       SendRequestDoneDto.cs
+¦       SendRequestDto.cs
+¦       StreamingRequestClientDto.cs
+¦       StreamingRequestDto.cs
+¦       StreamingResponseClientDto.cs
+¦       StreamingResponseDto.cs
+¦       SubscribeDto.cs
+¦       SynchronizeClientIdsDto.cs
+¦       SynchronizeFabricIdsDto.cs
+¦       UnsubscribeDto.cs
+¦       UpdateSessionDto.cs
+¦       
++---Enums
+¦       BaseResponseErrorEnum.cs
+¦       FormattingOption.cs
+¦       WssClientToServerMessageEnum.cs
+¦       WssServerToClientMessageEnum.cs
+¦       
++---Extensions
+¦       GuidToStringExtention.cs
+¦       StringHelper.cs
+¦       UriExtensions.cs
+¦       
++---Helpers
+¦       DataChunkStreamSeekableReader.cs
+¦       EnvironmentPathHelper.cs
+¦       IRemoteAsyncEnumerator.cs
+¦       LinkedLinkedCancellationTokenSourceWithTimeout.cs
+¦       RemoteAsyncEnumerable.cs
+¦       RemoteAsyncEnumerable2.cs
+¦       RemoteException.cs
+¦       ResettableTimeout.cs
+¦       
++---Ids
+¦       ClientConnectionId.cs
+¦       FabricConnectionId.cs
+¦       FabricManagerId.cs
+¦       RequestId.cs
+¦       ServiceId.cs
+¦       ServiceMethodId.cs
+¦       ServiceSubscriptionId.cs
+¦       SessionId.cs
+¦       SseManagerId.cs
+¦       StreamId.cs
+¦       UserId.cs
+¦       
++---Interfaces
+¦       IAccountService.cs
+¦       ICrudEntity.cs
+¦       IReadonlyStorageFileDto.cs
+¦       IStateParser.cs
+¦       IStorageFileDto.cs
+¦       IWssLoggerFactory.cs
+¦       
++---obj
+¦   ¦   gAPI.Core.csproj.nuget.dgspec.json
+¦   ¦   gAPI.Core.csproj.nuget.g.props
+¦   ¦   gAPI.Core.csproj.nuget.g.targets
+¦   ¦   project.assets.json
+¦   ¦   project.nuget.cache
+¦   ¦   
+¦   +---Debug
+¦       +---net10.0
+¦           ¦   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+¦           ¦   gAPI.Core.AssemblyInfo.cs
+¦           ¦   gAPI.Core.AssemblyInfoInputs.cache
+¦           ¦   gAPI.Core.assets.cache
+¦           ¦   gAPI.Core.csproj.AssemblyReference.cache
+¦           ¦   gAPI.Core.csproj.BuildWithSkipAnalyzers
+¦           ¦   gAPI.Core.csproj.CoreCompileInputs.cache
+¦           ¦   gAPI.Core.csproj.FileListAbsolute.txt
+¦           ¦   gAPI.Core.dll
+¦           ¦   gAPI.Core.GeneratedMSBuildEditorConfig.editorconfig
+¦           ¦   gAPI.Core.GlobalUsings.g.cs
+¦           ¦   gAPI.Core.pdb
+¦           ¦   gAPI.Core.sourcelink.json
+¦           ¦   
+¦           +---ref
+¦           ¦       gAPI.Core.dll
+¦           ¦       
+¦           +---refint
+¦                   gAPI.Core.dll
+¦                   
++---Serializers
+¦       DateTimeOffsetSerializers.cs
+¦       DateTimeSerializers.cs
+¦       DefaultStateParser.cs
+¦       GuidSerializer.cs
+¦       IFormFileSerializer.cs
+¦       PrimitivesSpanSerializer.cs
+¦       WssClientToServerMessageEnumSerializer.cs
+¦       WssServerToClientMessageEnumSerializer.cs
+¦       
++---Sse
+¦       ApiResult.cs
+¦       ApiResultT.cs
+¦       HubResult.cs
+¦       HubResultT.cs
+¦       SseEvent.cs
+¦       
++---Wss
+        GapiLogger.cs
+        WssConverter.cs
+        WssLoggerConfig.cs
+        WssLoggerLogDto.cs
+        

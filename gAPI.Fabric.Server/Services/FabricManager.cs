@@ -2,6 +2,8 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
+using gAPI.Fabric.Server.Interfaces;
+using gAPI.Fabric.Server.Monitoring;
 using gAPI.Fabric.Server.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -19,13 +21,20 @@ public class FabricManager
     public readonly ConcurrentDictionary<RequestId, RequestState> OpenRequests;
     public readonly Service Logging;
     public readonly Service System;
-    public readonly IConsole Console;
-    public event EventHandler? OnUpdate;
+    internal IFabricStatusSink StatusSink { get; }
+    public event EventHandler? Changed;
 
-    public FabricManager(IConsole console)
+    [Obsolete("Use Changed instead.")]
+    public event EventHandler? OnUpdate
+    {
+        add => Changed += value;
+        remove => Changed -= value;
+    }
+
+    public FabricManager(IFabricStatusSink? statusSink = null)
     {
         FabricManagerId = FabricManagerId.New();
-        Console = console;
+        StatusSink = statusSink ?? NullFabricStatusSink.Instance;
         SessionCache = new();
         Connections = new();
         Services = new(this);
@@ -36,13 +45,19 @@ public class FabricManager
         //Logging = Services[new ServiceId("")];
     }
 
+    [Obsolete("Use FabricManager(IFabricStatusSink?) instead.")]
+    public FabricManager(IConsole console)
+        : this(new ConsoleStatusSinkAdapter(console))
+    {
+    }
+
     public void StartNewFabricHost(TcpClient tcpClient)
     {
         // FabricHost abonneert zichzelf op connections
         var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
 
-        OnUpdate?.Invoke(this, new EventArgs());
+        NotifyChanged();
     }
 
     public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
@@ -87,7 +102,7 @@ public class FabricManager
             await Services[subscribe.ServiceId]
                 .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
-            OnUpdate?.Invoke(this, new EventArgs());
+            NotifyChanged();
         }, ct);
     }
     public async Task Receive_Unsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
@@ -100,7 +115,7 @@ public class FabricManager
             await Services[unsubscribe.ServiceId]
                 .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
 
-            OnUpdate?.Invoke(this, new EventArgs());
+            NotifyChanged();
         }, ct);
     }
 
@@ -435,8 +450,33 @@ public class FabricManager
         foreach (var conn in Connections)
             conn.Dispose();
 
-        OnUpdate?.Invoke(this, new EventArgs());
+        NotifyChanged();
     }
+
+    public FabricDashboardSnapshot GetDashboardSnapshot(int port)
+    {
+        var connections = Connections
+            .Select(connection => new FabricConnectionSnapshot(
+                connection.FabricConnectionId.Value,
+                connection.GetSendBytesPerSecond(),
+                connection.GetReceiveBytesPerSecond()))
+            .OrderBy(connection => connection.ConnectionId)
+            .ToArray();
+
+        var services = Services
+            .Select(service => new FabricServiceSnapshot(
+                service.Id.ToString(),
+                service.GetSendSpeed() + service.Sessions.Sum(session => session.GetSendSpeed()) + service.Users.Sum(user => user.GetSendSpeed()),
+                service.GetReceiveSpeed() + service.Sessions.Sum(session => session.GetReceiveSpeed()) + service.Users.Sum(user => user.GetReceiveSpeed()),
+                service.Sessions.Count,
+                service.Users.Count))
+            .OrderBy(service => service.ServiceId, StringComparer.Ordinal)
+            .ToArray();
+
+        return new FabricDashboardSnapshot(DateTimeOffset.UtcNow, port, connections, services);
+    }
+
+    private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
     public async Task DisposeAsync()
     {

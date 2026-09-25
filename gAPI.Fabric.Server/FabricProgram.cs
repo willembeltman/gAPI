@@ -1,160 +1,39 @@
-﻿using gAPI.Fabric.Server.Config;
+using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.ConsoleHelper;
-using gAPI.Fabric.Server.Models;
 using gAPI.Fabric.Server.Services;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace gAPI.Fabric.Server;
 
-public class FabricProgram
+public static class FabricProgram
 {
-    private static string GetSpeed(long bytes)
+    public static async Task StartAsync(int port = 9494, CancellationToken cancellationToken = default)
     {
-        return bytes switch
+        var config = new FabricConfig { Port = port };
+
+        if (!CanRenderConsole())
         {
-            < 1024 => $"{bytes}b/sec",
-            < 1024 * 1024 => $"{bytes / 1024}kb/sec",
-            < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)}mb/sec",
-            < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)}gb/sec",
-            _ => $"{bytes / (1024L * 1024 * 1024 * 1024)}tb/sec"
-        };
+            await using var server = new FabricServer(config.Port);
+            await server.StartAsync();
+            return;
+        }
+
+        var dashboard = new FabricConsoleDashboard();
+        await using var interactiveServer = new FabricServer(config.Port, dashboard);
+        var serverTask = interactiveServer.StartAsync();
+
+        await dashboard.RunAsync(interactiveServer, cancellationToken);
+        await serverTask;
     }
-    public static async Task StartAsync(int port = 9494)
+
+    private static bool CanRenderConsole()
     {
-        Thread.Sleep(200);
-
-        Console.WriteLine("Getting the config...");
-        //var config = await FabricConfig.LoadAsync();
-
-        var config = new FabricConfig()
-        {
-            Port = port
-        };
-
-        //WssLoggerConfig.MinimumLevel = LogLevel.Trace;
-
-        var textArea = new ScrollWindow("Fabric Hub", new(2, 1), new(116, 12));
-        var connections = new ScrollWindow("Connections", new(2, 14), new(30, 15));
-        var subscriptions = new ScrollWindow("Subscriptions", new(34, 14), new(84, 15));
-
-        textArea.SetItems(
-        [
-            new ColorLine () { Text = "Server started!"},
-            new ColorLine () { Text = $"Port: {port}" },
-            new ColorLine () { Text = "" },
-            new ColorLine () { Text = "press q to exit..." },
-            new ColorLine () { Text = "press r to restart all connections..." }
-        ]);
-
-        var screen = new Screen([textArea, connections, subscriptions]);
-
-        Console.WriteLine("Setup server...");
-        await using var server = new FabricServer(config.Port, textArea);
-
-        Console.WriteLine("Starting server...");
-        var windowwidth = 0;
         try
         {
-            windowwidth = Console.WindowWidth;
+            return !Console.IsOutputRedirected && Console.WindowWidth >= 10;
         }
-        catch { }
-        if (windowwidth < 10)
+        catch (IOException)
         {
-            await server.StartAsync();
-            return; /////////////////////////////// STOP //////////////////////////////////
-        }
-
-        _ = Task.Run(server.StartAsync);
-
-        var width = 0;
-        var height = 0;
-        var dirty = false;
-
-        server.Manager.OnUpdate += (sender, e) => { dirty = true; };
-
-        static IEnumerable<ColorLine> Get(Service a)
-        {
-            return
-            [
-                new ColorLine() { Text = $"{a.Id} "+
-                $"S:{GetSpeed(a.GetSendSpeed() + a.Sessions.Sum(a => a.GetSendSpeed()) + a.Users.Sum(a => a.GetSendSpeed()))} "+
-                $"R:{GetSpeed(a.GetReceiveSpeed() + a.Sessions.Sum(a => a.GetReceiveSpeed()) + a.Users.Sum(a => a.GetReceiveSpeed()))} "+
-                $"{a.Sessions.Count} sessions " +
-                $"{a.Users.Count} users "}
-                //,
-                //.. a.Sessions.Select(s => new ColorLine() { Text = $"- {s.Id} S:{s.GetSendSpeed()} R:{s.GetReceiveSpeed()}" })
-            ];
-        }
-
-        Stopwatch sw = Stopwatch.StartNew();
-        var sec = 1;
-
-        while (true)
-        {
-            await Task.Delay(40);
-
-            if (sw.Elapsed.TotalSeconds > sec)
-            {
-                dirty = true;
-                sec++;
-            }
-
-            if (dirty)
-            {
-                dirty = false;
-                connections.SetItems([.. server.Manager.Connections
-                    .Select(a => new ColorLine()
-                    {
-                        Text = $"Node {a.FabricConnectionId} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
-                    })]);
-                subscriptions.SetItems([.. server.Manager.Services.OrderBy(a => a.Id.Value).SelectMany(Get)]);
-            }
-
-            var resized = false;
-            if (Console.WindowWidth != width || Console.WindowHeight != height)
-            {
-                width = Console.WindowWidth;
-                height = Console.WindowHeight;
-                resized = true;
-            }
-            screen.Render(resized);
-
-            if (Console.KeyAvailable)
-            {
-                var key = Console.ReadKey(true).Key;
-                // wait for q to exit
-                if (key == ConsoleKey.Q)
-                    break;
-                if (key == ConsoleKey.R)
-                {
-                    textArea.WriteLine("Restarting, please wait");
-                    textArea.WriteLine();
-                    await server.DisconnectAllAsync();
-                }
-                if (key == ConsoleKey.C)
-                {
-                    textArea.WriteLine("Clearing logs");
-                    textArea.WriteLine();
-                    textArea.SetItems([]);
-                }
-                if (key == ConsoleKey.S)
-                {
-                    textArea.WriteLine("Showing stats");
-                }
-                if (key == ConsoleKey.Tab)
-                {
-                    screen.SelectNext();
-                }
-                if (key == ConsoleKey.UpArrow)
-                {
-                    screen.Up();
-                }
-                if (key == ConsoleKey.DownArrow)
-                {
-                    screen.Down();
-                }
-            }
+            return false;
         }
     }
 }

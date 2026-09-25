@@ -1,0 +1,109 @@
+Folder PATH listing for volume Storage space
+Volume serial number is 5247-44A6
+D:.
+¦   gAPI.Core.Client.csproj
+¦   README.md
+¦   tree.txt
+¦   
++---bin
+¦   +---Debug
+¦       +---net10.0
+¦               gAPI.Core.Client.deps.json
+¦               gAPI.Core.Client.dll
+¦               gAPI.Core.Client.pdb
+¦               gAPI.Core.Client.staticwebassets.endpoints.json
+¦               gAPI.Core.Client.staticwebassets.runtime.json
+¦               gAPI.Core.dll
+¦               gAPI.Core.pdb
+¦               
++---Collections
+¦       SseManagerCollection.cs
+¦       
++---Config
+¦       ClientConfig.cs
+¦       
++---Extensions
+¦       CreateClientConfigExtention.cs
+¦       
++---Helpers
+¦       AsyncEnumerableRegistration.cs
+¦       
++---Interfaces
+¦       IClientAuthenticatedHttpClient.cs
+¦       ISseClientConnection.cs
+¦       IUriNavigationManager.cs
+¦       IWssClientConnection.cs
+¦       
++---Navigation
+¦       DefaultNavigationManager.cs
+¦       StaticNavigationManager.cs
+¦       
++---obj
+¦   ¦   gAPI.Core.Client.csproj.nuget.dgspec.json
+¦   ¦   gAPI.Core.Client.csproj.nuget.g.props
+¦   ¦   gAPI.Core.Client.csproj.nuget.g.targets
+¦   ¦   project.assets.json
+¦   ¦   project.nuget.cache
+¦   ¦   
+¦   +---Debug
+¦       +---net10.0
+¦           ¦   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+¦           ¦   EmbeddedAttribute.cs
+¦           ¦   gAPI.Cor.0FD6E3E4.Up2Date
+¦           ¦   gAPI.Core.Client.AssemblyInfo.cs
+¦           ¦   gAPI.Core.Client.AssemblyInfoInputs.cache
+¦           ¦   gAPI.Core.Client.assets.cache
+¦           ¦   gAPI.Core.Client.csproj.AssemblyReference.cache
+¦           ¦   gAPI.Core.Client.csproj.BuildWithSkipAnalyzers
+¦           ¦   gAPI.Core.Client.csproj.CoreCompileInputs.cache
+¦           ¦   gAPI.Core.Client.csproj.FileListAbsolute.txt
+¦           ¦   gAPI.Core.Client.dll
+¦           ¦   gAPI.Core.Client.GeneratedMSBuildEditorConfig.editorconfig
+¦           ¦   gAPI.Core.Client.GlobalUsings.g.cs
+¦           ¦   gAPI.Core.Client.pdb
+¦           ¦   gAPI.Core.Client.sourcelink.json
+¦           ¦   rjsmcshtml.dswa.cache.json
+¦           ¦   rjsmrazor.dswa.cache.json
+¦           ¦   rpswa.dswa.cache.json
+¦           ¦   staticwebassets.build.endpoints.json
+¦           ¦   staticwebassets.build.json
+¦           ¦   staticwebassets.build.json.cache
+¦           ¦   staticwebassets.development.json
+¦           ¦   staticwebassets.publish.endpoints.json
+¦           ¦   staticwebassets.publish.json
+¦           ¦   staticwebassets.references.upToDateCheck.txt
+¦           ¦   staticwebassets.removed.txt
+¦           ¦   swae.build.ex.cache
+¦           ¦   swae.publish.ex.cache
+¦           ¦   ValidatableTypeAttribute.cs
+¦           ¦   
+¦           +---ref
+¦           ¦       gAPI.Core.Client.dll
+¦           ¦       
+¦           +---refint
+¦           ¦       gAPI.Core.Client.dll
+¦           ¦       
+¦           +---staticwebassets
+¦                   msbuild.build.gAPI.Core.Client.props
+¦                   msbuild.buildMultiTargeting.gAPI.Core.Client.props
+¦                   msbuild.buildTransitive.gAPI.Core.Client.props
+¦                   
++---Razor
+¦       ErrorView.razor
+¦       FormFile.cs
+¦       ItemDataSource.cs
+¦       ListDataSource.cs
+¦       LoaderView.razor
+¦       RedirectToHome.razor
+¦       RedirectToLogin.razor
+¦       ToFormFileExtention.cs
+¦       WithCookiesHandler.cs
+¦       
++---Sse
+¦       SseClient.cs
+¦       SseClientConnection.cs
+¦       
++---Wss
+        WssClientConnection.cs
+        WssClientConnectionSender.cs
+        

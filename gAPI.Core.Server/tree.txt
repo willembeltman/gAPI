@@ -1,0 +1,181 @@
+Folder PATH listing for volume Storage space
+Volume serial number is 5247-44A6
+D:.
+¦   gAPI.Core.Server.csproj
+¦   README.md
+¦   tree.txt
+¦   
++---Authentication
+¦       AccountService.cs
+¦       AuthenticationDbContextFactory.cs
+¦       AuthenticationHandler.cs
+¦       AuthenticationHeaders.cs
+¦       AuthenticationInitializeResult.cs
+¦       AuthenticationMiddleware.cs
+¦       AuthenticationOptions.cs
+¦       AuthenticationSecurity.cs
+¦       AuthenticationService.cs
+¦       AuthenticationState.cs
+¦       AuthenticationStateFactory.cs
+¦       AuthenticationStateMapping.cs
+¦       IUserTokenFactory.cs
+¦       NoDbServerAuthenticationService.cs
+¦       RequestIds.cs
+¦       UserTokenFactory.cs
+¦       
++---bin
+¦   +---Debug
+¦       +---net10.0
+¦               gAPI.Core.dll
+¦               gAPI.Core.pdb
+¦               gAPI.Core.Server.deps.json
+¦               gAPI.Core.Server.dll
+¦               gAPI.Core.Server.pdb
+¦               
++---Collections
+¦       ServerConnectionCollection.cs
+¦       ServiceSubscriptionCollection.cs
+¦       SessionCache.cs
+¦       StreamingCache.cs
+¦       
++---Config
+¦       ServerConfig.cs
+¦       
++---Entities
+¦       AuthenticationDbContext.cs
+¦       AuthUser.cs
+¦       Ip.cs
+¦       Route.cs
+¦       Session.cs
+¦       UserIp.cs
+¦       UserIpSession.cs
+¦       UserIpSessionToken.cs
+¦       UserIpSessionTokenRoute.cs
+¦       UserIpSessionTokenRouteRequest.cs
+¦       UserToken.cs
+¦       
++---Enums
+¦       FabricClientToHostMessageEnum.cs
+¦       FabricHostToClientMessageEnum.cs
+¦       
++---Extensions
+¦       AddStorageExtention.cs
+¦       ApplyOrderByExtention.cs
+¦       CreateServerConfigExtention.cs
+¦       
++---Fabric
+¦       FabricClient.cs
+¦       FabricClientSender.cs
+¦       FabricConverter.cs
+¦       
++---Helpers
+¦       AsyncEnumerableRegistration.cs
+¦       StartupHelper.cs
+¦       
++---Interfaces
+¦       IAuthenticationCheck.cs
+¦       IAuthenticationSecurity.cs
+¦       IAuthenticationService.cs
+¦       IAuthenticationStateFactory.cs
+¦       IServerAuthenticationService.cs
+¦       IServerConnection.cs
+¦       IServiceSubscription.cs
+¦       IStateMapping.cs
+¦       IUseCase.cs
+¦       IWssServerConnection.cs
+¦       Mapping.cs
+¦       
++---obj
+¦   ¦   gAPI.Core.Server.csproj.nuget.dgspec.json
+¦   ¦   gAPI.Core.Server.csproj.nuget.g.props
+¦   ¦   gAPI.Core.Server.csproj.nuget.g.targets
+¦   ¦   project.assets.json
+¦   ¦   project.nuget.cache
+¦   ¦   
+¦   +---Debug
+¦       +---net10.0
+¦           ¦   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+¦           ¦   AppSettingsSchema.json
+¦           ¦   CombinedComponentSchema.json
+¦           ¦   gAPI.Cor.F9EE0EEC.Up2Date
+¦           ¦   gAPI.Core.Server.AssemblyInfo.cs
+¦           ¦   gAPI.Core.Server.AssemblyInfoInputs.cache
+¦           ¦   gAPI.Core.Server.assets.cache
+¦           ¦   gAPI.Core.Server.csproj.AssemblyReference.cache
+¦           ¦   gAPI.Core.Server.csproj.BuildWithSkipAnalyzers
+¦           ¦   gAPI.Core.Server.csproj.CoreCompileInputs.cache
+¦           ¦   gAPI.Core.Server.csproj.FileListAbsolute.txt
+¦           ¦   gAPI.Core.Server.dll
+¦           ¦   gAPI.Core.Server.GeneratedMSBuildEditorConfig.editorconfig
+¦           ¦   gAPI.Core.Server.GlobalUsings.g.cs
+¦           ¦   gAPI.Core.Server.pdb
+¦           ¦   gAPI.Core.Server.sourcelink.json
+¦           ¦   
+¦           +---ref
+¦           ¦       gAPI.Core.Server.dll
+¦           ¦       
+¦           +---refint
+¦                   gAPI.Core.Server.dll
+¦                   
++---Properties
+¦       launchSettings.json
+¦       
++---Sse
+¦       SseServiceSubscription.cs
+¦       
++---Storage
+¦   ¦   IReadonlyStorageFile.cs
+¦   ¦   IStorageFile.cs
+¦   ¦   IStorageService.cs
+¦   ¦   README.md
+¦   ¦   StorageFileInfo.cs
+¦   ¦   StorageService.cs
+¦   ¦   
+¦   +---AzureStorage
+¦   ¦       AzureStorageConfig.cs
+¦   ¦       AzureStorageService.cs
+¦   ¦       
+¦   +---Mock
+¦   ¦       FileKeyHashHelper.cs
+¦   ¦       MockFileData.cs
+¦   ¦       MockFileDataHelper.cs
+¦   ¦       MockStorageConfig.cs
+¦   ¦       MockStorageService.cs
+¦   ¦       
+¦   +---StorageServer
+¦       ¦   StorageServerConfig.cs
+¦       ¦   StorageServerService.cs
+¦       ¦   
+¦       +---Dtos
+¦       ¦   ¦   Credential.cs
+¦       ¦   ¦   
+¦       ¦   +---Requests
+¦       ¦   ¦       AppendRequest.cs
+¦       ¦   ¦       DeleteRequest.cs
+¦       ¦   ¦       DownloadRequest.cs
+¦       ¦   ¦       ExistsRequest.cs
+¦       ¦   ¦       GetStorageFileInfoRequest.cs
+¦       ¦   ¦       LoginRequest.cs
+¦       ¦   ¦       OpenRequest.cs
+¦       ¦   ¦       Request.cs
+¦       ¦   ¦       SaveRequest.cs
+¦       ¦   ¦       
+¦       ¦   +---Responses
+¦       ¦           AppendResponse.cs
+¦       ¦           DeleteResponse.cs
+¦       ¦           DownloadResponse.cs
+¦       ¦           ExistsResponse.cs
+¦       ¦           GetStorageFileInfoResponse.cs
+¦       ¦           LoginResponse.cs
+¦       ¦           OpenResponse.cs
+¦       ¦           Response.cs
+¦       ¦           SaveResponse.cs
+¦       ¦           
+¦       +---Enums
+¦               ErrorMessagesEnum.cs
+¦               
++---Wss
+        WssServerConnection.cs
+        WssServerConnectionSender.cs
+        WssServiceSubscription.cs
+        
