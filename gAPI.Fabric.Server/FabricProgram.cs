@@ -2,12 +2,24 @@
 using gAPI.Fabric.Server.ConsoleHelper;
 using gAPI.Fabric.Server.Models;
 using gAPI.Fabric.Server.Services;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace gAPI.Fabric.Server;
 
 public class FabricProgram
 {
+    private static string GetSpeed(long bytes)
+    {
+        return bytes switch
+        {
+            < 1024 => $"{bytes}b/sec",
+            < 1024 * 1024 => $"{bytes / 1024}kb/sec",
+            < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)}mb/sec",
+            < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)}gb/sec",
+            _ => $"{bytes / (1024L * 1024 * 1024 * 1024)}tb/sec"
+        };
+    }
     public static async Task StartAsync(int port = 9494)
     {
         Thread.Sleep(200);
@@ -65,7 +77,11 @@ public class FabricProgram
         {
             return
             [
-                new ColorLine() { Text = $"{a.Id} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()} {a.Sessions.Count} connections" }
+                new ColorLine() { Text = $"{a.Id} "+
+                $"S:{GetSpeed(a.GetSendSpeed() + a.Sessions.Sum(a => a.GetSendSpeed()) + a.Users.Sum(a => a.GetSendSpeed()))} "+
+                $"R:{GetSpeed(a.GetReceiveSpeed() + a.Sessions.Sum(a => a.GetReceiveSpeed()) + a.Users.Sum(a => a.GetReceiveSpeed()))} "+
+                $"{a.Sessions.Count} sessions " +
+                $"{a.Users.Count} users "}
                 //,
                 //.. a.Sessions.Select(s => new ColorLine() { Text = $"- {s.Id} S:{s.GetSendSpeed()} R:{s.GetReceiveSpeed()}" })
             ];
@@ -92,7 +108,7 @@ public class FabricProgram
                     {
                         Text = $"Node {a.FabricConnectionId} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
                     })]);
-                subscriptions.SetItems([.. server.Manager.Services.SelectMany(Get)]);
+                subscriptions.SetItems([.. server.Manager.Services.OrderBy(a => a.Id.Value).SelectMany(Get)]);
             }
 
             var resized = false;

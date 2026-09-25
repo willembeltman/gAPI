@@ -21,7 +21,7 @@ public record User(UserId Id) : IActor
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceiveLogger = new();
 
-    private string GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    private long GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
         var interval = 1.0;
         var now = Stopwatch.Elapsed.TotalSeconds;
@@ -30,19 +30,11 @@ public record User(UserId Id) : IActor
         while (queue.TryPeek(out var entry) && entry.time < now - interval)
             queue.TryDequeue(out _);
 
-        var bytes = queue.Sum(x => x.bytes);
+        return queue.Sum(x => x.bytes);
 
-        return bytes switch
-        {
-            < 1024 => $"{bytes}b/sec",
-            < 1024 * 1024 => $"{bytes / 1024}kb/sec",
-            < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)}mb/sec",
-            < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)}gb/sec",
-            _ => $"{bytes / (1024L * 1024 * 1024 * 1024)}tb/sec"
-        };
     }
-    public string GetSendSpeed() => GetSpeed(SendLogger);
-    public string GetReceiveSpeed() => GetSpeed(ReceiveLogger);
+    public long GetSendSpeed() => GetSpeed(SendLogger);
+    public long GetReceiveSpeed() => GetSpeed(ReceiveLogger);
 
     public void EnqueueSend(long size)
     {

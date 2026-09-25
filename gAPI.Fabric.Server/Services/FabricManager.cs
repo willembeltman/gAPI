@@ -2,13 +2,10 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
-using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Data.SqlTypes;
 using System.Net.Sockets;
-using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Services;
 
@@ -20,6 +17,8 @@ public class FabricManager
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
     public readonly ConcurrentDictionary<RequestId, RequestState> OpenRequests;
+    public readonly Service Logging;
+    public readonly Service System;
     public readonly IConsole Console;
     public event EventHandler? OnUpdate;
 
@@ -31,6 +30,10 @@ public class FabricManager
         Connections = new();
         Services = new(this);
         OpenRequests = new();
+
+        System = Services[new ServiceId("Fabric System")];
+        Logging = Services[new ServiceId("Fabric Logging")];
+        //Logging = Services[new ServiceId("")];
     }
 
     public void StartNewFabricHost(TcpClient tcpClient)
@@ -70,7 +73,7 @@ public class FabricManager
             string? cookieData = null;
             SessionCache.TryGet(sessionId, out cookieData);
             var getSessionCookieDataResponse = new SendGetSessionCookieDataResponseDto(sessionId, cookieData);
-            await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, null);
+            await caller.Send_GetSessionCookieDataResponse_ToApiAsync(getSessionCookieDataResponse, System);
         }, ct);
     }
 
@@ -309,7 +312,7 @@ public class FabricManager
                 return;
 
             state.ResetTimeout();
-            state.Actor?.EnqueueReceive(receiveSize);
+            state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var target in state.Targets)
             {
@@ -328,7 +331,7 @@ public class FabricManager
                 return;
 
             state.ResetTimeout();
-            state.Actor?.EnqueueReceive(receiveSize);
+            state.Actor.EnqueueReceive(receiveSize);
 
             if (response.IsCompleted ||
                 response.IsCancelled ||
@@ -399,7 +402,7 @@ public class FabricManager
                 return;
 
             state.ResetTimeout();
-            state.Actor?.EnqueueReceive(receiveSize);
+            state.Actor.EnqueueReceive(receiveSize);
 
             if (state.StreamRoutes.TryAdd(request.StreamId, caller))
             {
@@ -418,7 +421,7 @@ public class FabricManager
                 return;
 
             state.ResetTimeout();
-            state.Actor?.EnqueueReceive(receiveSize);
+            state.Actor.EnqueueReceive(receiveSize);
 
             if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
             {

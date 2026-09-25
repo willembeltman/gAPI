@@ -20,7 +20,7 @@ public sealed class FabricHost : IFabricLoggerFactory
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
     private readonly NetworkStream Stream;
-    private readonly Channel<(Action<BinaryWriter> write, IActor? actor)> SendQueue;
+    private readonly Channel<SendQueueItem> SendQueue;
     private readonly CancellationTokenSource Cts;
 
     public FabricConnectionId FabricConnectionId { get; }
@@ -65,7 +65,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         TcpClient = tcpClient;
         Cts = new CancellationTokenSource();
         Stream = tcpClient.GetStream();
-        SendQueue = Channel.CreateUnbounded<(Action<BinaryWriter> write, IActor? actor)>();
+        SendQueue = Channel.CreateUnbounded<SendQueueItem>();
         FabricConnectionId = Connections.AddConnection(this);
         Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
         ManagerLogger = ((ILoggerFactory)this).CreateLogger<FabricManager>();
@@ -77,7 +77,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         _ = Task.Run(SendLoop);
     }
 
-    public async Task Send_SendRequest_ToApiAsync(SendRequestDto request, IActor? actor)
+    public async Task Send_SendRequest_ToApiAsync(SendRequestDto request, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_SendRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), request, actor);
@@ -87,7 +87,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(request);
         }, actor);
     }
-    public async Task Send_SendRequestCancelled_ToApiAsync(SendRequestCancelledDto cancel, IActor? actor)
+    public async Task Send_SendRequestCancelled_ToApiAsync(SendRequestCancelledDto cancel, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_SendRequestCancelled_ToApiAsync({cancel}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, actor);
@@ -97,7 +97,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(cancel);
         }, actor);
     }
-    public async Task Send_SendRequestDone_ToApiAsync(SendRequestDoneDto done, IActor? actor)
+    public async Task Send_SendRequestDone_ToApiAsync(SendRequestDoneDto done, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_SendRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), done, actor);
@@ -118,7 +118,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(request);
         }, actor);
     }
-    public async Task Send_InvokeRequestCancelled_ToApiAsync(InvokeRequestCancelledDto cancel, IActor? actor)
+    public async Task Send_InvokeRequestCancelled_ToApiAsync(InvokeRequestCancelledDto cancel, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_InvokeRequestCancelled_ToApiAsync({cancel}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, actor);
@@ -128,7 +128,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(cancel);
         }, actor);
     }
-    public async Task Send_InvokeRequestDone_ToApiAsync(InvokeRequestDoneDto done, IActor? actor)
+    public async Task Send_InvokeRequestDone_ToApiAsync(InvokeRequestDoneDto done, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_InvokeRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), done, actor);
@@ -139,7 +139,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         }, actor);
     }
 
-    public async Task Send_StreamingRequestServerToClient_ToApiAsync(StreamingRequestDto request, IActor? actor)
+    public async Task Send_StreamingRequestServerToClient_ToApiAsync(StreamingRequestDto request, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_StreamingRequestServerToClient_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), request, actor);
@@ -149,7 +149,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(request);
         }, actor);
     }
-    public async Task Send_StreamingResponseServerToClient_ToApiAsync(StreamingResponseDto response, IActor? actor)
+    public async Task Send_StreamingResponseServerToClient_ToApiAsync(StreamingResponseDto response, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_StreamingResponseServerToClient_ToApiAsync({response}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), response, actor);
@@ -160,7 +160,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         }, actor);
     }
 
-    public async Task Send_StreamingRequestClientToServer_ToApiAsync(StreamingRequestDto request, IActor? actor)
+    public async Task Send_StreamingRequestClientToServer_ToApiAsync(StreamingRequestDto request, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_StreamingRequestClientToServer_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), request, actor);
@@ -170,7 +170,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(request);
         }, actor);
     }
-    public async Task Send_StreamingResponseClientToServer_ToApiAsync(StreamingResponseDto response, IActor? actor)
+    public async Task Send_StreamingResponseClientToServer_ToApiAsync(StreamingResponseDto response, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_StreamingResponseClientToServer_ToApiAsync({response}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), response, actor);
@@ -181,7 +181,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         }, actor);
     }
 
-    public async Task Send_GetSessionCookieDataResponse_ToApiAsync(SendGetSessionCookieDataResponseDto response, IActor? actor)
+    public async Task Send_GetSessionCookieDataResponse_ToApiAsync(SendGetSessionCookieDataResponseDto response, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_GetSessionCookieDataResponse_ToApiAsync({response}, {actor})", DateTime.Now.ToString("HH:mm:ss.fff"), response, actor);
@@ -191,7 +191,7 @@ public sealed class FabricHost : IFabricLoggerFactory
             writer.Write(response);
         }, actor);
     }
-    private async Task Send_SynchronizeFabricIds_ToApiAsync(SynchronizeFabricIdsDto ids, IActor? actor)
+    private async Task Send_SynchronizeFabricIds_ToApiAsync(SynchronizeFabricIdsDto ids, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Send_SynchronizeFabricIds_ToApiAsync({ids}, {actor})", DateTime.Now.ToString("HH:mm:ss.fff"), ids, actor);
@@ -209,7 +209,7 @@ public sealed class FabricHost : IFabricLoggerFactory
 
         await Send_SynchronizeFabricIds_ToApiAsync(new SynchronizeFabricIdsDto(
             Manager.FabricManagerId,
-            FabricConnectionId), null);
+            FabricConnectionId), Manager.System);
 
         var previous = counter.BytesWritten;
         await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
@@ -220,12 +220,12 @@ public sealed class FabricHost : IFabricLoggerFactory
 
             var size = counter.BytesWritten - previous;
             previous = counter.BytesWritten;
-            item.actor?.EnqueueSend(size);
+            item.actor.EnqueueSend(size);
             SendLogger.Enqueue(new(Stopwatch.Elapsed.TotalSeconds, size));
         }
         Dispose();
     }
-    private async Task Enqueue(Action<BinaryWriter> write, IActor? actor = null)
+    private async Task Enqueue(Action<BinaryWriter> write, IActor actor)
     {
         await SendQueue.Writer.WriteAsync(new(write, actor));
     }
@@ -392,7 +392,7 @@ public sealed class FabricHost : IFabricLoggerFactory
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
             writer.Write(dto);
-        });
+        }, Manager.Logging);
     }
     public ILogger CreateLogger(string categoryName)
         => new FabricLogger(categoryName, this);

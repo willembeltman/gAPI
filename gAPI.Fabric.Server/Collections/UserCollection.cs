@@ -1,11 +1,12 @@
 ﻿using gAPI.Core.Ids;
 using gAPI.Fabric.Server.Models;
 using gAPI.Fabric.Server.Services;
+using System.Collections;
 using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Server.Collections;
 
-public class UserCollection
+public class UserCollection : IEnumerable<User>
 {
     private readonly ConcurrentDictionary<UserId, User> Users = new();
 
@@ -27,5 +28,17 @@ public class UserCollection
         user.Unsubscribe(connection);
         if (user?.Connections.Count == 0)
             Users.TryRemove(userId, out _);
+    }
+
+    public int Count => Users.Count;
+
+    public IEnumerator<User> GetEnumerator()
+    {
+        return Users.Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
