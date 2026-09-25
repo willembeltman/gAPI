@@ -65,8 +65,9 @@ public class FabricProgram
         {
             return
             [
-                new ColorLine() { Text = $"{a.Id} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}" },
-        .. a.Sessions.Select(s => new ColorLine() { Text = $"- {s.Id} S:{s.GetSendSpeed()} R:{s.GetReceiveSpeed()}" })
+                new ColorLine() { Text = $"{a.Id} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()} {a.Sessions.Count} connections" }
+                //,
+                //.. a.Sessions.Select(s => new ColorLine() { Text = $"- {s.Id} S:{s.GetSendSpeed()} R:{s.GetReceiveSpeed()}" })
             ];
         }
 
@@ -75,7 +76,7 @@ public class FabricProgram
 
         while (true)
         {
-            Thread.Sleep(40);
+            await Task.Delay(40);
 
             if (sw.Elapsed.TotalSeconds > sec)
             {
@@ -87,12 +88,9 @@ public class FabricProgram
             {
                 dirty = false;
                 connections.SetItems([.. server.Manager.Connections
-                    .Select(a =>
+                    .Select(a => new ColorLine()
                     {
-                        return new ColorLine()
-                        {
-                            Text = $"Node {a.FabricConnectionId} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
-                        };
+                        Text = $"Node {a.FabricConnectionId} S:{a.GetSendSpeed()} R:{a.GetReceiveSpeed()}"
                     })]);
                 subscriptions.SetItems([.. server.Manager.Services.SelectMany(Get)]);
             }

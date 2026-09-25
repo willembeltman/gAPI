@@ -16,6 +16,6 @@ public static class StartupHelper
         //Console.WriteLine("##  ###    ##    ####   ##  ##  ##   ##   ####   ##### ##");
         //Console.WriteLine("##                                                     ##");
         //Console.WriteLine("#########################################################");
-        Console.WriteLine($"## gAPI.Storage.Server UserName = {userName}");
+        Console.WriteLine($"gAPI.Storage.Server started"); // UserName = {userName}");
     }
 }

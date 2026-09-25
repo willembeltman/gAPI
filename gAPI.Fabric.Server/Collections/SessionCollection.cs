@@ -29,6 +29,8 @@ public class SessionCollection : IEnumerable<Session>
             Sessions.TryRemove(sessionId, out _);
     }
 
+    public int Count => Sessions.Count;
+
     public IEnumerator<Session> GetEnumerator()
     {
         return Sessions.Values.GetEnumerator();

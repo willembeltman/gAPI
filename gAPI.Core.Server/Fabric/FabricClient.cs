@@ -87,9 +87,6 @@ public sealed class FabricClient : IAsyncDisposable
 
         try
         {
-            if (Logger.IsEnabled(LogLevel.Information))
-                Logger.LogInformation($"Starting FabricClient");
-
             IsConnecting = true;
 
             SenderCts = new CancellationTokenSource();
@@ -308,9 +305,6 @@ public sealed class FabricClient : IAsyncDisposable
         if (BinaryReader == null) return;
         try
         {
-            if (Logger.IsEnabled(LogLevel.Warning))
-                Logger.LogWarning("{now} FabricClient {Id.Value} started", DateTime.Now.ToString("HH:mm:ss.fff"), FabricConnectionId.Value);
-
             while (!ct.IsCancellationRequested)
             {
                 var messageType = FabricConverter.ReadHostToClientMessageType(BinaryReader);
@@ -321,6 +315,7 @@ public sealed class FabricClient : IAsyncDisposable
                     case FabricHostToClientMessageEnum.SynchronizeFabricIds:
                         var synchronizeFabricIds = BinaryReader.ReadSynchronizeFabricIdsDto();
                         await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
+                        Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} FabricClient {FabricConnectionId.Value} started");
                         break;
                     case FabricHostToClientMessageEnum.FabricSendRequest:
                         var fabricSendRequest = BinaryReader.ReadSendRequestDto();
