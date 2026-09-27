@@ -65,6 +65,7 @@ public class Interface
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
     public Service Service { get; }
+    public bool IsApiProxy => Service.IsApiProxy;
 
     public override string ToString()
     {

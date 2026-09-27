@@ -39,6 +39,7 @@ public class ApiClient_Generator : _BaseGenerator
     public SharedReference RequestId => Context.SharedReferences.RequestId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
+    public SharedReference IsApiProxyAttribute => Context.SharedReferences.IsApiProxyAttribute;
 
     public List<INamedTypeSymbol> NeededSpanSerializerTypes { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -58,6 +59,7 @@ public class ApiClient_Generator : _BaseGenerator
         Reg("System.Buffers.Binary");
         Reg("gAPI.Core.Attributes");
         Reg("gAPI.Core.Serializers");
+        Reg(IsApiProxyAttribute);
         Reg(Interface);
         Reg(WssClientConnection);
         Reg(IClientLoggerFactory);
@@ -85,6 +87,7 @@ public class ApiClient_Generator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
+[{IsApiProxyAttribute}]
 public sealed class {Name}(
     {WssClientConnection} ___clientConnection,
     {IClientLoggerFactory} ___loggerFactory,

@@ -405,8 +405,10 @@ Please don't use it as a reference implementation.
 
 For an example of gAPI being used in a real application, see:
 
-https://github.com/willembeltman/LanCloud
-https://github.com/willembeltman/UwvLlm
+- https://github.com/willembeltman/LanCloud
+- https://github.com/willembeltman/UwvLlm
+
+Read more about these projects at the end of this readme file.
 
 ---
 
@@ -482,7 +484,7 @@ Documentation and examples are still being expanded.
 
 ## Breaking Changes
 
-Breaking changes can happen frequently while the architecture is still evolving. See the Issues section of Github for latest state.
+Breaking changes can happen frequently while the architecture is still evolving. See the Issues section of Github for latest state. https://github.com/willembeltman/gAPI/issues
 
 ---
 
@@ -566,27 +568,26 @@ A working example using gAPI can be found here:
 
 https://github.com/willembeltman/LanCloud
 
-Within LanCloud, gAPI.AutoWss and gAPI.AutoAuth is utilized as a highly efficient service bus for multiple console clients.
+Within LanCloud, `gAPI.AutoWss` and `gAPI.AutoAuth` are utilized as a highly efficient service bus for multiple console clients.
 
-- What it does: It acts as a local API storage server for your network. You can connect your local file explorer to it using FTP (currently a bit buggy) or WebDAV.
-- How it works: When you launch a LanCloud Host console application on machines across your network, they establish a connection to the central API via gAPI.AutoWss. The host application then automatically `answers` the API whenever your file explorer triggers a new request, making the host's local storage seamlessly appear as part of the shared network pool.
-- The gAPI advantage: Thanks to the strict server-to-client contract rules of gAPI.AutoWss combined with native support for IAsyncEnumerable (enabling 1-to-many streaming across multiple clients), this approach works flawlessly. For example, when executing a ListDirectories task, a single method call fetches the folder structures from all connected hosts simultaneously:
+- **What it does**: It acts as a local API storage server for your network. You can connect your local file explorer to it using `FTP` (currently a bit buggy) or `WebDAV`.
+- **How it works**: When you launch a `LanCloud Host` console application on machines across your network, they establish a connection to the central API via `gAPI.AutoWss`. The host application then automatically *answers* the API whenever your file explorer triggers a new request, making the host's local storage seamlessly appear as part of the shared network pool.
+- **The gAPI advantage**: Thanks to the strict server-to-client contract rules of `gAPI.AutoWss` combined with native support for `IAsyncEnumerable` (enabling 1-to-many streaming across multiple clients), this approach works flawlessly. For example, when executing a `ListDirectories` task, a single method call fetches the folder structures from all connected hosts simultaneously:
 
 ```
 var allHostDirectories = clientContext.HostHub.ToAll.GetDirectories(path, ct)
 ```
 
-- Project status: This version is fully functional but currently on pause, as it was built to support a different application that takes priority right now. There are some temporary design choices in place—for example, if multiple hosts hold different versions of the same file in their root directory, the system defaults to picking the newest version. While this might not remain the permanent default behavior, it works perfectly for now.
+- Project status: This version is fully functional but currently on pause, as it was built to support a different application that takes priority right now. There are some temporary design choices in place, for example, if multiple hosts hold different versions of the same file in their root directory, the system defaults to picking the newest version. While this might not remain the permanent default behavior, it works perfectly for now.
 
 ### 📱 UwvLlm
 https://github.com/willembeltman/UwvLlm
 
 This project serves as a fast-paced, 24-hour Proof of Concept (PoC) showcasing gAPI integrated into a .NET MAUI application (native XAML, not Blazor).
 
-- The challenge: gAPI was originally engineered with Blazor WebAssembly and Blazor MAUI targets in mind, meaning standard XAML-based MAUI apps are not supported out of the box.
-- The showcase: This repository acts as an excellent case study on how you can still successfully adopt the core architecture of gAPI and enjoy its main advantages in a standard mobile/desktop framework.
-- Current status: The project implements gAPI.AutoApi and gAPI.AutoAuth. While the core data pipeline functions well, the plumbing for real-time Server-Sent Events (SSE) callbacks is still being ironed out. The definitive solution is already planned, but time constraints have pushed the upgrade to a later date. If you are an experienced MAUI developer, you will likely spot the exact integration issue immediately! (it's not gAPI)
-
+- **The challenge**: gAPI was originally engineered with `Blazor WebAssembly` and `Blazor MAUI` targets in mind, meaning standard `XAML-based MAUI apps` are not supported out of the box.
+- **The showcase**: This repository acts as an excellent case study on how you can still successfully adopt the core architecture of gAPI and enjoy its main advantages in a standard mobile/desktop framework. While features like `gAPI.CodeGen.Frontend`, `gAPI.AutoComponent`, and `gAPI.AutoPages` cannot be used here, this project still heavily utilizes `gAPI.AutoApi` and `gAPI.CodeGen.Backend`. This architectural split allowed me to let gAPI handle the backend, leaving me to focus entirely on setting up a clean MVVM frontend.
+- **Current status**: The project implements `gAPI.AutoApi` and `gAPI.AutoAuth`. While the core data pipeline functions well, the plumbing for real-time `Server-Sent Events` (SSE) callbacks is still being ironed out. The definitive solution is already planned, but time constraints have pushed the upgrade to a later date. If you are an experienced MAUI developer, you will likely spot the exact integration issue immediately, and just to be clear, it is a MAUI quirk, not a gAPI issue!
 
 ---
 

@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Generated;
 
+[IsApiProxyAttribute]
 public sealed class FileSystemApi(
     IWssClientConnection ___clientConnection,
     IClientLoggerFactory ___loggerFactory,

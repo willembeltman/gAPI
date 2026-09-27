@@ -16,7 +16,7 @@ public class AccountService<TUser, TStateDto>(
     where TUser : AuthUser, new()
     where TStateDto : AuthStateDto
 {
-    public async Task<BaseResponse> LoginAsync(string email, string password, CancellationToken ct)
+    public virtual async Task<BaseResponse> LoginAsync(string email, string password, CancellationToken ct)
     {
         var allowedBefore = await security.BeforeLoginAsync(ct);
         if (!allowedBefore)
@@ -68,7 +68,7 @@ public class AccountService<TUser, TStateDto>(
             RedirectPath = "/"
         };
     }
-    public async Task<BaseResponse> LogoffAsync(CancellationToken ct)
+    public virtual async Task<BaseResponse> LogoffAsync(CancellationToken ct)
     {
         var result = await authenticationService.LogoffAsync(ct);
 
@@ -80,7 +80,7 @@ public class AccountService<TUser, TStateDto>(
             RedirectPath = "/"
         };
     }
-    public async Task<BaseResponse> RegisterAsync(string userName, string email, string password, string passwordRepeat, CancellationToken ct)
+    public virtual async Task<BaseResponse> RegisterAsync(string userName, string email, string password, string passwordRepeat, CancellationToken ct)
     {
         var usernameLower = userName?.ToLower();
         var emailLower = email?.ToLower();

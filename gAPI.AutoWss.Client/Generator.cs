@@ -31,8 +31,13 @@ public class Generator
         CustomCreateCopys = customCreateCopys;
         CustomMultipartFormDataContents = customMultipartFormDataContents;
 
-        Apis = ServiceContext.ApiInterfaces.Select(a => new ApiClient_Generator(this, a)).ToArray();
-        MinimalApis = ServiceContext.MinimalApiInterfaces.Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContents)).ToArray();
+        Apis = ServiceContext.ApiInterfaces
+            .Select(a => new ApiClient_Generator(this, a))
+            .ToArray();
+        MinimalApis = ServiceContext.MinimalApiInterfaces
+            .Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContents))
+            .ToArray();
+
         IClientConnection = new IClientConnectionGenerator(this);
         ClientConnection = new ClientConnectionGenerator(this);
         AddAutoWssExtension = new AddAutoWssClientExtensionGenerator(this);

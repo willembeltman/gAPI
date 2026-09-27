@@ -38,6 +38,7 @@ public class SharedReferences
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
         IClientAuthenticatedHttpClientImplementation = SharedReferenceFinder.TryFindByInterface(IClientAuthenticatedHttpClient, allSymbols);
+        IsApiProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsApiProxyAttribute", allSymbols);
 
     }
     public SharedReference ServiceId { get; }
@@ -64,4 +65,5 @@ public class SharedReferences
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference? IClientAuthenticatedHttpClientImplementation { get; }
+    public SharedReference IsApiProxyAttribute { get; }
 }

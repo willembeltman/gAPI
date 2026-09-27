@@ -63,6 +63,7 @@ public class Interface : SharedReference
     public string Title { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
+    public bool IsApiProxy => Service.IsApiProxy;
     public InterfaceMethod[] Methods { get; }
     public Service Service { get; }
 

@@ -28,11 +28,13 @@ public class ClientService_Generator : BaseGenerator
     public SharedReference SessionId => Context.SharedReferences.SessionId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference RequestId => Context.SharedReferences.RequestId;
+    public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
 
     public override void GenerateCode()
     {
         Reg("System.Text.Json");
         Reg(Interface);
+        Reg(IsHubProxyAttribute);
         Reg(FabricClient);
         Reg(UserId);
         Reg(SessionId);
@@ -47,6 +49,7 @@ public class ClientService_Generator : BaseGenerator
 #nullable enable
 namespace {Namespace};
 
+[{IsHubProxyAttribute}]
 public class {Name}(
     {FabricClient} FabricClient,
     {UserId}? UserId = null,

@@ -42,6 +42,7 @@ public class HubClient_Generator : _BaseGenerator
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
+    public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
     public SharedReference? OwnImplementation { get; }
@@ -62,6 +63,7 @@ public class HubClient_Generator : _BaseGenerator
         Reg("gAPI.Core.Serializers");
         Reg("System.Runtime.CompilerServices");
         Reg(Interface);
+        Reg(IsHubProxyAttribute);
         Reg(FabricClient);
         Reg(SessionId);
         Reg(UserId);
@@ -106,6 +108,7 @@ public class HubClient_Generator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
+[{IsHubProxyAttribute}]
 public class {Name}(
     {FabricClient} ___fabricClient,
     ILoggerFactory ___loggerFactory,

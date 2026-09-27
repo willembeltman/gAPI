@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 using gAPI.Core.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Core.Interfaces;
 
+[IsApiProxyAttribute]
 public class AccountService(
     gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient clientAuthenticationService) 
     : IAccountService

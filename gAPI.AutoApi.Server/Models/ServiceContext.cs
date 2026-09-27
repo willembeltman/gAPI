@@ -27,6 +27,7 @@ public class ServiceContext
 
         ApiInterfaces = apiInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .Where(a => a.IsApiProxy == false)
             .ToArray();
 
         var minimalApiInterfaceSymbols = allSymbols

@@ -34,6 +34,7 @@ public class MinimalClientGenerator : _BaseGenerator
     public SharedReference BaseResponseT => Context.SharedReferences.BaseResponseT;
 
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
+    public SharedReference IsApiProxyAttribute => Context.SharedReferences.IsApiProxyAttribute;
 
     public List<INamedTypeSymbol> NeededMultipartFormSerializerTypes { get; } = [];
     public INamedTypeSymbol TypeSymbol { get; }
@@ -44,6 +45,7 @@ public class MinimalClientGenerator : _BaseGenerator
     public override void GenerateCode()
     {
         Reg(Interface);
+        Reg(IsApiProxyAttribute);
         Reg("Microsoft.Extensions.Logging");
         Reg("System.Net.Http.Json");
         Reg("System.Net.Http.Headers");
@@ -59,6 +61,7 @@ public class MinimalClientGenerator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
+[{IsApiProxyAttribute}]
 public class {Name}(
     {IClientAuthenticatedHttpClient.FullName} clientAuthenticationService) 
     : {Interface.Name}

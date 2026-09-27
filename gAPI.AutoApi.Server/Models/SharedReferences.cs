@@ -10,6 +10,7 @@ public class SharedReferences
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthServer_Middleware = SharedReferenceFinder.TryFindStart("gAPI.Core.Server.AuthenticationMiddleware", allSymbols);
 
+        IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Sse.SseServiceSubscription", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
@@ -28,7 +29,7 @@ public class SharedReferences
 
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference? AuthServer_Middleware { get; }
-
+    public SharedReference IsHubProxyAttribute { get; }
     public SharedReference FabricClient { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference ServerConnectionCollection { get; }

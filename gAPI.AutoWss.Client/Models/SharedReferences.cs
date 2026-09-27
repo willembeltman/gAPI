@@ -9,6 +9,7 @@ public class SharedReferences
 {
     public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
+        IsApiProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsApiProxyAttribute", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
@@ -49,6 +50,7 @@ public class SharedReferences
             .ToDictionary(a => a.Interface, a => a.Implementation!);
     }
 
+    public SharedReference IsApiProxyAttribute { get; }
     public SharedReference ServiceId { get; }
     public SharedReference RequestId { get; }
     public SharedReference SessionId { get; }

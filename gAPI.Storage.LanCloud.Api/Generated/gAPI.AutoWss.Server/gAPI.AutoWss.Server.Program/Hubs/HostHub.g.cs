@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Generated;
 
+[IsHubProxyAttribute]
 public class HostHub(
     FabricClient ___fabricClient,
     ILoggerFactory ___loggerFactory,
