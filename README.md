@@ -405,6 +405,7 @@ Please don't use it as a reference implementation.
 
 For an example of gAPI being used in a real application, see:
 
+https://github.com/willembeltman/LanCloud
 https://github.com/willembeltman/UwvLlm
 
 ---
@@ -481,7 +482,7 @@ Documentation and examples are still being expanded.
 
 ## Breaking Changes
 
-Breaking changes can happen frequently while the architecture is still evolving.
+Breaking changes can happen frequently while the architecture is still evolving. See the Issues section of Github for latest state.
 
 ---
 
@@ -531,29 +532,29 @@ The gAPI ecosystem is available through the following public NuGet packages:
 
 ## Core
 
-* `gAPI.Core`
-* `gAPI.Core.Client`
-* `gAPI.Core.Server`
+* `gAPI.Core` https://www.nuget.org/packages/gAPI.Core/
+* `gAPI.Core.Client` https://www.nuget.org/packages/gAPI.Core.Client/
+* `gAPI.Core.Server` https://www.nuget.org/packages/gAPI.Core.Server/
 
 ## AutoApi
 
-* `gAPI.AutoApi.Client`
-* `gAPI.AutoApi.Server`
+* `gAPI.AutoApi.Client` https://www.nuget.org/packages/gAPI.AutoApi.Client/
+* `gAPI.AutoApi.Server` https://www.nuget.org/packages/gAPI.AutoApi.Server/
 
 ## AutoWss
 
-* `gAPI.AutoWss.Client`
-* `gAPI.AutoWss.Server`
+* `gAPI.AutoWss.Client` https://www.nuget.org/packages/gAPI.AutoWss.Client/
+* `gAPI.AutoWss.Server` https://www.nuget.org/packages/gAPI.AutoWss.Server/
 
 ## Authentication
 
-* `gAPI.AutoAuth.Client`
-* `gAPI.AutoAuth.Server`
+* `gAPI.AutoAuth.Client` https://www.nuget.org/packages/gAPI.AutoAuth.Client/
+* `gAPI.AutoAuth.Server` https://www.nuget.org/packages/gAPI.AutoAuth.Server/
 
 ## Other
 
-* `gAPI.AutoSerializer`
-* `gAPI.Fabric.Server`
+* `gAPI.AutoSerializer` https://www.nuget.org/packages/gAPI.AutoSerializer/
+* `gAPI.Fabric.Server` https://www.nuget.org/packages/gAPI.Fabric.Server/
 
 ---
 
@@ -561,7 +562,31 @@ The gAPI ecosystem is available through the following public NuGet packages:
 
 A working example using gAPI can be found here:
 
+### 🌐 LanCloud
+
+https://github.com/willembeltman/LanCloud
+
+Within LanCloud, gAPI.AutoWss and gAPI.AutoAuth is utilized as a highly efficient service bus for multiple console clients.
+
+- What it does: It acts as a local API storage server for your network. You can connect your local file explorer to it using FTP (currently a bit buggy) or WebDAV.
+- How it works: When you launch a LanCloud Host console application on machines across your network, they establish a connection to the central API via gAPI.AutoWss. The host application then automatically `answers` the API whenever your file explorer triggers a new request, making the host's local storage seamlessly appear as part of the shared network pool.
+- The gAPI advantage: Thanks to the strict server-to-client contract rules of gAPI.AutoWss combined with native support for IAsyncEnumerable (enabling 1-to-many streaming across multiple clients), this approach works flawlessly. For example, when executing a ListDirectories task, a single method call fetches the folder structures from all connected hosts simultaneously:
+
+```
+var allHostDirectories = clientContext.HostHub.ToAll.GetDirectories(path, ct)
+```
+
+- Project status: This version is fully functional but currently on pause, as it was built to support a different application that takes priority right now. There are some temporary design choices in place—for example, if multiple hosts hold different versions of the same file in their root directory, the system defaults to picking the newest version. While this might not remain the permanent default behavior, it works perfectly for now.
+
+### 📱 UwvLlm
 https://github.com/willembeltman/UwvLlm
+
+This project serves as a fast-paced, 24-hour Proof of Concept (PoC) showcasing gAPI integrated into a .NET MAUI application (native XAML, not Blazor).
+
+- The challenge: gAPI was originally engineered with Blazor WebAssembly and Blazor MAUI targets in mind, meaning standard XAML-based MAUI apps are not supported out of the box.
+- The showcase: This repository acts as an excellent case study on how you can still successfully adopt the core architecture of gAPI and enjoy its main advantages in a standard mobile/desktop framework.
+- Current status: The project implements gAPI.AutoApi and gAPI.AutoAuth. While the core data pipeline functions well, the plumbing for real-time Server-Sent Events (SSE) callbacks is still being ironed out. The definitive solution is already planned, but time constraints have pushed the upgrade to a later date. If you are an experienced MAUI developer, you will likely spot the exact integration issue immediately! (it's not gAPI)
+
 
 ---
 
