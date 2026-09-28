@@ -17,6 +17,7 @@ public class ServiceContext
 
         HubInterfaces = hubInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .OrderBy(a => a.Name)
             .ToArray();
 
         var apiInterfaceSymbols = allSymbols
@@ -27,6 +28,7 @@ public class ServiceContext
 
         ApiInterfaces = apiInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .OrderBy(a => a.Name)
             .ToArray();
 
         var minimalApiInterfaceSymbols = allSymbols
@@ -37,6 +39,7 @@ public class ServiceContext
 
         MinimalApiInterfaces = minimalApiInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .OrderBy(a => a.Name)
             .ToArray();
     }
 

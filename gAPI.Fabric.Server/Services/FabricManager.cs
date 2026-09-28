@@ -2,9 +2,10 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
+using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.Interfaces;
-using gAPI.Fabric.Server.Monitoring;
 using gAPI.Fabric.Server.Models;
+using gAPI.Fabric.Server.Monitoring;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
@@ -16,40 +17,37 @@ public class FabricManager
     private readonly SessionCache SessionCache;
 
     public readonly FabricManagerId FabricManagerId;
+
+    private readonly FabricConfig Config;
+
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
     public readonly ConcurrentDictionary<RequestId, RequestState> OpenRequests;
     public readonly Service Logging;
     public readonly Service System;
-    internal IFabricStatusSink StatusSink { get; }
-    public event EventHandler? Changed;
+    public readonly ConsoleBuffer Console;
 
-    [Obsolete("Use Changed instead.")]
-    public event EventHandler? OnUpdate
-    {
-        add => Changed += value;
-        remove => Changed -= value;
-    }
-
-    public FabricManager(IFabricStatusSink? statusSink = null)
+    public FabricManager(
+        FabricConfig config, 
+        ConsoleBuffer consoleBuffer)
     {
         FabricManagerId = FabricManagerId.New();
-        StatusSink = statusSink ?? NullFabricStatusSink.Instance;
+        Config = config;
+
         SessionCache = new();
         Connections = new();
         Services = new(this);
         OpenRequests = new();
+        Console = consoleBuffer; // Initial state
 
         System = Services[new ServiceId("Fabric System")];
         Logging = Services[new ServiceId("Fabric Logging")];
-        //Logging = Services[new ServiceId("")];
     }
 
-    [Obsolete("Use FabricManager(IFabricStatusSink?) instead.")]
-    public FabricManager(IConsole console)
-        : this(new ConsoleStatusSinkAdapter(console))
-    {
-    }
+    //// Handler voor als het aantal connections of subscriptions veranderd
+    //public event EventHandler? Changed;
+    //public void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
 
     public void StartNewFabricHost(TcpClient tcpClient)
     {
@@ -57,7 +55,7 @@ public class FabricManager
         var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
 
-        NotifyChanged();
+        //NotifyChanged();
     }
 
     public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
@@ -102,7 +100,7 @@ public class FabricManager
             await Services[subscribe.ServiceId]
                 .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
-            NotifyChanged();
+            //NotifyChanged();
         }, ct);
     }
     public async Task Receive_Unsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
@@ -115,7 +113,7 @@ public class FabricManager
             await Services[unsubscribe.ServiceId]
                 .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
 
-            NotifyChanged();
+            //NotifyChanged();
         }, ct);
     }
 
@@ -450,10 +448,10 @@ public class FabricManager
         foreach (var conn in Connections)
             conn.Dispose();
 
-        NotifyChanged();
+        //NotifyChanged();
     }
 
-    public FabricDashboardSnapshot GetDashboardSnapshot(int port)
+    public FabricDashboardSnapshot GetDashboardSnapshot()
     {
         var connections = Connections
             .Select(connection => new FabricConnectionSnapshot(
@@ -473,10 +471,9 @@ public class FabricManager
             .OrderBy(service => service.ServiceId, StringComparer.Ordinal)
             .ToArray();
 
-        return new FabricDashboardSnapshot(DateTimeOffset.UtcNow, port, connections, services);
+        return new FabricDashboardSnapshot(DateTimeOffset.UtcNow, Config.Port, connections, services);
     }
 
-    private void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
     public async Task DisposeAsync()
     {

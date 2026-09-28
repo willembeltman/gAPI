@@ -61,7 +61,7 @@ public sealed class FabricHost : IFabricLoggerFactory
     };
 
     private FabricHostCollection Connections => Manager.Connections;
-    private IFabricStatusSink StatusSink => Manager.StatusSink;
+    private ConsoleBuffer Console => Manager.Console;
 
     public FabricHost(
         FabricManager manager,
@@ -238,7 +238,7 @@ public sealed class FabricHost : IFabricLoggerFactory
 
     private async Task ReceiveLoop()
     {
-        StatusSink.WriteInfo($"FabricHost {FabricConnectionId} started");
+        Console.WriteInfo($"FabricHost {FabricConnectionId} started");
 
         try
         {
@@ -368,11 +368,11 @@ public sealed class FabricHost : IFabricLoggerFactory
         catch (Exception ex)
         {
             Logger.LogError(ex, "ReceiveLoop");
-            StatusSink.WriteError($"FabricClient #{FabricConnectionId.Value}: receive loop failed.", ex);
+            Console.WriteError($"FabricClient #{FabricConnectionId.Value}: receive loop failed.", ex);
         }
         Dispose();
 
-        StatusSink.WriteInfo($"FabricHost {FabricConnectionId} stopped");
+        Console.WriteInfo($"FabricHost {FabricConnectionId} stopped");
     }
 
     public void Dispose()

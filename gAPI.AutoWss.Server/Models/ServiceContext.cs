@@ -17,6 +17,7 @@ public class ServiceContext
 
         HubInterfaces = hubInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .OrderBy(a => a.Name)
             .ToArray();
 
         var apiInterfaceSymbols = allSymbols
@@ -28,17 +29,20 @@ public class ServiceContext
         ApiInterfaces = apiInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
             .Where(a => a.IsApiProxy == false)
+            .OrderBy(a => a.Name)
             .ToArray();
 
         var minimalApiInterfaceSymbols = allSymbols
             .Where(t =>
                 t.TypeKind == TypeKind.Interface &&
                 t.HasAttribute("gAPI.Core.Attributes.GenerateMinimalApiAttribute"))
+            .OrderBy(a => a.Name)
             .ToArray();
 
         MinimalApiInterfaces = minimalApiInterfaceSymbols
             //.Where(a => a.ToDisplayString() != "gAPI.Core.Interfaces.IAccountService")
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .OrderBy(a => a.Name)
             .ToArray();
     }
 

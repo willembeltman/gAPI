@@ -1,69 +1,80 @@
-﻿using gAPI.Fabric.Server.Helpers;
+﻿using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.Interfaces;
-using gAPI.Fabric.Server.Monitoring;
+using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Net.Sockets;
 
 namespace gAPI.Fabric.Server.Services;
 
-public sealed class FabricServer : IAsyncDisposable
+public sealed class FabricServer : IHostedService, IAsyncDisposable
 {
     private readonly TcpListener Listener;
-    private readonly CancellationTokenSource ListenerCts = new();
-    private readonly IFabricStatusSink StatusSink;
+    private readonly FabricManager Manager;
+    private readonly FabricConfig Config;
+    private readonly ConsoleBuffer Console;
 
-    public int Port { get; }
-    public FabricManager Manager { get; }
+    private CancellationTokenSource? ListenerCts;
 
-    public FabricServer(int port, IFabricStatusSink? statusSink = null)
+
+    public FabricServer(
+        FabricConfig config,
+        FabricManager manager,
+        ConsoleBuffer console)
     {
-        Port = port;
-        StatusSink = statusSink ?? NullFabricStatusSink.Instance;
-        Listener = new TcpListener(IPAddress.Any, port);
-        Manager = new FabricManager(StatusSink);
+        Config = config;
+        Manager = manager;
+        Console = console;
+
+        Listener = new TcpListener(IPAddress.Any, Config.Port);
     }
 
-    [Obsolete("Use FabricServer(int, IFabricStatusSink?) instead.")]
-    public FabricServer(int port, IConsole console)
-        : this(port, new ConsoleStatusSinkAdapter(console))
+
+    public async Task StartAsync(CancellationToken ct2)
     {
-    }
+        ListenerCts = CancellationTokenSource.CreateLinkedTokenSource(ct2);
+        var ct = ListenerCts.Token;
 
-    public async Task StartAsync()
-    {
-        Listener.Start();
-
-        StatusSink.WriteInfo($"FABRIC Port: {Port}");
-
-        try
+        _ = Task.Run(async () =>
         {
-            while (!ListenerCts.IsCancellationRequested)
+            Listener.Start();
+
+            Console.WriteInfo($"Fabric started on port: {Config.Port}");
+
+            try
             {
-                var tcpClient = await Listener.AcceptTcpClientAsync(ListenerCts.Token);
-                Manager.StartNewFabricHost(tcpClient);
+                while (!ListenerCts.IsCancellationRequested)
+                {
+                    var tcpClient = await Listener.AcceptTcpClientAsync(ct);
+                    Manager.StartNewFabricHost(tcpClient);
+                }
             }
-        }
-        catch (OperationCanceledException) when (ListenerCts.IsCancellationRequested)
-        {
-        }
+            catch (OperationCanceledException) when (ListenerCts.IsCancellationRequested)
+            {
+            }
+            finally
+            {
+                ListenerCts.Dispose();
+                ListenerCts = null;
+            }
+        }, ct);
     }
 
-    public async Task DisconnectAllAsync()
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await Manager.DisconnectAllAsync();
+        if (ListenerCts == null)
+            return;
+        await ListenerCts.CancelAsync();
     }
-
-    public Task StopAsync() => ListenerCts.CancelAsync();
-
-    public FabricDashboardSnapshot GetDashboardSnapshot()
-        => Manager.GetDashboardSnapshot(Port);
 
     public async ValueTask DisposeAsync()
     {
         Listener.Stop();
         Listener.Dispose();
-        await ListenerCts.CancelAsync();
-        ListenerCts.Dispose();
-        await Manager.DisposeAsync();
+
+        if (ListenerCts != null)
+        {
+            await ListenerCts.CancelAsync();
+            ListenerCts.Dispose();
+        }
     }
 }

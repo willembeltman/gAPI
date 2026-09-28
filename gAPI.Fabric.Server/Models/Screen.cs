@@ -1,4 +1,4 @@
-﻿namespace gAPI.Fabric.Server.ConsoleHelper;
+﻿namespace gAPI.Fabric.Server.Models;
 
 public class Screen(ScrollWindow[] windows)
 {
