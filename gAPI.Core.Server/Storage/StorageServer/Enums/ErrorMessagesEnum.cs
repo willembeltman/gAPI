@@ -8,5 +8,6 @@ public enum ErrorMessagesEnum
     FileDoesntExistsOnDisk,
     KeyIsEmpty,
     CouldNotDeleteFileInUse,
-    NoFileUploaded
+    NoFileUploaded,
+    DoNotHack
 }

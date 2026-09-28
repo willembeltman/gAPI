@@ -15,9 +15,9 @@ public static class CompilationExtensions
         );
         return hasGenerateApiAttribute;
     }
-    public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol @this)
+    public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol namespaceSymbol)
     {
-        foreach (var member in @this.GetMembers())
+        foreach (var member in namespaceSymbol.GetMembers())
         {
             if (member is INamespaceSymbol ns)
             {

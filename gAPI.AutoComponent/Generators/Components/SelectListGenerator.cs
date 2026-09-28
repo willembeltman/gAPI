@@ -117,7 +117,7 @@ else
                             <td>
                                 <button class=""btn btn-sm btn-outline-primary""
                                         @onclick=""() => SelectItem(item)"">
-                                    @SelectText
+                                    @(SelectText)
                                 </button>
                             </td>{string.Join("", displayProps.Select(p =>
             {
@@ -129,7 +129,7 @@ else
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}))
                                 {{
-                                    <img src=""@item.Model!.{p.Name}"" style=""max-height:32px;"" />
+                                    <img src=""@(item.Model!.{p.Name})"" style=""max-height:32px;"" />
                                 }}
                             </td>
                         }}";
@@ -141,16 +141,6 @@ else
                         <td>@item.Model!.{p.Name}</td>
                     }}";
             }))}
-                        </tr>
-                    }}
-
-                    @if (DataSource.HasMore)
-                    {{
-                        <tr id=""@DataSource.SentinelId"">
-                            <td colspan=""@SentinelWidth""
-                                class=""text-center text-muted"">
-                                @LoadingModeText
-                            </td>
                         </tr>
                     }}
                 </tbody>
@@ -194,7 +184,7 @@ else
                                     @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}) &&
                                         !HideColumnNames.Contains(""{p.Name}""))
                                     {{
-                                        <img src=""@item.Model!.{p.Name}"" style=""max-height:32px; margin-right:8px;"" />
+                                        <img src=""@(item.Model!.{p.Name})"" style=""max-height:32px; margin-right:8px;"" />
                                     }}";
                 }
 
@@ -208,22 +198,22 @@ else
                                 <div class=""mt-2"">
                                     <button class=""btn btn-sm btn-outline-primary w-100""
                                             @onclick=""() => SelectItem(item)"">
-                                        @SelectText
+                                        @(SelectText)
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 }}
-
-                @if (DataSource.HasMore)
-                {{
-                    <div id=""@DataSource.SentinelId"" class=""sentinel"">
-                        @LoadingModeText
-                    </div>
-                }}
             </div>
         </div>
+
+    @if (DataSource.HasMore)
+    {{
+        <div id=""@(DataSource.SentinelId)"" class=""sentinel"">
+            @(LoadingModeText)
+        </div>
+    }}
     </div>
 }}
 

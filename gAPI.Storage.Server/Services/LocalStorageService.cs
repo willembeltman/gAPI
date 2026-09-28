@@ -15,39 +15,67 @@ public class LocalStorageService(ApplicationDbContext db)
 
     public async Task<GetStorageFileInfoResponse> GetStorageFileUrl(GetStorageFileInfoRequest model, CancellationToken ct)
     {
-        (string directoryName, string fileName) = GetDirectoryAndFileName(model.StorageKey);
-
-        var storageFolder = db.StorageFolders
-            .FirstOrDefaultAsync(a => a.Name == directoryName, ct);
-        if (storageFolder == null)
+        var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
+        if (info.FullName.StartsWith(Directory.FullName) == false)
             return new GetStorageFileInfoResponse()
             {
-                ErrorMessage = ErrorMessagesEnum.FolderDoesntExists
+                ErrorMessage = ErrorMessagesEnum.DoNotHack
             };
 
-        var directoryFullName = Path.Combine(Directory.FullName, directoryName);
-        if (!System.IO.Directory.Exists(directoryFullName))
+        if (info.Directory == null || info.Directory.Exists == false)
             return new GetStorageFileInfoResponse()
             {
                 ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
             };
 
+        var fullName = info.FullName;
+        if (!File.Exists(fullName))
+            return new GetStorageFileInfoResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
+            };
+
         var storageFile = await db.StorageFiles
-            .FirstOrDefaultAsync(a =>
-                a.StorageFolderId == storageFolder.Id &&
-                a.Key == model.StorageKey, ct);
+            .FirstOrDefaultAsync(a => a.Key == model.StorageKey, ct);
         if (storageFile?.FileName == null)
             return new GetStorageFileInfoResponse()
             {
                 ErrorMessage = ErrorMessagesEnum.FileDoesntExists
             };
 
-        var fullName = Path.Combine(directoryFullName, storageFile.FileName);
-        if (!File.Exists(fullName))
-            return new GetStorageFileInfoResponse()
-            {
-                ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
-            };
+        //(string directoryName, string fileName) = GetDirectoryAndFileName(model.StorageKey);
+
+        //var storageFolder = db.StorageFolders
+        //    .FirstOrDefaultAsync(a => a.Name == directoryName, ct);
+        //if (storageFolder == null)
+        //    return new GetStorageFileInfoResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FolderDoesntExists
+        //    };
+
+        //var directoryFullName = Path.Combine(Directory.FullName, directoryName);
+        //if (!System.IO.Directory.Exists(directoryFullName))
+        //    return new GetStorageFileInfoResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
+        //    };
+
+        //var storageFile = await db.StorageFiles
+        //    .FirstOrDefaultAsync(a =>
+        //        a.StorageFolderId == storageFolder.Id &&
+        //        a.Key == model.StorageKey, ct);
+        //if (storageFile?.FileName == null)
+        //    return new GetStorageFileInfoResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FileDoesntExists
+        //    };
+
+        //var fullName = Path.Combine(directoryFullName, storageFile.FileName);
+        //if (!File.Exists(fullName))
+        //    return new GetStorageFileInfoResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
+        //    };
 
         var token = new StorageFileToken()
         {
@@ -55,9 +83,8 @@ public class LocalStorageService(ApplicationDbContext db)
         };
 
         var now = DateTime.Now;
-        var removeList = await db.StorageFileTokens
-            .Where(a => a.DateTime < now.AddMinutes(-15))
-            .ToArrayAsync();
+        var removeList = db.StorageFileTokens
+            .Where(a => a.DateTime < now.AddMinutes(-15));
         foreach (var remove in removeList)
             db.StorageFileTokens.Remove(remove);
         await db.StorageFileTokens.AddAsync(token, ct);
@@ -81,14 +108,23 @@ public class LocalStorageService(ApplicationDbContext db)
 
     public async Task<SaveResponse> SaveStorageFile(SaveRequest model, Stream inputStream, CancellationToken ct)
     {
-        (string directoryName, string fileName) = GetDirectoryAndFileName(model.StorageKey);
+        var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
+        if (info.FullName.StartsWith(Directory.FullName) == false)
+            return new SaveResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.DoNotHack
+            };
 
-        if (!Directory.Exists) Directory.Create();
+        if (info.Directory == null)
+            return new SaveResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
+            };
 
-        var directoryFullName = Path.Combine(Directory.FullName, directoryName);
-        var directoryInfo = new DirectoryInfo(directoryFullName);
-        if (!directoryInfo.Exists) directoryInfo.Create();
-        var fullName = Path.Combine(directoryFullName, fileName);
+        if (info.Directory.Exists == false)
+            info.Directory.Create();
+
+        var fullName = info.FullName;
 
         var length = 0L;
         var sha256 = string.Empty;
@@ -111,36 +147,45 @@ public class LocalStorageService(ApplicationDbContext db)
             sha256 = ToHexStringLower(hashBytes!);
         }
 
-        var storageFolder = await db.StorageFolders.FirstOrDefaultAsync(a => a.Name == directoryName, ct);
-        if (storageFolder == null)
-        {
-            storageFolder = new StorageFolder()
-            {
-                Name = directoryName,
-            };
-            db.StorageFolders.Add(storageFolder);
-            db.SaveChanges();
-        }
 
         var storageFile = await db.StorageFiles
-            .FirstOrDefaultAsync(a =>
-                a.StorageFolderId == storageFolder.Id &&
-                a.FileName == model.FileName, ct);
-        if (storageFile != null)
+            .FirstOrDefaultAsync(a => a.Key == model.StorageKey, ct);
+        if (storageFile == null)
         {
-            db.StorageFiles.Remove(storageFile);
+            storageFile = new StorageFile()
+            {
+                Key = model.StorageKey
+            };
+            await db.StorageFiles.AddAsync(storageFile, ct);
             await db.SaveChangesAsync(ct);
         }
-        storageFile = new StorageFile()
+
+        var changed = false;
+        if (storageFile.FileName != model.FileName)
         {
-            Key = model.StorageKey,
-            StorageFolderId = storageFolder.Id,
-            FileName = fileName,
-            Length = length,
-            MimeType = model.MimeType
-        };
-        await db.StorageFiles.AddAsync(storageFile, ct);
-        await db.SaveChangesAsync(ct);
+            storageFile.FileName = model.FileName;
+            changed = true;
+        }
+        if (storageFile.MimeType != model.MimeType)
+        {
+            storageFile.MimeType = model.MimeType;
+            changed = true;
+        }
+        if (storageFile.Length != length)
+        {
+            storageFile.Length = length;
+            changed = true;
+        }
+        if (storageFile.Hash != sha256)
+        {
+            storageFile.Hash = sha256;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync(ct);
+        }
 
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
@@ -164,69 +209,89 @@ public class LocalStorageService(ApplicationDbContext db)
     }
     public async Task<AppendResponse> AppendStorageFile(AppendRequest model, Stream inputStream, CancellationToken ct)
     {
-        var split = model.StorageKey.Split('/');
-        var typeName = "_";
-        var id = model.StorageKey;
-        if (split.Length > 1)
-        {
-            typeName = split[0];
-            id = id.Substring(typeName.Length + 1);
-        }
-
-        if (!Directory.Exists) Directory.Create();
-
-        var fileName = $"{model.StorageKey}{model.FileName}";
-        var directoryFullName = Path.Combine(Directory.FullName, typeName);
-        var directoryInfo = new DirectoryInfo(directoryFullName);
-        if (!directoryInfo.Exists) directoryInfo.Create();
-        var fullName = Path.Combine(directoryFullName, fileName);
-
-        var length = 0L;
-
-        using (inputStream)
-        using (var outputStream = File.Open(fullName, FileMode.Append))
-        {
-            length = outputStream.Position;
-
-            var buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+        var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
+        if (info.FullName.StartsWith(Directory.FullName) == false)
+            return new AppendResponse()
             {
-                await outputStream.WriteAsync(buffer, 0, bytesRead, ct);
-                length += bytesRead;
-            }
-        }
-
-        var storageFolder = await db.StorageFolders.FirstOrDefaultAsync(a => a.Name == typeName, ct);
-        if (storageFolder == null)
-        {
-            storageFolder = new StorageFolder()
-            {
-                Name = typeName,
+                ErrorMessage = ErrorMessagesEnum.DoNotHack
             };
-            await db.StorageFolders.AddAsync(storageFolder, ct);
-            await db.SaveChangesAsync(ct);
-        }
+
+        if (info.Directory == null || info.Directory.Exists == false)
+            return new AppendResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
+            };
+
+        var fullName = info.FullName;
 
         var storageFile = await db.StorageFiles
-            .FirstOrDefaultAsync(a =>
-                a.StorageFolderId == storageFolder.Id &&
-                a.Key == model.StorageKey, ct);
-        if (storageFile != null)
+            .FirstOrDefaultAsync(a => a.Key == model.StorageKey, ct);
+        if (storageFile == null)
+            return new AppendResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.FileDoesntExists
+            };
+
+        var length = 0L;
+        var sha256 = string.Empty;
+
+        using (var hasher = SHA256.Create())
         {
-            db.StorageFiles.Remove(storageFile);
-           await db.SaveChangesAsync(ct);
+            var buffer = new byte[8192];
+
+            using (var fileStream = File.Open(fullName, FileMode.Open))
+            {
+                int bytesRead;
+                while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+                {
+                    hasher.TransformBlock(buffer, 0, bytesRead, null, 0);
+                    length += bytesRead;
+                }
+            }
+
+            using (inputStream)
+            using (var outputStream = File.Open(fullName, FileMode.Append))
+            {
+                int bytesRead;
+                while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+                {
+                    hasher.TransformBlock(buffer, 0, bytesRead, null, 0);
+                    await outputStream.WriteAsync(buffer, 0, bytesRead, ct);
+                    length += bytesRead;
+                }
+            }
+
+            hasher.TransformFinalBlock([], 0, 0);
+            var hashBytes = hasher.Hash;
+            sha256 = ToHexStringLower(hashBytes!);
         }
-        storageFile = new StorageFile()
+
+        var changed = false;
+        if (storageFile.FileName != model.FileName)
         {
-            Key = model.StorageKey,
-            StorageFolderId = storageFolder.Id,
-            FileName = fileName,
-            Length = length,
-            MimeType = model.MimeType
-        };
-        await db.StorageFiles.AddAsync(storageFile, ct);
-        await db.SaveChangesAsync(ct);
+            storageFile.FileName = model.FileName;
+            changed = true;
+        }
+        if (storageFile.MimeType != model.MimeType)
+        {
+            storageFile.MimeType = model.MimeType;
+            changed = true;
+        }
+        if (storageFile.Length != length)
+        {
+            storageFile.Length = length;
+            changed = true;
+        }
+        if (storageFile.Hash != sha256)
+        {
+            storageFile.Hash = sha256;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync(ct);
+        }
 
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
@@ -247,50 +312,166 @@ public class LocalStorageService(ApplicationDbContext db)
                 Length = storageFile.Length
             },
         };
+
+
+
+        //var split = model.StorageKey.Split('/');
+        //var typeName = "_";
+        //var id = model.StorageKey;
+        //if (split.Length > 1)
+        //{
+        //    typeName = split[0];
+        //    id = id.Substring(typeName.Length + 1);
+        //}
+
+        //if (!Directory.Exists) Directory.Create();
+
+        //var fileName = $"{model.StorageKey}{model.FileName}";
+        //var directoryFullName = Path.Combine(Directory.FullName, typeName);
+        //var directoryInfo = new DirectoryInfo(directoryFullName);
+        //if (!directoryInfo.Exists) directoryInfo.Create();
+        //var fullName = Path.Combine(directoryFullName, fileName);
+
+        //var length = 0L;
+
+        //using (inputStream)
+        //using (var outputStream = File.Open(fullName, FileMode.Append))
+        //{
+        //    length = outputStream.Position;
+
+        //    var buffer = new byte[8192];
+        //    int bytesRead;
+        //    while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+        //    {
+        //        await outputStream.WriteAsync(buffer, 0, bytesRead, ct);
+        //        length += bytesRead;
+        //    }
+        //}
+
+        //var storageFolder = await db.StorageFolders.FirstOrDefaultAsync(a => a.Name == typeName, ct);
+        //if (storageFolder == null)
+        //{
+        //    storageFolder = new StorageFolder()
+        //    {
+        //        Name = typeName,
+        //    };
+        //    await db.StorageFolders.AddAsync(storageFolder, ct);
+        //    await db.SaveChangesAsync(ct);
+        //}
+
+        //var storageFile = await db.StorageFiles
+        //    .FirstOrDefaultAsync(a =>
+        //        a.StorageFolderId == storageFolder.Id &&
+        //        a.Key == model.StorageKey, ct);
+        //if (storageFile != null)
+        //{
+        //    db.StorageFiles.Remove(storageFile);
+        //    await db.SaveChangesAsync(ct);
+        //}
+        //storageFile = new StorageFile()
+        //{
+        //    Key = model.StorageKey,
+        //    StorageFolderId = storageFolder.Id,
+        //    FileName = fileName,
+        //    Length = length,
+        //    MimeType = model.MimeType
+        //};
+        //await db.StorageFiles.AddAsync(storageFile, ct);
+        //await db.SaveChangesAsync(ct);
+
+        //var externalUrlRequest = new GetStorageFileInfoRequest()
+        //{
+        //    StorageKey = model.StorageKey,
+        //    BaseUrl = model.BaseUrl
+        //};
+        //var externalUrlResponse = await GetStorageFileUrl(externalUrlRequest, ct);
+
+        //return new AppendResponse()
+        //{
+        //    Success = true,
+        //    Url = externalUrlResponse.Url,
+        //    FileInfo = new()
+        //    {
+        //        Key = storageFile.Key,
+        //        MimeType = storageFile.MimeType,
+        //        FileName = storageFile.FileName,
+        //        Length = storageFile.Length
+        //    },
+        //};
     }
 
     public async Task<DeleteResponse> DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
-        var split = model.StorageKey.Split('/');
-        var typeName = "_";
-        var id = model.StorageKey;
-        if (split.Length > 1)
-        {
-            typeName = split[0];
-            id = id.Substring(typeName.Length + 1);
-        }
-
-        var storageFolder = await db.StorageFolders
-            .FirstOrDefaultAsync(a => a.Name == typeName, ct);
-        if (storageFolder == null)
+        var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
+        if (info.FullName.StartsWith(Directory.FullName) == false)
             return new DeleteResponse()
             {
-                ErrorMessage = ErrorMessagesEnum.FolderDoesntExists
+                ErrorMessage = ErrorMessagesEnum.DoNotHack
             };
 
-        var directoryFullName = Path.Combine(Directory.FullName, typeName);
-        if (!System.IO.Directory.Exists(directoryFullName))
+        if (info.Exists == false)
+            return new DeleteResponse()
+            {
+                ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
+            };
+
+        if (info.Directory == null || info.Directory.Exists == false)
             return new DeleteResponse()
             {
                 ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
             };
 
+        var fullName = info.FullName;
+
         var storageFile = await db.StorageFiles
-            .FirstOrDefaultAsync(a =>
-                a.StorageFolderId == storageFolder.Id &&
-                a.Key == model.StorageKey, ct);
-        if (storageFile?.FileName == null)
+            .FirstOrDefaultAsync(a => a.Key == model.StorageKey, ct);
+        if (storageFile == null)
             return new DeleteResponse()
             {
                 ErrorMessage = ErrorMessagesEnum.FileDoesntExists
             };
 
-        var fullName = Path.Combine(directoryFullName, storageFile.FileName);
-        if (!File.Exists(fullName))
-            return new DeleteResponse()
-            {
-                ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
-            };
+
+        //var split = model.StorageKey.Split('/');
+        //var typeName = "_";
+        //var id = model.StorageKey;
+        //if (split.Length > 1)
+        //{
+        //    typeName = split[0];
+        //    id = id.Substring(typeName.Length + 1);
+        //}
+
+        //var storageFolder = await db.StorageFolders
+        //    .FirstOrDefaultAsync(a => a.Name == typeName, ct);
+        //if (storageFolder == null)
+        //    return new DeleteResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FolderDoesntExists
+        //    };
+
+        //var directoryFullName = Path.Combine(Directory.FullName, typeName);
+        //if (!System.IO.Directory.Exists(directoryFullName))
+        //    return new DeleteResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FolderDoesntExistsOnDisk
+        //    };
+
+        //var storageFile = await db.StorageFiles
+        //    .FirstOrDefaultAsync(a =>
+        //        a.StorageFolderId == storageFolder.Id &&
+        //        a.Key == model.StorageKey, ct);
+        //if (storageFile?.FileName == null)
+        //    return new DeleteResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FileDoesntExists
+        //    };
+
+        //var fullName = Path.Combine(directoryFullName, storageFile.FileName);
+        //if (!File.Exists(fullName))
+        //    return new DeleteResponse()
+        //    {
+        //        ErrorMessage = ErrorMessagesEnum.FileDoesntExistsOnDisk
+        //    };
 
         // Forceer delete, wacht tot alle lezers weg zijn
         if (!ForceDelete(fullName))
@@ -312,18 +493,18 @@ public class LocalStorageService(ApplicationDbContext db)
 
 
 
-    private static (string directoryName, string fileName) GetDirectoryAndFileName(string storageKey)
-    {
-        var split = storageKey.Split('/');
-        var directoryName = "_";
-        var fileName = storageKey;
-        if (split.Length > 1)
-        {
-            directoryName = split[0];
-            fileName = storageKey.Substring(directoryName.Length + 1);
-        }
-        return new(directoryName, fileName);
-    }
+    //private static (string directoryName, string fileName) GetDirectoryAndFileName(string storageKey)
+    //{
+    //    var split = storageKey.Split('/');
+    //    var directoryName = "_";
+    //    var fileName = storageKey;
+    //    if (split.Length > 1)
+    //    {
+    //        directoryName = split[0];
+    //        fileName = storageKey.Substring(directoryName.Length + 1);
+    //    }
+    //    return new(directoryName, fileName);
+    //}
     private static string ToHexStringLower(byte[] bytes)
     {
         var chars = new char[bytes.Length * 2];

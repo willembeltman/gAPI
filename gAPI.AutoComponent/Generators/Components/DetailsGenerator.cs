@@ -86,11 +86,11 @@ else
             @if (new[] {{ ""png"", ""jpg"", ""jpeg"", ""gif"", ""bmp"", ""webp"" }}.
                 Contains(System.IO.Path.GetExtension(DataSource.Model!.StorageFileUrl)!.TrimStart('.').ToLowerInvariant()))
             {{
-                <img src=""@DataSource.Model!.StorageFileUrl"" style=""max-height: 120px;"" />
+                <img src=""@(DataSource.Model!.StorageFileUrl)"" style=""max-height: 120px;"" />
             }}
             else
             {{
-                <a href=""@DataSource.Model!.StorageFileUrl"" download>Download</a>
+                <a href=""@(DataSource.Model!.StorageFileUrl)"" download>Download</a>
             }}
         </div>
     }}";

@@ -132,7 +132,7 @@ else
                                 <td>
                                     @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}))
                                     {{
-                                        <img src=""@item.Model!.{p.Name}"" style=""max-height: 32px;"" />
+                                        <img src=""@(item.Model!.{p.Name})"" style=""max-height: 32px;"" />
                                     }} 
                                 </td>
                             }}";
@@ -142,7 +142,7 @@ else
                     return $@"
                             @if (HideColumnNames.Contains(""{p.Name}"") == false)
                             {{
-                                <td>@item.Model!.{p.Name}</td>
+                                <td>@(item.Model!.{p.Name})</td>
                             }}";
                 }
             }))}
@@ -197,7 +197,7 @@ else
                                     @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}) && 
                                         HideColumnNames.Contains(""{p.Name}"") == false)
                                     {{
-                                        <img src=""@item.Model!.{p.Name}"" style=""max-height: 32px; margin-right: 8px;"" />
+                                        <img src=""@(item.Model!.{p.Name})"" style=""max-height: 32px; margin-right: 8px;"" />
                                     }}";
                 }
                 else

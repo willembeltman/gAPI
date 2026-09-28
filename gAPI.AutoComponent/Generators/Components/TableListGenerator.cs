@@ -135,7 +135,7 @@ else
                                 <td>
                                     @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}))
                                     {{
-                                        <img src=""@item.Model!.{p.Name}"" style=""max-height: 32px;"" />
+                                        <img src=""@(item.Model!.{p.Name})"" style=""max-height: 32px;"" />
                                     }} 
                                 </td>
                             }}";
@@ -200,7 +200,7 @@ else
                                     @if (!string.IsNullOrWhiteSpace(item.Model!.{p.Name}) && 
                                         HideColumnNames.Contains(""{p.Name}"") == false)
                                     {{
-                                        <img src=""@item.Model!.{p.Name}"" style=""max-height: 32px; margin-right: 8px;"" />
+                                        <img src=""@(item.Model!.{p.Name})"" style=""max-height: 32px; margin-right: 8px;"" />
                                     }}";
                 }
                 else
@@ -234,7 +234,7 @@ else
 
         @if (DataSource.HasMore)
         {{
-            <div id=""@DataSource.SentinelId"" class=""sentinel"">@(LoadingModeText)</div>
+            <div id=""@(DataSource.SentinelId)"" class=""sentinel"">@(LoadingModeText)</div>
         }}
     </div>
 }}

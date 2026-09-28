@@ -105,7 +105,7 @@ else
                             @if (item.File != null)
                             {{
                                 <div class=""storageFileUploadPreview"">
-                                    <span>📄 @item.File.FileName</span>
+                                    <span>📄 @(item.File.FileName)</span>
                                     <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""() => DataSource.OnCancelFileSelected(item)"">❌ Remove</button>
                                 </div>
                             }}
