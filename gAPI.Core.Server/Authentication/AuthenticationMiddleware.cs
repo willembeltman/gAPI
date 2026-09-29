@@ -55,9 +55,9 @@ public class AuthenticationMiddleware
         if (initResult.Forbidden)
         {
             ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-            var response = hostEnvironment.IsDevelopment()
-                ? initResult.ForbiddenReason ?? "Forbidden"
-                : "Forbidden";
+            var response = (hostEnvironment.IsDevelopment()
+                ? initResult.ForbiddenReason ?? $"Forbidden"
+                : $"Forbidden") + " HOI";
             await ctx.Response.WriteAsync(response, ctx.RequestAborted);
             return;
         }

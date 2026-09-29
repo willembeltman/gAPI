@@ -231,7 +231,7 @@ else
 
         @if (DataSource.HasMore)
         {{
-            <div id=""@DataSource.SentinelId"" class=""sentinel"">@(LoadingModeText)</div>
+            <div id=""@(DataSource.SentinelId)"" class=""sentinel"">@(LoadingModeText)</div>
         }}
     </div>
 }}
