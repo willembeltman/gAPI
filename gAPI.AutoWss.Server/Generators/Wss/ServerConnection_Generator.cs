@@ -231,8 +231,8 @@ public class {Name} : WssServerConnection
         return $@"
     public Task {@interface}_{method}({SendRequestDto} ___sendRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
     {{
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(""{@interface}_{method}({{___sendRequest}})"", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace(""{{now}} {@interface}_{method}({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
        
         return {@interface.CleanName}.{method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"___ct" : $@"{arg}"))});
     }}";
@@ -242,8 +242,8 @@ public class {Name} : WssServerConnection
         return $@"
     public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
     {{
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace(""{{now}} {@interface}_{method}({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
 
         var ___responseTask = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
             ___ct" : $@"
@@ -260,8 +260,8 @@ public class {Name} : WssServerConnection
         return $@"
     public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}[EnumeratorCancellation] CancellationToken ___ct)
     {{
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(""{@interface}_{method}({{___invokeRequest}})"", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace(""{{now}} {@interface}_{method}({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
 
         var ___responseList = {@interface.CleanName}.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"
             ___ct" : $@"

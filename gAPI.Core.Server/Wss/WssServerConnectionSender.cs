@@ -76,139 +76,172 @@ public class WssServerConnectionSender(
             WebSocketMessageType.Binary,
             true,
             ct);
+
+        Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} WssServerConnection {wssServerConnection.ClientConnectionId} started");
+
     }
 
-    public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto sendRequest, CancellationToken ct)
+    public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricSendRequest_ToClientAsync({sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequest);
+            Logger.LogTrace("{now} QUEUED Send_FabricSendRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricSendRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendRequest);
-            writer.Write(ref offset, sendRequest);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
-    public async Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct)
+    public async Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({sendRequestCancelled})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestCancelled);
+            Logger.LogTrace("{now} QUEUED Send_FabricSendRequestCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendRequestCancelled);
-            writer.Write(ref offset, sendRequestCancelled);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
-    public async Task Send_SendRequestDone_ToClientAsync(SendRequestDoneClientDto sendRequestDone, CancellationToken ct)
+    public async Task Send_SendRequestDone_ToClientAsync(SendRequestDoneClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_SendRequestDone_ToClientAsync({sendRequestDone})", DateTime.Now.ToString("HH:mm:ss.fff"), sendRequestDone);
+            Logger.LogTrace("{now} QUEUED Send_SendRequestDone_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SendRequestDone_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SendRequestDone);
-            writer.Write(ref offset, sendRequestDone);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
 
-    public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestClientDto invokeRequest, CancellationToken ct)
+    public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricInvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
+            Logger.LogTrace("{now} QUEUED Send_FabricInvokeRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricInvokeRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricInvokeRequest);
-            writer.Write(ref offset, invokeRequest);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
-    public async Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledClientDto invokeRequestCancelledDto, CancellationToken ct)
+    public async Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricInvokeCancelled_ToClientAsync({invokeRequestCancelledDto})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequestCancelledDto);
+            Logger.LogTrace("{now} QUEUED Send_FabricInvokeCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricInvokeCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricInvokeRequestCancelled);
-            writer.Write(ref offset, invokeRequestCancelledDto);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
-    public async Task Send_InvokeRequestDone_ToClientAsync(InvokeRequestDoneClientDto invokeResponseDoneDto, CancellationToken ct)
+    public async Task Send_InvokeRequestDone_ToClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_InvokeRequestDone_ToClientAsync({invokeResponseDoneDto})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeResponseDoneDto);
+            Logger.LogTrace("{now} QUEUED Send_InvokeRequestDone_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_InvokeRequestDone_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestDone);
-            writer.Write(ref offset, invokeResponseDoneDto);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
 
-    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestClientDto request, CancellationToken ct)
+    public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
+            Logger.LogTrace("{now} QUEUED Send_StreamingRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.StreamingRequest);
-            writer.Write(ref offset, request);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
 
-    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseClientDto response, CancellationToken ct)
+    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({response})", DateTime.Now.ToString("HH:mm:ss.fff"), response);
+            Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.StreamingResponse);
-            writer.Write(ref offset, response);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
 
-    public async Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestClientDto request, CancellationToken ct)
+    public async Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
+            Logger.LogTrace("{now} QUEUED Send_FabricStreamingRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingRequest);
-            writer.Write(ref offset, request);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }
-    public async Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseClientDto response, CancellationToken ct)
+    public async Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({response})", DateTime.Now.ToString("HH:mm:ss.fff"), response);
+            Logger.LogTrace("{now} QUEUED Send_FabricStreamingResponse_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         await EnqueueAsync(writer =>
         {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingResponse);
-            writer.Write(ref offset, response);
+            writer.Write(ref offset, message);
             return offset;
         }, ct);
     }

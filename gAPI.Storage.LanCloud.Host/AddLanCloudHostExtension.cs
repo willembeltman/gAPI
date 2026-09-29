@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Client.Config;
+using gAPI.Core.Client.Extensions;
 using gAPI.Generated;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,20 +18,22 @@ public static class AddLanCloudHostExtension
         this IServiceCollection services,
         IConfigurationManager configuration)
     {
-        var config = configuration.CreateLanCloudHostConfig();
-        return AddStorageLanCloudHost(services, config);
+        var clientConfig = configuration.CreateClientConfig();
+        var hostConfig = configuration.CreateLanCloudHostConfig();
+        return AddStorageLanCloudHost(services, clientConfig, hostConfig);
     }
     public static IServiceCollection AddStorageLanCloudHost(
         this IServiceCollection services,
-        LanCloudHostConfig config)
+        ClientConfig clientConfig,
+        LanCloudHostConfig hostConfig)
     {
-        services.AddSingleton(config);
+        services.AddSingleton(clientConfig);
+        services.AddSingleton(hostConfig);
 
-        services.AddAutoWssClient(config);
-        services.AddAutoAuthClient(config);
+        services.AddAutoWssClient(clientConfig);
+        services.AddAutoAuthClient(clientConfig);
 
         services.AddHostedService<HostHub>();
-        services.AddSingleton<ClientConfig>(sp => sp.GetRequiredService<LanCloudHostConfig>());
 
         return services;
     }

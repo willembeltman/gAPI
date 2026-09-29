@@ -32,19 +32,23 @@ public static class AddAutoWssClientExtension
     {
         if (config.WssBackendUrl == null)
             throw new Exception("WssBackendUrl must be filled in config");
-        return AddAutoWssClient(services, config.WssBackendUrl, dateTime);
-    }
 
-    public static IServiceCollection AddAutoWssClient(
-        this IServiceCollection services,
-        string wssBackendUrl,
-        TimeProvider? dateTime = null)
-    {
+        //    return AddAutoWssClient(services, config.WssBackendUrl, dateTime);
+        //}
+
+        //public static IServiceCollection AddAutoWssClient(
+        //    this IServiceCollection services,
+        //    string wssBackendUrl,
+        //    TimeProvider? dateTime = null)
+        //{
+
+
+        services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Connection stuff
         services.AddScoped<ClientConnection>(sp => 
-            new ClientConnection(sp.GetRequiredService<IClientAuthenticatedHttpClient>(), wssBackendUrl));
+            new ClientConnection(config, sp.GetRequiredService<IClientAuthenticatedHttpClient>()));
         services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IWssClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IClientLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());

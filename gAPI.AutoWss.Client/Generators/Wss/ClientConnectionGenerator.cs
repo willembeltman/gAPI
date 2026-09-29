@@ -43,6 +43,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
+    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
 
@@ -75,6 +76,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(ServiceId);
         Reg(StreamingResponseDto);
         Reg(IClientLoggerFactory);
+        Reg(ClientConfig);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
             Reg(@interface);
@@ -113,9 +115,9 @@ public class {Name}
     : {WssClientConnection}, {IClientConnection}
 {{
     public {Name}(
-        {IClientAuthenticatedHttpClient} httpClient,
-        string wssBackendUrl)
-        : base(httpClient, wssBackendUrl)
+        {ClientConfig} clientConfig,
+        {IClientAuthenticatedHttpClient} httpClient)
+        : base(clientConfig, httpClient)
     {{
         ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
@@ -171,7 +173,7 @@ public class {Name}
         if (implementation is {hub} {hub.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(DateTime.Now.ToString(""HH:mm:ss.fff"") + "" SubscribeAsync({{serviceId}})"", ""{hub}"");
+                ___Logger.LogTrace(""{{now}} SubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
 
             await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
@@ -202,7 +204,7 @@ public class {Name}
         if (implementation is {hub} {hub.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(""UnsubscribeAsync({{serviceId}})"", ""{hub}"");
+                ___Logger.LogTrace(""{{now}} UnsubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
 
             await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
@@ -230,7 +232,7 @@ public class {Name}
     protected override async Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Send_SendRequest_ToServiceAsync({{___sendRequest}})"", ___sendRequest);
+            ___Logger.LogTrace(""{{now}} Send_SendRequest_ToServiceAsync({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
         {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
@@ -275,7 +277,7 @@ public class {Name}
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", ___invokeRequest);
+            ___Logger.LogTrace(""{{now}} Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
 {(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)) ? $@"
 
         switch (___invokeRequest.Routing.ServiceId.Value)

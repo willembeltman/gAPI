@@ -3,7 +3,6 @@ using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Config;
-using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Models;
 using gAPI.Fabric.Server.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,7 @@ public class FabricManager
 
     public readonly FabricManagerId FabricManagerId;
 
-    private readonly FabricConfig Config;
+    public readonly FabricConfig Config;
 
     public readonly FabricHostCollection Connections;
     public readonly ServiceCollection Services;
@@ -454,20 +453,70 @@ public class FabricManager
     public FabricDashboardSnapshot GetDashboardSnapshot()
     {
         var connections = Connections
-            .Select(connection => new FabricConnectionSnapshot(
-                connection.FabricConnectionId.Value,
-                connection.GetSendBytesPerSecond(),
-                connection.GetReceiveBytesPerSecond()))
+            .Select(connection => {
+                var send = connection.GetSendBytesPerSecond();
+                var receive = connection.GetReceiveBytesPerSecond();
+                return new FabricConnectionSnapshot(
+                    connection.FabricConnectionId.Value,
+                    send.bytes,
+                    receive.bytes,
+                    send.count,
+                    receive.count);
+            })
             .OrderBy(connection => connection.ConnectionId)
             .ToArray();
 
         var services = Services
-            .Select(service => new FabricServiceSnapshot(
-                service.Id.ToString(),
-                service.GetSendSpeed() + service.Sessions.Sum(session => session.GetSendSpeed()) + service.Users.Sum(user => user.GetSendSpeed()),
-                service.GetReceiveSpeed() + service.Sessions.Sum(session => session.GetReceiveSpeed()) + service.Users.Sum(user => user.GetReceiveSpeed()),
-                service.Sessions.Count,
-                service.Users.Count))
+            .Select(service =>
+            {
+                
+                var sendSpeed = 0L;
+                var sendCount = 0;
+
+                var send = service.GetSendSpeed();
+                sendSpeed += send.bytes;
+                sendCount += send.count;
+                foreach (var session in service.Sessions)
+                {
+                    var sendSession = session.GetSendSpeed();
+                    sendSpeed += sendSession.bytes;
+                    sendCount += sendSession.count;
+                }
+                foreach (var user in service.Users)
+                {
+                    var sendUser = user.GetSendSpeed();
+                    sendSpeed += sendUser.bytes;
+                    sendCount += sendUser.count;
+                }
+
+
+                var receivedSpeed = 0L;
+                var receivedCount = 0;
+
+                var received = service.GetReceiveSpeed();
+                receivedSpeed += received.bytes;
+                receivedCount += received.count;
+                foreach (var session in service.Sessions)
+                {
+                    var receivedSession = session.GetReceiveSpeed();
+                    receivedSpeed += receivedSession.bytes;
+                    receivedCount += receivedSession.count;
+                }
+                foreach (var user in service.Users)
+                {
+                    var receivedUser = user.GetReceiveSpeed();
+                    receivedSpeed += receivedUser.bytes;
+                    receivedCount += receivedUser.count;
+                }
+                return new FabricServiceSnapshot(
+                    service.Id.ToString(),
+                    sendSpeed,
+                    receivedSpeed,
+                    sendCount,
+                    receivedCount,
+                    service.Sessions.Count,
+                    service.Users.Count);
+            })
             .OrderBy(service => service.ServiceId, StringComparer.Ordinal)
             .ToArray();
 

@@ -12,11 +12,15 @@ public sealed record FabricDashboardSnapshot(
 public sealed record FabricConnectionSnapshot(
     long ConnectionId,
     long SentBytesPerSecond,
-    long ReceivedBytesPerSecond);
+    long ReceivedBytesPerSecond,
+    int SentCount,
+    int ReceivedCount);
 
 public sealed record FabricServiceSnapshot(
     string ServiceId,
     long SentBytesPerSecond,
     long ReceivedBytesPerSecond,
+    int SentCount,
+    int ReceivedCount,
     int SessionCount,
     int UserCount);

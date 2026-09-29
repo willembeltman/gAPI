@@ -20,8 +20,8 @@ public class WssLoggerLogDto
     public string? CorrelationId { get; set; }   // tie FE + BE logs together
     public string? UserId { get; set; }
 
-    // Extra structured data
-    public SignalRLogDataDto[]? Data { get; set; }
+    //// Extra structured data
+    //public SignalRLogDataDto[]? Data { get; set; }
 
     // For errors
     public string? StackTrace { get; set; }

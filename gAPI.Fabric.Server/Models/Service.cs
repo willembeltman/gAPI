@@ -52,7 +52,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         }
     }
 
-    private long GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
         var interval = 1.0;
         var now = Stopwatch.Elapsed.TotalSeconds;
@@ -61,10 +61,17 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         while (queue.TryPeek(out var entry) && entry.time < now - interval)
             queue.TryDequeue(out _);
 
-        return queue.Sum(x => x.bytes);
+        var bytes = 0L;
+        var count = 0;
+        foreach (var item in queue)
+        {
+            bytes += item.bytes;
+            count++;
+        }
+        return new(count, bytes);
     }
-    public long GetSendSpeed() => GetSpeed(SendLogger);
-    public long GetReceiveSpeed() => GetSpeed(ReceiveLogger);
+    public (int count, long bytes) GetSendSpeed() => GetSpeed(SendLogger);
+    public (int count, long bytes) GetReceiveSpeed() => GetSpeed(ReceiveLogger);
 
     public void EnqueueSend(long size)
     {

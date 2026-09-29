@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿//using Microsoft.Extensions.Logging;
 
-namespace gAPI.Core.Wss;
+//namespace gAPI.Core.Wss;
 
-public static class WssLoggerConfig
-{
-    public static LogLevel MinimumLevel { get; set; } = LogLevel.Error;
-}
+//public static class WssLoggerConfig
+//{
+//    public static LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
+//}
 

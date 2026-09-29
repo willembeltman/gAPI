@@ -149,8 +149,8 @@ public class {Name}(
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace(""{{now}}, {method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})"", DateTime.Now.ToString(""HH:mm:ss.fff""){string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
 
         var ___requestId = {RequestId}.New();
         var ___routing = new {RoutingDto}(
@@ -186,8 +186,8 @@ public class {Name}(
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace(""{{now}}, {method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})"", DateTime.Now.ToString(""HH:mm:ss.fff""){string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
 
         var ___routing = new {RoutingDto}(
             {RequestId}.New(),

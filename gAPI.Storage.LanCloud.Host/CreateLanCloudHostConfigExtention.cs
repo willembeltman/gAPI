@@ -8,8 +8,6 @@ public static class CreateLanCloudHostConfigExtention
     public static LanCloudHostConfig CreateLanCloudHostConfig(this IConfigurationManager m)
     {
         var config = new LanCloudHostConfig(
-            m["ApiBackendUrl"] ?? "",
-            m["WssBackendUrl"] ?? "",
             m.GetSection("LocalShares").Get<LocalShare[]>() ?? []);
         return config;
     }

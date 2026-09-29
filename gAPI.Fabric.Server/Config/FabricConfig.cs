@@ -1,10 +1,12 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace gAPI.Fabric.Server.Config;
 
 public class FabricConfig
 {
     public int Port { get; set; } = 9494;
+    public LogLevel LogLevel { get; set; }
 
     //public async static Task<FabricConfig> LoadAsync()
     //{
