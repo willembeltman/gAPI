@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using gAPI.AutoWss.Server.Generators.Apis;
 
 namespace gAPI.AutoWss.Server;
 
@@ -35,6 +36,7 @@ public class Generator
         ServerConnection = new ServerConnection_Generator(this);
         IClientContext = new IClientContext_Generator(this);
         ClientContext = new ClientContext_Generator(this);
+        ServiceRouter = new ServiceRouter_Generator(this);
         AddAutoWssExtension = new AddAutoWssServerExtensionGenerator(this);
         MapAutoWssExtension = new MapAutoWssServerExtensionGenerator(this);
         MapWssEndpointExtension = new WssEndpointExtensionGenerator(this);
@@ -48,11 +50,11 @@ public class Generator
             .ToArray();
 
         IClientHandlerContexts = ClientHandlers
-            .Select(clientHandler => new IClientServiceContext_Generator(this, clientHandler))
+            .Select(clientHandler => new IHubClientContext_Generator(this, clientHandler))
             .ToArray();
 
         ClientContexts = IClientHandlerContexts
-            .Select(iclientHandler => new ClientServiceContext_Generator(this, iclientHandler))
+            .Select(iclientHandler => new HubClientContext_Generator(this, iclientHandler))
             .ToArray();
 
 
@@ -72,13 +74,14 @@ public class Generator
     public ServerConnection_Generator ServerConnection { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
+    public ServiceRouter_Generator ServiceRouter { get; }
     public AddAutoWssServerExtensionGenerator AddAutoWssExtension { get; }
     public MapAutoWssServerExtensionGenerator MapAutoWssExtension { get; }
     public WssEndpointExtensionGenerator MapWssEndpointExtension { get; }
     public MinimalApi_Generator[] MinimalApis { get; }
     public HubClient_Generator[] ClientHandlers { get; }
-    public IClientServiceContext_Generator[] IClientHandlerContexts { get; }
-    public ClientServiceContext_Generator[] ClientContexts { get; }
+    public IHubClientContext_Generator[] IClientHandlerContexts { get; }
+    public HubClientContext_Generator[] ClientContexts { get; }
     //public IStateParserGenerator IStateParser { get; }
     //public StateParserGenerator StateParser { get; }
 
@@ -90,6 +93,7 @@ public class Generator
         GenerateItem(spc, AddAutoWssExtension);
         GenerateItem(spc, MapAutoWssExtension);
         GenerateItem(spc, MapWssEndpointExtension);
+        GenerateItem(spc, ServiceRouter);
 
         foreach (var item in MinimalApis)
             GenerateItem(spc, item);

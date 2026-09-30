@@ -46,6 +46,8 @@ public class AuthenticationService<TUser, TStateDto>(
         => _Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     public UserId UserId
         => new(_AuthenticationState?.User?.Id.ToString());
+    public AuthenticationHeaders Headers
+        => _Headers ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
     //public Task<AuthenticationInitializeResult> InitializeAsync(string url, string? cookieData, string? sessionData, string? stateData, CancellationToken ct)
     //{

@@ -38,6 +38,8 @@ public class HostHub(
         //    ___Logger.LogTrace("{now}, ListDirectory({relativePath})", DateTime.Now.ToString("HH:mm:ss.fff"), relativePath);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("ListDirectory"),
@@ -86,6 +88,8 @@ public class HostHub(
         //    ___Logger.LogTrace("{now}, Get({relativeFullName})", DateTime.Now.ToString("HH:mm:ss.fff"), relativeFullName);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Get"),
@@ -134,6 +138,8 @@ public class HostHub(
         //    ___Logger.LogTrace("{now}, ReadFile({relativeFullName}, {startOffset})", DateTime.Now.ToString("HH:mm:ss.fff"), relativeFullName, startOffset);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("ReadFile"),

@@ -52,7 +52,7 @@ public class Interface : SharedReference
                 a.TypeKind == TypeKind.Class &&
                 a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
             .Select(a => new Service(this, a))
-            .FirstOrDefault();
+            .FirstOrDefault(a => a.IsApiProxy == false);
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }

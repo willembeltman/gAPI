@@ -2,11 +2,11 @@
 
 namespace gAPI.AutoWss.Server.Generators.Hubs;
 
-public class ClientServiceContext_Generator : _BaseGenerator
+public class HubClientContext_Generator : _BaseGenerator
 {
-    public ClientServiceContext_Generator(
+    public HubClientContext_Generator(
         Generator context,
-        IClientServiceContext_Generator iClientHandlerContext)
+        IHubClientContext_Generator iClientHandlerContext)
     {
         Context = context;
         IClientContext = iClientHandlerContext;
@@ -19,7 +19,7 @@ public class ClientServiceContext_Generator : _BaseGenerator
     }
 
     public Generator Context { get; }
-    public IClientServiceContext_Generator IClientContext { get; }
+    public IHubClientContext_Generator IClientContext { get; }
 
     public HubClient_Generator Client => IClientContext.ClientHandler;
     public Interface IClient => Client.Interface;

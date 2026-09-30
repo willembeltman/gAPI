@@ -9,6 +9,9 @@ public interface IWssClientConnection : IClientLoggerFactory
     SessionId SessionId { get; }
     bool Initialized { get; }
     bool IsConnected { get; }
+    FabricManagerId FabricManagerId { get; }
+    FabricConnectionId FabricConnectionId { get; }
+    ClientConnectionId ClientConnectionId { get; }
 
     Task TryConnectAsync(CancellationToken ct);
 

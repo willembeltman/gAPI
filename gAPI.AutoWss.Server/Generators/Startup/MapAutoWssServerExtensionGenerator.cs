@@ -20,7 +20,7 @@ public class MapAutoWssServerExtensionGenerator : _BaseGenerator
 
     public Generator Context { get; }
 
-    public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
+    public HubClientContext_Generator[] ClientContexts => Context.ClientContexts;
 
     public override void GenerateCode()
     {

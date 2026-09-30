@@ -12,6 +12,7 @@ public interface IServerAuthenticationService
     SessionId SessionId { get; }
     bool Initialized { get; }
     AuthenticationInitializeResult Result { get; }
+    AuthenticationHeaders Headers { get; }
 
     Task<AuthenticationInitializeResult> InitializeAsync(
         PathString path, 

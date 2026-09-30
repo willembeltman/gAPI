@@ -4,11 +4,8 @@ using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using System.Net;
-using System.Reflection.PortableExecutable;
 using System.Security.Claims;
 
 namespace gAPI.Core.Server.Authentication;
@@ -22,6 +19,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
     where TUser : AuthUser
     where TStateDto : AuthStateDto, new()
 {
+    private AuthenticationHeaders? _Headers;
     private AuthenticationInitializeResult? _Result;
     private TStateDto? _ClientState;
     private TStateDto? _State;
@@ -36,6 +34,8 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
     public TStateDto? ClientState => _ClientState;
     public TStateDto State => _State ?? throw new Exception("Please initialize the NoDbServerAuthenticationService first");
     public AuthenticationState<TUser> AuthenticationState => throw new Exception("Please do not use in no-db mode");
+    public AuthenticationHeaders Headers
+        => _Headers ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
     public async Task<AuthenticationInitializeResult> InitializeAsync(
         PathString path,
@@ -70,6 +70,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
         if (authenticationOptions.UpdateSession)
             await fabricClient.UpdateSession(parsedSessionId, cookieData, ct);
 
+        _Headers = new AuthenticationHeaders(path, query, ipAddress, cookieData, stateData, parsedSessionId);
         _Result = new AuthenticationInitializeResult();
         return Result;
     }

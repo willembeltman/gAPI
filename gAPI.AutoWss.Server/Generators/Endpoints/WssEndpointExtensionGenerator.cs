@@ -22,7 +22,7 @@ public class WssEndpointExtensionGenerator : _BaseGenerator
     public Generator Context { get; }
 
     public ServerConnection_Generator ServerConnection => Context.ServerConnection;
-    public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
+    public HubClientContext_Generator[] ClientContexts => Context.ClientContexts;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
 

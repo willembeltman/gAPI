@@ -6,6 +6,7 @@ using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Fabric;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Storage.LanCloud.Api.Models;
 using gAPI.Storage.LanCloud.Api.Services;
 using gAPI.Storage.LanCloud.Shared.Dtos;
@@ -80,6 +81,8 @@ public static class AddAutoWssServerExtension
             });
         }
 
+        services.AddSingleton<IServiceRouter, ServiceRouter>();
+
         var sessionCache = new SessionCache();
         services.AddSingleton(sessionCache);
 
@@ -97,6 +100,7 @@ public static class AddAutoWssServerExtension
             sessionCache,
             requestCache,
             serviceSubscriptionCollection,
+            sp.GetRequiredService<IServiceRouter>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 

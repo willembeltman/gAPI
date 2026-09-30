@@ -1,13 +1,13 @@
 ﻿using gAPI.AutoWss.Server.Generators.Wss;
 using gAPI.AutoWss.Server.Models;
 
-namespace gAPI.AutoWss.Server.Generators.Hubs;
+namespace gAPI.AutoWss.Server.Generators.Apis;
 
-public class IClientServiceContext_Generator : _BaseGenerator
+public class IApiClientContext_Generator : _BaseGenerator
 {
-    public IClientServiceContext_Generator(
+    public IApiClientContext_Generator(
         Generator context,
-        HubClient_Generator clientHandler)
+        ApiClient_Generator clientHandler)
     {
         Context = context;
         ClientHandler = clientHandler;
@@ -16,11 +16,11 @@ public class IClientServiceContext_Generator : _BaseGenerator
         Namespace = clientHandler.Namespace;
 
         Name = "I" + ClientHandler.Interface.CleanName + "Context";
-        FileName = $"Hubs/{Name}.g.cs";
+        FileName = $"Apis/{Name}.g.cs";
     }
 
     public Generator Context { get; }
-    public HubClient_Generator ClientHandler { get; }
+    public ApiClient_Generator ClientHandler { get; }
     public Interface IClientHandler => ClientHandler.Interface;
     public ServerConnection_Generator ServerConnection => Context.ServerConnection;
     public SharedReference UserId => Context.SharedReferences.UserId;

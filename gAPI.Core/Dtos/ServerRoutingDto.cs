@@ -4,14 +4,14 @@ using gAPI.Core.Ids;
 namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
-public record RoutingDto(
+public record ServerRoutingDto(
     FabricManagerId From_FabricManagerId,
     FabricConnectionId From_FabricConnectionId,
 
     RequestId RequestId,
     ServiceId ServiceId,
     ServiceMethodId MethodId,
-    
-    UserId? UserId,
-    SessionId? SessionId
+
+    FabricConnectionId FabricConnectionId,
+    ClientConnectionId ClientConnectionId
     );

@@ -24,5 +24,15 @@ public enum FabricClientToHostMessageEnum
 
     UpdateSession,
     ClearSession,
-    GetSessionCookieData
+    GetSessionCookieData,
+
+
+    ServerSendRequest, 
+    ServerSendRequestCancelled,
+    ServerSendRequestDone,
+    ServerInvokeRequest,
+    ServerInvokeRequestCancelled,
+    ServerInvokeRequestDone,
+    ServerStreamingRequest,
+    ServerStreamingResponse
 }

@@ -5,7 +5,6 @@ using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
-using System.ComponentModel.DataAnnotations;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;

@@ -4,28 +4,19 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Server.Generators.Hubs;
+namespace gAPI.AutoWss.Server.Generators.Apis;
 
-public class HubClient_Generator : _BaseGenerator
+public class ApiClient_Generator : _BaseGenerator
 {
-    public HubClient_Generator(Generator context, Interface @interface)
+    public ApiClient_Generator(Generator context, Interface @interface)
     {
         Context = context;
         Interface = @interface;
 
-        if (context.SharedReferences.OwnHubs.TryGetValue(Interface, out var impl))
-        {
-            OwnImplementation = impl;
-            Namespace = impl.Namespace;
-            Name = impl.Name;
-        }
-        else
-        {
-            Namespace = "gAPI.Generated";
-            Name = Interface.CleanName;
-        }
+        Namespace = "gAPI.Generated";
+        Name = Interface.CleanName;
 
-        FileName = $"Hubs/{Name}.g.cs";
+        FileName = $"Apis/{Name}.g.cs";
         Directory = "";
 
         PropertyHelper = new GeneratePropertyHelper([], Context.CustomSpanSerializers, [], Reg, NeededSerializers);
@@ -42,7 +33,7 @@ public class HubClient_Generator : _BaseGenerator
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
-    public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
+    public SharedReference IsApiProxyAttribute => Context.SharedReferences.IsApiProxyAttribute;
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
     public SharedReference? OwnImplementation { get; }
@@ -63,7 +54,7 @@ public class HubClient_Generator : _BaseGenerator
         Reg("gAPI.Core.Serializers");
         Reg("System.Runtime.CompilerServices");
         Reg(Interface);
-        Reg(IsHubProxyAttribute);
+        Reg(IsApiProxyAttribute);
         Reg(FabricClient);
         Reg(SessionId);
         Reg(UserId);
@@ -87,7 +78,7 @@ public class HubClient_Generator : _BaseGenerator
             }
         }
 
-        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
             Reg(@interface);
             foreach (var method in @interface.Methods)
@@ -108,7 +99,7 @@ public class HubClient_Generator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
-[{IsHubProxyAttribute}]
+[{IsApiProxyAttribute}]
 public class {Name}(
     {FabricClient} ___fabricClient,
     ILoggerFactory ___loggerFactory,

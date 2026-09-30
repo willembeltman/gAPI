@@ -136,6 +136,8 @@ public sealed class {Name}(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 
         var ___routing = new {RoutingDto}(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
@@ -175,6 +177,8 @@ public sealed class {Name}(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
 
         var ___routing = new {RoutingDto}(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
@@ -222,6 +226,8 @@ public sealed class {Name}(
 
         var ___requestId = {RequestId}.New();
         var ___routing = new {RoutingDto}(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             ___requestId,
             ___ServiceId,
             new(""{method}""),

@@ -14,6 +14,7 @@ public class SharedReferences
 
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
+        IsApiProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsApiProxyAttribute", allSymbols);
         
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
@@ -29,7 +30,11 @@ public class SharedReferences
         InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
 
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
-        
+
+        IServiceRouter = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceRouter", allSymbols);
+        OwnServiceRouter = SharedReferenceFinder.TryFindByInterface(IServiceRouter, allSymbols);
+
+
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
@@ -47,10 +52,18 @@ public class SharedReferences
             .Where(a => a.Implementation != null)
             .ToDictionary(a => a.Interface, a => a.Implementation!);
 
+
+        ServerSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerSendRequestDto", allSymbols);
+        ServerSendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerSendRequestCancelledDto", allSymbols);
+        ServerInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerInvokeRequestDto", allSymbols);
+        ServerInvokeRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerInvokeRequestCancelledDto", allSymbols);
+        ServerStreamingRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerStreamingRequestDto", allSymbols);
+
     }
 
     public SharedReference FabricClient { get; }
     public SharedReference IsHubProxyAttribute { get; }
+    public SharedReference IsApiProxyAttribute { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
@@ -60,6 +73,8 @@ public class SharedReferences
     public SharedReference InvokeRequestDto { get; }
     public SharedReference StreamingResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
+    public SharedReference IServiceRouter { get; }
+    public SharedReference? OwnServiceRouter { get; }
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference AuthenticationHeaders { get; }
     public SharedReference SendRequestDto { get; }
@@ -75,4 +90,9 @@ public class SharedReferences
     public SharedReference WssServerConnection { get; }
     public SharedReference? OwnServerConnection { get; }
     public Dictionary<Interface, SharedReference> OwnHubs { get; }
+    public SharedReference ServerSendRequestDto { get; }
+    public SharedReference ServerSendRequestCancelledDto { get; }
+    public SharedReference ServerInvokeRequestDto { get; }
+    public SharedReference ServerInvokeRequestCancelledDto { get; }
+    public SharedReference ServerStreamingRequestDto { get; }
 }

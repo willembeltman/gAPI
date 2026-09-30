@@ -14,6 +14,11 @@ public class FabricConverter
     public static void WriteHostToClientMessageType(BinaryWriter w, FabricHostToClientMessageEnum type)
         => w.Write((byte)type);
 
+    public static void WriteHostToClientMessageType(BinaryWriter writer, object serverSendRequestDone)
+    {
+        throw new NotImplementedException();
+    }
+
 
 
     //public static FabricConnectionId ReadFabricHostId(BinaryReader binaryReader)

@@ -18,4 +18,13 @@ public enum FabricHostToClientMessageEnum
     GetSessionCookieDataResponse,
     SynchronizeFabricIds,
     Log,
+
+    ServerSendRequest,
+    ServerSendRequestCancelled,
+    ServerSendRequestDone,
+    ServerInvokeRequest,
+    ServerInvokeRequestCancelled,
+    ServerInvokeRequestDone,
+    ServerStreamingRequest,
+    ServerStreamingResponse,
 }

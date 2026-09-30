@@ -7,9 +7,9 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Server.Models;
 
-public sealed class RequestState : IDisposable
+public sealed class ServerRequestState : IDisposable
 {
-    public required RoutingDto Routing { get; init; }
+    public required ServerRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
     public required FabricHost Caller { get; init; }
     public required FabricHost[] Targets { get; init; }
