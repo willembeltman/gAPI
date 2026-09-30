@@ -1,9 +1,8 @@
-﻿
-using gAPI.AutoApi.Server.Models;
+﻿using gAPI.AutoApi.Server.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Endpoints;
 
 public class SseEndpointExtension_Generator : BaseGenerator
 {

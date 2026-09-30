@@ -1,7 +1,8 @@
-﻿using gAPI.AutoApi.Server.Models;
+﻿using gAPI.AutoApi.Server.Generators.Hubs;
+using gAPI.AutoApi.Server.Models;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Sse;
 
 public class ClientContext_Generator : BaseGenerator
 {
@@ -20,7 +21,7 @@ public class ClientContext_Generator : BaseGenerator
     public Generator Context { get; }
 
     public ServiceContext DataModel => Context.ServiceContext;
-    public ClientServiceContext_Generator[] ClientContexts => Context.ClientContexts;
+    public HubClientContext_Generator[] ClientContexts => Context.ClientContexts;
     public IClientContext_Generator IClientContext => Context.IClientContext;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;

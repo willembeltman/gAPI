@@ -1,12 +1,12 @@
 ﻿using gAPI.AutoApi.Server.Models;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Hubs;
 
-public class ClientServiceContext_Generator : BaseGenerator
+public class HubClientContext_Generator : BaseGenerator
 {
-    public ClientServiceContext_Generator(
+    public HubClientContext_Generator(
         Generator context,
-        IClientServiceContext_Generator iClientContext)
+        IHubClientContext_Generator iClientContext)
     {
         Context = context;
         IClientContext = iClientContext;
@@ -19,11 +19,11 @@ public class ClientServiceContext_Generator : BaseGenerator
     }
 
     public Generator Context { get; }
-    public IClientServiceContext_Generator IClientContext { get; }
+    public IHubClientContext_Generator IClientContext { get; }
 
     public Interface Interface => IClientContext.Interface;
     public ServiceContext DataModel => Context.ServiceContext;
-    public ClientService_Generator SseService => IClientContext.SseService;
+    public HubClient_Generator SseService => IClientContext.SseService;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference UserId => Context.SharedReferences.UserId;
@@ -48,10 +48,10 @@ public class {Name}(
 {{
     public {Interface.Name} ToAll
         => new {SseService.Name}(fabricClient);
-    public {Interface.Name} ToUser(string userId)
-        => new {SseService.Name}(fabricClient, new {UserId}(userId));
-    public {Interface.Name} ToSession(string sessionId)
-        => new {SseService.Name}(fabricClient, null, new {SessionId}(sessionId));
+    public {Interface.Name} ToUser({UserId} userId)
+        => new {SseService.Name}(fabricClient, userId);
+    public {Interface.Name} ToSession({SessionId} sessionId)
+        => new {SseService.Name}(fabricClient, null, sessionId);
 }}
 ";
     }

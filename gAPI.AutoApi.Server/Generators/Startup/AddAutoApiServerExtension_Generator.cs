@@ -1,9 +1,10 @@
-﻿
+﻿using gAPI.AutoApi.Server.Generators.Hubs;
+using gAPI.AutoApi.Server.Generators.Sse;
 using gAPI.AutoApi.Server.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Startup;
 
 public class AddAutoApiServerExtension_Generator : BaseGenerator
 {
@@ -28,7 +29,7 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
     public SharedReference? Middleware => Context.SharedReferences.AuthServer_Middleware;
 
 
-    public IEnumerable<ClientService_Generator> SseServices => Context.SseServices;
+    public IEnumerable<HubClient_Generator> SseServices => Context.SseServices;
     public IClientContext_Generator IClientContext => Context.IClientContext;
     public ClientContext_Generator ClientContext => Context.ClientContext;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
@@ -147,6 +148,7 @@ public static class {Name}
             sessionCache, 
             streamingCache,
             serviceSubscriptionCollection,
+            null!,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 

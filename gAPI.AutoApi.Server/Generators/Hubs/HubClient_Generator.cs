@@ -2,11 +2,11 @@
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Hubs;
 
-public class ClientService_Generator : BaseGenerator
+public class HubClient_Generator : BaseGenerator
 {
-    public ClientService_Generator(Generator context, Interface @interface)
+    public HubClient_Generator(Generator context, Interface @interface)
     {
         Context = context;
         Interface = @interface;
@@ -51,12 +51,12 @@ namespace {Namespace};
 
 [{IsHubProxyAttribute}]
 public class {Name}(
-    {FabricClient} FabricClient,
-    {UserId}? UserId = null,
-    {SessionId}? SessionId = null)
+    {FabricClient} ___FabricClient,
+    {UserId}? ___UserId = null,
+    {SessionId}? ___SessionId = null)
     : {Interface}
 {{
-    private readonly {ServiceId} ServiceId = new {ServiceId}(""{Interface}"");
+    private readonly {ServiceId} ___ServiceId = new {ServiceId}(""{Interface}"");
 {methodsCode}
 {string.Join("\r\n", Interface.Methods.Select(m => @$"
     public class {Interface.Title}_{m.Name}
@@ -130,15 +130,26 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        var payload = new {Interface.Title}_{method.Name}
+        var ___payload = new {Interface.Title}_{method.Name}
         {{
             {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
         }};
-        var serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-        var json = JsonSerializer.Serialize(payload);
-        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-        var requestId = {RequestId}.New();
-        await FabricClient.SendAsync(new (requestId, ServiceId, serviceMethodId, UserId, SessionId), bytes{(cancellationToken == null ? ", default" : $", {cancellationToken.Name}")});
+        var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
+        var ___json = JsonSerializer.Serialize(___payload);
+        var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
+        var ___requestId = {RequestId}.New();
+        await ___FabricClient.SendAsync(
+            new (
+                ___FabricClient.FabricManagerId, 
+                ___FabricClient.FabricConnectionId, 
+                ___requestId, 
+                ___ServiceId, 
+                ___serviceMethodId, 
+                ___UserId, 
+                ___SessionId), 
+            ___bytes{(cancellationToken == null ? @", 
+            default" : $@", 
+            {cancellationToken.Name}")});
     }}";
             }
             else
@@ -152,14 +163,24 @@ public class {Name}(
     public void {method.Name}({string.Join($",\r\n", method.Arguments.Select(a => @$"
             {a.ParameterType.Name} {a.Name}"))})
     {{
-        var payload = new {Interface.Title}_{method.Name}
+        var ___payload = new {Interface.Title}_{method.Name}
         {{{string.Join($",\r\n", args.Select(a => @$"
             {a.Name} = {a.Name}"))}
         }};
-        var serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-        var json = JsonSerializer.Serialize(payload);
-        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-        FabricClient.SendAsync(ServiceId, serviceMethodId, UserId, SessionId, bytes{(cancellationToken == null ? ", default" : $", {cancellationToken.Name}")}).GetAwaiter().GetResult();
+        var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
+        var ___json = JsonSerializer.Serialize(___payload);
+        var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
+        ___FabricClient.SendAsync(
+            new (
+                ___FabricClient.FabricManagerId, 
+                ___FabricClient.FabricConnectionId, 
+                ___ServiceId, 
+                ___serviceMethodId, 
+                ___UserId, 
+                ___SessionId), 
+            ___bytes{(cancellationToken == null ? @", 
+            default" : $@", 
+            {cancellationToken.Name}")}).GetAwaiter().GetResult();
     }}";
             }
         }

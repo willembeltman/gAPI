@@ -1,4 +1,7 @@
-﻿using gAPI.AutoApi.Server.Generators;
+﻿using gAPI.AutoApi.Server.Generators.Endpoints;
+using gAPI.AutoApi.Server.Generators.Hubs;
+using gAPI.AutoApi.Server.Generators.Sse;
+using gAPI.AutoApi.Server.Generators.Startup;
 using gAPI.AutoApi.Server.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -17,7 +20,7 @@ public class Generator
 
         // Api
         Apis = serviceContext.ApiInterfaces
-            .Select(service => new Controller_Generator(this, service))
+            .Select(service => new ControllerApi_Generator(this, service))
             .ToArray();
         MinimalApis = serviceContext.MinimalApiInterfaces
             .Select(service => new MinimalApi_Generator(this, service))
@@ -25,15 +28,15 @@ public class Generator
 
         // Sse
         SseServices = serviceContext.HubInterfaces
-            .Select(@interface => new ClientService_Generator(this, @interface))
+            .Select(@interface => new HubClient_Generator(this, @interface))
             .ToArray();
 
         IClientContexts = SseServices
-            .Select(clientHandler => new IClientServiceContext_Generator(this, clientHandler))
+            .Select(clientHandler => new IHubClientContext_Generator(this, clientHandler))
             .ToArray();
 
         ClientContexts = IClientContexts
-            .Select(clientHandler => new ClientServiceContext_Generator(this, clientHandler))
+            .Select(clientHandler => new HubClientContext_Generator(this, clientHandler))
             .ToArray();
 
         IClientContext = new IClientContext_Generator(this);
@@ -47,11 +50,11 @@ public class Generator
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
-    public Controller_Generator[] Apis { get; }
+    public ControllerApi_Generator[] Apis { get; }
     public MinimalApi_Generator[] MinimalApis { get; }
-    public ClientService_Generator[] SseServices { get; }
-    public IClientServiceContext_Generator[] IClientContexts { get; }
-    public ClientServiceContext_Generator[] ClientContexts { get; }
+    public HubClient_Generator[] SseServices { get; }
+    public IHubClientContext_Generator[] IClientContexts { get; }
+    public HubClientContext_Generator[] ClientContexts { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
     public AddAutoApiServerExtension_Generator AddAutoApi { get; }

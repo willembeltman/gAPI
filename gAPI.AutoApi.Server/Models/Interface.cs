@@ -39,6 +39,9 @@ public class Interface
         IsHidden = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
 
+        NoAutoApi = NamedTypeSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "NoAutoApiAttribute");
+
         Methods = NamedTypeSymbol
             .GetMembers()
             .OfType<IMethodSymbol>()
@@ -52,7 +55,7 @@ public class Interface
                 a.TypeKind == TypeKind.Class &&
                 a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
             .Select(a => new Service(this, a))
-            .FirstOrDefault();
+            .FirstOrDefault(a => a.IsApiProxy == false);
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }
@@ -63,9 +66,9 @@ public class Interface
     public string Title { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
+    public bool NoAutoApi { get; }
     public InterfaceMethod[] Methods { get; }
     public Service Service { get; }
-    public bool IsApiProxy => Service.IsApiProxy;
 
     public override string ToString()
     {

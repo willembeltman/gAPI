@@ -127,47 +127,47 @@ public class {Name}(
         var code = "";
         if (args.Length == 0)
         {
-            code += $"        using var response = await clientAuthenticationService.GetAsync(\"/{Interface.CleanName}/{method.Name}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.GetAsync(\"/{Interface.CleanName}/{method.Name}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsList)
         {
             code += $"        var query = $\"{{(queryItems.Count > 0 ? \"?\" : \"\")}}{{string.Join(\"&\", queryItems)}}\";\r\n";
-            code += $"        using var response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}{{query}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}{{query}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsListBy || method.IsListNotBy)
         {
             var idArg = method.Arguments
                 .First(a => a.Name != "skip" && a.Name != "take" && a.Name != "orderby");
             code += $"        var query = $\"{{(queryItems.Count > 0 ? \"?\" : \"\")}}{{string.Join(\"&\", queryItems)}}\";\r\n";
-            code += $"        using var response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}/{{{idArg.Name}}}{{query}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}/{{{idArg.Name}}}{{query}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsRead)
         {
             var arg = method.Arguments.First();
-            code += $"        using var response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.GetAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsDelete)
         {
             var arg = method.Arguments.First();
-            code += $"        using var response = await clientAuthenticationService.DeleteAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.DeleteAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsUpdate)
         {
-            code += $"        using var response = await clientAuthenticationService.PutAsync($\"/{Interface.CleanName}/{method.Name}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.PutAsync($\"/{Interface.CleanName}/{method.Name}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsFileUpdate)
         {
             var arg = method.Arguments.First();
-            code += $"        using var response = await clientAuthenticationService.PutAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.PutAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else if (method.IsFileDelete)
         {
             var arg = method.Arguments.First();
-            code += $"        using var response = await clientAuthenticationService.DeleteAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.DeleteAsync($\"/{Interface.CleanName}/{method.Name}/{{{arg.Name}}}\"{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         else
         {
-            code += $"        using var response = await clientAuthenticationService.PostAsync(\"/{Interface.CleanName}/{method.Name}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
+            code += $"        using var ___response = await clientAuthenticationService.PostAsync(\"/{Interface.CleanName}/{method.Name}\", ___content{(cancellationToken != null ? $", {cancellationToken.Name}" : ", Cts.Token")});";
         }
         return code;
     }
@@ -196,9 +196,9 @@ public class {Name}(
                 : $"BaseResponseT<{underlaying.Name}>";
 
         return $@"
-        response.EnsureSuccessStatusCode();
+        ___response.EnsureSuccessStatusCode();
 
-        var responseData = await response.Content.ReadFromJsonAsync<{responseType}>({(cancellationToken != null ? $"{cancellationToken.Name}" : "Cts.Token")})
+        var ___responseData = await ___response.Content.ReadFromJsonAsync<{responseType}>({(cancellationToken != null ? $"{cancellationToken.Name}" : "Cts.Token")})
             ?? throw new Exception(""Could not cast response data"");{(
                 underlaying == null
                 ? ""
@@ -207,16 +207,16 @@ public class {Name}(
                     underlaying.IsBaseResponseT ||
                     underlaying.IsBaseListResponseT
                     ? $@"
-        return responseData;"
+        return ___responseData;"
                     :
                         underlaying.IsNullable || underlaying.Name == "bool"
                         ? @"
-        return responseData.Response;" :
+        return ___responseData.Response;" :
                             underlaying.IsValueType
                             ? @"
-        return responseData.Response!;"
+        return ___responseData.Response!;"
                         : @"
-        return responseData.Response
+        return ___responseData.Response
             ?? throw new Exception(""Could not cast response data"");")}";
     }
 }

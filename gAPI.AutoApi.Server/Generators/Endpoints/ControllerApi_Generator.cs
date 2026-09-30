@@ -3,11 +3,11 @@ using gAPI.AutoApi.Server.Models;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Endpoints;
 
-public class Controller_Generator : BaseGenerator
+public class ControllerApi_Generator : BaseGenerator
 {
-    public Controller_Generator(Generator context, Interface @interface)
+    public ControllerApi_Generator(Generator context, Interface @interface)
     {
         Context = context;
         Interface = @interface;
@@ -138,7 +138,7 @@ public class {Name}(
             _ =>
                 $"[FromForm] {arg.ParameterType.Name} {arg.Name}"
         }),
-        "[FromHeader(Name = \"X-SessionId\")] string sessionId"
+        "[FromHeader(Name = \"X-SessionId\")] string ___sessionId"
             ]);
             var methodCallArguments = string.Join(", ", method.Arguments.Select(a => $"{a.Name}"));
 

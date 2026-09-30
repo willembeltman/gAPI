@@ -5,6 +5,7 @@ using gAPI.Storage.LanCloud.Shared.Dtos;
 namespace gAPI.Storage.LanCloud.Shared.Interfaces;
 
 [GenerateHub]
+[NoAutoApi]
 public interface IHostHub
 {
     IAsyncEnumerable<HubEntryDto> ListDirectory(string relativePath, CancellationToken ct);

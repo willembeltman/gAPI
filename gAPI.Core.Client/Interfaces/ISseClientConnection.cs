@@ -5,8 +5,8 @@ namespace gAPI.Core.Client.Interfaces;
 public interface ISseClientConnection : IDisposable
 {
     bool Initialized { get; }
-    Task SendRequestCancelled_ReceivedAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken token);
+    Task SendRequestCancelled_ReceivedAsync(SendRequestCancelledClientDto sendRequestCancelled, CancellationToken ct);
     Task SendRequest_ReceivedAsync(SendRequestClientDto sendRequest, CancellationToken ct);
-    Task SubscribeAsync(object implementation);
-    Task UnsubscribeAsync(object implementation);
+    Task SubscribeAsync(object implementation, CancellationToken ct = default);
+    Task UnsubscribeAsync(object implementation, CancellationToken ct = default);
 }

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Endpoints;
 
 public class MinimalApi_Generator : BaseGenerator
 {

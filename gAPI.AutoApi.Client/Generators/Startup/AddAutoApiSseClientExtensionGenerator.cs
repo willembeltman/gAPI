@@ -22,6 +22,7 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference ISseClientConnection => Context.SharedReferences.ISseClientConnection;
     public SharedReference SseManagerCollection => Context.SharedReferences.SseManagerCollection;
+    public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
 
     public SharedReference IUriNavigationManager => Context.SharedReferences.IUriNavigationManager;
     public SharedReference DefaultNavigationManager => Context.SharedReferences.DefaultNavigationManager;
@@ -39,6 +40,7 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("Microsoft.AspNetCore.Components");
         Reg("Microsoft.AspNetCore.Components.Authorization");
+        Reg(ClientConfig);
         Reg(ClientConnection);
         Reg(ISseClientConnection);
         Reg(SseManagerCollection);
@@ -61,8 +63,9 @@ namespace {Namespace};
 
 public static class {Name}
 {{
-    public static void AddAutoApiClient(this IServiceCollection services, string apiUrl)
+    public static IServiceCollection AddAutoApiClient(this IServiceCollection services, {ClientConfig} clientConfig)
     {{{propertiesCode}
+        services.AddSingleton(clientConfig);
         services.AddScoped<{ClientConnection}>();
         services.AddScoped<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddScoped<{ISseClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
@@ -87,7 +90,7 @@ public static class {Name}
         // Register the cookie handler
         services.AddSingleton<{WithCookiesHandler}>();
 
-
+        return services;
     }}
 }}";
     }

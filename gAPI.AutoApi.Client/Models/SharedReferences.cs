@@ -22,6 +22,7 @@ public class SharedReferences
 
         SseManagerCollection = SharedReferenceFinder.Find("gAPI.Core.Client.Collections.SseManagerCollection", allSymbols);
         SseClient = SharedReferenceFinder.Find("gAPI.Core.Client.Sse.SseClient", allSymbols);
+        ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
 
         AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileAttribute", allSymbols);
         AuthClient_ToFormFileExtension = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileExtensionAttribute", allSymbols);
@@ -54,6 +55,7 @@ public class SharedReferences
     public SharedReference SendRequestClientDto { get; }
     public SharedReference SendRequestCancelledClientDto { get; }
     public SharedReference SseClient { get; }
+    public SharedReference ClientConfig { get; }
     public SharedReference? AuthClient_FormFile { get; }
     public SharedReference? AuthClient_ToFormFileExtension { get; }
     public SharedReference IUriNavigationManager { get; }

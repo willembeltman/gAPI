@@ -17,6 +17,7 @@ public class ServiceContext
 
         HubInterfaces = hubInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
+            .Where(a => a.NoAutoApi == false && a.Service == null)
             .OrderBy(a => a.Name)
             .ToArray();
 
@@ -28,7 +29,7 @@ public class ServiceContext
 
         ApiInterfaces = apiInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
-            .Where(a => a.IsApiProxy == false)
+            .Where(a => a.NoAutoApi == false && a.Service != null && a.Service.IsApiProxy == false)
             .OrderBy(a => a.Name)
             .ToArray();
 

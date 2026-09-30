@@ -1,6 +1,7 @@
-﻿using System.Linq;
+﻿using gAPI.AutoApi.Server.Generators.Hubs;
+using System.Linq;
 
-namespace gAPI.AutoApi.Server.Generators;
+namespace gAPI.AutoApi.Server.Generators.Sse;
 
 public class IClientContext_Generator : BaseGenerator
 {
@@ -17,7 +18,7 @@ public class IClientContext_Generator : BaseGenerator
     }
 
     public Generator Context { get; }
-    public ClientServiceContext_Generator[] ClientHandlerContexts => Context.ClientContexts;
+    public HubClientContext_Generator[] ClientHandlerContexts => Context.ClientContexts;
 
     public override void GenerateCode()
     {
