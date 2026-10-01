@@ -179,7 +179,8 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {{
-        if (!firstRender || DataSource == null)
+        if (//!firstRender || 
+            DataSource == null)
             return;
         await DataSource.AfterRenderAsync();
     }}

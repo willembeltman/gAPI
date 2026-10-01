@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
+using System.Data.Common;
 using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Client.Razor;
@@ -65,11 +66,23 @@ public class ListDataSource<T, TKey>(
             };
         }
     }
+
     public async Task AfterRenderAsync()
     {
+        // We forceren elke keer een her-registratie op het (mogelijk nieuwe) DOM-element
         await RegisterAsync();
         Registered = true;
-        await EnsureVisibleAsync();
+        await EnsureVisibleAsync(); //
+    }
+
+    private async Task RegisterAsync()
+    {
+        DotNetRef ??= DotNetObjectReference.Create(this); //
+
+        // VERWIJDER de check: if (!IsRegistrated)
+        // We moeten JS áltijd aanroepen om het element opnieuw te observeren
+        await JS.InvokeVoidAsync("intersectionObserver.register", DotNetRef, SentinelId); //
+        IsRegistrated = true; //
     }
 
     public async Task OnHandleFileSelected(ItemDataSource<T, TKey> item, InputFileChangeEventArgs e)
@@ -147,16 +160,6 @@ public class ListDataSource<T, TKey>(
             await LoadMoreAsync();
     }
 
-    private async Task RegisterAsync()
-    {
-        DotNetRef ??= DotNetObjectReference.Create(this);
-        if (!IsRegistrated)
-        {
-            await JS.InvokeVoidAsync("intersectionObserver.register", DotNetRef, SentinelId);
-            IsRegistrated = true;
-        }
-    }
-
     private async Task EnsureVisibleAsync()
     {
         if (DotNetRef != null)
@@ -178,12 +181,17 @@ public class ListDataSource<T, TKey>(
     }
     private async Task LoadMoreAsync()
     {
+        // 🎯 FIX 1: Eerst controleren, dan pas tokens muteren!
+        // Als we al laden of er is geen data meer, direct de methode verlaten.
+        if (IsLoading || !HasMore) 
+            return;
+
+        IsLoading = true;
+        StateHasChanged(); // Zorg dat de UI (zoals een spinner) direct weet dat we laden
+
         LoadCts?.Cancel();
         LoadCts = new CancellationTokenSource();
         var token = LoadCts.Token;
-
-        if (IsLoading || !HasMore) return;
-        IsLoading = true;
 
         try
         {
@@ -192,24 +200,37 @@ public class ListDataSource<T, TKey>(
 
             await foreach (var item in newItems)
             {
-                if (token.IsCancellationRequested) return;
+                if (token.IsCancellationRequested) 
+                    return;
                 Items.Add(item);
                 count++;
             }
 
+            // Als we minder items terugkrijgen dan we vroegen, is de koek op
             HasMore = count >= Take;
+        }
+        catch (OperationCanceledException)
+        {
+            // Netjes opgevangen als er tussentijds geannuleerd werd (bijv. door snel her-ordenen)
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Fout tijdens infinite scroll: {ex.Message}");
         }
         finally
         {
             IsLoading = false;
             StateHasChanged();
 
-            // Fallback: als pagina korter is dan viewport, nog een keer proberen
-            //await JS.InvokeVoidAsync("intersectionObserver.ensureVisible", DotNetRef, SentinelId);
-            if (Registered)
+            // 🎯 FIX 2: Alleen controleren of we nog een pagina moeten laden 
+            // als de token niet tussentijds is gecanceld en er daadwerkelijk meer is.
+            if (!token.IsCancellationRequested && HasMore && Registered)
+            {
                 await EnsureVisibleAsync();
+            }
         }
     }
+
     private async IAsyncEnumerable<ItemDataSource<T, TKey>> ListItems(int? skip, int? take, string[]? orderBy, [EnumeratorCancellation] CancellationToken ct)
     {
         Response = await List(skip, take, orderBy, ct);

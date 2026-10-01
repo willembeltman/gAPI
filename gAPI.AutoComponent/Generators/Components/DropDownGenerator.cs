@@ -55,7 +55,7 @@ else
 {{
     <div class=""position-relative"">
         <button type=""button""
-                id=""@Id""
+                id=""@(Id)""
                 class=""form-control text-start d-flex justify-content-between align-items-center""
                 @onclick=""DataSource.ToggleDropdown"">
             <span>@(ForeignName ?? ChooseText)</span>
@@ -114,7 +114,8 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {{
-        if (!firstRender || DataSource == null)
+        if (//!firstRender || 
+            DataSource == null)
             return;
         await DataSource.AfterRenderAsync();
     }}

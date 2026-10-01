@@ -79,7 +79,7 @@ public class SelectListGenerator : BaseGenerator
 }}
 else
 {{
-    <div id=""@Id"">
+    <div id=""@(Id)"">
         <!-- Desktop -->
         <div class=""d-none d-md-block"">
             <table class=""table table-bordered"">
@@ -250,7 +250,8 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {{
-        if (!firstRender || DataSource == null)
+        if (//!firstRender || 
+            DataSource == null)
             return;
         await DataSource.AfterRenderAsync();
     }}

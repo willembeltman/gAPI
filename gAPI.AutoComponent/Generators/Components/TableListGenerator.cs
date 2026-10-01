@@ -83,7 +83,7 @@ public class TableListGenerator : BaseGenerator
 }}
 else
 {{
-    <div id=""@Id"">
+    <div>
         <!-- Desktop weergave -->
         <div class=""d-none d-md-block"">
             <table class=""table table-bordered"">
@@ -270,7 +270,8 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {{
-        if (!firstRender || DataSource == null)
+        if (//!firstRender || 
+            DataSource == null)
             return;
         await DataSource.AfterRenderAsync();
     }}
