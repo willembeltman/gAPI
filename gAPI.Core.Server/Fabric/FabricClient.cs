@@ -243,10 +243,9 @@ public sealed class FabricClient : IAsyncDisposable
             var getSessionDto = new SendGetSessionCookieDataDto(sessionId);
             await Sender.Send_GetSession_ToFabricAsync(getSessionDto, ct);
 
-            // Maak een time-out van 30 seconden aan
-            using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(100));
             // Koppel de time-out aan de meegegeven CancellationToken van de gebruiker
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, ctsTimeout.Token);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            linkedCts.CancelAfter(TimeSpan.FromSeconds(100));
 
             // Wacht tot óf de TaskCompletionSource klaar is, óf de time-out/cancel afgaat
             using (linkedCts.Token.Register(() => tcs.TrySetCanceled(linkedCts.Token)))

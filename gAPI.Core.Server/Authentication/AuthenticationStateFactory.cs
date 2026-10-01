@@ -70,7 +70,13 @@ public class AuthenticationStateFactory<TUser>(
             await db.SaveChangesAsync(ct);
         }
 
-        _ = Task.Run(async () => await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct));
+        _ = Task.Run(async () =>
+        {
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(100));
+            var ct = cts.Token;
+            await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
+        });
 
         var authState = new AuthenticationState<TUser>(
             dbUser,

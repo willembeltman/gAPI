@@ -128,40 +128,43 @@ public sealed class {Name}(
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
-    public async void {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
+    public void {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{method}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg}}}"))})""{string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg}"))});
-        {(ct == null
-        ? $@"
-        var ___activityCts = ___Cts;"
-        : $@"
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, {ct});")}
-
-        var ___routing = new {RoutingDto}(
-            ___clientConnection.FabricManagerId,
-            ___clientConnection.FabricConnectionId,
-            {RequestId}.New(),
-            ___ServiceId,
-            new(""{method}""),
-            ___httpClient.UserId,
-            ___httpClient.SessionId
-        );
-        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___activityCts.Token);" : ""))}
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
+        var ___cts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token);
+        ___cts.CancelAfter(TimeSpan.FromSeconds(100));{(ct == null ? $@"
+        var ___ct = ___cts.Token;" : $@"
+        {ct} = ___cts.Token;")}
+        _ = Task.Run(async () =>
         {{
-            await ___clientConnection.Send_SendRequest_ToServerAsync(
-                ___routing,
-                ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))}),
-                ___activityCts.Token);
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        finally
-        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
-        }}" : "")}
+
+            var ___routing = new {RoutingDto}(
+                ___clientConnection.FabricManagerId,
+                ___clientConnection.FabricConnectionId,
+                {RequestId}.New(),
+                ___ServiceId,
+                new(""{method}""),
+                ___httpClient.UserId,
+                ___httpClient.SessionId
+            );
+            {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            ___clientConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___ct" : ct.Name)});" : ""))}
+            await ___clientConnection.TryConnectAsync(___Cts.Token);
+            {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+            try" : "")}
+            {{
+                await ___clientConnection.Send_SendRequest_ToServerAsync(
+                    ___routing,
+                    ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"{arg}"))}),
+                    {(ct == null ? "___ct" : ct.Name)});
+            }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+            finally
+            {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+                await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
+            }}" : "")}
+
+            await Task.Delay(5);
+            ___cts.Dispose();
+        }}, {(ct == null ? "___ct" : ct)});
     }}";
     }
 

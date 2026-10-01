@@ -123,6 +123,51 @@ public class {Name}(
                 $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
                 "No TaskT supported");
             }
+            if (method.ResponseType.IsVoid)
+            {
+                //if (method.ResponseType.Name != "Task")
+                //    throw new Exception(
+                //    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                //    "1 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
+
+                code += $@"
+    public void {method.Name}(
+        {string.Join(
+            $",\r\n        ",
+            method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
+    {{
+        var ___cts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token);
+        ___cts.CancelAfter(TimeSpan.FromSeconds(100));
+        var ___ct = ___cts.Token;
+        _ = Task.Run(async () =>
+        {{
+
+            var ___payload = new {Interface.Title}_{method.Name}
+            {{
+                {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
+            }};
+            var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
+            var ___json = JsonSerializer.Serialize(___payload);
+            var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
+            var ___requestId = {RequestId}.New();
+            await ___FabricClient.SendAsync(
+                new (
+                    ___FabricClient.FabricManagerId, 
+                    ___FabricClient.FabricConnectionId, 
+                    ___requestId, 
+                    ___ServiceId, 
+                    ___serviceMethodId, 
+                    ___UserId, 
+                    ___SessionId), 
+                ___bytes{(cancellationToken == null ? @", 
+                ___ct" : $@", 
+                {cancellationToken.Name}")});
+
+            await Task.Delay(5);
+            ___cts.Dispose();
+        }}, ___ct);
+    }}";
+            }
             if (method.ResponseType.IsTask)
             {
                 //if (method.ResponseType.Name != "Task")
