@@ -24,20 +24,39 @@ public class WssClientConnectionSender(IClientLoggerFactory LoggerFactory)
 
     public async Task SendKernel(WebSocket socket, CancellationToken ct)
     {
-        await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
+        try
         {
-            var span = SendBuffer.AsSpan();
+            await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
+            {
+                var span = SendBuffer.AsSpan();
+                var offset = item(span);
 
-            // 🚀 direct serializen in pooled buffer
-            var offset = item(span);
-
-            // 🚀 direct versturen zonder kopie
-            await socket.SendAsync(
-                new ArraySegment<byte>(SendBuffer, 0, offset),
-                WebSocketMessageType.Binary,
-                true,
-                ct);
+                await socket.SendAsync(
+                    new ArraySegment<byte>(SendBuffer, 0, offset),
+                    WebSocketMessageType.Binary,
+                    true,
+                    ct);
+            }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Netjes geannuleerd via Cts.Cancel(), niks aan de hand
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("SendKernel => Exception tijdens verzenden: {ex}", ex);
+            throw; // Dit zorgt ervoor dat de Task faalt en eventueel elders opgemerkt kan worden
+        }
+    }
+
+    public void ClearQueue()
+    {
+        // Vis alle openstaande callbacks uit de wachtrij zodat we met een schone lei beginnen
+        while (SendQueue.Reader.TryRead(out _))
+        {
+            // No-op: we gooien ze gewoon weg
+        }
+        Logger.LogInformation("Wachtrij succesvol leeggemaakt na verbindingsverlies.");
     }
 
     public async Task Send_Initialize_ToServerAsync(InitializeDto message, string sessionId, CancellationToken ct)

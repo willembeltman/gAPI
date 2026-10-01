@@ -68,7 +68,11 @@ public abstract class WssClientConnection : IWssClientConnection
             if (IsConnected)
                 return;
 
-            InitializeTask ??= ConnectAsync(Config.WssBackendUrl!, ct);
+            // Als we niet verbonden zijn, moeten we de oude tafelen/resetten
+            if (InitializeTask == null || InitializeTask.IsFaulted || InitializeTask.IsCompleted)
+            {
+                InitializeTask = ConnectAsync(Config.WssBackendUrl!, ct);
+            }
         }
         finally
         {
@@ -88,6 +92,10 @@ public abstract class WssClientConnection : IWssClientConnection
 
                 Cts = new();
                 Ws = new ClientWebSocket();
+
+                // ❌ VERWIJDER OF COMMENTEER DEZE REGEL:
+                // Ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(5); // <-- Dit veroorzaakte de crash op WASM
+
                 var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
                 await Ws.ConnectAsync(url, ct);
 
@@ -100,11 +108,16 @@ public abstract class WssClientConnection : IWssClientConnection
                 };
                 await Sender.Send_Initialize_ToServerAsync(initialize, sessionId, Cts.Token);
 
+                Logger.LogInformation("Verbinding hersteld, bezig met opnieuw inschrijven op {count} subscripties...", Subscriptions.Count);
+                await Resubscribe(Cts.Token);
+
                 Initialized = true;
                 return;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
+                await InitLock.WaitAsync(CancellationToken.None);
+                try { InitializeTask = null; } finally { InitLock.Release(); }
                 throw;
             }
             catch (Exception ex)
@@ -112,19 +125,21 @@ public abstract class WssClientConnection : IWssClientConnection
                 Initialized = false;
                 Logger.LogWarning("ConnectAsync => connection failed, retrying: {ex}", ex.Message);
 
+                await InitLock.WaitAsync(CancellationToken.None);
+                try { InitializeTask = null; } finally { InitLock.Release(); }
+
                 try
                 {
                     Cts?.Cancel();
                     Ws?.Dispose();
                 }
-                catch
-                {
-                }
+                catch { }
 
                 await Task.Delay(TimeSpan.FromSeconds(5), ct);
             }
         }
     }
+
     private void HttpClient_OnStateHasChanged()
     {
         if (HttpClient.ForceReconnect)
@@ -147,6 +162,21 @@ public abstract class WssClientConnection : IWssClientConnection
                 Cts?.Cancel();
             }
             catch { }
+
+            // 🎯 NIEUW: Maak de verzendwachtrij direct leeg!
+            // Oude, niet-verzonden berichten mogen NOOIT over de nieuwe socket gaan.
+            Sender.ClearQueue();
+
+            // Laat alle hangende verzoeken direct falen zodat de UI/aanroeper weet dat de verbinding weg is
+            foreach (var pending in PendingSendRequests.Values)
+                pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
+
+            foreach (var pending in PendingInvokeRequests.Values)
+                pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
+
+            PendingSendRequests.Clear();
+            PendingInvokeRequests.Clear();
+            Timeouts.Clear();
 
             // 2. Sluit websocket netjes
             if (Ws != null)
@@ -185,6 +215,7 @@ public abstract class WssClientConnection : IWssClientConnection
         await TryConnectAsync(ct);
     }
 
+
     #endregion
 
     #region Sender
@@ -212,6 +243,13 @@ public abstract class WssClientConnection : IWssClientConnection
         Subscriptions.Remove(unsubscribe.ToString(), out _);
 
         await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
+    }
+    public async Task Resubscribe(CancellationToken ct)
+    {
+        foreach (var subscribe in Subscriptions.Values)
+        {
+            await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+        }
     }
 
     private async Task Send_StreamingRequest_ToServerAsync(RoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
@@ -253,6 +291,7 @@ public abstract class WssClientConnection : IWssClientConnection
     private async Task ReceiverKernel(WebSocket socket, CancellationTokenSource cts)
     {
         var ct = cts.Token;
+        bool explicitClose = false;
 
         try
         {
@@ -271,6 +310,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     {
                         await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
                         await cts.CancelAsync();
+                        explicitClose = true; // Netjes afgesloten door server of client
                         return;
                     }
 
@@ -340,9 +380,31 @@ public abstract class WssClientConnection : IWssClientConnection
         catch (Exception ex)
         {
             Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
+            throw;
+        }
+        finally
+        {
             cts.Cancel();
             cts.Dispose();
-            throw;
+
+            // 🎯 ALS de verbinding onverwacht is verbroken (bv. door netwerkwissel), start reconnect flow:
+            if (!explicitClose && !ct.IsCancellationRequested)
+            {
+                Logger.LogInformation("Verbinding onverwacht verloren. Herverbinden over 5 seconden...");
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    try
+                    {
+                        // ForceReconnectAsync reset de state netjes en start TryConnectAsync opnieuw
+                        await ForceReconnectAsync(CancellationToken.None);
+                    }
+                    catch (Exception reconEx)
+                    {
+                        Logger.LogError("Automatische herverbinding mislukt: {ex}", reconEx);
+                    }
+                });
+            }
         }
     }
 
