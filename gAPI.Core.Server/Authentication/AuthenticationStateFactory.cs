@@ -20,7 +20,7 @@ public class AuthenticationStateFactory<TUser>(
         AuthenticationHeaders headers,
         CancellationToken ct)
     {
-        var db = await dbFactory.CreateDbContextAsync(ct);
+        using var db = await dbFactory.CreateDbContextAsync(ct);
         var shortago = dateTime.GetUtcNow().AddHours(ShortHoursAgo);
         var longago = dateTime.GetUtcNow().AddHours(LongHoursAgo);
 
@@ -96,7 +96,7 @@ public class AuthenticationStateFactory<TUser>(
     public async Task<RequestIds> DoTheRest_StoredProcedure(
         Guid? userId, long? tokenId, long ipId, string sessionCode, string routePath, CancellationToken ct)
     {
-        var db = await dbFactory.CreateDbContextAsync(ct);
+        using var db = await dbFactory.CreateDbContextAsync(ct);
         var now = dateTime.GetUtcNow().UtcDateTime;
 
         // Deze query is 100% geldig in Postgres en voert alles in één transactie/roundtrip uit
@@ -374,7 +374,7 @@ public class AuthenticationStateFactory<TUser>(
                 TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
                 CancellationToken ct)
     {
-        var db = await dbFactory.CreateDbContextAsync(ct);
+        using var db = await dbFactory.CreateDbContextAsync(ct);
         var dbSession = await db.Sessions
             .FirstOrDefaultAsync(a =>
                 a.SessionId == headers.SessionId.Value,

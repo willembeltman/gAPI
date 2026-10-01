@@ -26,7 +26,5 @@ public class StreamingCache
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> ServerStreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<ServerStreamingResponseDto>> ServerStreamingResponseHandlers = [];
 
-
-
     public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
 }

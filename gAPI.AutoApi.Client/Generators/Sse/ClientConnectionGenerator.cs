@@ -25,10 +25,8 @@ public class ClientConnectionGenerator : _BaseGenerator
 
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference SseManagerCollection => Context.SharedReferences.SseManagerCollection;
-    public SharedReference SseServiceId => Context.SharedReferences.ServiceId;
-    public SharedReference SendRequestClientDto => Context.SharedReferences.SendRequestClientDto;
-    public SharedReference SendRequestCancelledClientDto => Context.SharedReferences.SendRequestCancelledClientDto;
-    public SharedReference SseManagerId => Context.SharedReferences.SseManagerId;
+    public SharedReference ServiceId => Context.SharedReferences.ServiceId;
+    public SharedReference ServiceMethodId => Context.SharedReferences.ServiceMethodId;
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference SseClientConnection => Context.SharedReferences.SseClientConnection;
 
@@ -43,10 +41,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(SseClient);
         Reg(IClientAuthenticatedHttpClient);
         Reg(SseManagerCollection);
-        Reg(SseServiceId);
-        Reg(SendRequestClientDto);
-        Reg(SendRequestCancelledClientDto);
-        Reg(SseManagerId);
+        Reg(ServiceId);
         Reg(SseClientConnection);
 
 
@@ -73,13 +68,14 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
 
     public async Task SubscribeAsync(object implementation, CancellationToken ct)
     {{
-        {string.Join("\r\n        else ", Interfaces
+        {string.Join("", Interfaces
         .Select(i =>
         {
             Reg(i);
-            return @$"if (implementation is {i.Name} _{i.Name})
+            return @$"
+        if (implementation is {i.Name} _{i.Name})
         {{
-            var serviceId = new {SseServiceId}(nameof({i.Name}));
+            var serviceId = new {ServiceId}(nameof({i.Name}));
             var client = ServiceClients.AddOrUpdate(
                 serviceId,
                 serviceId =>
@@ -95,21 +91,18 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
                     return client;
                 }});
         }}";
-        }))}{(Interfaces.Length == 0 ? "" : $@"
-        else 
-        {{
-            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to register, please add the [GenerateHub] attribute to the interface you are trying to register."");
-        }}")}
+        }))}
     }}
     public async Task UnsubscribeAsync(object implementation, CancellationToken ct)
     {{
-        {string.Join("\r\n        else ", Interfaces
+        {string.Join("", Interfaces
         .Select(i =>
         {
             Reg(i);
-            return @$"if (implementation is {i.Name} _{i.Name})
+            return @$"
+        if (implementation is {i.Name} _{i.Name})
         {{
-            var serviceId = new {SseServiceId}(nameof({i.Name}));
+            var serviceId = new {ServiceId}(nameof({i.Name}));
             ImmutableInterlocked.Update(ref {i.Title}s, list => list.Remove(_{i.Name}));
             if ({i.Title}s.Length == 0 &&
                 ServiceClients.TryRemove(serviceId, out var client))
@@ -117,35 +110,35 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
                 client.Dispose();
             }}
         }}";
-        }))}{(Interfaces.Length == 0 ? "" : $@"
-        else 
-        {{
-            throw new NotImplementedException(""The SseManager doesn't recognise the component you are trying to unregister, please add the [GenerateHub] attribute to the interface you are trying to unregister."");
-        }}")}
+        }))}
     }}
 
-    public async Task SendRequest_ReceivedAsync({SendRequestClientDto} message, CancellationToken ct)
+    public async Task SendRequest_ReceivedAsync(
+        {ServiceId} serviceId,
+        {ServiceMethodId} methodId,
+        byte[] data,
+        CancellationToken ct)
     {{{(Interfaces.Length > 0 ? $@"
-        switch (message.Routing.ServiceId.Value)
+        switch (serviceId.Value)
         {{{string.Join("\r\n", Interfaces
         .Select(i =>
         {
             Reg(i);
             return $@"
             case ""{i.Name}"":
-                switch(message.Routing.MethodId.Value)
-                {{{string.Join("\r\n", i.Methods.Select(m =>
+                switch(methodId.Value)
+                {{{string.Join("\r\n", i.Methods.Where(a => a.ResponseType.IsTask).Select(m =>
             {
                 var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");
                 return $@"
                     case ""{m.Name}"":
                         var {m.Name.ToLower()} = 
                             JsonSerializer.Deserialize<{i.Title}_{m.Name}>(
-                                Encoding.UTF8.GetString(message.BinaryData));
+                                Encoding.UTF8.GetString(data));
                         if ({m.Name.ToLower()} == null) return;
-                        foreach (var item in {i.Title}s)
+                        foreach (var hub in {i.Title}s)
                         {{
-                            await item.{m.Name}({string.Join(", ", m.Arguments
+                            await hub.{m.Name}({string.Join(", ", m.Arguments
     .Where(a => a.ParameterType.Name != "CancellationToken")
     .Select(a => $"{m.Name.ToLower()}.{a.Name}")
     .Concat(hasCancellationToken ? new[] { "ct" } : Enumerable.Empty<string>()))});
@@ -157,9 +150,52 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         }))}
         }}" : "")}
     }}
-    public async Task SendRequestCancelled_ReceivedAsync({SendRequestCancelledClientDto} message, CancellationToken ct)
-    {{
-        // TODO
+
+    public async IAsyncEnumerable<byte[]> InvokeRequest_ReceivedAsync(
+        {ServiceId} serviceId,
+        {ServiceMethodId} methodId,
+        byte[] data,
+        CancellationToken ct)
+    {{{(Interfaces.Length > 0 ? $@"
+        switch (serviceId.Value)
+        {{{string.Join("\r\n", Interfaces
+        .Select(i =>
+        {
+            Reg(i);
+            return $@"
+            case ""{i.Name}"":
+                switch(methodId.Value)
+                {{{string.Join("\r\n", i.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(m =>
+            {
+                var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");
+                return $@"
+                    case ""{m.Name}"":
+                        {{
+                            var {m.Name.ToLower()} = 
+                                JsonSerializer.Deserialize<{i.Title}_{m.Name}>(
+                                    Encoding.UTF8.GetString(data));
+                            if ({m.Name.ToLower()} == null) yield break;
+                            foreach (var hub in {i.Title}s)
+                            {{
+                                var list = hub.{m.Name}({string.Join(", ", m.Arguments
+                                    .Where(a => a.ParameterType.Name != "CancellationToken")
+                                    .Select(a => $"{m.Name.ToLower()}.{a.Name}")
+                                    .Concat(hasCancellationToken ? new[] { "ct" } : Enumerable.Empty<string>()))});
+
+                                await foreach (var item in list)
+                                {{
+                                    yield return Encoding.UTF8.GetBytes(
+                                        JsonSerializer.Serialize(item));
+                                }}
+                            }}
+                        }}
+                        break;";
+            }))}
+                }}
+                break;";
+        }))}
+        }}" : "")}
+        yield break;
     }}{string.Join("", Interfaces
         .Select(i =>
         {

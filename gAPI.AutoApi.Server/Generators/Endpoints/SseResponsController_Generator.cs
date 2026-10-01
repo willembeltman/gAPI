@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators.Endpoints;
 
-public class SseEndpointExtension_Generator : BaseGenerator
+public class SseResponsController_Generator : BaseGenerator
 {
-    public SseEndpointExtension_Generator(Generator context)
+    public SseResponsController_Generator(Generator context)
     {
         Context = context;
 
@@ -50,8 +50,7 @@ public static class {Name}
 {{
     public static WebApplication MapSseEndpoint(this WebApplication app)
     {{
-        // 🔥 Sse endpoint
-        app.MapGet(""/SseServiceSubscription/connect/{{serviceId}}"", async (
+        app.MapGet(""/SseServiceSubscription/invokeDone/{{serviceId}}"", async (
             string serviceId,
             [FromHeader(Name = ""X-SessionId"")] string sessionId,
             [FromServices] {IServerAuthenticationService} authenticationService,
@@ -62,20 +61,18 @@ public static class {Name}
             CancellationToken ct
         ) =>
         {{
-            var SseServiceSubscription = new {SseServiceSubscription}(
-                authenticationService,
-                serverConnectionCollection,
-                ServiceSubscriptionCollection,
-                streamingCache,
-                fabricClient,
-                new {ServiceId}(serviceId),
-                authenticationService.UserId,
-                authenticationService.SessionId
-            );
-
-            return Results.ServerSentEvents(
-                SseServiceSubscription.ReadAllAsync(ct)
-            );
+        }});
+        app.MapGet(""/SseServiceSubscription/streamingResponse/{{serviceId}}"", async (
+            string serviceId,
+            [FromHeader(Name = ""X-SessionId"")] string sessionId,
+            [FromServices] {IServerAuthenticationService} authenticationService,
+            [FromServices] {ServerConnectionCollection} serverConnectionCollection,
+            [FromServices] {ServiceSubscriptionCollection} ServiceSubscriptionCollection,
+            [FromServices] {StreamingCache} streamingCache,
+            [FromServices] {FabricClient} fabricClient,
+            CancellationToken ct
+        ) =>
+        {{
         }});
 
         return app;

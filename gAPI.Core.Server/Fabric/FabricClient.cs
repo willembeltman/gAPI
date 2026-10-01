@@ -875,14 +875,14 @@ public sealed class FabricClient : IAsyncDisposable
         }
     }
 
-    internal async Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto done, CancellationToken ct)
+    public async Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto done, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now} Send_FabricInvokeRequestDone_ToFabricAsync({done})", DateTime.Now.ToString("HH:mm:ss.fff"), done);
 
         await Sender.Send_InvokeRequestDone_ToFabricAsync(done, ct);
     }
-    internal async Task Send_FabricSendRequestDone_ToFabricAsync(SendRequestDoneDto done, CancellationToken ct)
+    public async Task Send_FabricSendRequestDone_ToFabricAsync(SendRequestDoneDto done, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now} Send_FabricSendRequestDone_ToFabricAsync({done})", DateTime.Now.ToString("HH:mm:ss.fff"), done);
@@ -1091,7 +1091,7 @@ public sealed class FabricClient : IAsyncDisposable
         }
     }
 
-    private RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    public RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(

@@ -128,7 +128,7 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             throw new Exception("Initialize the ServerAuthenticationService first please");
 
         var now = timeProvider.GetUtcNow();
-        var db = await dbFactory.CreateDbContextAsync(ct);
+        using var db = await dbFactory.CreateDbContextAsync(ct);
         ip = db.Ips.FirstOrDefault(a => a.Id == ip.Id);
         if (ip == null) return false;
 

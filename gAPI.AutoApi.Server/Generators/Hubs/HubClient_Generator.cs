@@ -91,11 +91,11 @@ public class {Name}(
                     $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` " +
                     "IFormFile is not supported by SignalR");
 
-            var isTask = method.ResponseType.Name != "Void" || method.ResponseType.Name != "Task";
-            if (isTask == false || method.ResponseType.UnderlayingTypes.Length > 0)
-                throw new Exception(
-                    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-                    "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
+            //var isTask = method.ResponseType.Name != "Void" || method.ResponseType.Name != "Task";
+            //if (isTask == false || method.ResponseType.UnderlayingTypes.Length > 0)
+            //    throw new Exception(
+            //        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+            //        "3 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
 
             RegRange(method.Arguments.SelectMany(b => b.ParameterType.Namespaces));
             //var methodArguments = method.Arguments
@@ -117,12 +117,18 @@ public class {Name}(
             var cancellationToken = method.Arguments
                 .FirstOrDefault(a => a.ParameterType.Name == "CancellationToken");
 
-            if (method.IsAsync)
+            if (method.ResponseType.IsTaskT)
             {
-                if (method.ResponseType.Name != "Task")
-                    throw new Exception(
-                    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-                    "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
+                throw new Exception(
+                $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                "No TaskT supported");
+            }
+            if (method.ResponseType.IsTask)
+            {
+                //if (method.ResponseType.Name != "Task")
+                //    throw new Exception(
+                //    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                //    "1 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
 
                 code += $@"
     public async Task {method.Name}(
@@ -152,37 +158,80 @@ public class {Name}(
             {cancellationToken.Name}")});
     }}";
             }
-            else
+            else if (method.ResponseType.IsIAsyncEnumerable)
             {
-                if (method.ResponseType.Name != "Void")
-                    throw new Exception(
-                    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-                    "Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
 
                 code += $@"
-    public void {method.Name}({string.Join($",\r\n", method.Arguments.Select(a => @$"
-            {a.ParameterType.Name} {a.Name}"))})
+    public async {method.ResponseType} {method.Name}(
+        {string.Join(
+            $",\r\n        ",
+            method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
         var ___payload = new {Interface.Title}_{method.Name}
-        {{{string.Join($",\r\n", args.Select(a => @$"
-            {a.Name} = {a.Name}"))}
+        {{
+            {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
         }};
         var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
         var ___json = JsonSerializer.Serialize(___payload);
         var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
-        ___FabricClient.SendAsync(
+        var ___requestId = {RequestId}.New();
+        var ___list = ___FabricClient.InvokeAsync(
             new (
                 ___FabricClient.FabricManagerId, 
                 ___FabricClient.FabricConnectionId, 
+                ___requestId, 
                 ___ServiceId, 
                 ___serviceMethodId, 
                 ___UserId, 
                 ___SessionId), 
             ___bytes{(cancellationToken == null ? @", 
             default" : $@", 
-            {cancellationToken.Name}")}).GetAwaiter().GetResult();
+            {cancellationToken.Name}")});
+        await foreach (var ___responseBytes in ___list)
+        {{
+            yield return JsonSerializer.Deserialize<{method.ResponseType.UnderlayingTypes.First()}>(
+                System.Text.Encoding.UTF8.GetString(___responseBytes));
+        }}
     }}";
             }
+            else
+            {
+                throw new Exception(
+                $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+                $"No {method.ResponseType} supported");
+            }
+
+            //        else
+            //        {
+            //            if (method.ResponseType.Name != "Void")
+            //                throw new Exception(
+            //                $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
+            //                "2 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
+
+            //            code += $@"
+            //public void {method.Name}({string.Join($",\r\n", method.Arguments.Select(a => @$"
+            //        {a.ParameterType.Name} {a.Name}"))})
+            //{{
+            //    var ___payload = new {Interface.Title}_{method.Name}
+            //    {{{string.Join($",\r\n", args.Select(a => @$"
+            //        {a.Name} = {a.Name}"))}
+            //    }};
+            //    var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
+            //    var ___json = JsonSerializer.Serialize(___payload);
+            //    var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
+            //    ___FabricClient.SendAsync(
+            //        new (
+            //            ___FabricClient.FabricManagerId, 
+            //            ___FabricClient.FabricConnectionId, 
+            //            ___ServiceId, 
+            //            ___serviceMethodId, 
+            //            ___UserId, 
+            //            ___SessionId), 
+            //        ___bytes{(cancellationToken == null ? @", 
+            //        default" : $@", 
+            //        {cancellationToken.Name}")}).GetAwaiter().GetResult();
+            //}}";
+            //        }
         }
 
 

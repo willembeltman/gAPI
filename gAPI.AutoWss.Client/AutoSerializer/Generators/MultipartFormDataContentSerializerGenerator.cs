@@ -66,7 +66,9 @@ public static class {Name}
 
     [IsMultipartFormDataContentSerializer]
     public static void {WriteMethodName}(this MultipartFormDataContent ___content, string ___name, {TypeSymbolName} value)
-    {{{writeProps}
+    {{
+        string ___prefix = string.IsNullOrEmpty(___name) ? """" : $""{{___name}}."";
+        {writeProps}
     }}
 }}";
     }

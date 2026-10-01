@@ -365,22 +365,23 @@ public abstract class WssServerConnection : IWssServerConnection
 
             // Create cancellation token
             var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
+            ct = cts.Token; 
             StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 
             try
             {
                 if (message.StateIsChanged)
-                    await AuthenticationService.UpdateStateDataAsync(message.StateData, cts.Token);
+                    await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
                 // Get the enumerable
-                var enumerable = Send_InvokeRequest_ToServiceAsync(message, cts.Token);
+                var enumerable = Send_InvokeRequest_ToServiceAsync(message, ct);
 
                 // Register it for streaming
                 FabricClient.RegisterAsyncEnumerableArgumentByte(
                     message.Routing,
                     -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
                     enumerable,
-                    cts.Token);
+                    ct);
 
                 // Register dispose 
                 cts.OnDispose = async () =>
@@ -548,6 +549,10 @@ public abstract class WssServerConnection : IWssServerConnection
                 // Doorlussen naar fabric
                 await FabricClient.Send_StreamingResponseClientToServer_ToFabricAsync(message, ct);
             }
+            else
+            {
+                await Receive_StreamingResponse_FromClientAsync(message, ct);
+            }
         }, ct);
     }
 
@@ -686,7 +691,7 @@ public abstract class WssServerConnection : IWssServerConnection
             stateData);
         await Sender.Send_StreamingRequest_ToClientAsync(streamingRequestClient, ct);
     }
-    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto request, CancellationToken ct)
+    public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseDto response, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({request})", DateTime.Now.ToString("HH:mm:ss.fff"), request);
@@ -694,13 +699,13 @@ public abstract class WssServerConnection : IWssServerConnection
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
         var streamingResponseClient = new StreamingResponseClientDto(
-            request.Routing,
-            request.ArgumentIndex,
-            request.StreamId,
-            request.IsCompleted,
-            request.IsCancelled,
-            request.ExceptionMessage,
-            request.BinaryData,
+            response.Routing,
+            response.ArgumentIndex,
+            response.StreamId,
+            response.IsCompleted,
+            response.IsCancelled,
+            response.ExceptionMessage,
+            response.BinaryData,
             stateIsChanged,
             stateData);
         await Sender.Send_StreamingResponse_ToClientAsync(streamingResponseClient, ct);

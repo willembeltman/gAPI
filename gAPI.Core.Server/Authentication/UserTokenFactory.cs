@@ -14,7 +14,7 @@ public class UserTokenFactory<TUser>(
 {
     public async Task<UserToken<TUser>> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
     {
-        var db = await dbFactory.CreateDbContextAsync(ct);
+        using var db = await dbFactory.CreateDbContextAsync(ct);
         // Add new token hash to database
         var dbToken = new UserToken<TUser>()
         {

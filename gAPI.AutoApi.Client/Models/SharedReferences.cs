@@ -8,6 +8,7 @@ public class SharedReferences
     public SharedReferences(INamedTypeSymbol[] allSymbols)
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
+        ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
@@ -17,6 +18,8 @@ public class SharedReferences
         SendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledDto", allSymbols);
         SendRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestClientDto", allSymbols);
         SendRequestCancelledClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledClientDto", allSymbols);
+        InvokeRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestClientDto", allSymbols);
+        InvokeRequestCancelledClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestCancelledClientDto", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         ISseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.ISseClientConnection", allSymbols);
 
@@ -43,6 +46,7 @@ public class SharedReferences
 
     }
     public SharedReference ServiceId { get; }
+    public SharedReference ServiceMethodId { get; }
     public SharedReference RequestId { get; }
     public SharedReference SessionId { get; }
     public SharedReference UserId { get; }
@@ -54,6 +58,8 @@ public class SharedReferences
     public SharedReference SendRequestCancelledDto { get; }
     public SharedReference SendRequestClientDto { get; }
     public SharedReference SendRequestCancelledClientDto { get; }
+    public SharedReference InvokeRequestClientDto { get; }
+    public SharedReference InvokeRequestCancelledClientDto { get; }
     public SharedReference SseClient { get; }
     public SharedReference ClientConfig { get; }
     public SharedReference? AuthClient_FormFile { get; }
