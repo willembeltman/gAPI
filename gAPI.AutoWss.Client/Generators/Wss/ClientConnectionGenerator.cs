@@ -233,14 +233,34 @@ public class {Name}
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{{now}} Send_SendRequest_ToServiceAsync({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
-        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsVoid).Select(method => $@"
+                        case ""{method}"":
+                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
+            .Select((arg, index) => (arg, index))
+            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                ? $@"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
+                : $@"
+                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
+                                foreach (var client in clients)
+                                {{
+                                    client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                        {arg.Name.ToCamelCase()}" : $@"
+                                        ___ct"))});
+                                }}
+                                return;
+                            }}"))}
+                    {string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
                         case ""{method}"":
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
@@ -278,15 +298,15 @@ public class {Name}
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{{now}} Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
-{(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)) ? $@"
+{(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
 
         switch (___invokeRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask == false).Select(method =>
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
             return

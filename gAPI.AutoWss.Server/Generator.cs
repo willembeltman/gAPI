@@ -115,6 +115,7 @@ public class Generator
     private void GenerateSpanSerializers(SourceProductionContext spc)
     {
         var generatedItems = new HashSet<string>();
+        var fileNames = new HashSet<string>();
 
         foreach (var api in ClientHandlers)
         {
@@ -130,6 +131,10 @@ public class Generator
                 var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
                 serializerGenerator.Namespace = api.Namespace!;
                 var code = serializerGenerator.Generate();
+
+                if (fileNames.Contains(serializerGenerator.FileName)) continue;
+                fileNames.Add(serializerGenerator.FileName);
+
                 spc.AddSource(
                     serializerGenerator.FileName,
                     SourceText.From(code, Encoding.UTF8));
@@ -137,7 +142,7 @@ public class Generator
         }
 
         var ServerConnectionSpanSerializers = FindAndCreateGenaratorsRecursive.FindAndCreateGenerators(
-            ServerConnection.NeededSerializers.ToArray(), 
+            ServerConnection.NeededSerializers.ToArray(),
             CustomSpanSerializers.Select(a => a.Type));
         foreach (var item in ServerConnectionSpanSerializers)
         {
@@ -148,6 +153,10 @@ public class Generator
             var serializerGenerator = new SpanSerializerGenerator(item, CustomSpanSerializers);
             serializerGenerator.Namespace = ServerConnection.Namespace!;
             var code = serializerGenerator.Generate();
+
+            if (fileNames.Contains(serializerGenerator.FileName)) continue;
+            fileNames.Add(serializerGenerator.FileName);
+
             spc.AddSource(
                 serializerGenerator.FileName,
                 SourceText.From(code, Encoding.UTF8));

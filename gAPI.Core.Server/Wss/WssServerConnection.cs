@@ -365,7 +365,7 @@ public abstract class WssServerConnection : IWssServerConnection
 
             // Create cancellation token
             var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
-            ct = cts.Token; 
+            ct = cts.Token;
             StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 
             try
@@ -589,17 +589,25 @@ public abstract class WssServerConnection : IWssServerConnection
         var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
         await Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
 
+        var cancelledFromClient = false;
         try
         {
             var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
-            if (response.Cancelled)
-                throw new TaskCanceledException();
+            cancelledFromClient = response.Cancelled;
+        }
+        catch (TaskCanceledException)
+        {
+            stateIsChanged = AuthenticationService.IsStateDataChanged();
+            stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_FabricSendRequestCancelled_ToClientAsync(new SendRequestCancelledClientDto(sendRequest.Routing, "Task is cancelled", stateIsChanged, stateData), ct);
         }
         finally
         {
             StreamingCache.PendingClientSendRequests.TryRemove(sendRequest.Routing.RequestId, out _);
+            if (cancelledFromClient)
+                throw new TaskCanceledException();
         }
     }
     public async IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
@@ -617,11 +625,22 @@ public abstract class WssServerConnection : IWssServerConnection
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
-            if (response.Cancelled)
+            var cancelledFromClient = false;
+            try
+            {
+                var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
+                if (response.ExceptionMessage != null)
+                    throw new Exception(response.ExceptionMessage);
+                cancelledFromClient = response.Cancelled;
+            }
+            catch (TaskCanceledException)
+            {
+                stateIsChanged = AuthenticationService.IsStateDataChanged();
+                stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+                await Sender.Send_FabricInvokeRequestCancelled_ToClientAsync(new InvokeRequestCancelledClientDto(invokeRequest.Routing, "Task is cancelled", stateIsChanged, stateData), ct);
+            }
+            if (cancelledFromClient)
                 throw new TaskCanceledException();
-            if (response.ExceptionMessage != null)
-                throw new Exception(response.ExceptionMessage);
 
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
             await foreach (var item in enumerable)

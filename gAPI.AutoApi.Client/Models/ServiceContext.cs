@@ -75,7 +75,7 @@ public class ServiceContext
                 "When communicating from server to client, the number of client responses is unknown, " +
                 "therefore response methods must use IAsyncEnumerable<T>.");
         }
-        else if (!responseType.IsTask && !responseType.IsIAsyncEnumerable)
+        else if (!responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
         {
             errors.Add(
                 $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
@@ -84,7 +84,7 @@ public class ServiceContext
     }
     private void CheckApi(TypeHelper responseType, List<string> errors, string method, string hubInterface)
     {
-        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable)
+        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
         {
             errors.Add(
                 $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +

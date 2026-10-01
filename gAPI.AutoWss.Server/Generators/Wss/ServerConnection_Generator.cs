@@ -131,14 +131,30 @@ public class {Name} : WssServerConnection
         var functions = "";
         var code = $@"
     protected override Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         var ___offset = 0;
         var ___span = new Span<byte>(___sendRequest.BinaryData);
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)).Select(@interface => $@"
+        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(@interface => $@"
             case ""{@interface}"":
                 switch (___sendRequest.Routing.MethodId.Value)
-                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
+                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsVoid).Select(method =>
+        {
+            return $@"
+                    case ""{method}"":
+                        {@interface}_{method}(
+                            ___sendRequest,{string.Join("", method.Arguments
+                                .Select((arg, index) => (arg, index))
+                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                    ? $@"
+                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                    : $@"
+                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                            ___ct);
+                        return Task.CompletedTask;";
+        })))}
+            {(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
         {
             return $@"
                     case ""{method}"":
@@ -166,14 +182,14 @@ public class {Name} : WssServerConnection
         var functions = "";
         var code = $@"
     protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
-    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)) ? $@"
+    {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)) ? $@"
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
         switch (___invokeRequest.Routing.ServiceId.Value)
-        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask == false)).Select(@interface => $@"
+        {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)).Select(@interface => $@"
             case ""{@interface}"":
                 switch (___invokeRequest.Routing.MethodId.Value)
-                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask == false).Select(method => $@"
+                {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method => $@"
                     case ""{method}"":
                         return {@interface}_{method}(
                             ___invokeRequest,{string.Join("", method.Arguments
@@ -199,7 +215,11 @@ public class {Name} : WssServerConnection
     {
         var code = "";
         var functions = "";
-        if (method.ResponseType.IsTask)
+        if (method.ResponseType.IsVoid)
+        {
+            code += GenerateVoidMethod(@interface, method);
+        }
+        else if (method.ResponseType.IsTask)
         {
             code += GenerateTaskMethod(@interface, method);
         }
@@ -224,6 +244,18 @@ public class {Name} : WssServerConnection
 
         functions2 += functions;
         return code;
+    }
+
+    private string GenerateVoidMethod(Interface @interface, InterfaceMethod method)
+    {
+        return $@"
+    public void {@interface}_{method}({SendRequestDto} ___sendRequest, {string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{arg.ParameterType} {arg}, "))}CancellationToken ___ct)
+    {{
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace(""{{now}} {@interface}_{method}({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
+       
+        {@interface.CleanName}.{method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken ? $@"___ct" : $@"{arg}"))});
+    }}";
     }
 
     private string GenerateTaskMethod(Interface @interface, InterfaceMethod method)

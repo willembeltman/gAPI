@@ -131,6 +131,8 @@ public class {Name}(
         var functions = "";
         var code = "";
 
+        if (method.ResponseType.IsVoid)
+            code += GenerateVoid(method);
         if (method.ResponseType.IsTask)
             code += GenerateTask(method);
         if (method.ResponseType.IsIAsyncEnumerable)
@@ -143,6 +145,44 @@ public class {Name}(
         return code;
     }
 
+    private string GenerateVoid(InterfaceMethod method)
+    {
+        var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
+        return $@"
+    public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
+    {{
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace(""{{now}}, {method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})"", DateTime.Now.ToString(""HH:mm:ss.fff""){string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+
+        var ___requestId = {RequestId}.New();
+        var ___routing = new {RoutingDto}(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
+            ___requestId,
+            ___ServiceId,
+            new(""{method}""),
+            ___userId,
+            ___sessionId
+        );
+        var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+            {arg}"))});
+
+        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await ___fabricClient.SendAsync(
+                ___routing,
+                ___payload, 
+                {(ct == null ? "___Cts.Token" : ct.Name)});
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
+        }}" : "")}
+    }}";
+    }
     private string GenerateTask(InterfaceMethod method)
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);

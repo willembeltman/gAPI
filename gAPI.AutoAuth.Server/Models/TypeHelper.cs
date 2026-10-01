@@ -147,6 +147,8 @@ public class TypeHelper : SharedReference
     public string FullNameInner => $"{Namespace}.{NameInner}";
 
     public TypeHelper[] UnderlayingTypes { get; }
+    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
+
 
     public static string GetSimpleCsTypeByName(string name)
     {

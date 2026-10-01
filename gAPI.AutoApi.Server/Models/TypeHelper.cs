@@ -94,6 +94,8 @@ public class TypeHelper : SharedReference
     public bool IsReferenceType { get; }
     public bool IsValueType { get; }
     public bool IsTask { get; }
+    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
+
     public bool IsTaskT { get; }
     public bool IsArray { get; }
     public bool IsList { get; }
