@@ -72,7 +72,7 @@ else
         var nullSafe = p.PropertyType.IsNullable ? "?" : "";
         return $@"
     <div class=""mb-2"">
-        <strong>{p.Name}</strong>: @DataSource.Model.{p.Name}{nullSafe}.ToString()
+        <strong>{p.Name}</strong>: @(DataSource.Model.{p.Name}{nullSafe}.ToString())
     </div>";
     }
 

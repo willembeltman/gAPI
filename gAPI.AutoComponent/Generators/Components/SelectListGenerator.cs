@@ -138,7 +138,7 @@ else
                 return $@"
                     @if (!HideColumnNames.Contains(""{p.Name}""))
                     {{
-                        <td>@item.Model!.{p.Name}</td>
+                        <td>@(item.Model!.{p.Name})</td>
                     }}";
             }))}
                         </tr>
@@ -151,23 +151,44 @@ else
         <div class=""d-md-none"">
             <div class=""mb-2 d-flex gap-2 align-items-center"">
                 <select @onchange=""DataSource.OrderByChanged"" class=""form-select form-select-sm w-auto"">
-                    <option value="""">@EmptyText</option>{string.Join("", orderableProps.Select(p => $@"
-                    @if (!HideColumnNames.Contains(""{p.Name}""))
-                    {{
-                        <option value=""{p.Name}"" selected=""@{p.Name}Selected"">
-                            {p.Name}
-                        </option>
-                    }}"))}
-                </select>
-
-                @if (!string.IsNullOrEmpty(DataSource.OrderByColumn))
+                @if (Nothing__Selected)
                 {{
-                    <select @onchange=""DataSource.OrderByDirectionChanged""
-                            class=""form-select form-select-sm w-auto"">
-                        <option value=""false"" selected=""@DataSource.OrderByDirectionAsc"">@AscText</option>
-                        <option value=""true"" selected=""@DataSource.OrderByDirectionDesc"">@DescText</option>
-                    </select>
+                    <option value="""" selected>@(EmptyText)</option>
                 }}
+                else
+                {{
+                    <option value="""">@(EmptyText)</option>
+                }}
+
+                {string.Join("", orderableProps.Select(p => $@"
+                @if (HideColumnNames.Contains(""{p.Name}"") == false)
+                {{
+                    @if ({p.Name}__Selected)
+                    {{
+                        <option value=""{p.Name}"" selected>{p.Name}</option>
+                    }}
+                    else
+                    {{
+                        <option value=""{p.Name}"">{p.Name}</option>
+                    }}
+                }}"))}
+            </select>
+
+            @if (!string.IsNullOrEmpty(DataSource.OrderByColumn))
+            {{
+                <select @onchange=""DataSource.OrderByDirectionChanged"" class=""form-select form-select-sm w-auto"">
+                    @if (DataSource.OrderByDirectionAsc)
+                    {{
+                        <option value=""false"" selected>@(AscText)</option>
+                        <option value=""true"">@(DescText)</option>
+                    }}
+                    else
+                    {{
+                        <option value=""false"">@(AscText)</option>
+                        <option value=""true"" selected>@(DescText)</option>
+                    }}
+                </select>
+            }}
             </div>
 
             <div class=""row row-cols-1 g-2"">
@@ -191,7 +212,7 @@ else
                 return $@"
                                     @if (!HideColumnNames.Contains(""{p.Name}""))
                                     {{
-                                        <div class=""text-muted"">@item.Model!.{p.Name}</div>
+                                        <div class=""text-muted"">@(item.Model!.{p.Name})</div>
                                     }}";
             }))}
                                 </div>
@@ -267,8 +288,9 @@ else
         if (DataSource != null)
             await DataSource.OrderByColumnClicked(""{p.Name}"");
     }}"))}
-    private int SentinelWidth => {displayProps.Length + 1} - HideColumnNames.Length;{string.Join("", orderableProps.Select(p => $@"
-    private bool {p.Name}Selected => DataSource?.OrderByColumn == ""{p.Name}"";"))}
+
+    private bool Nothing__Selected => string.IsNullOrEmpty(DataSource?.OrderByColumn);{string.Join("", orderableProps.Select(p => $@"
+    private bool {p.Name}__Selected => DataSource?.OrderByColumn == ""{p.Name}"";"))}
 }}";
     }
 }

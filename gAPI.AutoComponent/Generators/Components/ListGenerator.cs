@@ -168,19 +168,44 @@ else
         <div class=""d-md-none"">
             <div class=""mb-2 d-flex gap-2 align-items-center"">
                 <select @onchange=""DataSource.OrderByChanged"" class=""form-select form-select-sm w-auto"">
-                    <option value="""" selected=""@Nothing__Selected"">@EmptyText</option>{string.Join("", orderableProps.Select(p => $@"
-                    @if (HideColumnNames.Contains(""{p.Name}"") == false)
-                    {{
-                        <option value=""{p.Name}"" selected=""@{p.Name}__Selected"">{p.Name}</option>
-                    }}"))}
-                </select>
-                @if (!string.IsNullOrEmpty(DataSource.OrderByColumn))
+                @if (Nothing__Selected)
                 {{
-                    <select @onchange=""DataSource.OrderByDirectionChanged"" class=""form-select form-select-sm w-auto"">
-                        <option value=""false"" selected=""@DataSource.OrderByDirectionAsc"">@AscText</option>
-                        <option value=""true"" selected=""@DataSource.OrderByDirectionDesc"">@DescText</option>
-                    </select>
+                    <option value="""" selected>@(EmptyText)</option>
                 }}
+                else
+                {{
+                    <option value="""">@(EmptyText)</option>
+                }}
+
+                {string.Join("", orderableProps.Select(p => $@"
+                @if (HideColumnNames.Contains(""{p.Name}"") == false)
+                {{
+                    @if ({p.Name}__Selected)
+                    {{
+                        <option value=""{p.Name}"" selected>{p.Name}</option>
+                    }}
+                    else
+                    {{
+                        <option value=""{p.Name}"">{p.Name}</option>
+                    }}
+                }}"))}
+            </select>
+
+            @if (!string.IsNullOrEmpty(DataSource.OrderByColumn))
+            {{
+                <select @onchange=""DataSource.OrderByDirectionChanged"" class=""form-select form-select-sm w-auto"">
+                    @if (DataSource.OrderByDirectionAsc)
+                    {{
+                        <option value=""false"" selected>@(AscText)</option>
+                        <option value=""true"">@(DescText)</option>
+                    }}
+                    else
+                    {{
+                        <option value=""false"">@(AscText)</option>
+                        <option value=""true"" selected>@(DescText)</option>
+                    }}
+                </select>
+            }}
             </div>
 
             <div class=""row row-cols-1 g-2"">
@@ -205,7 +230,7 @@ else
                     return $@"
                                     @if (HideColumnNames.Contains(""{p.Name}"") == false)
                                     {{
-                                        <div class=""text-muted"">@item.Model!.{p.Name}</div>
+                                        <div class=""text-muted"">@(item.Model!.{p.Name})</div>
                                     }}";
                 }
             }))}
@@ -213,11 +238,11 @@ else
                                 <div class=""mt-2"">
                                     @if (item.Model!.CanUpdate)
                                     {{
-                                        <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@(item.Model!.Id)"">@EditText</a>
+                                        <a class=""btn btn-sm btn-primary"" href=""/{Dto.Name.ToLower().ToMultiple()}/edit/@(item.Model!.Id)"">@(EditText)</a>
                                     }}
                                     @if (item.Model!.CanDelete)
                                     {{
-                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@(item.Model!.Id)"">@DeleteText</a>
+                                        <a class=""btn btn-sm btn-danger ms-1"" href=""/{Dto.Name.ToLower().ToMultiple()}/delete/@(item.Model!.Id)"">@(DeleteText)</a>
                                     }}{string.Join("", Dto.HasLinks.Select(link => link.Action == null ? $@"   
                                     <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/@(item.Model!.Id)"">{link.Text}</a>" : $@"   
                                     <a class=""btn btn-sm btn-danger ms-1"" href=""/{link.Controller}/{link.Action}/@(item.Model!.Id)"">{link.Text}</a>"))}
@@ -279,8 +304,6 @@ else
         if (DataSource != null)
             await DataSource.OrderByColumnClicked(""{p.Name}"");
     }}"))}
-
-    private int SentinelWidth => {displayProps.Length + 1} - HideColumnNames.Length;
 
     private bool Nothing__Selected => string.IsNullOrEmpty(DataSource?.OrderByColumn);{string.Join("", orderableProps.Select(p => $@"
     private bool {p.Name}__Selected => DataSource?.OrderByColumn == ""{p.Name}"";"))}

@@ -41,6 +41,7 @@ public class ListDataSource<T, TKey>(
     public bool OrderByDirectionDesc { get; private set; } = false;
     public bool OrderByDirectionAsc => !OrderByDirectionDesc;
     public string OrderByColumn { get; private set; } = "";
+    public bool OrderByColumnIsNull => string.IsNullOrEmpty(OrderByColumn);
     public bool ShowDropdown { get; set; } = false;
     public bool IsLoading { get; private set; } = false;
 
@@ -122,36 +123,36 @@ public class ListDataSource<T, TKey>(
         ShowDropdown = false;
         await UnRegisterAsync();
     }
-    public async Task OrderByChanged(ChangeEventArgs e)
-    {
-        OrderByColumn = e.Value?.ToString() ?? "";
-        Items.Clear();
-        await LoadMoreAsync();
-    }
-    public async Task OrderByDirectionChanged(ChangeEventArgs e)
-    {
-        OrderByDirectionDesc = Convert.ToBoolean(e.Value);
-        Items.Clear();
-        await LoadMoreAsync();
-    }
-    public async Task OrderByColumnClicked(string columnName)
-    {
-        if (OrderByColumn != columnName)
-        {
-            OrderByColumn = columnName;
-            OrderByDirectionDesc = false;
-        }
-        else if (!OrderByDirectionDesc)
-        {
-            OrderByDirectionDesc = true;
-        }
-        else
-        {
-            OrderByColumn = "";
-        }
-        Items.Clear();
-        await LoadMoreAsync();
-    }
+    //public async Task OrderByChanged(ChangeEventArgs e)
+    //{
+    //    OrderByColumn = e.Value?.ToString() ?? "";
+    //    Items.Clear();
+    //    await LoadMoreAsync();
+    //}
+    //public async Task OrderByDirectionChanged(ChangeEventArgs e)
+    //{
+    //    OrderByDirectionDesc = Convert.ToBoolean(e.Value);
+    //    Items.Clear();
+    //    await LoadMoreAsync();
+    //}
+    //public async Task OrderByColumnClicked(string columnName)
+    //{
+    //    if (OrderByColumn != columnName)
+    //    {
+    //        OrderByColumn = columnName;
+    //        OrderByDirectionDesc = false;
+    //    }
+    //    else if (!OrderByDirectionDesc)
+    //    {
+    //        OrderByDirectionDesc = true;
+    //    }
+    //    else
+    //    {
+    //        OrderByColumn = "";
+    //    }
+    //    Items.Clear();
+    //    await LoadMoreAsync();
+    //}
 
     [JSInvokable]
     public async Task OnIntersect()
@@ -270,5 +271,47 @@ public class ListDataSource<T, TKey>(
         Cts.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    // 🎯 Voeg deze handige reset-methode toe om de state correct klaar te zetten voor de nieuwe sortering
+    private void ResetForReorder()
+    {
+        Items.Clear();
+        HasMore = true; // CRUCIAL: Zorg dat LoadMoreAsync weer data mag ophalen!
+    }
+
+    public async Task OrderByChanged(ChangeEventArgs e)
+    {
+        OrderByColumn = e.Value?.ToString() ?? "";
+        ResetForReorder(); // <-- Gebruik de reset helper
+        await LoadMoreAsync();
+    }
+
+    public async Task OrderByDirectionChanged(ChangeEventArgs e)
+    {
+        OrderByDirectionDesc = Convert.ToBoolean(e.Value);
+        ResetForReorder(); // <-- Gebruik de reset helper
+        await LoadMoreAsync();
+    }
+
+    public async Task OrderByColumnClicked(string columnName)
+    {
+        if (OrderByColumn != columnName)
+        {
+            OrderByColumn = columnName;
+            OrderByDirectionDesc = false;
+        }
+        else if (!OrderByDirectionDesc)
+        {
+            OrderByDirectionDesc = true;
+        }
+        else
+        {
+            OrderByColumn = "";
+        }
+
+        ResetForReorder(); // <-- Gebruik de reset helper
+        await LoadMoreAsync();
+    }
+
 
 }
