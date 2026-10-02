@@ -696,7 +696,26 @@ public abstract class WssClientConnection : IWssClientConnection
     #endregion
 
     #region Call's vanuit gegenereerde code
+    public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
+    {
+        try
+        {
+            var stateIsChanged = HttpClient.IsStateDataChanged();
+            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
+            var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
+            // Gebruik je eigen token voor de queueing
+            await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogWarning("FireAndForget chunk afgebroken vanwege time-out (30s).");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fout opgevangen in FireAndForget streaming bus-call");
+        }
+    }
     public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

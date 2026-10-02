@@ -1219,6 +1219,46 @@ public sealed class FabricClient : IAsyncDisposable
             });
     }
 
+    public Task SendFireAndForgetAsync(RoutingDto routing, byte[] data, CancellationToken ct)
+    {
+        var request = new SendRequestDto(routing, data);
+
+        if (Host == null || IsConnected == false)
+        {
+            return Handle_SendFireAndForget_ToClient_Async(request, ct);
+        }
+
+        return Handle_SendFireAndForget_ToFabric_Async(request, ct);
+    }
+
+    private async Task Handle_SendFireAndForget_ToFabric_Async(SendRequestDto request, CancellationToken ct)
+    {
+        // GEEN StreamingCache.PendingFabricSendRequests meer!
+        // Schiet hem direct de netwerkqueue in (EnqueueAsync onder water)
+        await Sender.Send_SendRequest_ToFabricAsync(request, ct);
+        // Direct klaar, geen 100s timeout wachtrij!
+    }
+
+    private async Task Handle_SendFireAndForget_ToClient_Async(SendRequestDto request, CancellationToken ct)
+    {
+        var sessions = GetServiceSubscriptions(request.Routing).GroupBy(a => a.SessionId).Select(a => a.First());
+
+        foreach (var serviceSubscription in sessions)
+        {
+            try
+            {
+                // We awaiten dit wel, maar omdat de client-kant nu ook async void/fire-and-forget is,
+                // accepteert de WssServerConnection de bytes direct in de queue zonder te wachten.
+                await serviceSubscription.SendRequestAsync(request, ct);
+            }
+            catch (Exception)
+            {
+                // Zorg dat een falende sessie de streaming voor andere sessies niet permanent blokkeert
+            }
+        }
+    }
+
+
     public Task SendAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
