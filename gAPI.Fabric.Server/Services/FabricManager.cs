@@ -1,18 +1,18 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Dashboard;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Models;
-using gAPI.Fabric.Server.Monitoring;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 
 namespace gAPI.Fabric.Server.Services;
 
-public class FabricManager
+public class FabricManager : IDashboardSnapshotGetter
 {
     private readonly SessionCache SessionCache;
 
@@ -624,7 +624,7 @@ public class FabricManager
                 var send = connection.GetSendBytesPerSecond();
                 var receive = connection.GetReceiveBytesPerSecond();
                 return new FabricConnectionSnapshot(
-                    connection.FabricConnectionId.Value,
+                    connection.FabricConnectionId.Value.ToString(),
                     send.bytes,
                     receive.bytes,
                     send.count,
@@ -687,7 +687,7 @@ public class FabricManager
             .OrderBy(service => service.ServiceId, StringComparer.Ordinal)
             .ToArray();
 
-        return new FabricDashboardSnapshot(DateTimeOffset.UtcNow, Config.Port, connections, services);
+        return new FabricDashboardSnapshot(DateTimeOffset.UtcNow, connections, services);
     }
 
 

@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Core.Server.Collections;
 
-public sealed class ServerConnectionCollection
+public sealed class ServerConnectionCollection 
 {
     private long _nextId;
     private readonly ConcurrentDictionary<ClientConnectionId, IServerConnection> Clients = new();

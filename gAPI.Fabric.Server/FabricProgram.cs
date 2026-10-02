@@ -7,12 +7,12 @@ namespace gAPI.Fabric.Server;
 
 public static class FabricProgram
 {
-    public static async Task StartAsync(int port = 9494, CancellationToken ct = default)
+    public static async Task StartAsync(string name, int port = 9494, CancellationToken ct = default)
     {
         var config = new FabricConfig { Port = port };
-        await StartAsync(config, ct);
+        await StartAsync(name, config, ct);
     }
-    public static async Task StartAsync(FabricConfig config, CancellationToken ct = default)
+    public static async Task StartAsync(string name, FabricConfig config, CancellationToken ct = default)
     {
         var builder = Host.CreateApplicationBuilder();
 #if DEBUG
@@ -21,7 +21,7 @@ public static class FabricProgram
             builder.Configuration.AddJsonStream(stream);
 #endif
 
-        builder.AddFabric();
+        builder.AddFabric(name);
         var app = builder.Build();
         await app.RunAsync();
     }

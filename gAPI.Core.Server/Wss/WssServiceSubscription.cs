@@ -4,6 +4,8 @@ using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace gAPI.Core.Server.Wss;
 
@@ -31,11 +33,13 @@ public class WssServiceSubscription
 
         ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this, serviceId);
         Logger = loggerFactory.CreateLogger<WssServiceSubscription>();
+        Stopwatch = Stopwatch.StartNew();
     }
 
     private byte Disposed;
 
     public ILogger Logger { get; }
+    public Stopwatch Stopwatch { get; }
     public IWssServerConnection Connection { get; }
     public ServiceSubscriptionCollection ServiceSubscriptionCollection { get; }
     public FabricClient FabricClient { get; }
@@ -67,6 +71,38 @@ public class WssServiceSubscription
         => Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(cancel, ct);
     public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
         => Connection.Send_FabricSendRequestCancelled_ToClientAsync(cancel, ct);
+
+    private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
+    private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
+
+    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    {
+        var interval = 1.0;
+        var now = Stopwatch.Elapsed.TotalSeconds;
+
+        // Verwijder oude entries
+        while (queue.TryPeek(out var entry) && entry.time < now - interval)
+            queue.TryDequeue(out _);
+
+        var bytes = 0L;
+        var count = 0;
+        foreach (var item in queue)
+        {
+            bytes += item.bytes;
+            count++;
+        }
+        return new(count, bytes);
+    }
+    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(SendBytesLogger);
+    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
+    public void EnqueueSend(long size)
+    {
+        SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
+    public void EnqueueReceive(long size)
+    {
+        ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
 
     public async ValueTask DisposeAsync()
     {

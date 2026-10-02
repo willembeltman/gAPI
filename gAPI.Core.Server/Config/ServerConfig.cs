@@ -1,4 +1,6 @@
-﻿namespace gAPI.Core.Server.Config;
+﻿using gAPI.Core.Server.Dashboard;
+
+namespace gAPI.Core.Server.Config;
 
 public record ServerConfig(
     string? FrontendUrl = null,
@@ -16,4 +18,8 @@ public record ServerConfig(
     long ChangePasswordMaxAttemptTimeout = 24,
     int ShortHoursAgo = -1,
     int LongHoursAgo = -72
-);
+) : IDashboardName
+{
+
+    public string DashboardName => $"FrontendUrl {FrontendUrl}";
+}

@@ -1,6 +1,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Dashboard;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Wss;

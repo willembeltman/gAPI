@@ -3,7 +3,7 @@ using gAPI.Core.Ids;
 
 namespace gAPI.Core.Server.Interfaces;
 
-public interface IServiceSubscription
+public interface IServiceSubscription : ISpeedGetter
 {
     ClientConnectionId ClientConnectionId { get; }
     ServiceSubscriptionId ServiceSubscriptionId { get; }
@@ -24,4 +24,5 @@ public interface IServiceSubscription
     Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto message, CancellationToken ct);
     Task Send_FabricInvokeRequestCancelled_ToClientAsync(InvokeRequestCancelledDto message, CancellationToken ct);
     Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto message, CancellationToken ct);
+
 }

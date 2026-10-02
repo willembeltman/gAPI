@@ -5,6 +5,7 @@ using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.ServerSentEvents;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -27,10 +28,13 @@ public class SseServiceSubscription : IServiceSubscription
     public Channel<SseEvent> Channel { get; }
     public StreamingCache StreamingCache { get; }
     public ClientConnectionId ClientConnectionId { get; }
+    public Stopwatch Stopwatch { get; }
     public ServiceSubscriptionId ServiceSubscriptionId { get; private set; }
     public ServiceId ServiceId { get; }
     public SessionId SessionId { get; }
     public UserId UserId { get; }
+
+    public string Id => ServiceSubscriptionId.Value.ToString();
 
     public SseServiceSubscription(
         IServerAuthenticationService authenticationService,
@@ -52,6 +56,7 @@ public class SseServiceSubscription : IServiceSubscription
         Channel = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
         ServiceSubscriptionId = serviceSubscriptionCollection.Add(this, serviceId);
         ClientConnectionId = serverConnectionCollection.AddConnection(this);
+        Stopwatch = Stopwatch.StartNew();
     }
 
     readonly ConcurrentDictionary<RequestId, int> Requests = [];
@@ -283,5 +288,39 @@ public class SseServiceSubscription : IServiceSubscription
             stateData);
         var sseEvent = new SseEvent("FabricStreamingResponseClientDto", streamingResponse);
         await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
+
+
+
+    private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
+    private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
+
+    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    {
+        var interval = 1.0;
+        var now = Stopwatch.Elapsed.TotalSeconds;
+
+        // Verwijder oude entries
+        while (queue.TryPeek(out var entry) && entry.time < now - interval)
+            queue.TryDequeue(out _);
+
+        var bytes = 0L;
+        var count = 0;
+        foreach (var item in queue)
+        {
+            bytes += item.bytes;
+            count++;
+        }
+        return new(count, bytes);
+    }
+    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(SendBytesLogger);
+    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
+    public void EnqueueSend(long size)
+    {
+        SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
+    public void EnqueueReceive(long size)
+    {
+        ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
 }

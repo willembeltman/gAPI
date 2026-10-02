@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using gAPI.Core.Server.Dashboard;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace gAPI.Fabric.Server.Config;
 
-public class FabricConfig
+public class FabricConfig : IDashboardName
 {
     public int Port { get; set; } = 9494;
     public LogLevel LogLevel { get; set; }
+
+    public string DashboardName => $"Port {Port} LogLevel {LogLevel}";
 
     //public async static Task<FabricConfig> LoadAsync()
     //{

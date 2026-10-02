@@ -1,5 +1,8 @@
-﻿namespace gAPI.Core.Server.Interfaces;
+﻿using gAPI.Core.Ids;
 
-public interface IServerConnection
+namespace gAPI.Core.Server.Interfaces;
+
+public interface IServerConnection : ISpeedGetter
 {
+    string Id { get; }
 }

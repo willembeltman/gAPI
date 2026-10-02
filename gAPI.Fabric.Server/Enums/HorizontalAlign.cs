@@ -1,8 +1,8 @@
-﻿namespace gAPI.Fabric.Server.Enums;
+﻿//namespace gAPI.Fabric.Server.Enums;
 
-public enum HorizontalAlign
-{
-    Center,
-    Left,
-    Right
-}
+//public enum HorizontalAlign
+//{
+//    Center,
+//    Left,
+//    Right
+//}

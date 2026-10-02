@@ -37,6 +37,8 @@ public class WssServerConnectionSender(
                     WebSocketMessageType.Binary,
                     true,
                     ct);
+
+                wssServerConnection.EnqueueSend(offset);
             }
         }
         catch (OperationCanceledException)

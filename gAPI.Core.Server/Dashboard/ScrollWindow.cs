@@ -1,7 +1,6 @@
-﻿using gAPI.Core.Server.Dashboard;
-using System.Drawing;
+﻿using System.Drawing;
 
-namespace gAPI.Fabric.Server.Models;
+namespace gAPI.Core.Server.Dashboard;
 
 public class ScrollWindow(string title, Point point, Size size, HorizontalAlign align = HorizontalAlign.Left) : IConsole
 {
@@ -40,6 +39,7 @@ public class ScrollWindow(string title, Point point, Size size, HorizontalAlign 
     }
 
     public bool Dirty { get; set; }
+    public string Title { get; set; } = title;
 
     public bool Render(bool force)
     {
@@ -48,7 +48,7 @@ public class ScrollWindow(string title, Point point, Size size, HorizontalAlign 
 
         Console.BackgroundColor = ConsoleColor.DarkBlue; ;
         Console.SetCursorPosition(X, Y);
-        Console.WriteLine(FillString(title, Width, HorizontalAlign.Center));
+        Console.WriteLine(FillString(Title, Width, HorizontalAlign.Center));
 
         var max = Y + Height;
         var i = topIndex;
