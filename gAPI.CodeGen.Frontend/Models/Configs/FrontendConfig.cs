@@ -26,6 +26,7 @@ public record FrontendConfig(
 
     bool GenerateIsPage,
     bool GenerateComponents,
+    bool GenerateNavigation,
 
     bool OverwritePages,
     bool OverwriteComponents,

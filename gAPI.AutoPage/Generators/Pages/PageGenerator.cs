@@ -230,8 +230,7 @@ public class PageGenerator : BaseGenerator, IPage
             : args.Select(a => a.Name!.ToNameCase()))});{(IsBaseResponse || IsBaseResponseT ? $@"
         if (!string.IsNullOrWhiteSpace(Response.RedirectPath))
         {{
-            Console.WriteLine(""RedirectPath"");
-            NavigationManager.NavigateTo(Response.RedirectPath);
+            NavigationManager.NavigateTo(Response.RedirectPath, forceLoad: true);
         }}" : "")}
     }}
 {(DataSources.Any() ? $@"

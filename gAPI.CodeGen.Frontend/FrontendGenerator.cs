@@ -73,8 +73,8 @@ public class FrontendGenerator
             RootPages = [.. pages.Where(a => a.RoutePath == "/")];
 
             PageIndexes = [.. Pages
-            .GroupBy(a => a.RoutePath)
-            .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
+                .GroupBy(a => a.RoutePath)
+                .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
 
             NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
             NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);

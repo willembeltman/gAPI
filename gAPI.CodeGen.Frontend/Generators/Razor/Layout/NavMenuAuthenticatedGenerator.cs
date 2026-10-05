@@ -45,7 +45,8 @@ public class NavMenuAuthenticatedGenerator : BaseGenerator
     </NavLink>
 </div>")));
 
-        Save();
+        if (Generator.Config.GenerateNavigation)
+            Save();
     }
 
 }
