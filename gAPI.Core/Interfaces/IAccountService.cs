@@ -46,7 +46,7 @@ public interface IAccountService
 
         CancellationToken ct);
 
-    [IsPage("/Account/Register", "Change password", "Change password", "")]
+    [IsPage("/Account/ChangePassword", "Change password", "Change password", "")]
     [IsAuthorized]
     Task<BaseResponse> ChangePasswordAsync(
 
