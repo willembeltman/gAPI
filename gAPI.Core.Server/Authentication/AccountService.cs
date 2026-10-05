@@ -16,6 +16,56 @@ public class AccountService<TUser, TStateDto>(
     where TUser : AuthUser, new()
     where TStateDto : AuthStateDto
 {
+    public virtual async Task<BaseResponse> ChangePasswordAsync(string oldPassword, string newPassword, string newPasswordRepeat, CancellationToken ct)
+    {
+        if (newPassword != newPasswordRepeat)
+            return new BaseResponse()
+            {
+                Error = BaseResponseErrorEnum.ErrorCouldNotAuthenticateUser
+            };
+
+        var allowedBefore = await security.BeforeLoginAsync(ct);
+        if (!allowedBefore)
+            return new BaseResponse()
+            {
+                Error = BaseResponseErrorEnum.ErrorLockedOut
+            };
+
+        var userId = authenticationService.AuthenticationState.User?.Id;
+        if (userId == null)
+            return new BaseResponse()
+            {
+                Error = BaseResponseErrorEnum.ErrorCouldNotAuthenticateUser
+            };
+
+        var db = dbFactory.CreateDbContext();
+        var dbUser = await db.Users
+            .FirstOrDefaultAsync(a => a.Id == userId, ct);
+        if (dbUser == null)
+            return new BaseResponse()
+            {
+                Error = BaseResponseErrorEnum.ErrorCouldNotAuthenticateUser
+            };
+
+        var oldPasswordHash = StringHelper.HashString(oldPassword);
+        var newPasswordHash = StringHelper.HashString(newPassword);
+
+        if (dbUser.PasswordHash != oldPasswordHash)
+            return new BaseResponse()
+            {
+                Error = BaseResponseErrorEnum.ErrorCouldNotAuthenticateUser
+            };
+
+        dbUser.PasswordHash = newPasswordHash;
+        await db.SaveChangesAsync(ct);
+
+        // Return updated state
+        return new BaseResponse()
+        {
+            Success = true,
+            RedirectPath = "/"
+        };
+    }
     public virtual async Task<BaseResponse> LoginAsync(string email, string password, CancellationToken ct)
     {
         var allowedBefore = await security.BeforeLoginAsync(ct);

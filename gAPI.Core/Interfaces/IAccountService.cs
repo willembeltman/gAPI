@@ -46,6 +46,27 @@ public interface IAccountService
 
         CancellationToken ct);
 
+    [IsPage("/Account/Register", "Change password", "Change password", "")]
+    [IsAuthorized]
+    Task<BaseResponse> ChangePasswordAsync(
+
+        [Title("Old password"), IsPassword]
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
+        string oldPassword,
+
+        [Title("New Password"), IsPassword]
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
+        string password,
+
+        [Title("Repeat password"), IsPassword]
+        [Required(ErrorMessage = "Please repeat the password")]
+        [IsCompare("Password", ErrorMessage = "Passwords do not match")]
+        string passwordRepeat,
+
+        CancellationToken ct);
+
     [IsLogoffPage]
     [IsAuthorized]
     [IsPage("/Account/Logoff", "Logoff", "Log off", "")]
