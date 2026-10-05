@@ -123,7 +123,7 @@ else
     public {ItemDataSource.Name}<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 {string.Join("", clients.Select(p => $@"
     [Parameter, EditorRequired]
-    public {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType!.KeyProperty.TypeSimpleName}> {p.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }} = null!;"))}
+    public {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType!.KeyProperty.TypeSimpleName}> {p.Name.ToMultiple()} {{ get; set; }} = null!;"))}
 
     private string[] HideColumnNames = [];
 
@@ -150,7 +150,7 @@ else
         // Foreign key dropdown
         if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
         {
-            var dsName = p.ForeignKeyType.Name.ToMultiple();
+            var dsName = p.Name.ToMultiple();
             string bindAttr = p.PropertyType.IsNullable ? "bind-NullableValue" : "bind-Value";
             string bindTypeAttr = p.PropertyType.IsNullable ? "bindtype_NullableValue" : "bindtype_Value";
             string valueType = p.TypeSimpleName;

@@ -155,7 +155,7 @@ else
     public {ListDataSource.Name}<{CrudType.Name}, {CrudType.KeyProperty.TypeSimpleName}>? DataSource {{ get; set; }}
 
     {string.Join("\r\n    ", foreigns.Select(f => $@"[Parameter, EditorRequired]
-    public {ListDataSource.Name}<{f.ForeignKeyType!.Name}, {f.ForeignKeyType!.KeyProperty!.TypeSimpleName}>? {f.ForeignKeyType!.Name.ToMultiple()} {{ get; set; }}"))}
+    public {ListDataSource.Name}<{f.ForeignKeyType!.Name}, {f.ForeignKeyType!.KeyProperty!.TypeSimpleName}>? {f.Name.ToMultiple()} {{ get; set; }}"))}
 
     [Parameter] public string Id {{ get; set; }} = $""{CrudType.Name.ToLower()}GridEdit_{{Guid.NewGuid()}}"";
     [Parameter] public string LoadingText {{ get; set; }} = ""Loading, please wait..."";
@@ -203,7 +203,7 @@ else
                             <{p.ForeignKeyType.Name}DropDown 
                                 {drop}
                                 @bind-ForeignName=""{modelPrefix}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?"" 
-                                DataSource=""{p.ForeignKeyType.Name.ToMultiple()}"" />
+                                DataSource=""{p.Name.ToMultiple()}"" />
                         </div>
                     }}";
         }

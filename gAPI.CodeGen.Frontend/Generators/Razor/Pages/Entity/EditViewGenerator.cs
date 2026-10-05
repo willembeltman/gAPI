@@ -121,7 +121,7 @@ public class EditViewGenerator : BaseGenerator
             <EditForm Model=""{entityName}!.Model"" OnValidSubmit=""{entityName}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
+                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{entityName}""{string.Join("", clients.Select(p => $@" {p.Name.ToMultiple()}=""{p.Name.ToMultiple()}"""))}{(CrudType.ForeignItemProperties.Any(p => p.IsImmutable) ? $@" HideColumns=""{string.Join(", ", CrudType.ForeignItemProperties
                 .Where(p => p.IsImmutable)
                 .Select(p => p.Name))}""" : "")} />
                 <{ErrorView.Name} Response=""{entityName}.StatusResponse"" />
@@ -141,7 +141,7 @@ public class EditViewGenerator : BaseGenerator
 
     private CancellationTokenSource? Cts;
     private {ItemDataSource.Name}<{entityName}, {keyType}>? {entityName};{string.Join("", clients.Select(p => @$"
-    private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.ForeignKeyType.Name.ToMultiple()};"))}
+    private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.Name.ToMultiple()};"))}
 
     protected override async Task OnParametersSetAsync()
     {{
@@ -171,7 +171,7 @@ public class EditViewGenerator : BaseGenerator
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 
-        {p.ForeignKeyType!.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
+        {p.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
             JS,
             StateHasChanged,
             GetPrimaryKey: x => x.{p.ForeignKeyType.KeyProperty.Name},
@@ -184,7 +184,7 @@ public class EditViewGenerator : BaseGenerator
             Update: {p.ListMethod.Interface.Name.ToCamelCase()}.Update,
             Delete: {p.ListMethod.Interface.Name.ToCamelCase()}.Delete
         );
-        await {p.ForeignKeyType.Name.ToMultiple()}.InitialiseAsync();"))}
+        await {p.Name.ToMultiple()}.InitialiseAsync();"))}
     }}
 
     public async ValueTask DisposeAsync()
@@ -196,8 +196,8 @@ public class EditViewGenerator : BaseGenerator
         }}
         if ({entityName} != null) 
             await {entityName}.DisposeAsync();{string.Join("", clients.Select(p => $@"
-        if ({p.ForeignKeyType!.Name.ToMultiple()} != null) 
-            await {p.ForeignKeyType.Name.ToMultiple()}.DisposeAsync();"))}
+        if ({p.Name.ToMultiple()} != null) 
+            await {p.Name.ToMultiple()}.DisposeAsync();"))}
     }}
 }}";
 

@@ -116,7 +116,7 @@ public class CreateViewGenerator : BaseGenerator
             <EditForm Model=""{name}!.Model"" OnValidSubmit=""{name}.HandleValidSubmit"">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.ForeignKeyType!.Name.ToMultiple()}=""{p.ForeignKeyType!.Name.ToMultiple()}"""))} />
+                <{(Config.UseAutoComponents ? "Auto" : "")}{FormView.Name} DataSource=""{name}""{string.Join("", clients.Select(p => $@" {p.Name.ToMultiple()}=""{p.Name.ToMultiple()}"""))} />
                 <{ErrorView.Name} Response=""{name}.StatusResponse"" />
                 <button id=""create"" class=""btn btn-primary"" type=""submit"">➕ Create</button>
                 <button id=""cancel"" class=""btn btn-secondary ms-2"" @onclick=""{name}.Cancel"">Cancel</button>
@@ -131,7 +131,7 @@ public class CreateViewGenerator : BaseGenerator
 @code {{
     private CancellationTokenSource? Cts;
     private {ItemDataSource.Name}<{name}, {CrudType.KeyProperty!.TypeSimpleName}>? {name};{string.Join("", clients.Select(p => $@"
-    private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.ForeignKeyType!.Name.ToMultiple()};"))}
+    private {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>? {p.Name.ToMultiple()};"))}
 
     protected override async Task OnInitializedAsync()
     {{
@@ -161,7 +161,7 @@ public class CreateViewGenerator : BaseGenerator
         );
         {name}.NewModel();{string.Join("", clients.Select(p => $@"
 
-        {p.ForeignKeyType!.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
+        {p.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
             JS,
             StateHasChanged,
             GetPrimaryKey: {p.ForeignKeyType.Name.ToLower()} => {p.ForeignKeyType.Name.ToLower()}.{p.ForeignKeyType.KeyProperty.Name},
@@ -174,7 +174,7 @@ public class CreateViewGenerator : BaseGenerator
             Update: null,
             Delete: null
         );
-        await {p.ForeignKeyType!.Name.ToMultiple()}.InitialiseAsync();"))}
+        await {p.Name.ToMultiple()}.InitialiseAsync();"))}
     }}
 
     public async ValueTask DisposeAsync()
@@ -186,8 +186,8 @@ public class CreateViewGenerator : BaseGenerator
         }}
         if ({name} != null) 
             await {name}.DisposeAsync();{string.Join("", clients.Select(p => $@"
-        if ({p.ForeignKeyType!.Name.ToMultiple()} != null) 
-            await {p.ForeignKeyType!.Name.ToMultiple()}.DisposeAsync();"))}
+        if ({p.Name.ToMultiple()} != null) 
+            await {p.Name.ToMultiple()}.DisposeAsync();"))}
     }}
 }}";
 
