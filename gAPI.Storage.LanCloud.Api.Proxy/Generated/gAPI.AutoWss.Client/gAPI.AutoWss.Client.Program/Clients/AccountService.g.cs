@@ -59,6 +59,25 @@ public class AccountService(
         return responseData;
     }
 
+    public async Task<BaseResponse> ChangePasswordAsync(
+        string oldPassword,
+        string password,
+        string passwordRepeat,
+        CancellationToken ct)
+    {
+        var ___content = new MultipartFormDataContent();
+        ___content.Add(new StringContent(oldPassword), $"oldPassword");
+        ___content.Add(new StringContent(password), $"password");
+        ___content.Add(new StringContent(passwordRepeat), $"passwordRepeat");
+
+        using var response = await clientAuthenticationService.PostAsync("/AccountService/ChangePasswordAsync", ___content, ct);
+        response.EnsureSuccessStatusCode();
+
+        var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
+            ?? throw new Exception("Could not cast response data");
+        return responseData;
+    }
+
     public async Task<BaseResponse> LogoffAsync(
         CancellationToken ct)
     {

@@ -21,6 +21,7 @@ public static class AccountServiceEndpointsExtensions
     {
         app.MapAccountServiceRegisterAsync();
         app.MapAccountServiceLoginAsync();
+        app.MapAccountServiceChangePasswordAsync();
         app.MapAccountServiceLogoffAsync();
         return app;
     }
@@ -65,6 +66,28 @@ public static class AccountServiceEndpointsExtensions
             return Results.Ok(response);
         })
         .AllowAnonymous()
+        .DisableAntiforgery();
+        return app;
+    }
+    public static IEndpointRouteBuilder MapAccountServiceChangePasswordAsync(this IEndpointRouteBuilder app)
+    {
+        app.MapPost("/accountservice/changepasswordasync", async (
+            [FromForm] string oldPassword, 
+            [FromForm] string password, 
+            [FromForm] string passwordRepeat, 
+            CancellationToken ct, 
+            [FromHeader(Name = "X-SessionId")] string ___sessionId, 
+            [FromHeader(Name = "X-StateData")] string? ___stateData, 
+            [FromServices] IServerAuthenticationService ___authentication, 
+            HttpContext ___httpContext, 
+            [FromServices] TimeProvider ___dateTime, 
+            [FromServices] IHostEnvironment ___hostEnvironment, 
+            [FromServices] IAccountService accountService) =>
+        {
+            var response = await accountService.ChangePasswordAsync(oldPassword, password, passwordRepeat, ct);
+            return Results.Ok(response);
+        })
+        .RequireAuthorization()
         .DisableAntiforgery();
         return app;
     }
