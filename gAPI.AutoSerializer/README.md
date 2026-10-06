@@ -33,7 +33,6 @@ Add the GenerateSerializer attribute to a class or record:
 public class AuthStateDto
 {
 	public AuthStateUserDto? User { get; set; }
-	public bool ForceReconnect { get; set; }
 }
 ```
 
@@ -136,7 +135,7 @@ public static AuthStateDto CreateCopy(this AuthStateDto value)
 {
 	var copy = new AuthStateDto();
 	copy.User = value.User == null ? null : value.User.CreateCopy();
-	copy.ForceReconnect = value.ForceReconnect;
+	copy.SomeValue = value.SomeValue;
 	return copy;
 }
 ```
@@ -177,7 +176,7 @@ public class AuthStateUserDto
 public class AuthStateDto
 {
 	public AuthStateUserDto? User { get; set; }
-	public bool ForceReconnect { get; set; }
+	public bool SomeValue { get; set; }
 }
 ```
 

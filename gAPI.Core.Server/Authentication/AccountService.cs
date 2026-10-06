@@ -109,25 +109,23 @@ public class AccountService<TUser, TStateDto>(
                 Error = BaseResponseErrorEnum.ErrorLockedOut
             };
 
-        authenticationService.State.ForceReconnect = true;
-
         // Return updated state
         return new BaseResponse()
         {
             Success = true,
-            RedirectPath = "/"
+            RedirectPath = "/",
+            ForceReload = true
         };
     }
     public virtual async Task<BaseResponse> LogoffAsync(CancellationToken ct)
     {
         var result = await authenticationService.LogoffAsync(ct);
 
-        authenticationService.State.ForceReconnect = true;
-
         return new BaseResponse()
         {
             Success = result,
-            RedirectPath = "/"
+            RedirectPath = "/",
+            ForceReload = true
         };
     }
     public virtual async Task<BaseResponse> RegisterAsync(string userName, string email, string password, string passwordRepeat, CancellationToken ct)
@@ -207,12 +205,11 @@ public class AccountService<TUser, TStateDto>(
                 Error = BaseResponseErrorEnum.ErrorCouldNotAuthenticateUser
             };
 
-        authenticationService.State.ForceReconnect = true;
-
         return new BaseResponse()
         {
             Success = true,
-            RedirectPath = "/"
+            RedirectPath = "/",
+            ForceReload = true
         };
     }
 }

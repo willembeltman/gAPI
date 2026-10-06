@@ -24,7 +24,6 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         Config = config;
         HttpClient = httpClient;
-        HttpClient.OnStateHasChanged += HttpClient_OnStateHasChanged;
         Sender = new WssClientConnectionSender(this);
         Logger = ((IClientLoggerFactory)this).CreateLogger<WssClientConnection>();
     }
@@ -140,14 +139,6 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private void HttpClient_OnStateHasChanged()
-    {
-        if (HttpClient.ForceReconnect)
-        {
-            HttpClient.ForceReconnect = false;
-            _ = ForceReconnectAsync(new());
-        }
-    }
     public async Task ForceReconnectAsync(CancellationToken ct)
     {
         if (HttpClient.BaseUri == null)
@@ -1149,7 +1140,6 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public void Dispose()
     {
-        HttpClient.OnStateHasChanged -= HttpClient_OnStateHasChanged;
         Cts?.Cancel();
         Cts?.Dispose();
         Cts = null;

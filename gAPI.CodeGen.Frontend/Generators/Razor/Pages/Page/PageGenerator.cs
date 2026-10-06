@@ -192,7 +192,10 @@ public class PageGenerator : BaseGenerator
             : args.Select(a => a.Name!.ToNameCase()))});{(IsBaseResponse || IsBaseResponseT ? $@"
         if (!string.IsNullOrWhiteSpace(Response.RedirectPath))
         {{
-            NavigationManager.NavigateTo(Response.RedirectPath, forceLoad: true);
+            if (Response.ForceReload)
+                NavigationManager.NavigateTo(Response.RedirectPath, forceLoad: true);
+            else
+                NavigationManager.NavigateTo(Response.RedirectPath);
         }}" : "")}
     }}
 

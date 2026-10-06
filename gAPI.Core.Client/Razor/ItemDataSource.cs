@@ -40,6 +40,16 @@ public class ItemDataSource<T, TKey>(
         StatusResponse = Response;
         NewModelFlag = true;
     }
+    public void LoadModel(T model)
+    {
+        Response = new BaseResponseT<T>
+        {
+            Success = true,
+            Response = model
+        };
+        StatusResponse = Response;
+        NewModelFlag = true;
+    }
 
     public async Task LoadModelAsync(TKey? key)
     {

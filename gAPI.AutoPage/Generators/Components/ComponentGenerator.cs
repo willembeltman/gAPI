@@ -208,7 +208,10 @@ public class ComponentGenerator : BaseGenerator
             : args.Select(a => a.Name!.ToNameCase()))});{(IsBaseResponse || IsBaseResponseT ? $@"
         if (!string.IsNullOrWhiteSpace(Response.RedirectPath))
         {{
-            NavigationManager.NavigateTo(Response.RedirectPath);
+            if (Response.ForceReload)
+                NavigationManager.NavigateTo(Response.RedirectPath, forceLoad: true);
+            else
+                NavigationManager.NavigateTo(Response.RedirectPath);
         }}" : "")}
     }}
 {(DataSources.Any() ? $@"

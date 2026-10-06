@@ -69,12 +69,6 @@ public class {Name}(
     public {UserId} UserId => new(State?.User?.Id.ToString());
     public Uri? BaseUri => HttpClient.BaseAddress;
 
-    public bool ForceReconnect
-    {{
-        get => State?.ForceReconnect == true;
-        set => State?.ForceReconnect = value;
-    }}
-
     public async Task<bool?> IsAuthenticatedAsync(CancellationToken ct)
     {{
         try

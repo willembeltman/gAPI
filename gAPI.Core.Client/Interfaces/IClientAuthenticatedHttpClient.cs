@@ -10,7 +10,6 @@ public interface IClientAuthenticatedHttpClient : IDisposable
     SessionId SessionId { get; }
     UserId UserId { get; }
     Uri? BaseUri { get; }
-    bool ForceReconnect { get; set; }
 
     Task<bool?> IsAuthenticatedAsync(CancellationToken ct = default);
 

@@ -7,5 +7,4 @@ namespace gAPI.Core.Dtos;
 public class AuthStateDto
 {
     public AuthStateUserDto? User { get; set; }
-    public bool ForceReconnect { get; set; }
 }
