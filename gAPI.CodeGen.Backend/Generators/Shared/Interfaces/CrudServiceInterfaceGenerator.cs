@@ -45,7 +45,7 @@ public class CrudServiceInterfaceGenerator : BaseGenerator
 
         var useStorageFile = Entity.HasIStorageFileInterface && !Entity.HasIReadonlyStorageFileInterface;
         var loadBysCode = string.Join("", Entity.Properties
-            .Where(a => a.IsNavigationItem)
+            .Where(a => a.IsNavigationItem && a.IsHidden == false)
             .Select(property =>
             {
                 Reg(property.NavigationItemProperty!);

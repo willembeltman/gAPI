@@ -10,7 +10,7 @@ namespace gAPI.SimpleRazorCompiler;
 
 public static class BuildRenderTree
 {
-    public static string Compile(this CodeNode structure, ISharedReference[] AllComponents, List<string> usings)
+    public static string Compile(this CodeNode structure, IEnumerable<ISharedReference> AllComponents, List<string> usings, List<(string Type, string Name)> injects)
     {
         var builderIndex = 0;
         var sb = new StringBuilder();
@@ -19,32 +19,32 @@ public static class BuildRenderTree
         sb.AppendLine("            var seq0 = 0;");
         foreach (var node in structure.Nodes)
         {
-            ProcessNode(node, sb, "            ", builderIndex, AllComponents, usings);
+            ProcessNode(node, sb, "            ", builderIndex, AllComponents, usings, injects);
         }
         sb.Append("        }");
         return sb.ToString();
     }
 
-    private static void ProcessNode(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
+    private static void ProcessNode(Node node, StringBuilder sb, string indent, int builderIndex, IEnumerable<ISharedReference> specialControls, List<string> usings, List<(string Type, string Name)> injects)
     {
         switch (node.NodeType)
         {
             case NodeTypeEnum.Xml:
-                HandleXml(node, sb, indent, builderIndex, specialControls, usings);
+                HandleXml(node, sb, indent, builderIndex, specialControls, usings, injects);
                 break;
 
             case NodeTypeEnum.Text:
-                HandleText(node, sb, indent, builderIndex, specialControls, usings);
+                HandleText(node, sb, indent, builderIndex, specialControls, usings, injects);
                 break;
 
             case NodeTypeEnum.Code:
             case NodeTypeEnum.SubCode:
-                HandleCode(node, sb, indent, builderIndex, specialControls, usings);
+                HandleCode(node, sb, indent, builderIndex, specialControls, usings, injects);
                 break;
         }
     }
 
-    private static void HandleXml(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] assemblyControls, List<string> usings)
+    private static void HandleXml(Node node, StringBuilder sb, string indent, int builderIndex, IEnumerable<ISharedReference> assemblyControls, List<string> usings, List<(string Type, string Name)> injects)
     {
         string seqVar = $"seq{builderIndex}";
 
@@ -84,7 +84,7 @@ public static class BuildRenderTree
 {indent}    var {newSeqVar} = 0;");
             foreach (var child in node.Nodes)
             {
-                ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);
+                ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings, injects);
             }
             sb.AppendLine($"{indent}}})));");
             return;
@@ -132,7 +132,7 @@ public static class BuildRenderTree
 {indent}    var {newSeqVar} = 0;");
                 foreach (var child in node.Nodes)
                 {
-                    ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);
+                    ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings, injects);
                 }
                 sb.AppendLine($"{indent}}})));");
             }
@@ -146,7 +146,7 @@ public static class BuildRenderTree
 {indent}    var {newSeqVar} = 0;");
                 foreach (var child in node.Nodes)
                 {
-                    ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);
+                    ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings, injects);
                 }
                 sb.AppendLine($"{indent}}}));");
             }
@@ -155,7 +155,7 @@ public static class BuildRenderTree
                 sb.AppendLine($"{indent}{{");
                 foreach (var child in node.Nodes)
                 {
-                    ProcessNode(child, sb, indent + "    ", builderIndex, assemblyControls, usings);
+                    ProcessNode(child, sb, indent + "    ", builderIndex, assemblyControls, usings, injects);
                 }
                 sb.AppendLine($"{indent}}}");
             }
@@ -198,6 +198,12 @@ public static class BuildRenderTree
             if (name == "OnChange")
             {
                 sb.AppendLine($"{indent}__builder{builderIndex}.AddAttribute({seqVar}++, \"{name}\", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, {value}));");
+                continue;
+            }
+
+            if (name == "DataSource")
+            {
+                sb.AppendLine($"{indent}__builder{builderIndex}.AddAttribute({seqVar}++, \"{name}\", {value});");
                 continue;
             }
             if (name == "@ref")
@@ -246,7 +252,7 @@ public static class BuildRenderTree
         }
     }
 
-    private static void HandleText(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
+    private static void HandleText(Node node, StringBuilder sb, string indent, int builderIndex, IEnumerable<ISharedReference> specialControls, List<string> usings, List<(string Type, string Name)> injects)
     {
         var seqVar = $"seq{builderIndex}";
         string text = node.Text!;
@@ -283,12 +289,12 @@ public static class BuildRenderTree
             sb.AppendLine($"{indent}{{");
             foreach (var child in node.Nodes)
             {
-                ProcessNode(child, sb, indent + "    ", builderIndex, specialControls, usings);
+                ProcessNode(child, sb, indent + "    ", builderIndex, specialControls, usings, injects);
             }
             sb.AppendLine($"{indent}}}");
         }
     }
-    private static void HandleCode(Node node, StringBuilder sb, string indent, int builderIndex, ISharedReference[] specialControls, List<string> usings)
+    private static void HandleCode(Node node, StringBuilder sb, string indent, int builderIndex, IEnumerable<ISharedReference> specialControls, List<string> usings, List<(string Type, string Name)> injects)
     {
         string code = node.Code!;
         if (!string.IsNullOrEmpty(code))
@@ -303,7 +309,7 @@ public static class BuildRenderTree
             sb.AppendLine($"{indent}{{");
             foreach (var child in node.Nodes)
             {
-                ProcessNode(child, sb, indent + "    ", builderIndex, specialControls, usings);
+                ProcessNode(child, sb, indent + "    ", builderIndex, specialControls, usings, injects);
             }
             sb.AppendLine($"{indent}}}");
         }

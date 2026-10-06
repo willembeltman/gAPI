@@ -47,6 +47,7 @@ public class FormGenerator : BaseGenerator
             "Microsoft.AspNetCore.Components",
             "Microsoft.AspNetCore.Components.Forms",
             "Microsoft.AspNetCore.Components.Web",
+            "gAPI.Generated.Components",
             "System",
             "System.Collections.Generic",
             "System.Threading.Tasks"
@@ -160,7 +161,7 @@ else
     {{
         <div class=""mb-3"">
             <label for=""{id}"" class=""form-label"">{p.ForeignKeyType.Name}</label>
-            <{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{modelPrefix}.{p.Name}"" {bindTypeAttr}=""{valueType}""
+            <Auto{p.ForeignKeyType.Name}DropDown @{bindAttr}=""{modelPrefix}.{p.Name}"" {bindTypeAttr}=""{valueType}""
                 @bind-ForeignName=""{modelPrefix}.{p.ForeignKeyNameProperty.Name}"" bindtype_ForeignName=""string?""
                 DataSource=""{dsName}"" id=""{id}"" />
         </div>

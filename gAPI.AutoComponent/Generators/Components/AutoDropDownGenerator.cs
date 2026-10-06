@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.SimpleRazorCompiler;
+using System;
 
 namespace gAPI.AutoComponent.Generators.Components;
 
@@ -35,6 +36,7 @@ public class AutoDropDownGenerator : BaseGenerator
 
     public void GenerateCode()
     {
+        Context.SharedReferences.AllComponents.Add(this); // Sorry voor de side effect, maar pffffffff
         DropDownGenerator.GenerateCode();
         var razorCode = GetRazorNamespacesCode() + "\r\n" + DropDownGenerator.Code;
         Code = RazorCompiler.CompileRazorToComponent(razorCode, Namespace!, Name, Context.SharedReferences.AllComponents);

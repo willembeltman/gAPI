@@ -1,6 +1,7 @@
 ﻿using gAPI.AutoComponent.Helpers;
 using Microsoft.CodeAnalysis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoComponent.Models;
@@ -163,7 +164,7 @@ public class SharedReferences
         return false;
     }
 
-    public SharedReference[] AllComponents { get; }
+    public List<SharedReference> AllComponents { get; }
     public SharedReference Gapi_IClientAuthenticatedHttpClient { get; }
     public SharedReference IsFormFileExtension { get; }
     public SharedReference FormFile { get; }

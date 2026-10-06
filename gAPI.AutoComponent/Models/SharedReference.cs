@@ -6,6 +6,9 @@ namespace gAPI.AutoComponent.Models;
 
 public class SharedReference : ISharedReference
 {
+    public SharedReference()
+    {
+    }
     public SharedReference(string fullName)
     {
         Name = fullName.Split('.').Last();
@@ -25,8 +28,8 @@ public class SharedReference : ISharedReference
 
 
     public ISymbol? Symbol { get; }
-    public string Name { get; protected set; }
-    public string Namespace { get; protected set; }
+    public string Name { get; set; } = string.Empty;
+    public string Namespace { get; set; } = string.Empty;
     public string FullName => $"{Namespace}.{Name}";
 
     public override string ToString()

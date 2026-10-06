@@ -124,7 +124,7 @@ context.DtoNameProperties
                 {a.Name}Name = 
                     {string.Join(" + \" \" + \r\n                        ",
 a.ForeignEntityNameProperties
-    .Select(p => p.IsName.Format($"entity.{a.NameProperty!.Name}.{p.Name}"))
+    .Select(p => p.IsName.Format($"entity.{a.NameProperty!.Name}.{p.Name}{(p.IsValueType && p.IsNullable ? ".Value" : "")}"))
 )},"))}
 #nullable enable
             }})

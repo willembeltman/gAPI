@@ -9,7 +9,7 @@ namespace gAPI.SimpleRazorCompiler;
 
 public static class RazorCompiler
 {
-    public static string CompileRazorToComponent(string fullRazorCode, string namespaceName, string className, ISharedReference[] specialControls)
+    public static string CompileRazorToComponent(string fullRazorCode, string namespaceName, string className, IEnumerable<ISharedReference> specialControls)
     {
         if (string.IsNullOrWhiteSpace(fullRazorCode))
             return $"namespace {namespaceName} {{ public partial class {className} : Microsoft.AspNetCore.Components.ComponentBase {{ }} }}";
@@ -91,7 +91,7 @@ public static class RazorCompiler
 
         // 5. Maak XML-compatibele markup en genereer builder code
         var builderStructure = new CodeNode(markup);
-        string builderCode = builderStructure.Compile(specialControls, usings);
+        string builderCode = builderStructure.Compile(specialControls, usings, injects);
 
         // 6. Combineer alles tot class
         var final = new StringBuilder();

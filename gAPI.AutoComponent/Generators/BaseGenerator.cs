@@ -1,17 +1,18 @@
 ﻿using gAPI.AutoComponent.Interfaces;
+using gAPI.AutoComponent.Models;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoComponent.Generators;
 
-public class BaseGenerator : IBaseGenerator
+public class BaseGenerator : SharedReference, IBaseGenerator
 {
     public string Directory { get; set; } = string.Empty;
-    public string? Namespace { get; set; }
+    //public string? Namespace { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string FullName => $"{Namespace}.{Name}";
+    //public string Name { get; set; } = string.Empty;
+    //public string FullName => $"{Namespace}.{Name}";
     private List<string> Namespaces { get; set; } = [];
 
     public void Reg(ISharedReference? reference)

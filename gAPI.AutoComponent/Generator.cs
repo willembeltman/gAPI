@@ -123,6 +123,22 @@ public class Generator
         //    RedirectToLogin = _RedirectToLogin;
         //}
 
+        var DropDowns = CrudContext.Cruds
+            .Where(a => a.ResponseType != null)
+            .Select(crud => new AutoDropDownGenerator(
+                this,
+                crud,
+                ListDataSource,
+                "",
+                "gAPI.Generated.Components"))
+            .ToArray();
+        foreach (var dropDown in DropDowns)
+        {
+            dropDown.GenerateCode();
+            var formFieldsViewFullName = Path.Combine(dropDown.Directory, dropDown.FileName);
+            Spc.AddSource(formFieldsViewFullName, SourceText.From(dropDown.Code, Encoding.UTF8));
+        }
+
         var Forms = CrudContext.Cruds
             .Where(a => a.ResponseType != null)
             .Select(crud => new AutoFormGenerator(
@@ -205,22 +221,6 @@ public class Generator
             list.GenerateCode();
             var formFieldsViewFullName = Path.Combine(list.Directory, list.FileName);
             Spc.AddSource(formFieldsViewFullName, SourceText.From(list.Code, Encoding.UTF8));
-        }
-
-        var DropDowns = CrudContext.Cruds
-            .Where(a => a.ResponseType != null)
-            .Select(crud => new AutoDropDownGenerator(
-                this,
-                crud,
-                ListDataSource,
-                "",
-                "gAPI.Generated.Components"))
-            .ToArray();
-        foreach (var dropDown in DropDowns)
-        {
-            dropDown.GenerateCode();
-            var formFieldsViewFullName = Path.Combine(dropDown.Directory, dropDown.FileName);
-            Spc.AddSource(formFieldsViewFullName, SourceText.From(dropDown.Code, Encoding.UTF8));
         }
 
         var GridEdits = CrudContext.Cruds
