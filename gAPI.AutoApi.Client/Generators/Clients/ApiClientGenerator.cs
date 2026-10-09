@@ -71,7 +71,10 @@ public class {Name}(
 
     private string GenerateMethod(InterfaceMethod method)
     {
-        if (!method.ResponseType.IsTask && !method.ResponseType.IsTaskT) return "";
+        if (!method.ResponseType.IsTask &&
+            !method.ResponseType.IsTaskT &&
+            !method.ResponseType.IsIAsyncEnumerable &&
+            !method.ResponseType.IsVoid) return "";
 
         Reg(method.ResponseType);
         foreach (var arg in method.Arguments)
@@ -86,6 +89,8 @@ public class {Name}(
         var skipTakeQueryItems = method.Arguments
             .Where(a => a.Name == "skip" || a.Name == "take");
 
+
+        var responseType = method.ResponseType.IsVoid ? "void" : method.ResponseType.ToString();
         var arguments = string.Join(",", method.Arguments.Select(arg => $@"
         {arg.ParameterType} {arg}"));
         var writeProps =
@@ -114,7 +119,7 @@ public class {Name}(
 
         return $@"
 
-    public async {method.ResponseType} {method}({arguments})
+    public async {responseType} {method}({arguments})
     {{
         var ___content = new MultipartFormDataContent();{writeProps}
 
@@ -173,7 +178,6 @@ public class {Name}(
     }
     private string GenerateReturn(InterfaceMethod method, InterfaceMethodArgument[] args, InterfaceMethodArgument cancellationToken)
     {
-
         var orderByQueryItem = method.Arguments
             .Where(a => a.Name == "orderby")
             .FirstOrDefault();

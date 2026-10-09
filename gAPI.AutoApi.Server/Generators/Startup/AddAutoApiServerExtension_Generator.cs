@@ -16,7 +16,7 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "AddAutoApiServerExtension";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Startup\\{Name}.g.cs";
     }
 
     public Generator Context { get; }
@@ -148,7 +148,7 @@ public static class {Name}
             sessionCache, 
             streamingCache,
             serviceSubscriptionCollection,
-            null!,
+            //null!,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 

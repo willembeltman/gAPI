@@ -46,6 +46,7 @@ public class Generator
 
         AddAutoApi = new AddAutoApiServerExtension_Generator(this);
         SseEndpointExtension = new SseEndpointExtension_Generator(this);
+        SseResponseController = new SseResponseController_Generator(this);
     }
 
     public ServiceContext ServiceContext { get; }
@@ -59,6 +60,7 @@ public class Generator
     public ClientContext_Generator ClientContext { get; }
     public AddAutoApiServerExtension_Generator AddAutoApi { get; }
     public SseEndpointExtension_Generator SseEndpointExtension { get; }
+    public SseResponseController_Generator SseResponseController { get; }
 
     public void Generate(SourceProductionContext spc)
     {
@@ -114,6 +116,9 @@ public class Generator
 
         SseEndpointExtension.GenerateCode();
         spc.AddSource(Path.Combine(SseEndpointExtension.Directory, SseEndpointExtension.FileName), SourceText.From(SseEndpointExtension.Code, Encoding.UTF8));
+
+        SseResponseController.GenerateCode();
+        spc.AddSource(Path.Combine(SseResponseController.Directory, SseResponseController.FileName), SourceText.From(SseResponseController.Code, Encoding.UTF8));
 
     }
 }

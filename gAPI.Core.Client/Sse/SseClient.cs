@@ -121,12 +121,14 @@ public class SseClient : IDisposable
                             case "StreamingRequestClientDto":
                                 var streamingRequest = JsonSerializer.Deserialize<StreamingRequestClientDto>(eventData);
                                 if (streamingRequest != null)
-                                    await Receive_StreamingRequest_FromServerAsync(streamingRequest, Cts.Token);
+                                    // Converteer naar fabric call
+                                    await Receive_FabricStreamingRequest_FromServerAsync(streamingRequest, Cts.Token);
                                 break;
                             case "StreamingResponseClientDto":
                                 var streamingResponse = JsonSerializer.Deserialize<StreamingResponseClientDto>(eventData);
                                 if (streamingResponse != null)
-                                    await Receive_StreamingResponse_FromServerAsync(streamingResponse, Cts.Token);
+                                    // Converteer naar fabric call
+                                    await Receive_FabricStreamingResponse_FromServerAsync(streamingResponse, Cts.Token);
                                 break;
 
                             case "FabricStreamingRequestClientDto":
@@ -307,45 +309,45 @@ public class SseClient : IDisposable
         cts.Dispose();
     }
 
-    private async Task Receive_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
-    {
-        ct = CreateCancellation(message.Routing.RequestId, ct);
-        _ = Task.Run(async () =>
-        {
-            if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+    //private async Task Receive_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
+    //{
+    //    ct = CreateCancellation(message.Routing.RequestId, ct);
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (message.StateIsChanged)
+    //            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-            if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
-            {
-                var response = await handler.Invoke(message.StreamId, false, ct);
-                var stateIsChanged = HttpClient.IsStateDataChanged();
-                var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-                var streamingResponseClient = new StreamingResponseClientDto(
-                    response.Routing,
-                    response.ArgumentIndex,
-                    response.StreamId,
-                    response.IsCompleted,
-                    response.IsCancelled,
-                    response.ExceptionMessage,
-                    response.BinaryData,
-                    stateIsChanged,
-                    stateData);
-                await Sender.Send_StreamingResponse_ToServerAsync(streamingResponseClient, ct);
-            }
-        }, ct);
-    }
-    private async Task Receive_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
-    {
-        ct = CreateCancellation(message.Routing.RequestId, ct);
-        _ = Task.Run(async () =>
-        {
-            if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+    //        if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
+    //        {
+    //            var response = await handler.Invoke(message.StreamId, false, ct);
+    //            var stateIsChanged = HttpClient.IsStateDataChanged();
+    //            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
+    //            var streamingResponseClient = new StreamingResponseClientDto(
+    //                response.Routing,
+    //                response.ArgumentIndex,
+    //                response.StreamId,
+    //                response.IsCompleted,
+    //                response.IsCancelled,
+    //                response.ExceptionMessage,
+    //                response.BinaryData,
+    //                stateIsChanged,
+    //                stateData);
+    //            await Sender.Send_StreamingResponse_ToServerAsync(streamingResponseClient, ct);
+    //        }
+    //    }, ct);
+    //}
+    //private async Task Receive_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
+    //{
+    //    ct = CreateCancellation(message.Routing.RequestId, ct);
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (message.StateIsChanged)
+    //            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-            if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
-                responseHandler.Invoke(message);
-        }, ct);
-    }
+    //        if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
+    //            responseHandler.Invoke(message);
+    //    }, ct);
+    //}
 
     private async Task Receive_FabricStreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
@@ -371,7 +373,7 @@ public class SseClient : IDisposable
                     response.BinaryData,
                     stateIsChanged,
                     stateData);
-                await Sender.Send_FabricStreamingResponse_ToServerAsync(streamingResponseClient, ct);
+                await Sender.Send_StreamingResponse_ToServerAsync(streamingResponseClient, ct);
             }
         }, ct);
     }

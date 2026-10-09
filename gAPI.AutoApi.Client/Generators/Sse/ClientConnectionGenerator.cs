@@ -127,7 +127,7 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
             return $@"
             case ""{i.Name}"":
                 switch(methodId.Value)
-                {{{string.Join("\r\n", i.Methods.Where(a => a.ResponseType.IsTask).Select(m =>
+                {{{string.Join("\r\n", i.Methods.Where(a => a.ResponseType.IsTask || a.ResponseType.IsVoid).Select(m =>
             {
                 var hasCancellationToken = m.Arguments.Any(a => a.ParameterType.Name == "CancellationToken");
                 return $@"
@@ -138,7 +138,7 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
                         if ({m.Name.ToLower()} == null) return;
                         foreach (var hub in {i.Title}s)
                         {{
-                            await hub.{m.Name}({string.Join(", ", m.Arguments
+                            {(m.ResponseType.IsVoid ? "" : "await ")}hub.{m.Name}({string.Join(", ", m.Arguments
     .Where(a => a.ParameterType.Name != "CancellationToken")
     .Select(a => $"{m.Name.ToLower()}.{a.Name}")
     .Concat(hasCancellationToken ? new[] { "ct" } : Enumerable.Empty<string>()))});

@@ -5,11 +5,16 @@ namespace gAPI.AutoApi.Server.Models;
 
 public class SharedReferences
 {
+
     public SharedReferences(INamedTypeSymbol[] allSymbols)
     {
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthServer_Middleware = SharedReferenceFinder.TryFindStart("gAPI.Core.Server.AuthenticationMiddleware", allSymbols);
+        BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
 
+        StreamingRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingRequestClientDto", allSymbols);
+        StreamingResponseClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseClientDto", allSymbols);
+        InvokeRequestDoneClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneClientDto", allSymbols);
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Sse.SseServiceSubscription", allSymbols);
@@ -29,6 +34,7 @@ public class SharedReferences
 
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference? AuthServer_Middleware { get; }
+    public SharedReference BaseResponse { get; }
     public SharedReference IsHubProxyAttribute { get; }
     public SharedReference FabricClient { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
@@ -44,4 +50,7 @@ public class SharedReferences
     public SharedReference SessionCache { get; }
     public SharedReference StreamingCache { get; }
     public SharedReference AuthenticationOptions { get; }
+    public SharedReference StreamingResponseClientDto { get; }
+    public SharedReference StreamingRequestClientDto { get; }
+    public SharedReference InvokeRequestDoneClientDto { get; }
 }

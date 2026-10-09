@@ -15,7 +15,7 @@ public class HubClientContext_Generator : BaseGenerator
         Namespace = iClientContext.Namespace;
 
         Name = Interface.CleanName + "Context";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs\\{Name}.g.cs";
     }
 
     public Generator Context { get; }

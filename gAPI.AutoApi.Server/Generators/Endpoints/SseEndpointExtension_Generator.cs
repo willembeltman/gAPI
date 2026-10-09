@@ -14,7 +14,7 @@ public class SseEndpointExtension_Generator : BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "SseEndpointExtension";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Endpoints\\{Name}.g.cs";
     }
 
     public Generator Context { get; }

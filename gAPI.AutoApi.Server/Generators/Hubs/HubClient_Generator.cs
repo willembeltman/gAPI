@@ -15,7 +15,7 @@ public class HubClient_Generator : BaseGenerator
         Namespace = @interface.Namespace;
 
         Name = Interface.CleanName;
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs\\{Name}.g.cs";
     }
 
     public Generator Context { get; }
@@ -123,7 +123,7 @@ public class {Name}(
                 $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
                 "No TaskT supported");
             }
-            if (method.ResponseType.IsVoid)
+            else if (method.ResponseType.IsVoid)
             {
                 //if (method.ResponseType.Name != "Task")
                 //    throw new Exception(
@@ -135,8 +135,9 @@ public class {Name}(
         {string.Join(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
-    {{
-        var ___cts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token);
+    {{{(cancellationToken == null ? $@"
+        var ___cts = new CancellationTokenSource();" : $@"
+        var ___cts = CancellationTokenSource.CreateLinkedTokenSource({cancellationToken.Name});")}
         ___cts.CancelAfter(TimeSpan.FromSeconds(100));
         var ___ct = ___cts.Token;
         _ = Task.Run(async () =>
@@ -168,7 +169,7 @@ public class {Name}(
         }}, ___ct);
     }}";
             }
-            if (method.ResponseType.IsTask)
+            else if (method.ResponseType.IsTask)
             {
                 //if (method.ResponseType.Name != "Task")
                 //    throw new Exception(
@@ -243,7 +244,7 @@ public class {Name}(
             {
                 throw new Exception(
                 $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-                $"No {method.ResponseType} supported");
+                $"No {method.ResponseType} supported 1");
             }
 
             //        else

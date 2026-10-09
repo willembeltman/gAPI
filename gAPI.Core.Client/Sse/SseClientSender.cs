@@ -25,14 +25,14 @@ public class SseClientSender(SseClient sseClient)
             throw;
         }
     }
-    public async Task Send_StreamingResponse_ToServerAsync(StreamingResponseClientDto message, CancellationToken ct)
+    public async Task Send_StreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         try
         {
             var content = new MultipartFormDataContent();
             content.Write("message", message);
 
-            using var response = await HttpClient.PostAsync("/SseServiceSubscription/StreamingResponse", content, ct);
+            using var response = await HttpClient.PostAsync("/SseServiceSubscription/StreamingRequest", content, ct);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
@@ -40,7 +40,7 @@ public class SseClientSender(SseClient sseClient)
             throw;
         }
     }
-    public async Task Send_FabricStreamingResponse_ToServerAsync(StreamingResponseClientDto message, CancellationToken ct)
+    public async Task Send_StreamingResponse_ToServerAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         try
         {
@@ -51,7 +51,7 @@ public class SseClientSender(SseClient sseClient)
                 { new StringContent(json), $"messageJson" }
             };
 
-            using var response = await HttpClient.PostAsync("/SseServiceSubscription/FabricStreamingResponse", content, ct);
+            using var response = await HttpClient.PostAsync("/SseServiceSubscription/StreamingResponse", content, ct);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
@@ -59,4 +59,33 @@ public class SseClientSender(SseClient sseClient)
             throw;
         }
     }
+
+
+
+    ///// <summary>
+    ///// MOET ALTIJD NAAR DE FABRIC WANT HET IS EEN NIEUWE CALL
+    ///// </summary>
+    //public async Task Send_FabricStreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
+    //{
+    //    try
+    //    {
+
+    //        var json = JsonSerializer.Serialize(message);
+    //        var content = new MultipartFormDataContent
+    //        {
+    //            { new StringContent(json), $"messageJson" }
+    //        };
+
+    //        using var Request = await HttpClient.PostAsync("/SseServiceSubscription/StreamingRequest", content, ct);
+    //        Request.EnsureSuccessStatusCode();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw;
+    //    }
+    //}
+
+    /// <summary>
+    /// MOET ALTIJD NAAR DE FABRIC WANT HET IS EEN NIEUWE CALL
+    /// </summary>
 }

@@ -15,7 +15,7 @@ public class IHubClientContext_Generator : BaseGenerator
         Namespace = sseService.Namespace;
 
         Name = $"I{sseService.Interface.CleanName}Context";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Hubs\\{Name}.g.cs";
     }
 
     public Generator Context { get; }

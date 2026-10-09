@@ -86,7 +86,7 @@ public class ServiceContext
     }
     private void CheckApi(TypeHelper responseType, List<string> errors, string method, string hubInterface)
     {
-        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
+        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsVoid)
         {
             errors.Add(
                 $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +

@@ -21,7 +21,7 @@ public class ControllerApi_Generator : BaseGenerator
         Namespace = Service.Namespace;
 
         Name = $"{Interface.CleanName}Controller";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Controllers\\{Name}.g.cs";
     }
 
     public Generator Context { get; }
@@ -33,10 +33,6 @@ public class ControllerApi_Generator : BaseGenerator
         Reg(Interface);
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("gAPI.Core.Dtos");
-
-        var synchroniousMethod = Interface.Methods.FirstOrDefault(method => method.IsAsync == false);
-        if (synchroniousMethod != null)
-            throw new Exception($"We don't do synchonious code anymore, please change to async. {Name}.{synchroniousMethod.Name}");
 
         foreach (var method in Interface.Methods)
         {
@@ -157,15 +153,24 @@ public class {Name}(
     {{
         if (!ModelState.IsValid) return BadRequest(ModelState);{(
         underlaying == null
-        ? $@"
+
+        ? method.ResponseType.IsVoid ? $@"
+
+        {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
+        return Ok(new {responseType}() {{ Success = true }});" :
+       
+        $@"
         await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(new {responseType}() {{ Success = true }});"
+
         : underlaying.IsBaseResponse ||
             underlaying.IsBaseResponseT ||
             underlaying.IsBaseListResponseT
+
             ? $@"
         var response = await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(response);"
+
             : $@"
         var response = await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(new {responseType}() {{ Success = true, Response = response }});")}

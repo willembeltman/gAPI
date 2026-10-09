@@ -17,7 +17,7 @@ public class MinimalApi_Generator : BaseGenerator
         Namespace = Interface.Namespace;
 
         Name = $"{Interface.CleanName}EndpointsExtensions";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Endpoints\\{Name}.g.cs";
     }
 
     public Generator Context { get; }

@@ -1,9 +1,11 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.ServerSentEvents;
@@ -170,7 +172,7 @@ public class SseServiceSubscription : IServiceSubscription
         //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
         var completion = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        StreamingCache.PendingClientInvokeRequests[invokeRequest.Routing.RequestId] = completion;
+        StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -191,13 +193,13 @@ public class SseServiceSubscription : IServiceSubscription
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
 
-            var enumerable = FabricClient.RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
+            var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
             await foreach (var item in enumerable)
                 yield return item;
         }
         finally
         {
-            StreamingCache.PendingClientInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
+            StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
         }
     }
     public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
@@ -291,6 +293,66 @@ public class SseServiceSubscription : IServiceSubscription
     }
 
 
+    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    {
+        return new RemoteAsyncEnumerable<byte[]>(
+            construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
+            {
+                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
+                StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
+                {
+                    if (response.IsCancelled)
+                    {
+                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
+                        return;
+                    }
+
+                    if (response.ExceptionMessage != null)
+                    {
+                        enumerator.Complete(new RemoteException(response.ExceptionMessage));
+                        return;
+                    }
+
+                    if (response.IsCompleted)
+                    {
+                        enumerator.Complete();
+                        return;
+                    }
+
+                    enumerator.Push(response.BinaryData);
+                });
+            },
+
+            requestNext: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
+            {
+                return Send_FabricStreamingRequest_ToClientAsync(
+                    new StreamingRequestDto(
+                        routing,
+                        argumentIndex,
+                        streamId,
+                        false),
+                    ct);
+            },
+
+            cancelled: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator) =>
+            {
+                return Send_FabricStreamingRequest_ToClientAsync(
+                    new StreamingRequestDto(
+                        routing,
+                        argumentIndex,
+                        streamId,
+                        true),
+                    default);
+            },
+
+            dispose: (StreamId streamId) =>
+            {
+                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
+                StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
+            });
+    }
+
+
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
@@ -323,4 +385,6 @@ public class SseServiceSubscription : IServiceSubscription
     {
         ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
+
+
 }

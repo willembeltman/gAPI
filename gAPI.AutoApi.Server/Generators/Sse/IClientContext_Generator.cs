@@ -14,7 +14,7 @@ public class IClientContext_Generator : BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "IClientContext";
-        FileName = $"{Name}.g.cs";
+        FileName = $"Sse\\{Name}.g.cs";
     }
 
     public Generator Context { get; }

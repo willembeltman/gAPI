@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoApi.Client.Helpers;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -55,16 +56,17 @@ public class ServiceContext
             foreach (var method in hubInterface.Methods)
                 CheckHub(method.ResponseType, errors, method.Name, hubInterface.FullName);
 
-        foreach (var hubInterface in ApiInterfaces)
-            foreach (var method in hubInterface.Methods)
-                CheckApi(method.ResponseType, errors, method.Name, hubInterface.FullName);
+        foreach (var apiInterface in ApiInterfaces)
+            foreach (var method in apiInterface.Methods)
+                CheckApi(method, apiInterface, errors);
 
-        foreach (var hubInterface in MinimalApiInterfaces)
-            foreach (var method in hubInterface.Methods)
-                CheckApi(method.ResponseType, errors, method.Name, hubInterface.FullName);
+        foreach (var apiInterface in MinimalApiInterfaces)
+            foreach (var method in apiInterface.Methods)
+                CheckApi(method, apiInterface, errors);
 
         return errors;
     }
+
     private void CheckHub(TypeHelper responseType, List<string> errors, string method, string hubInterface)
     {
         if (responseType.IsTaskT)
@@ -82,12 +84,22 @@ public class ServiceContext
                 "Please use Task (no response) or IAsyncEnumerable<T> (with responses).");
         }
     }
-    private void CheckApi(TypeHelper responseType, List<string> errors, string method, string hubInterface)
+
+
+    private void CheckApi(InterfaceMethod method, Interface apiInterface, List<string> errors)
     {
-        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
+        //var args = method.Arguments.Where(a => a.IsIEnumerable).ToArray();
+        //foreach (var arg in args) 
+        //{
+        //    errors.Add(
+        //        $"Method '{method}' on interface '{apiInterface}' '{arg}' " +
+        //        "This is not supported.");
+
+        //}
+        if (!method.ResponseType.IsTaskT && !method.ResponseType.IsTask && !method.ResponseType.IsVoid)
         {
             errors.Add(
-                $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
+                $"Method '{method}' on interface '{apiInterface}' appears to not be supported. " +
                 "Please use Task (no response), Task<T> or IAsyncEnumerable<T> (with responses).");
         }
     }

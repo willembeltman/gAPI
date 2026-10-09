@@ -467,7 +467,7 @@ public abstract class WssServerConnection : IWssServerConnection
                 await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
             // Voor als er geen fabric is
-            if (StreamingCache.PendingClientInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+            if (StreamingCache.PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
                 completion.TrySetResult(message);
             else
                 await FabricClient.Send_FabricInvokeRequestDone_ToFabricAsync(message, ct);
@@ -625,7 +625,7 @@ public abstract class WssServerConnection : IWssServerConnection
         //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
         var completion = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        StreamingCache.PendingClientInvokeRequests[invokeRequest.Routing.RequestId] = completion;
+        StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -657,7 +657,7 @@ public abstract class WssServerConnection : IWssServerConnection
         }
         finally
         {
-            StreamingCache.PendingClientInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
+            StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
         }
     }
 
