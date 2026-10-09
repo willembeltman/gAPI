@@ -7,7 +7,7 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 
 		<!-- NuGet Versiebeheer -->
-		<Version>0.0.2-beta</Version>
+		<Version>0.0.3-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.Storage.Server</PackageId>

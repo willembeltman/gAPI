@@ -1,26 +1,30 @@
-using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Client.Config;
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
-using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Threading.Channels;
-using System.Xml.Linq;
 
 namespace gAPI.Core.Client.Wss;
 
-public class WssClientConnectionSender(IClientLoggerFactory LoggerFactory)
+public class WssClientConnectionSender
 {
-    private readonly ILogger<WssClientConnectionSender> Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
-    private readonly byte[] SendBuffer = new byte[10 * 1024 * 1024];
+    private readonly ILogger<WssClientConnectionSender> Logger;
+    private readonly byte[] SendBuffer;
     private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
+
+    public WssClientConnectionSender(
+        ClientConfig clientConfig,
+        IClientLoggerFactory LoggerFactory)
+    {
+        Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
+        SendBuffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
+    }
 
     public async Task SendKernel(WebSocket socket, CancellationToken ct)
     {

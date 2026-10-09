@@ -32,10 +32,11 @@ public class ClientConnection
     {
         ___Logger = ((IClientLoggerFactory)this).CreateLogger<ClientConnection>();
         FileSystemApi = new FileSystemApi(this, this, httpClient);
+        ___Buffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
     readonly ILogger ___Logger;
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     
     
     public FileSystemApi FileSystemApi { get; }

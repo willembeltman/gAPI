@@ -68,5 +68,5 @@ gAPI turns your DbContext into the single source of truth and generates your ent
 
 ## Status
 
-Version 0.0.2-beta
+Version 0.0.3-beta
 Core generation pipelines are active and expanding.

@@ -4,6 +4,7 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Wss;
 using gAPI.Storage.LanCloud.Api.Models;
@@ -28,10 +29,12 @@ public class ServerConnection : WssServerConnection
     readonly ILogger ___logger;
     readonly IServerAuthenticationService ___authenticationService;
     readonly IFileSystemApi FileSystemApi;
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     readonly FabricClient ___fabricClient;
+    public ServerConfig ___config { get; set; }
 
     public ServerConnection(
+        ServerConfig serverConfig,
         IServerAuthenticationService authenticationService,
         ServiceSubscriptionCollection serviceSubscriptions,
         ServerConnectionCollection connections,
@@ -39,12 +42,14 @@ public class ServerConnection : WssServerConnection
         FabricClient fabricClient,
         IFileSystemApi fileSystemApi,
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
+        : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {
+        this.___config = serverConfig;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;
         this.FileSystemApi = fileSystemApi;
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
+        this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
     
     protected override Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)

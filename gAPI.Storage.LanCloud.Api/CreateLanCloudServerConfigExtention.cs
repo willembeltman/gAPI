@@ -13,6 +13,7 @@ public static class CreateLanCloudServerConfigExtention
             m.GetSection("LocalShare").Get<LocalShare>()
                 ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData")),
             m["CertificateFilename"] ?? "",
+            Convert.ToInt32(m["MaxPackageSize"] ?? (8 * 1024 * 1024).ToString()),
             m["FrontendUrl"] ?? "",
             m.GetConnectionString("DefaultConnection"),// ?? throw new Exception("no default db connectionstring?"),
             m.GetConnectionString("StorageConnection"),// ?? throw new Exception("no storage connectionstring?"),

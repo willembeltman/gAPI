@@ -12,6 +12,7 @@ public static class CreateServerConfigExtension
         var config = new ClientConfig(
             m["ApiBackendUrl"] ?? "",
             m["WssBackendUrl"] ?? "",
+            int.TryParse(m["MaxPackageSize"], out var maxPackageSize) ? maxPackageSize : null,
             logLevel);
         return config;
     }

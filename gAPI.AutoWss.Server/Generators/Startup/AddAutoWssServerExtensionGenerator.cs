@@ -143,19 +143,9 @@ public static class {Name}
         {ServerConfig} config,
         TimeProvider? dateTime = null)
     {{
-        return AddAutoWssServer(
-            services, 
-            config.FabricConnectionString,
-            config.FrontendUrl,
-            dateTime);
-    }}
-
-    public static IServiceCollection AddAutoWssServer(
-        this IServiceCollection services,
-        string? fabricConnectionString = null,
-        string? frontendUrl = null,
-        TimeProvider? dateTime = null)
-    {{
+        string? fabricConnectionString = config.FabricConnectionString;
+        string? frontendUrl = config.FrontendUrl;
+        services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         services.AddHttpContextAccessor();

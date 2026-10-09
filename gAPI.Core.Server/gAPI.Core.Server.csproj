@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.2-beta</Version>
+		<Version>0.0.3-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.Core.Server</PackageId>
@@ -40,7 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Storage.Blobs" Version="12.29.2" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.30.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
@@ -51,7 +51,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
-		<!--<PackageReference Include="gAPI.Core" Version="0.0.2-beta" />-->
+		<!--<PackageReference Include="gAPI.Core" Version="0.0.3-beta" />-->
 	</ItemGroup>
 
 	<ItemGroup>

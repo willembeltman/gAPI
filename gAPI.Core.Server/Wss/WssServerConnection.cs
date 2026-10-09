@@ -5,19 +5,17 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Wss;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Wss;
 
@@ -25,6 +23,7 @@ public abstract class WssServerConnection : IWssServerConnection
 {
     readonly ILoggerFactory LoggerFactory;
     readonly ILogger Logger;
+
     readonly IServerAuthenticationService AuthenticationService;
     readonly FabricClient FabricClient;
     readonly WssServerConnectionSender Sender;
@@ -32,16 +31,18 @@ public abstract class WssServerConnection : IWssServerConnection
     readonly ServiceSubscriptionCollection ServiceSubscriptions; // Voor alle service subscriptions
     readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> ConnectedServiceSubscriptions; // Alleen voor dispose
     readonly StreamingCache StreamingCache;
-    readonly byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ReceiveBuffer;
 
+    public ServerConfig Config { get; }
     public ClientConnectionId ClientConnectionId { get; }
     public FabricManagerId FabricManagerId => FabricClient.FabricManagerId;
     public FabricConnectionId FabricConnectionId => FabricClient.FabricConnectionId;
 
-    public Stopwatch Stopwatch { get; private set; }
+    public Stopwatch Stopwatch { get; }
     public string Id => ClientConnectionId.Value.ToString();
 
     public WssServerConnection(
+        ServerConfig serverConfig,
         IServerAuthenticationService authenticationService,
         ServiceSubscriptionCollection serviceSubscriptions,
         ServerConnectionCollection connections,
@@ -50,6 +51,7 @@ public abstract class WssServerConnection : IWssServerConnection
         ILoggerFactory loggerFactory)
     {
         Logger = loggerFactory.CreateLogger<WssServerConnection>();
+        Config = serverConfig;
         AuthenticationService = authenticationService;
         ServiceSubscriptions = serviceSubscriptions;
         StreamingCache = requestCache;
@@ -57,6 +59,7 @@ public abstract class WssServerConnection : IWssServerConnection
         FabricClient = fabricClient;
         LoggerFactory = loggerFactory;
         ConnectedServiceSubscriptions = [];
+        ReceiveBuffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
 
         ClientConnectionId = connections.AddConnection(this);
         Sender = new WssServerConnectionSender(this, loggerFactory);

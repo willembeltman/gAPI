@@ -8,6 +8,7 @@ public static class CreateServerConfigExtension
     public static ServerConfig CreateServerConfig(this IConfigurationManager m)
     {
         var config = new ServerConfig(
+            Convert.ToInt32(m["MaxPackageSize"] ?? (8 * 1024 * 1024).ToString()),
             m["FrontendUrl"] ?? "",
             m.GetConnectionString("DefaultConnection"),// ?? throw new Exception("no default db connectionstring?"),
             m.GetConnectionString("StorageConnection"),// ?? throw new Exception("no storage connectionstring?"),

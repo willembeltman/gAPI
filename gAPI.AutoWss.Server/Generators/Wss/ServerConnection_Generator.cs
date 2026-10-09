@@ -44,6 +44,7 @@ public class ServerConnection_Generator : _BaseGenerator
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference InvokeRequestDoneDto => Context.SharedReferences.InvokeRequestDoneDto;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
+    public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -55,6 +56,7 @@ public class ServerConnection_Generator : _BaseGenerator
             Code = "";
             return;
         }
+        Reg(ServerConfig);
         Reg("Microsoft.Extensions.Logging");
         Reg("System.Runtime.CompilerServices");
         Reg("System");
@@ -95,10 +97,12 @@ public class {Name} : WssServerConnection
     readonly ILogger ___logger;
     readonly {IServerAuthenticationService} ___authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
     readonly {@interface} {@interface.CleanName};")))}
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     readonly {FabricClient} ___fabricClient;
+    public {ServerConfig} ___config {{ get; set; }}
 
     public {Name}(
+        {ServerConfig} serverConfig,
         {IServerAuthenticationService} authenticationService,
         {ServiceSubscriptionCollection} serviceSubscriptions,
         {ServerConnectionCollection} connections,
@@ -106,12 +110,14 @@ public class {Name} : WssServerConnection
         {FabricClient} fabricClient,{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         {@interface} {@interface.CleanName.ToCamelCase()},")))}
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
+        : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {{
+        this.___config = serverConfig;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         this.{@interface.CleanName} = {@interface.CleanName.ToCamelCase()};")))}
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
+        this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
     {GenerateSendRequest(ref functions, functionNames)}
     {GenerateInvokeRequest(ref functions, functionNames)}

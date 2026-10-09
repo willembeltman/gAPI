@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.2-beta</Version>
+		<Version>0.0.3-beta</Version>
 
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
@@ -63,16 +63,16 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
-		<!--<PackageReference Include="gAPI.Core.Server" Version="0.0.2-beta" />-->
+		<!--<PackageReference Include="gAPI.Core.Server" Version="0.0.3-beta" />-->
 
 		<ProjectReference Include="..\gAPI.AutoWss.Server\gAPI.AutoWss.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<!--<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.2-beta">
+		<!--<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.3-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>-->
 
 		<ProjectReference Include="..\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<!--<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.2-beta">
+		<!--<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.3-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>-->

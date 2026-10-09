@@ -6,6 +6,7 @@ namespace gAPI.Storage.LanCloud.Api;
 public record LanCloudApiConfig(
     LocalShare LocalShare,
     string? CertificateFilename = null,
+    int? MaxPackageSize = null,
     string? FrontendUrl = null,
     string? DefaultConnectionString = null,
     string? StorageConnectionString = null,
@@ -22,6 +23,7 @@ public record LanCloudApiConfig(
     int ShortHoursAgo = -1,
     int LongHoursAgo = -72)
     : ServerConfig(
+        MaxPackageSize,
         FrontendUrl, 
         DefaultConnectionString, StorageConnectionString, FabricConnectionString,
         UseMemoryDatabase, 

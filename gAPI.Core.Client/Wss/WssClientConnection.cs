@@ -24,8 +24,9 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         Config = config;
         HttpClient = httpClient;
-        Sender = new WssClientConnectionSender(this);
+        Sender = new WssClientConnectionSender(config, this);
         Logger = ((IClientLoggerFactory)this).CreateLogger<WssClientConnection>();
+        ReceiveBuffer = new byte[config.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
     readonly WssClientConnectionSender Sender;
@@ -37,7 +38,7 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneClientDto>> PendingInvokeRequests = [];
     readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
-    readonly byte[] ReceiveBuffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ReceiveBuffer;
 
     private Task? InitializeTask;
     private ClientWebSocket? Ws;
@@ -724,11 +725,18 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
+            ct.Register(async () => {
+                var requestCancelled = new SendRequestCancelledClientDto(routing, "Task is cancelled", false, null);
+                await Sender.Send_SendRequestCancelled_ToServerAsync(requestCancelled, ct);
+                PendingSendRequests.TryRemove(routing.RequestId, out _);
+            });
+
             var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
                     ct);
+
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
         }
@@ -754,11 +762,18 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
+            ct.Register(async () => {
+                var invokeCancelled = new InvokeRequestCancelledClientDto(routing, "Task is cancelled", false, null);
+                await Sender.Send_InvokeRequestCancelled_ToServerAsync(invokeCancelled, ct);
+                PendingSendRequests.TryRemove(routing.RequestId, out _);
+            });
+
             var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
                     ct);
+
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
 

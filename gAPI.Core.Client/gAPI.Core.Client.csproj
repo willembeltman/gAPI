@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.2-beta</Version>
+		<Version>0.0.3-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.Core.Client</PackageId>
@@ -38,7 +38,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
-		<!--<PackageReference Include="gAPI.Core" Version="0.0.2-beta" />-->
+		<!--<PackageReference Include="gAPI.Core" Version="0.0.3-beta" />-->
 	</ItemGroup>
 
 	<ItemGroup>

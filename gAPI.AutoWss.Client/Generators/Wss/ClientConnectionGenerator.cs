@@ -121,10 +121,11 @@ public class {Name}
     {{
         ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
+        ___Buffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
 
     readonly ILogger ___Logger;
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     {GenerateApiProperties()}
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}

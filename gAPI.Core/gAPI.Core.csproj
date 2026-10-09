@@ -5,7 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InvariantGlobalization>true</InvariantGlobalization>
 
-		<Version>0.0.2-beta</Version>
+		<Version>0.0.3-beta</Version>
 		<Authors>Willem Beltman</Authors>
 		<Company>Willem Beltman</Company>
 		<PackageId>gAPI.Core</PackageId>
@@ -52,7 +52,7 @@
 	</ItemGroup>
 	
 	<!--<ItemGroup>
-		<PackageReference Include="gAPI.AutoSerializer" Version="0.0.2-beta">
+		<PackageReference Include="gAPI.AutoSerializer" Version="0.0.3-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>

@@ -24,7 +24,7 @@ public class AuthUser
     [StringLength(128)]
     [Required]
     public string UserName { get; set; } = string.Empty;
-    [IsName(" (", Core.Enums.FormattingOption.ToString, ")")]
+    
     [IsState]
     [StringLength(255)]
     [Required]
