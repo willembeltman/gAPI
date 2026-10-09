@@ -213,56 +213,56 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
 
 
-    public async Task Send_ServerSendRequest_ToApiAsync(ServerSendRequestDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_ServerSendRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerSendRequest);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_ServerSendRequestDone_ToApiAsync(ServerSendRequestDoneDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_ServerSendRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerSendRequestDone);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_ServerInvokeRequest_ToApiAsync(ServerInvokeRequestDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_ServerInvokeRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerInvokeRequest);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_ServerInvokeRequestDone_ToApiAsync(ServerInvokeRequestDoneDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_ServerInvokeRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerInvokeRequestDone);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_ServerStreamingRequestClientToServer_ToApiAsync(ServerStreamingRequestDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_ServerStreamingRequestClientToServer_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerStreamingRequest);
-            writer.Write(message);
-        }, actor);
-    }
+    //public async Task Send_ServerSendRequest_ToApiAsync(ServerSendRequestDto message, IActor actor)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now}: Send_ServerSendRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerSendRequest);
+    //        writer.Write(message);
+    //    }, actor);
+    //}
+    //public async Task Send_ServerSendRequestDone_ToApiAsync(ServerSendRequestDoneDto message, IActor actor)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now}: Send_ServerSendRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerSendRequestDone);
+    //        writer.Write(message);
+    //    }, actor);
+    //}
+    //public async Task Send_ServerInvokeRequest_ToApiAsync(ServerInvokeRequestDto message, IActor actor)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now}: Send_ServerInvokeRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerInvokeRequest);
+    //        writer.Write(message);
+    //    }, actor);
+    //}
+    //public async Task Send_ServerInvokeRequestDone_ToApiAsync(ServerInvokeRequestDoneDto message, IActor actor)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now}: Send_ServerInvokeRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerInvokeRequestDone);
+    //        writer.Write(message);
+    //    }, actor);
+    //}
+    //public async Task Send_ServerStreamingRequestClientToServer_ToApiAsync(ServerStreamingRequestDto message, IActor actor)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now}: Send_ServerStreamingRequestClientToServer_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
+    //    await Enqueue(writer =>
+    //    {
+    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.ServerStreamingRequest);
+    //        writer.Write(message);
+    //    }, actor);
+    //}
 
 
     private async Task SendLoop()
@@ -418,27 +418,27 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
 
 
-                    case FabricClientToHostMessageEnum.ServerSendRequest:
-                        {
-                            var sendRequest = reader.ReadServerSendRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_ServerSendRequest_FromApiAsync(this, ManagerLogger, sendRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.ServerInvokeRequest:
-                        {
-                            var invokeRequest = reader.ReadServerInvokeRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_ServerInvokeRequest_FromApiAsync(this, ManagerLogger, invokeRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.ServerStreamingRequest:
-                        {
-                            var streamingRequest = reader.ReadServerStreamingRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_ServerStreamingRequest_FromApiAsync(this, ManagerLogger, streamingRequest, receiveSize, Cts.Token);
-                        }
-                        break;
+                    //case FabricClientToHostMessageEnum.ServerSendRequest:
+                    //    {
+                    //        var sendRequest = reader.ReadServerSendRequestDto();
+                    //        var receiveSize = counter.BytesRead - previousBytesRead;
+                    //        await Manager.Receive_ServerSendRequest_FromApiAsync(this, ManagerLogger, sendRequest, receiveSize, Cts.Token);
+                    //    }
+                    //    break;
+                    //case FabricClientToHostMessageEnum.ServerInvokeRequest:
+                    //    {
+                    //        var invokeRequest = reader.ReadServerInvokeRequestDto();
+                    //        var receiveSize = counter.BytesRead - previousBytesRead;
+                    //        await Manager.Receive_ServerInvokeRequest_FromApiAsync(this, ManagerLogger, invokeRequest, receiveSize, Cts.Token);
+                    //    }
+                    //    break;
+                    //case FabricClientToHostMessageEnum.ServerStreamingRequest:
+                    //    {
+                    //        var streamingRequest = reader.ReadServerStreamingRequestDto();
+                    //        var receiveSize = counter.BytesRead - previousBytesRead;
+                    //        await Manager.Receive_ServerStreamingRequest_FromApiAsync(this, ManagerLogger, streamingRequest, receiveSize, Cts.Token);
+                    //    }
+                    //    break;
                 }
 
                 var size2 = counter.BytesRead - previousBytesRead;

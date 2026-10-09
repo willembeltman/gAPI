@@ -47,7 +47,7 @@ public static class AddAutoWssClientExtension
         services.AddScoped<IFileSystemApi>(sp => sp.GetRequiredService<ClientConnection>().FileSystemApi);
         
         // Minimal api clients
-        services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IAccountServiceApi, AccountServiceApi>();
 
         return services;
     }

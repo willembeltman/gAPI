@@ -47,13 +47,13 @@ public class AddAutoAuthServerExtensionGenerator : _BaseGenerator
     public SharedReference UserTokenFactoryT => Context.SharedReferences.UserTokenFactoryT;
     public SharedReference AuthenticationSecurityT => Context.SharedReferences.AuthenticationSecurityT;
     public SharedReference IAuthenticationStateFactoryT => Context.SharedReferences.IAuthenticationStateFactoryT;
-    public SharedReference AccountServiceT => Context.SharedReferences.AccountServiceT;
+    public SharedReference AccountServiceApiT => Context.SharedReferences.AccountServiceApiT;
     public SharedReference IStateMappingT => Context.SharedReferences.IStateMappingT;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference AuthenticationService => Context.AuthenticationService;
     public SharedReference AuthenticationServiceT => Context.SharedReferences.AuthenticationServiceT;
 
-    public SharedReference IAccountService => Context.SharedReferences.IAccountService;
+    public SharedReference IAccountService => Context.SharedReferences.IAccountServiceApi;
     public SharedReference IAuthenticationSecurity => Context.SharedReferences.IAuthenticationSecurity;
     public SharedReference AuthenticationHandler => Context.SharedReferences.AuthenticationHandler;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
@@ -179,7 +179,7 @@ public static class {Name}
                     useMemoryDatabase));
 
             services.AddScoped<{IUserTokenFactoryT.FullName}<{User.FullName}>, {UserTokenFactoryT}<{User.FullName}>>();
-            services.AddScoped<{IAccountService.FullName}, {AccountServiceT.FullName}<{User.FullName}, {State.FullName}>>();
+            services.AddScoped<{IAccountService.FullName}, {AccountServiceApiT.FullName}<{User.FullName}, {State.FullName}>>();
 
             services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }}

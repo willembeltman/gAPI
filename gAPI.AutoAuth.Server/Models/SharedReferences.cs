@@ -23,7 +23,7 @@ public class SharedReferences
         AuthenticationHandler = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHandler", allSymbols);
         NoDbServerAuthenticationServiceT = new("gAPI.Core.Server.Authentication.NoDbServerAuthenticationService");
         
-        AccountServiceT = new("gAPI.Core.Server.Authentication.AccountService");
+        AccountServiceApiT = new("gAPI.Core.Server.Authentication.AccountServiceApi");
         AuthenticationSecurityT = new("gAPI.Core.Server.Authentication.AuthenticationSecurity");
         IAuthenticationStateFactoryT = new("gAPI.Core.Server.Interfaces.IAuthenticationStateFactory");
         AuthenticationStateFactoryT = new("gAPI.Core.Server.Authentication.AuthenticationStateFactory");
@@ -32,7 +32,7 @@ public class SharedReferences
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         AuthenticationState = new("gAPI.Core.Server.Authentication.AuthenticationState");
 
-        IAccountService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAccountService", allSymbols);
+        IAccountServiceApi = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAccountServiceApi", allSymbols);
         IAuthenticationCheckT = new("gAPI.Core.Server.Interfaces.IAuthenticationCheck");
         AuthenticationServiceT = new("gAPI.Core.Server.Authentication.AuthenticationService");
         IAuthenticationServiceT = new("gAPI.Core.Server.Interfaces.IAuthenticationService");
@@ -70,11 +70,11 @@ public class SharedReferences
     public SharedReference AuthenticationState { get; }
     public SharedReference ServerConfig { get; }
     public SharedReference SessionCache { get; }
-    public SharedReference AccountServiceT { get; }
+    public SharedReference AccountServiceApiT { get; }
     public SharedReference AuthenticationSecurityT { get; }
     public SharedReference IAuthenticationStateFactoryT { get; }
     public SharedReference IStateParserT { get; }
-    public SharedReference IAccountService { get; }
+    public SharedReference IAccountServiceApi { get; }
 
     public SharedReference AuthenticationDbContextT { get; }
     public SharedReference? CustomDbContext { get; }

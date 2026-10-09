@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace gAPI.Core.Server.Authentication;
 
-public class AccountService<TUser, TStateDto>(
+public class AccountServiceApi<TUser, TStateDto>(
     IDbContextFactory<AuthenticationDbContext<TUser>> dbFactory,
     IAuthenticationSecurity security,
     IAuthenticationService<TUser, TStateDto> authenticationService)
-    : IAccountService
+    : IAccountServiceApi
     where TUser : AuthUser, new()
     where TStateDto : AuthStateDto
 {

@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 namespace gAPI.Core.Interfaces;
 
 [IsApiProxyAttribute]
-public class AccountService(
+public class AccountServiceApi(
     gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient clientAuthenticationService) 
-    : IAccountService
+    : IAccountServiceApi
     , IDisposable
 {
     private readonly CancellationTokenSource Cts = new();
@@ -34,7 +34,7 @@ public class AccountService(
         ___content.Add(new StringContent(password), $"password");
         ___content.Add(new StringContent(passwordRepeat), $"passwordRepeat");
 
-        using var response = await clientAuthenticationService.PostAsync("/AccountService/RegisterAsync", ___content, ct);
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/RegisterAsync", ___content, ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
@@ -51,7 +51,7 @@ public class AccountService(
         ___content.Add(new StringContent(email), $"email");
         ___content.Add(new StringContent(password), $"password");
 
-        using var response = await clientAuthenticationService.PostAsync("/AccountService/LoginAsync", ___content, ct);
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/LoginAsync", ___content, ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
@@ -70,7 +70,7 @@ public class AccountService(
         ___content.Add(new StringContent(password), $"password");
         ___content.Add(new StringContent(passwordRepeat), $"passwordRepeat");
 
-        using var response = await clientAuthenticationService.PostAsync("/AccountService/ChangePasswordAsync", ___content, ct);
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/ChangePasswordAsync", ___content, ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
@@ -83,7 +83,7 @@ public class AccountService(
     {
         var ___content = new MultipartFormDataContent();
 
-        using var response = await clientAuthenticationService.GetAsync("/AccountService/LogoffAsync", ct);
+        using var response = await clientAuthenticationService.GetAsync("/AccountServiceApi/LogoffAsync", ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)

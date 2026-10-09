@@ -31,8 +31,8 @@ public class SharedReferences
 
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
 
-        IServiceRouter = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceRouter", allSymbols);
-        OwnServiceRouter = SharedReferenceFinder.TryFindByInterface(IServiceRouter, allSymbols);
+        //IServiceRouter = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceRouter", allSymbols);
+        //OwnServiceRouter = SharedReferenceFinder.TryFindByInterface(IServiceRouter, allSymbols);
 
 
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
@@ -73,8 +73,8 @@ public class SharedReferences
     public SharedReference InvokeRequestDto { get; }
     public SharedReference StreamingResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
-    public SharedReference IServiceRouter { get; }
-    public SharedReference? OwnServiceRouter { get; }
+    //public SharedReference IServiceRouter { get; }
+    //public SharedReference? OwnServiceRouter { get; }
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference AuthenticationHeaders { get; }
     public SharedReference SendRequestDto { get; }

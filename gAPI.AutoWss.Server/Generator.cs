@@ -36,7 +36,7 @@ public class Generator
         ServerConnection = new ServerConnection_Generator(this);
         IClientContext = new IClientContext_Generator(this);
         ClientContext = new ClientContext_Generator(this);
-        ServiceRouter = new ServiceRouter_Generator(this);
+        //ServiceRouter = new ServiceRouter_Generator(this);
         AddAutoWssExtension = new AddAutoWssServerExtensionGenerator(this);
         MapAutoWssExtension = new MapAutoWssServerExtensionGenerator(this);
         MapWssEndpointExtension = new WssEndpointExtensionGenerator(this);
@@ -74,7 +74,7 @@ public class Generator
     public ServerConnection_Generator ServerConnection { get; }
     public IClientContext_Generator IClientContext { get; }
     public ClientContext_Generator ClientContext { get; }
-    public ServiceRouter_Generator ServiceRouter { get; }
+    //public ServiceRouter_Generator ServiceRouter { get; }
     public AddAutoWssServerExtensionGenerator AddAutoWssExtension { get; }
     public MapAutoWssServerExtensionGenerator MapAutoWssExtension { get; }
     public WssEndpointExtensionGenerator MapWssEndpointExtension { get; }
@@ -93,7 +93,7 @@ public class Generator
         GenerateItem(spc, AddAutoWssExtension);
         GenerateItem(spc, MapAutoWssExtension);
         GenerateItem(spc, MapWssEndpointExtension);
-        GenerateItem(spc, ServiceRouter);
+        //GenerateItem(spc, ServiceRouter);
 
         foreach (var item in MinimalApis)
             GenerateItem(spc, item);

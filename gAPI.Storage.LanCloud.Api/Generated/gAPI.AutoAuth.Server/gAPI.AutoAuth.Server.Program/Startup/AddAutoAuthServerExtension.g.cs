@@ -92,7 +92,7 @@ public static class AddAutoAuthServerExtension
                     useMemoryDatabase));
 
             services.AddScoped<gAPI.Core.Server.Authentication.IUserTokenFactory<gAPI.Core.Server.Entities.AuthUser>, UserTokenFactory<gAPI.Core.Server.Entities.AuthUser>>();
-            services.AddScoped<gAPI.Core.Interfaces.IAccountService, gAPI.Core.Server.Authentication.AccountService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>();
+            services.AddScoped<gAPI.Core.Interfaces.IAccountServiceApi, gAPI.Core.Server.Authentication.AccountServiceApi<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>();
 
             services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }

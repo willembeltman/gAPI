@@ -26,7 +26,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public HubClientContext_Generator[] ClientContexts => Context.ClientContexts;
     public IClientContext_Generator IClientContext => Context.IClientContext;
     public ClientContext_Generator ClientContext => Context.ClientContext;
-    public ServiceRouter_Generator ServiceRouter => Context.ServiceRouter;
+    //public ServiceRouter_Generator ServiceRouter => Context.ServiceRouter;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
@@ -34,7 +34,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
-    public SharedReference IServiceRouter => Context.SharedReferences.IServiceRouter;
+    //public SharedReference IServiceRouter => Context.SharedReferences.IServiceRouter;
 
     public override void GenerateCode()
     {
@@ -46,8 +46,8 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
         Reg(SessionCache);
-        Reg(IServiceRouter);
-        Reg(ServiceRouter);
+        //Reg(IServiceRouter);
+        //Reg(ServiceRouter);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
@@ -95,7 +95,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
                 }
             }
         }
-        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountService"))
+        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountServiceApi"))
         {
             Reg(@interface);
             Reg(@interface.Service);
@@ -165,7 +165,7 @@ public static class {Name}
             }});
         }}
 
-        services.AddSingleton<{IServiceRouter}, {ServiceRouter}>();
+        //services.AddSingleton<IServiceRouter, ServiceRouter>();
 
         var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
@@ -184,7 +184,7 @@ public static class {Name}
             sessionCache,
             requestCache,
             serviceSubscriptionCollection,
-            sp.GetRequiredService<{IServiceRouter}>(),
+            //sp.GetRequiredService<IServiceRouter>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
@@ -210,7 +210,7 @@ public static class {Name}
         services.AddScoped<{apiinterface.Name}, {apiinterface.Service.Name}>();"))}
 
         // Minimal Apis{string.Join("", Context.ServiceContext.MinimalApiInterfaces
-            .Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountService")
+            .Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountServiceApi")
             .Select(apiinterface => $@"
         services.AddScoped<{apiinterface.Name}, {apiinterface.Service.Name}>();"))}
 

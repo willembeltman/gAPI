@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace gAPI.Core.Interfaces;
 
 [GenerateMinimalApi]
-public interface IAccountService
+public interface IAccountServiceApi
 {
     [IsPage("/Account/Register", "Register", "Register", "")]
     [IsNotAuthorized]

@@ -464,148 +464,148 @@ public class FabricManager : IDashboardSnapshotGetter
     }
 
 
-    public async Task Receive_ServerSendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerSendRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_ServerSendRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+    //public async Task Receive_ServerSendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerSendRequestDto request, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_ServerSendRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-            var actor = Services[request.Routing.ServiceId];
-            var fabricHosts = Connections
-                .Where(conn => request.Routing.FabricConnectionId == conn.FabricConnectionId)
-                .ToArray();
-            actor.EnqueueReceive(receiveSize);
-            if (fabricHosts.Length == 0)
-            {
-                await caller.Send_ServerSendRequestDone_ToApiAsync(
-                    new ServerSendRequestDoneDto(
-                        request.Routing,
-                        false,
-                        $"No fabric connections found with id {request.Routing.FabricConnectionId}"),
-                    actor);
-                return;
-            }
+    //        var actor = Services[request.Routing.ServiceId];
+    //        var fabricHosts = Connections
+    //            .Where(conn => request.Routing.FabricConnectionId == conn.FabricConnectionId)
+    //            .ToArray();
+    //        actor.EnqueueReceive(receiveSize);
+    //        if (fabricHosts.Length == 0)
+    //        {
+    //            await caller.Send_ServerSendRequestDone_ToApiAsync(
+    //                new ServerSendRequestDoneDto(
+    //                    request.Routing,
+    //                    false,
+    //                    $"No fabric connections found with id {request.Routing.FabricConnectionId}"),
+    //                actor);
+    //            return;
+    //        }
 
-            var state = new ServerRequestState
-            {
-                Routing = request.Routing,
-                Caller = caller,
-                Actor = actor,
-                Targets = fabricHosts
-            };
+    //        var state = new ServerRequestState
+    //        {
+    //            Routing = request.Routing,
+    //            Caller = caller,
+    //            Actor = actor,
+    //            Targets = fabricHosts
+    //        };
 
-            if (!OpenServerRequests.TryAdd(request.Routing.RequestId, state))
-                return;
+    //        if (!OpenServerRequests.TryAdd(request.Routing.RequestId, state))
+    //            return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
-            {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
-                _ = CompleteServerRequestAsync(logger, state);
-            });
+    //        state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+    //        {
+    //            state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
+    //            _ = CompleteServerRequestAsync(logger, state);
+    //        });
 
-            foreach (var fabricHost in fabricHosts)
-                await fabricHost.Send_ServerSendRequest_ToApiAsync(request, actor);
-        }, ct);
+    //        foreach (var fabricHost in fabricHosts)
+    //            await fabricHost.Send_ServerSendRequest_ToApiAsync(request, actor);
+    //    }, ct);
 
-    }
-    public async Task Receive_ServerInvokeRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerInvokeRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_ServerInvokeRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+    //}
+    //public async Task Receive_ServerInvokeRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerInvokeRequestDto request, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_ServerInvokeRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-            var actor = Services[request.Routing.ServiceId];
-            var fabricHosts = Connections
-                .Where(conn => request.Routing.FabricConnectionId == conn.FabricConnectionId)
-                .ToArray();
-            actor.EnqueueReceive(receiveSize);
-            if (fabricHosts.Length == 0)
-            {
-                await caller.Send_ServerSendRequestDone_ToApiAsync(
-                    new ServerSendRequestDoneDto(
-                        request.Routing,
-                        false,
-                        $"No fabric connections found with id {request.Routing.FabricConnectionId}"),
-                    actor);
-                return;
-            }
+    //        var actor = Services[request.Routing.ServiceId];
+    //        var fabricHosts = Connections
+    //            .Where(conn => request.Routing.FabricConnectionId == conn.FabricConnectionId)
+    //            .ToArray();
+    //        actor.EnqueueReceive(receiveSize);
+    //        if (fabricHosts.Length == 0)
+    //        {
+    //            await caller.Send_ServerSendRequestDone_ToApiAsync(
+    //                new ServerSendRequestDoneDto(
+    //                    request.Routing,
+    //                    false,
+    //                    $"No fabric connections found with id {request.Routing.FabricConnectionId}"),
+    //                actor);
+    //            return;
+    //        }
 
-            var state = new ServerRequestState
-            {
-                Routing = request.Routing,
-                Actor = actor,
-                Caller = caller,
-                Targets = fabricHosts
-            };
+    //        var state = new ServerRequestState
+    //        {
+    //            Routing = request.Routing,
+    //            Actor = actor,
+    //            Caller = caller,
+    //            Targets = fabricHosts
+    //        };
 
-            if (!OpenServerRequests.TryAdd(request.Routing.RequestId, state))
-                return;
+    //        if (!OpenServerRequests.TryAdd(request.Routing.RequestId, state))
+    //            return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
-            {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
-                _ = ReadyServerInvokeAsync(logger, state);
-            });
+    //        state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+    //        {
+    //            state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
+    //            _ = ReadyServerInvokeAsync(logger, state);
+    //        });
 
-            foreach (var host in fabricHosts)
-                await host.Send_ServerInvokeRequest_ToApiAsync(request, actor);
-        }, ct);
-    }
-    public async Task Receive_ServerStreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerStreamingRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_StreamingRequestClientToServer_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+    //        foreach (var host in fabricHosts)
+    //            await host.Send_ServerInvokeRequest_ToApiAsync(request, actor);
+    //    }, ct);
+    //}
+    //public async Task Receive_ServerStreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, ServerStreamingRequestDto request, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_StreamingRequestClientToServer_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-            if (!OpenServerRequests.TryGetValue(request.Routing.RequestId, out var state))
-                return;
+    //        if (!OpenServerRequests.TryGetValue(request.Routing.RequestId, out var state))
+    //            return;
 
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
 
-            if (state.StreamRoutes.TryAdd(request.StreamId, caller))
-            {
-                await state.Caller.Send_ServerStreamingRequestClientToServer_ToApiAsync(request, state.Actor);
-            }
-        }, ct);
-    }
+    //        if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+    //        {
+    //            await state.Caller.Send_ServerStreamingRequestClientToServer_ToApiAsync(request, state.Actor);
+    //        }
+    //    }, ct);
+    //}
 
-    private async Task CompleteServerRequestAsync(ILogger<FabricManager> logger, ServerRequestState state)
-    {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: CompleteRequestAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+    //private async Task CompleteServerRequestAsync(ILogger<FabricManager> logger, ServerRequestState state)
+    //{
+    //    if (logger.IsEnabled(LogLevel.Trace))
+    //        logger.LogTrace("{now}: CompleteRequestAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
 
-        if (!state.TryComplete())
-            return;
+    //    if (!state.TryComplete())
+    //        return;
 
-        OpenRequests.TryRemove(state.Routing.RequestId, out _);
+    //    OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
-        var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
-        await state.Caller.Send_ServerSendRequestDone_ToApiAsync(
-            new ServerSendRequestDoneDto(
-                state.Routing,
-                state.Cancelled,
-                exceptionMessage
-            ), state.Actor);
-    }
-    private async Task ReadyServerInvokeAsync(ILogger<FabricManager> logger, ServerRequestState state)
-    {
-        if (logger.IsEnabled(LogLevel.Trace))
-            logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+    //    var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
+    //    await state.Caller.Send_ServerSendRequestDone_ToApiAsync(
+    //        new ServerSendRequestDoneDto(
+    //            state.Routing,
+    //            state.Cancelled,
+    //            exceptionMessage
+    //        ), state.Actor);
+    //}
+    //private async Task ReadyServerInvokeAsync(ILogger<FabricManager> logger, ServerRequestState state)
+    //{
+    //    if (logger.IsEnabled(LogLevel.Trace))
+    //        logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
 
-        if (!state.TryReady())
-            return;
+    //    if (!state.TryReady())
+    //        return;
 
-        await state.Caller.Send_ServerInvokeRequestDone_ToApiAsync(
-            new ServerInvokeRequestDoneDto(
-                state.Routing,
-                state.Cancelled,
-                state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
-            ), state.Actor);
-    }
+    //    await state.Caller.Send_ServerInvokeRequestDone_ToApiAsync(
+    //        new ServerInvokeRequestDoneDto(
+    //            state.Routing,
+    //            state.Cancelled,
+    //            state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
+    //        ), state.Actor);
+    //}
 
 
 

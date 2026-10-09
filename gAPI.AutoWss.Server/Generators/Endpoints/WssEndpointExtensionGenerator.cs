@@ -74,7 +74,7 @@ public class WssEndpointExtensionGenerator : _BaseGenerator
                 }
             }
         }
-        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountService"))
+        foreach (var @interface in Context.ServiceContext.MinimalApiInterfaces.Where(a => a.FullName != "gAPI.Core.Interfaces.IAccountServiceApi"))
         {
             Reg(@interface);
             Reg(@interface.Service);
