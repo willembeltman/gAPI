@@ -38,4 +38,14 @@ public static class StringHelper
         var result = Encoding.UTF8.GetString(bytes);
         return result;
     }
+    public static string ToHex(this string input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+
+        // Zet de string om naar bytes (meestal UTF-8)
+        byte[] bytes = Encoding.UTF8.GetBytes(input);
+
+        // Converteer de bytes direct naar een hex-string
+        return Convert.ToHexString(bytes);
+    }
 }
