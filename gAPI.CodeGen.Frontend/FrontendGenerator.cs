@@ -75,10 +75,10 @@ public class FrontendGenerator
             PageIndexes = [.. Pages
                 .GroupBy(a => a.RoutePath)
                 .Select(a => new IndexGenerator(a.Key, [.. a], clientConfig, Imports))];
-
-            NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
-            NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
         }
+
+        NavMenuAuthenticated = new NavMenuAuthenticatedGenerator(this);
+        NavMenuNotAuthenticated = new NavMenuNotAuthenticatedGenerator(this);
 
         Cruds = [.. CrudContext.AllCrudTypes
             .Select(crud => new CrudGenerator(
@@ -123,11 +123,6 @@ public class FrontendGenerator
         //RedirectToHome.GenerateCode();
         //RedirectToLogin.GenerateCode();
 
-        if (NavMenuAuthenticated != null)
-            NavMenuAuthenticated.GenerateCode();
-        if (NavMenuNotAuthenticated != null)
-            NavMenuNotAuthenticated.GenerateCode();
-
         if (Pages != null)
             foreach (var page in Pages) page.GenerateCode();
         if (RootPages != null)
@@ -149,6 +144,12 @@ public class FrontendGenerator
 
         //ClientAuthenticatedHttpClient.GenerateCode();
         //ClientAuthenticatedHttpClient.Save();
+
+
+        if (NavMenuAuthenticated != null)
+            NavMenuAuthenticated.GenerateCode();
+        if (NavMenuNotAuthenticated != null)
+            NavMenuNotAuthenticated.GenerateCode();
 
         Imports.GenerateCode();
     }

@@ -22,28 +22,28 @@ public class NavMenuAuthenticatedGenerator : BaseGenerator
     {
         Code = string.Join("\r\n\r\n", Generator.Cruds
             .Select(a => a.IndexViewGenerator)
-            .Where(a => a.CrudType.IsEntryPoint && a.CrudType.ListMethod != null && a.CrudType.IsJunction == false)
+            .Where(a => a.CrudType.IsAuthorized && a.CrudType.ListMethod != null)// && a.CrudType.IsJunction == false)
             .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.CrudType.Name!.ToMultiple().ToLower()}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.CrudType.Name!.ToMultiple()}
     </NavLink>
 </div>")
             .Concat(
-                Generator.PageIndexes!
+                Generator.PageIndexes?
                     .Where(a => a.Pages.Any(b => b.IsAuthorized))
                     .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.Route}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Title}
     </NavLink>
-</div>"))
+</div>") ?? [])
             .Concat(
-                Generator.RootPages!
+                Generator.RootPages?
                     .Where(a => a.IsAuthorized)
                     .Select(a => $@"<div class=""nav-item px-3"">
     <NavLink class=""nav-link"" href=""{a.Route}"">
         <span class=""bi bi-list-nested-nav-menu"" aria-hidden=""true""></span> {a.Name}
     </NavLink>
-</div>")));
+</div>") ?? []));
 
         if (Generator.Config.GenerateNavigation)
             Save();

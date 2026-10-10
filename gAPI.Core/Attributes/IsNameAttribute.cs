@@ -13,6 +13,10 @@ public class IsNameAttribute : Attribute
     {
         FormattingOption = formattingOption;
     }
+    public IsNameAttribute(FormattingOption formattingOption, string? end = null) : this(formattingOption)
+    {
+        End = end;
+    }
     public IsNameAttribute(string start, FormattingOption formattingOption, string? end = null) : this(formattingOption)
     {
         Start = start;
