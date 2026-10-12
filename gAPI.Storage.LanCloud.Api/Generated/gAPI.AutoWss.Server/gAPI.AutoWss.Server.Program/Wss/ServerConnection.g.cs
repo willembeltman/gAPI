@@ -52,7 +52,7 @@ public class ServerConnection : WssServerConnection
         this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
     
-    protected override Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___sendRequest.BinaryData);
@@ -63,67 +63,94 @@ public class ServerConnection : WssServerConnection
                 {
             
                     case "CreateDirectory":
-                        return IFileSystemApi_CreateDirectory(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_CreateDirectory(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "Delete":
-                        return IFileSystemApi_Delete(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_Delete(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "Move":
-                        return IFileSystemApi_Move(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_Move(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "WriteAsyncEnumerableByte":
-                        return IFileSystemApi_WriteAsyncEnumerableByte(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 2, IFileSystemApi_WriteAsyncEnumerableByte_2_Deserializer),
-                            ___ct);
+                        {
+                            await IFileSystemApi_WriteAsyncEnumerableByte(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                                RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 2, IFileSystemApi_WriteAsyncEnumerableByte_2_Deserializer),
+                                ___ct);
+                        }
+                        return;
                     case "AppendAsyncEnumerableByte":
-                        return IFileSystemApi_AppendAsyncEnumerableByte(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 1, IFileSystemApi_AppendAsyncEnumerableByte_1_Deserializer),
-                            ___ct);
+                        {
+                            await IFileSystemApi_AppendAsyncEnumerableByte(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                RegisterRemoteAsyncEnumerableArgument<byte[]>(___sendRequest.Routing, 1, IFileSystemApi_AppendAsyncEnumerableByte_1_Deserializer),
+                                ___ct);
+                        }
+                        return;
                     case "WriteByteArray":
-                        return IFileSystemApi_WriteByteArray(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_WriteByteArray(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "AppendByteArray":
-                        return IFileSystemApi_AppendByteArray(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_AppendByteArray(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "WriteReadOnlyMemory":
-                        return IFileSystemApi_WriteReadOnlyMemory(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_WriteReadOnlyMemory(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                     case "AppendReadOnlyMemory":
-                        return IFileSystemApi_AppendReadOnlyMemory(
-                            ___sendRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await IFileSystemApi_AppendReadOnlyMemory(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
                 }
                 break;
         }
         throw new Exception($"Send {___sendRequest.Routing.ServiceId.Value}.{___sendRequest.Routing.MethodId.Value} not implemented");
     }
     
-    protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
@@ -133,37 +160,73 @@ public class ServerConnection : WssServerConnection
                 switch (___invokeRequest.Routing.MethodId.Value)
                 {
                     case "AuthenticateUser":
-                        return IFileSystemApi_AuthenticateUser(
-                            ___invokeRequest,
-                            PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_AuthenticateUser(
+                                ___invokeRequest,
+                                PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                     case "Get":
-                        return IFileSystemApi_Get(
-                            ___invokeRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_Get(
+                                ___invokeRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                     case "GetAuthenticationInfo":
-                        return IFileSystemApi_GetAuthenticationInfo(
-                            ___invokeRequest,
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_GetAuthenticationInfo(
+                                ___invokeRequest,
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                     case "ListDirectory":
-                        return IFileSystemApi_ListDirectory(
-                            ___invokeRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_ListDirectory(
+                                ___invokeRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                     case "OpenReadByteArray":
-                        return IFileSystemApi_OpenReadByteArray(
-                            ___invokeRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_OpenReadByteArray(
+                                ___invokeRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                     case "OpenReadReadOnlyMemoryByte":
-                        return IFileSystemApi_OpenReadReadOnlyMemoryByte(
-                            ___invokeRequest,
-                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                            PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
-                            ___ct);
+                        {
+                            await foreach (var ___packet in IFileSystemApi_OpenReadReadOnlyMemoryByte(
+                                ___invokeRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset),
+                                ___ct))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                 }
                 break;
         }

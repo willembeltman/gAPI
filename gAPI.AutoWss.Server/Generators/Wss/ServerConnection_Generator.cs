@@ -131,12 +131,11 @@ public class {Name} : WssServerConnection
         Code = $"{GetNamespacesCode()}{Code}";
     }
 
-
     private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
     {
         var functions = "";
         var code = $@"
-    protected override Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         var ___offset = 0;
         var ___span = new Span<byte>(___sendRequest.BinaryData);
@@ -147,33 +146,50 @@ public class {Name} : WssServerConnection
                 {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsVoid).Select(method =>
         {
             return $@"
-                    case ""{method}"":
-                        {@interface}_{method}(
-                            ___sendRequest,{string.Join("", method.Arguments
-                                .Select((arg, index) => (arg, index))
-                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                                    ? $@"
-                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
-                                    : $@"
-                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
-                            ___ct);
-                        return Task.CompletedTask;";
+                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}
+                        {{
+                            {@interface}_{method}(
+                                ___sendRequest,{string.Join("", method.Arguments
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
+                                RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                        : $@"
+                                {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                                ___ct);
+                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        else
+                        {{
+                            ___logger.LogWarning(""Ongeautoriseerde SendRequest poging voor {{Service}}/{{Method}}"", ___sendRequest.Routing.ServiceId.Value, ___sendRequest.Routing.MethodId.Value);
+                            throw new UnauthorizedAccessException(""Niet geautoriseerd."");
+                        }}":"")}
+                        return;"; // Aangepast van return Task.CompletedTask; omdat de methode nu async is
         })))}
             {(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
         {
             return $@"
-                    case ""{method}"":
-                        return {@interface}_{method}(
-                            ___sendRequest,{string.Join("", method.Arguments
-                                .Select((arg, index) => (arg, index))
-                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                                    ? $@"
-                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
-                                    : $@"
-                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
-                            ___ct);";
+                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}
+                        {{
+                            await {@interface}_{method}(
+                                ___sendRequest,{string.Join("", method.Arguments
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
+                                RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                        : $@"
+                                {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                                ___ct);
+                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        else
+                        {{
+                            ___logger.LogWarning(""Ongeautoriseerde SendRequest poging voor {{Service}}/{{Method}}"", ___sendRequest.Routing.ServiceId.Value, ___sendRequest.Routing.MethodId.Value);
+                            throw new UnauthorizedAccessException(""Niet geautoriseerd."");
+                        }}" : "")}
+                        return;"; // Aangepast naar await en return voor async Task
         })))}
                 }}
                 break;")))}
@@ -183,11 +199,64 @@ public class {Name} : WssServerConnection
         functions2 += functions;
         return code;
     }
+
+    //private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    //{
+    //    var functions = "";
+    //    var code = $@"
+    //protected override Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
+    //{{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
+    //    var ___offset = 0;
+    //    var ___span = new Span<byte>(___sendRequest.BinaryData);
+    //    switch (___sendRequest.Routing.ServiceId.Value)
+    //    {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(@interface => $@"
+    //        case ""{@interface}"":
+    //            switch (___sendRequest.Routing.MethodId.Value)
+    //            {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsVoid).Select(method =>
+    //    {
+    //        return $@"
+    //                case ""{method}"":
+    //                    {@interface}_{method}(
+    //                        ___sendRequest,{string.Join("", method.Arguments
+    //                            .Select((arg, index) => (arg, index))
+    //                            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+    //                            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+    //                                ? $@"
+    //                        RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+    //                                : $@"
+    //                        {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+    //                        ___ct);
+    //                    return Task.CompletedTask;";
+    //    })))}
+    //        {(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
+    //    {
+    //        return $@"
+    //                case ""{method}"":
+    //                    return {@interface}_{method}(
+    //                        ___sendRequest,{string.Join("", method.Arguments
+    //                            .Select((arg, index) => (arg, index))
+    //                            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+    //                            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+    //                                ? $@"
+    //                        RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+    //                                : $@"
+    //                        {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+    //                        ___ct);";
+    //    })))}
+    //            }}
+    //            break;")))}
+    //    }}" : "")}
+    //    throw new Exception($""Send {{___sendRequest.Routing.ServiceId.Value}}.{{___sendRequest.Routing.MethodId.Value}} not implemented"");
+    //}}";
+    //    functions2 += functions;
+    //    return code;
+    //}
+
     private string GenerateInvokeRequest(ref string functions2, HashSet<string> functionNames)
     {
         var functions = "";
         var code = $@"
-    protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)) ? $@"
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
@@ -196,17 +265,29 @@ public class {Name} : WssServerConnection
             case ""{@interface}"":
                 switch (___invokeRequest.Routing.MethodId.Value)
                 {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method => $@"
-                    case ""{method}"":
-                        return {@interface}_{method}(
-                            ___invokeRequest,{string.Join("", method.Arguments
-                                .Select((arg, index) => (arg, index))
-                                .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-                                .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                                    ? $@"
-                            RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
-                                    : $@"
-                            {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
-                            ___ct);")))}
+                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}
+                        {{
+                            await foreach (var ___packet in {@interface}_{method}(
+                                ___invokeRequest,{string.Join("", method.Arguments
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
+                                RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+                                        : $@"
+                                {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+                                ___ct))
+                            {{
+                                yield return ___packet;
+                            }}
+                            yield break;
+                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        else
+                        {{
+                            ___logger.LogWarning(""Ongeautoriseerde InvokeRequest poging voor {{Service}}/{{Method}}"", ___invokeRequest.Routing.ServiceId.Value, ___invokeRequest.Routing.MethodId.Value);
+                            throw new UnauthorizedAccessException(""Niet geautoriseerd."");
+                        }}" : "")}")))}
                 }}
                 break;")))}
         }}" : "")}
@@ -215,6 +296,39 @@ public class {Name} : WssServerConnection
         functions2 += functions;
         return code;
     }
+
+    //private string GenerateInvokeRequest(ref string functions2, HashSet<string> functionNames)
+    //{
+    //    var functions = "";
+    //    var code = $@"
+    //protected override IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, CancellationToken ___ct)
+    //{{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)) ? $@"
+    //    var ___offset = 0;
+    //    var ___span = new Span<byte>(___invokeRequest.BinaryData);
+    //    switch (___invokeRequest.Routing.ServiceId.Value)
+    //    {{{(string.Join("", Context.ServiceContext.ApiInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)).Select(@interface => $@"
+    //        case ""{@interface}"":
+    //            switch (___invokeRequest.Routing.MethodId.Value)
+    //            {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method => $@"
+    //                case ""{method}"":
+    //                    return {@interface}_{method}(
+    //                        ___invokeRequest,{string.Join("", method.Arguments
+    //                            .Select((arg, index) => (arg, index))
+    //                            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+    //                            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+    //                                ? $@"
+    //                        RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {method.Interface}_{method}_{a.index}_Deserializer),"
+    //                                : $@"
+    //                        {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
+    //                        ___ct);")))}
+    //            }}
+    //            break;")))}
+    //    }}" : "")}
+    //    throw new Exception($""Invoke {{___invokeRequest.Routing.ServiceId.Value}}.{{___invokeRequest.Routing.MethodId.Value}} not implemented"");
+    //}}";
+    //    functions2 += functions;
+    //    return code;
+    //}
 
 
     private string GenerateMethod(Interface @interface, InterfaceMethod method, ref string functions2, HashSet<string> functionNames)
