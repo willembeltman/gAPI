@@ -1,5 +1,5 @@
-﻿//using Bsd.Public.Shared.Dtos;
-//using Bsd.Public.Shared.Interfaces;
+﻿//using Bsd.Public.Shared.Objects.Dtos;
+//using Bsd.Public.Shared.Contracts;
 //using gAPI.Core.Attributes;
 //using gAPI.Core.Dtos;
 //using gAPI.Core.Ids;

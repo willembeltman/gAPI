@@ -89,8 +89,12 @@ public class FindCustomSerializer
         var serializerLengthClasses = GetSpanSerializerLengthClasses(allTypes);
 
         var readerByType = serializerReadClasses
+            .GroupBy(a => a.Type, SymbolEqualityComparer.Default)
+            .Select(a => a.First())
             .ToDictionary(r => r.Type, SymbolEqualityComparer.Default);
         var lengthByType = serializerLengthClasses
+            .GroupBy(a => a.Type, SymbolEqualityComparer.Default)
+            .Select(a => a.First())
             .ToDictionary(r => r.Type, SymbolEqualityComparer.Default);
 
         var customSpanSerializers = serializerWriteClasses

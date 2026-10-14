@@ -1,4 +1,4 @@
-﻿//using Bsd.Public.Shared.Interfaces;
+﻿//using Bsd.Public.Shared.Contracts;
 //using gAPI.Core.Ids;
 
 //namespace gAPI.Generated;

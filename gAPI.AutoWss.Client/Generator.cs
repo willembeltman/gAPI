@@ -2,6 +2,7 @@
 using gAPI.AutoSerializer.Generators;
 using gAPI.AutoWss.Client.Generators;
 using gAPI.AutoWss.Client.Generators.Clients;
+using gAPI.AutoWss.Client.Generators.Hubs;
 using gAPI.AutoWss.Client.Generators.Startup;
 using gAPI.AutoWss.Client.Generators.Wss;
 using gAPI.AutoWss.Client.Models;
@@ -37,6 +38,9 @@ public class Generator
         MinimalApis = ServiceContext.MinimalApiInterfaces
             .Select(a => new MinimalClientGenerator(this, a, customMultipartFormDataContents))
             .ToArray();
+        HubDuds = ServiceContext.HubInterfaces
+            .Select(a => new HubDud_Generator(this, a))
+            .ToArray();
 
         IClientConnection = new IClientConnectionGenerator(this);
         ClientConnection = new ClientConnectionGenerator(this);
@@ -52,6 +56,7 @@ public class Generator
     public CustomObjectMethod[] CustomMultipartFormDataContents { get; }
     public ApiClient_Generator[] Apis { get; }
     public MinimalClientGenerator[] MinimalApis { get; }
+    public HubDud_Generator[] HubDuds { get; }
     public IClientConnectionGenerator IClientConnection { get; }
     public ClientConnectionGenerator ClientConnection { get; }
     public AddAutoWssClientExtensionGenerator AddAutoWssExtension { get; }
@@ -64,6 +69,8 @@ public class Generator
             GenerateItem(spc, api);
         foreach (var api in MinimalApis)
             GenerateItem(spc, api);
+        foreach (var dud in HubDuds)
+            GenerateItem(spc, dud);
         GenerateItem(spc, IClientConnection);
         GenerateItem(spc, ClientConnection);
         GenerateItem(spc, AddAutoWssExtension);
