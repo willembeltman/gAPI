@@ -1,0 +1,253 @@
+﻿@page "/"
+@using gAPI.Fabric.Server.Config
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject FabricManager Manager
+@inject ApplicationNameGetter NameGetter
+@inject FabricConfig config
+
+<PageTitle>Api Fabric</PageTitle>
+
+@if (Snapshot != null)
+{
+    <div class="dashboard-container">
+
+        <h1>@NameGetter.Name</h1>
+
+        <!-- Bovenbalk met metadata kaarten -->
+        <div class="meta-grid">
+            <div class="meta-card">
+                <span class="meta-label">Port</span>
+                <span class="meta-value">@config.Port</span>
+            </div>
+            <div class="meta-card">
+                <span class="meta-label">Last Update</span>
+                <span class="meta-value">@Snapshot.CapturedAt.ToString("yyyy-MM-dd HH:mm:ss")</span>
+            </div>
+        </div>
+
+        <!-- Tabel 1: Connections -->
+        <div class="table-card">
+            <h3>Api Connections</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Connection ID</th>
+                            <th class="text-right">Receive</th>
+                            <th class="text-right">Send</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Snapshot.Connections)
+                        {
+                            <tr>
+                                <td class="font-bold">@item.ConnectionId</td>
+                                <td class="text-right speed-cell">@FormatSpeed(item.ReceivedBytesPerSecond)</td>
+                                <td class="text-right speed-cell">@FormatSpeed(item.SentBytesPerSecond)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabel 2: Services -->
+        <div class="table-card">
+            <h3>Services</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service ID</th>
+                            <th class="text-right">Receive</th>
+                            <th class="text-right">Send</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Snapshot.Services)
+                        {
+                            <tr>
+                                <td class="font-bold">@item.ServiceId</td>
+                                <td class="text-right speed-cell">@FormatSpeed(item.ReceivedBytesPerSecond)</td>
+                                <td class="text-right speed-cell">@FormatSpeed(item.SentBytesPerSecond)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+
+<style>
+    /* Dashboard Layout */
+    .dashboard-container {
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #333;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+        .dashboard-container h1 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #000000;
+            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 8px;
+        }
+
+    /* Metadata Kaarten */
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .meta-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .meta-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    /* Tabel Kaarten */
+    .table-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+        .table-card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 8px;
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    /* Tabellen Basis */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 12px 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #dee2e6;
+        font-size: 0.95rem;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: #f8f9fa;
+    }
+
+    /* Hulpklassen voor Uitlijning en Lettertypen */
+    .text-right {
+        text-align: right;
+    }
+
+    .font-bold {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    /* Monospace zorgt ervoor dat de getallen niet "springen" bij updates */
+    .speed-cell {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-weight: 500;
+        color: #0d6efd; /* Subtiel blauw voor netwerkactiviteit */
+    }
+</style>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    public FabricDashboardSnapshot? Snapshot { get; private set; }
+
+    protected override void OnInitialized()
+    {
+        Snapshot = Manager.GetDashboardSnapshot();
+        _ = StartPeriodicUpdateAsync(_cts.Token);
+    }
+
+    private async Task StartPeriodicUpdateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, cancellationToken);
+                await InvokeAsync(() =>
+                {
+                    Snapshot = Manager.GetDashboardSnapshot();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        await Task.CompletedTask;
+    }
+
+    private static string FormatSpeed(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} b/sec",
+        < 1024 * 1024 => $"{bytes / 1024} kb/sec",
+        < 1024L * 1024 * 1024 => $"{bytes / (1024 * 1024)} mb/sec",
+        < 1024L * 1024 * 1024 * 1024 => $"{bytes / (1024L * 1024 * 1024)} gb/sec",
+        _ => $"{bytes / (1024L * 1024 * 1024 * 1024)} tb/sec"
+    };
+}

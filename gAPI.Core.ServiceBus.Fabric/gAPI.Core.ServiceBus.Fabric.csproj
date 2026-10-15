@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>0.0.4-beta</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
+	  <ProjectReference Include="..\gAPI.Core.ServiceBus\gAPI.Core.ServiceBus.csproj" />
+	</ItemGroup>
+
+</Project>

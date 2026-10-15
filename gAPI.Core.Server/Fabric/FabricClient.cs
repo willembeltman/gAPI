@@ -1,7 +1,6 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
@@ -17,7 +16,7 @@ namespace gAPI.Core.Server.Fabric;
 // Deze class houd alle communicatie consistentie in de gate, en routeert alles. Voor de WssServerConnection is dit gewoon het doorgeef luik "doe call naar client"
 // De fabricReceiver is wel autonoom wat betreft de afhandeling richting fabric, dus als er een bericht terug moet naar de fabric doet hij dit zelf.
 // De fabricSender is zo dom mogelijk
-public sealed class FabricClient : IAsyncDisposable
+public sealed class FabricClient : IFabricClient
 {
     public FabricClient(
         SessionCache sessionCache,
