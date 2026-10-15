@@ -45,6 +45,7 @@ public class ServerConnection_Generator : _BaseGenerator
     public SharedReference InvokeRequestDoneDto => Context.SharedReferences.InvokeRequestDoneDto;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
+    public SharedReference WssServerConnection => Context.SharedReferences.WssServerConnection;
 
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -57,19 +58,18 @@ public class ServerConnection_Generator : _BaseGenerator
             return;
         }
         Reg(ServerConfig);
+        Reg(IServerAuthenticationService);
+        Reg(StreamingCache);
+        Reg(ServiceSubscriptionCollection);
+        Reg(ServerConnectionCollection);
+        Reg(FabricClient);
+        Reg(WssServerConnection);
         Reg("Microsoft.Extensions.Logging");
         Reg("System.Runtime.CompilerServices");
         Reg("System");
         Reg("System.Text");
         Reg("System.Buffers.Binary");
-        Reg("gAPI.Core.Attributes");
         Reg("gAPI.Core.Serializers");
-        Reg("gAPI.Core.Server.Collections");
-        Reg("gAPI.Core.Dtos");
-        Reg("gAPI.Core.Server.Fabric");
-        Reg("gAPI.Core.Server.Wss");
-        Reg("gAPI.Core.Ids");
-        Reg("gAPI.Core.Interfaces");
         Reg("Microsoft.CodeAnalysis");
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
@@ -92,7 +92,7 @@ public class ServerConnection_Generator : _BaseGenerator
 
 namespace {Namespace};
 
-public class {Name} : WssServerConnection
+public class {Name} : {WssServerConnection}
 {{
     readonly ILogger ___logger;
     readonly {IServerAuthenticationService} ___authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"

@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using System.Net;

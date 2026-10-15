@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Server.Interfaces;
 
 public abstract class Mapping<TEntity, TDto>
 {

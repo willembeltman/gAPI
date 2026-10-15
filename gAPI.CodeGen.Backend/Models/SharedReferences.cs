@@ -8,8 +8,8 @@ public class SharedReferences()
     public SharedReference BaseResponseT { get; } = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
     public SharedReference BaseListResponseT { get; } = new SharedReference("gAPI.Core.Dtos.BaseListResponseT");
     public SharedReference CreateServerConfigExtension { get; } = new SharedReference("gAPI.Core.Extensions.CreateServerConfigExtension");
-    public SharedReference IUseCase { get; } = new SharedReference("gAPI.Core.Interfaces.IUseCase");
-    public SharedReference Mapping { get; } = new SharedReference("gAPI.Core.Interfaces.Mapping");
+    public SharedReference IUseCase { get; } = new SharedReference("gAPI.Core.Server.Interfaces.IUseCase");
+    public SharedReference Mapping { get; } = new SharedReference("gAPI.Core.Server.Interfaces.Mapping");
     public SharedReference IStorageService { get; } = new SharedReference("gAPI.Core.Server.Storage.IStorageService");
     public SharedReference IsStateDto { get; } = new SharedReference("gAPI.Core.Attributes.IsStateDto");
     public SharedReference ApplyOrderByExtension { get; } = new SharedReference("gAPI.Core.Server.Extensions.ApplyOrderBy");

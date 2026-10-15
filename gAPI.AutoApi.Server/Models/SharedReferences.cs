@@ -24,7 +24,7 @@ public class SharedReferences
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServerConfig", allSymbols);
-        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
+        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServerAuthenticationService", allSymbols);
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);

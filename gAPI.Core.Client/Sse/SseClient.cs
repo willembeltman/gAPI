@@ -1,9 +1,7 @@
 ﻿using gAPI.Core.Client.Helpers;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
-using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;

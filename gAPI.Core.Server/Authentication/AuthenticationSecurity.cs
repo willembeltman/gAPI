@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Entities;
+﻿using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

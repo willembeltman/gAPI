@@ -2,7 +2,6 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;

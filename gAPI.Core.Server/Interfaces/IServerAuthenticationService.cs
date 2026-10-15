@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Security.Claims;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IServerAuthenticationService
 {

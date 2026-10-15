@@ -72,9 +72,9 @@ public class MappingGenerator : BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    gAPI.Core.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.HasIStorageFileInterface ? @$", 
+    gAPI.Core.Server.Interfaces.IUseCase<{typeEntity.FullName}, {typeDto.FullName}, {typeEntity.KeyProperty.TypeSimpleName}> useCase{(Entity.HasIStorageFileInterface ? @$", 
     {IStorageService} storageService" : "")}) 
-    : gAPI.Core.Interfaces.Mapping<{typeEntity.FullName}, {typeDto.FullName}>
+    : gAPI.Core.Server.Interfaces.Mapping<{typeEntity.FullName}, {typeDto.FullName}>
 {{
     public override {typeEntity.FullName} ToEntity(
         {typeDto.FullName} dto, 

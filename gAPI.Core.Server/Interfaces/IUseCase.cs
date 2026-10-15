@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Interfaces;
+﻿namespace gAPI.Core.Server.Interfaces;
 
 public interface IUseCase<TEntity, TDto, TKey>
 {

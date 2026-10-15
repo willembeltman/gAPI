@@ -29,7 +29,7 @@ public class SharedReferences
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
         InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
 
-        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
+        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServerAuthenticationService", allSymbols);
 
         //IServiceRouter = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceRouter", allSymbols);
         //OwnServiceRouter = SharedReferenceFinder.TryFindByInterface(IServiceRouter, allSymbols);

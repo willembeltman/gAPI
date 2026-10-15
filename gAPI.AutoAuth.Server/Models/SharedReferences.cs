@@ -18,8 +18,8 @@ public class SharedReferences
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         ServerConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServerConfig", allSymbols);
 
-        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IServerAuthenticationService", allSymbols);
-        IAuthenticationSecurity = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IAuthenticationSecurity", allSymbols);
+        IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServerAuthenticationService", allSymbols);
+        IAuthenticationSecurity = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IAuthenticationSecurity", allSymbols);
         AuthenticationHandler = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHandler", allSymbols);
         NoDbServerAuthenticationServiceT = new("gAPI.Core.Server.Authentication.NoDbServerAuthenticationService");
         
