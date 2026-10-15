@@ -2,9 +2,9 @@
 using gAPI.Core.Enums; // Vereist voor streaming data overdracht
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.ServiceBus.Config;
 using gAPI.Core.ServiceBus.Helpers;
-using gAPI.Core.ServiceBus.Interfaces;
 using global::RabbitMQ.Client;
 using global::RabbitMQ.Client.Events;
 using System.Collections.Concurrent;

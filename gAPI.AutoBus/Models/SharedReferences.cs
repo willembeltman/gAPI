@@ -19,7 +19,7 @@ public class SharedReferences
         BusInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusInvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
     
-        IBaseBusConnection = SharedReferenceFinder.Find("gAPI.Core.ServiceBus.Interfaces.IBaseBusConnection", allSymbols);
+        IBaseBusConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IBaseBusConnection", allSymbols);
 
         BusToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.BusToChoice", allSymbols);
         BusConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.BusConnectionId", allSymbols);

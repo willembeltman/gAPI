@@ -15,24 +15,12 @@ public enum FabricClientToHostMessageEnum
 
     StreamingRequestServerToClient,
     StreamingResponseServerToClient,
-    //StreamingCancelledServerToClient, 
 
     StreamingRequestClientToServer,
     StreamingResponseClientToServer,
-    //StreamingCancelledClientToServer,
 
 
     UpdateSession,
     ClearSession,
     GetSessionCookieData,
-
-
-    //ServerSendRequest, 
-    //ServerSendRequestCancelled,
-    //ServerSendRequestDone,
-    //ServerInvokeRequest,
-    //ServerInvokeRequestCancelled,
-    //ServerInvokeRequestDone,
-    //ServerStreamingRequest,
-    //ServerStreamingResponse
 }

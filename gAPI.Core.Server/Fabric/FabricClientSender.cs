@@ -368,4 +368,33 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }
     }
 
+    internal async Task Send_BusSubscribe_ToFabricAsync(BusSubscribeDto subscribe, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task Send_BusUnsubscribe_ToFabricAsync(BusUnsubscribeDto unsubscribe, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task Send_BusSendFireAndForget_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task Send_BusSend_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task Send_BusInvoke_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

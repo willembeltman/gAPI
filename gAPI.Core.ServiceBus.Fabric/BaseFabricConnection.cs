@@ -4,7 +4,6 @@ using gAPI.Core.Ids;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.ServiceBus.Config;
 using gAPI.Core.ServiceBus.Helpers;
-using gAPI.Core.ServiceBus.Interfaces;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
@@ -12,12 +11,12 @@ namespace gAPI.Core.ServiceBus.Fabric;
 
 public abstract class BaseFabricConnection(
     IFabricClient fabricClient,
-    ServiceBusConfig busConfig) 
-    : IBaseBusConnection
+    ServiceBusConfig busConfig)
+    : IBaseFabricConnection
 {
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
-    public bool Initialized { get; private set; }
+    public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
 
     // Calling this will route the request to service
@@ -27,40 +26,56 @@ public abstract class BaseFabricConnection(
     // This is called everytime something wants to subscribe
     public async Task TryConnectAsync(CancellationToken ct)
     {
-        throw new NotImplementedException();
     }
 
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
-    protected async Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    protected Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
+        => fabricClient.BusSubscribeAsync(this, new(serviceId, BusConnectionId), ct);
     // This is called AFTER the service has been unregistered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
-    protected async Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    protected Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
+        => fabricClient.BusUnsubscribeAsync(this, new(serviceId, BusConnectionId), ct);
 
     // This is called when a service has to be called through the service bus
-    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+    public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+        => fabricClient.BusSendFireAndForgetAsync(this, new(routing, data), ct);
+    public Task SendAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+        => fabricClient.BusSendAsync(this, new(routing, data), ct);
+    public IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+        => fabricClient.BusInvokeAsync(this, new(routing, data), ct);
+
+    // Callbacks from fabric
+    public Task ReceiveFireAndForgetAsync(BusSendRequestDto requestDto, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return Send_SendRequest_ToServiceAsync(requestDto, ct);
     }
-    public async Task SendAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+    public Task ReceiveSendRequestAsync(BusSendRequestDto requestDto, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return Send_SendRequest_ToServiceAsync(requestDto, ct);
     }
-    public async IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<byte[]> ReceiveInvokeRequestAsync(BusInvokeRequestDto requestDto, CancellationToken ct)
     {
-        yield break;
-    }
-    private async Task SendStreamingRequestAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
-    {
-        throw new NotImplementedException();
+        return Send_InvokeRequest_ToServiceAsync(requestDto, ct);
     }
 
+    public async Task ReceiveStreamingRequestAsync(BusStreamingRequestDto requestDto, CancellationToken ct)
+    {
+        var key = new RequestArgumentIndexDto(requestDto.Routing.RequestId, requestDto.ArgumentIndex);
+        if (StreamingRequestHandlers.TryGetValue(key, out var responseHandler) == false)
+            return;
+        var response = await responseHandler.Invoke(requestDto.StreamId, requestDto.Cancelled, ct);
+        await SendStreamingResponseAsync(response, ct);
+    }
+    public async Task ReceiveStreamingResponseAsync(BusStreamingResponseDto responseDto, CancellationToken ct)
+    {
+        var key = new RequestArgumentIndexStreamDto(responseDto.Routing.RequestId, responseDto.ArgumentIndex, responseDto.StreamId);
+        if (StreamingResponseHandlers.TryGetValue(key, out var responseHandler) == false)
+            return;
+        responseHandler.Invoke(responseDto);
+    }
+
+    // Enumerable arguments
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
         return new RemoteAsyncEnumerable<T>(
@@ -214,4 +229,11 @@ public abstract class BaseFabricConnection(
             await registration.DisposeAsync();
         }
     }
+
+    // Fabric proxy methods
+    private Task SendStreamingRequestAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
+        => fabricClient.BusStreamingRequestAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
+    private Task SendStreamingResponseAsync(BusStreamingResponseDto response, CancellationToken ct)
+        => fabricClient.BusStreamingResponseAsync(this, response, ct);
+
 }

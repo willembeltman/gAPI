@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 
 namespace gAPI.Core.Server.Interfaces;
 
@@ -31,4 +32,13 @@ public interface IFabricClient : IAsyncDisposable
     Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
     Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct);
     Task UpdateSession(SessionId sessionId, string? cookieData, CancellationToken ct);
+
+    Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct);
+    Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct);
+    IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationToken ct);
+    
+    Task BusStreamingRequestAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
+    Task BusStreamingResponseAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
+    Task BusSubscribeAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct);
+    Task BusUnsubscribeAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct);
 }
