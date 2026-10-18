@@ -91,7 +91,7 @@ public static class {Name}
         string apiAddress)
     {{
         // Het kan helaas niet anders
-        services.AddScoped<{IUriNavigationManager}>(sp =>
+        services.AddSingleton<{IUriNavigationManager}>(sp =>
         {{
             var navigationManager = sp.GetService<NavigationManager>();
             if (navigationManager != null)
@@ -105,7 +105,7 @@ public static class {Name}
         }});
 
         // Register the cookie handler
-        services.AddScoped<{WithCookiesHandler}>();
+        services.AddSingleton<{WithCookiesHandler}>();
 
         // Configure named client for WebAssembly with cookies
         services
@@ -114,20 +114,20 @@ public static class {Name}
 (IClientAuthenticatedHttpClientImplementation == null ? $@"
 
         // Register global client authentication service
-        services.AddScoped<{AuthenticatedHttpClient}>();
-        services.AddScoped<{IAuthenticatedHttpClient}>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
+        services.AddSingleton<{AuthenticatedHttpClient}>();
+        services.AddSingleton<{IAuthenticatedHttpClient}>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
+        services.AddSingleton<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
+        services.AddSingleton<AuthenticationStateProvider>(sp => sp.GetRequiredService<{AuthenticatedHttpClient}>());
 " : $@"
 
         // Register global client authentication service
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
+        services.AddSingleton<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
+        services.AddSingleton<AuthenticationStateProvider>(sp => sp.GetRequiredService<{IClientAuthenticatedHttpClientImplementation}>());
 ")}
         // Register StateParser
-        services.AddScoped<{StateParser}>();
-        services.AddScoped<{IStateParser}>(sp => sp.GetRequiredService<{StateParser}>());
-        services.AddScoped<{IStateParserT}<{State}>>(sp => sp.GetRequiredService<{StateParser}>());
+        services.AddSingleton<{StateParser}>();
+        services.AddSingleton<{IStateParser}>(sp => sp.GetRequiredService<{StateParser}>());
+        services.AddSingleton<{IStateParserT}<{State}>>(sp => sp.GetRequiredService<{StateParser}>());
 
         // Set up authorization core
         services.AddAuthorizationCore();

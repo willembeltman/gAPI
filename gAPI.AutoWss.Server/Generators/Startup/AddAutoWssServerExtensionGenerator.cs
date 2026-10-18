@@ -165,8 +165,6 @@ public static class {Name}
             }});
         }}
 
-        //services.AddSingleton<IServiceRouter, ServiceRouter>();
-
         var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
 
@@ -203,8 +201,8 @@ public static class {Name}
         }}
 
         // Hubs
-        services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
-        services.AddScoped<{a.IClientContext.Name}, {a.Name}>();"))}
+        services.AddSingleton<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
+        services.AddSingleton<{a.IClientContext.Name}, {a.Name}>();"))}
 
         // Apis{string.Join("", Context.ServiceContext.ApiInterfaces.Select(apiinterface => $@"
         services.AddScoped<{apiinterface.Name}, {apiinterface.Service.Name}>();"))}
