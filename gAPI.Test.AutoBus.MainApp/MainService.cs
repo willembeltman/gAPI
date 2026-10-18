@@ -13,10 +13,12 @@ public class MainService(
         async IAsyncEnumerable<string> test()
         {
             yield return "Hoi hoi";
-        };
-        await busContext.Service1.ToAny.WriteLineAsync("jdsbaksjd");
+        }
+        ;
         await Task.Delay(5000);
-        await busContext.Service2.ToAny.Test(test());
+        await busContext.Service1.ToAny().WriteLineAsync("jdsbaksjd");
+        await Task.Delay(5000);
+        await busContext.Service2.ToAny().Test(test());
     }
 
     public async Task StopAsync(CancellationToken ct)

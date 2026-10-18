@@ -18,6 +18,7 @@ namespace gAPI.Generated;
 public class Service1Client(
     ILoggerFactory ___loggerFactory,
     IBusConnection ___busConnection,
+    DeliveryMode ___deliveryMode,
     BusToChoice ___to,
     BusConnectionId? ___busConnectionId = null)
     : IService1
@@ -40,6 +41,7 @@ public class Service1Client(
                 RequestId.New(),
                 ___ServiceId,
                 new("WriteLine"),
+                ___deliveryMode,
                 ___to,
                 ___busConnectionId
             );
@@ -92,6 +94,7 @@ public class Service1Client(
             RequestId.New(),
             ___ServiceId,
             new("WriteLineAsync"),
+            ___deliveryMode,
             ___to,
             ___busConnectionId
         );
@@ -131,6 +134,7 @@ public class Service1Client(
             RequestId.New(),
             ___ServiceId,
             new("Get"),
+            ___deliveryMode,
             ___to,
             ___busConnectionId
         );
@@ -180,6 +184,7 @@ public class Service1Client(
             RequestId.New(),
             ___ServiceId,
             new("Test"),
+            ___deliveryMode,
             ___to,
             ___busConnectionId
         );

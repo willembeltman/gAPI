@@ -9,13 +9,13 @@ namespace gAPI.Generated;
 
 public class Service1Context(
     ILoggerFactory loggerFactory,
-    IBusConnection fabricClient)
+    IBusConnection busConnection)
     : IService1Context
 {
-    public IService1 ToAll
-        => new Service1Client(loggerFactory, fabricClient, BusToChoice.ToAll);
-    public IService1 ToAny
-        => new Service1Client(loggerFactory, fabricClient, BusToChoice.ToAny);
-    public IService1 ToBusConnectionId(BusConnectionId busConnectionId)
-        => new Service1Client(loggerFactory, fabricClient, BusToChoice.ToBusConnectionId, busConnectionId);
+    public IService1 ToAll(DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToAll);
+    public IService1 ToAny(DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToAny);
+    public IService1 ToBusConnectionId(BusConnectionId busConnectionId, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToBusConnectionId, busConnectionId);
 }

@@ -31,6 +31,7 @@ public class BusClient_Generator : _BaseGenerator
     public SharedReference BusRoutingDto => Context.SharedReferences.BusRoutingDto;
     public SharedReference BusChoiceType => Context.SharedReferences.BusToChoice;
     public SharedReference BusConnectionId => Context.SharedReferences.BusConnectionId;
+    public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
 
@@ -51,6 +52,7 @@ public class BusClient_Generator : _BaseGenerator
         Reg(IBusConnection);
         Reg(BusChoiceType);
         Reg(BusConnectionId);
+        Reg(DeliveryMode);
 
         foreach (var @interface in Context.ServiceContext.HubInterfaces)
         {
@@ -76,6 +78,7 @@ namespace {Namespace};
 public class {Name}(
     ILoggerFactory ___loggerFactory,
     {IBusConnection} ___busConnection,
+    {DeliveryMode} ___deliveryMode,
     {BusChoiceType} ___to,
     {BusConnectionId}? ___busConnectionId = null)
     : {Interface}
@@ -125,6 +128,7 @@ public class {Name}(
                 {RequestId}.New(),
                 ___ServiceId,
                 new(""{method}""),
+                ___deliveryMode,
                 ___to,
                 ___busConnectionId
             );
@@ -175,6 +179,7 @@ public class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            ___deliveryMode,
             ___to,
             ___busConnectionId
         );
@@ -212,6 +217,7 @@ public class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            ___deliveryMode,
             ___to,
             ___busConnectionId
         );

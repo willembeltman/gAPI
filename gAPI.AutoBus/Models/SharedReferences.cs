@@ -29,6 +29,7 @@ public class SharedReferences
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
         
         IFabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Interfaces.IFabricClient", allSymbols);
+        DeliveryMode = SharedReferenceFinder.Find("gAPI.Core.Enums.DeliveryMode", allSymbols);
 
     }
 
@@ -47,4 +48,5 @@ public class SharedReferences
     public SharedReference? BaseRabbitMQConnection { get; }
     public SharedReference? BaseAzureConnection { get; }
     public SharedReference? IFabricClient { get; }
+    public SharedReference DeliveryMode { get; }
 }

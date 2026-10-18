@@ -14,7 +14,6 @@ public interface IFabricClient : IAsyncDisposable
     Task ClearSession(SessionId sessionId, CancellationToken ct);
     Task ConnectAsync();
     Task DisconnectAsync();
-    ValueTask DisposeAsync();
     Task<string?> GetSessionCookieData(string sessionIdString, CancellationToken ct);
     IAsyncEnumerable<byte[]> InvokeAsync(RoutingDto routing, byte[] data, CancellationToken ct);
     Task ReceiveKernel(CancellationToken ct);
