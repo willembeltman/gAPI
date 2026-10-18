@@ -19,8 +19,8 @@ public class BusConnectionGenerator : _BaseGenerator
         Directory = "";
         Namespace = "gAPI.Generated";
 
-        Name = BusName + "Connection";
-        FileName = $"Connections/{Name}.g.cs";
+        Name = "BusConnection";
+        FileName = $"Bus/{Name}.g.cs";
 
         PropertyHelper = new GeneratePropertyHelper([], [.. Context.CustomSpanSerializers], [], Reg, NeededSpanSerializers);
     }
@@ -92,7 +92,7 @@ namespace {Namespace};
 public class {Name}
     : {BaseConnection}, {IBusConnection}
 {{
-    private readonly ILogger<{Name}> Logger;
+    private readonly ILogger<{Name}> ___Logger;
 
     public {Name}(
         ILoggerFactory loggerFactory,{(OverloadFabricClient && IFabricClient != null ? $@"
@@ -100,11 +100,10 @@ public class {Name}
         {ServiceBusConfig} serviceBusConfig)
         : base({(OverloadFabricClient && IFabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
     {{
-        Logger = loggerFactory.CreateLogger<{Name}>();
+        ___Logger = loggerFactory.CreateLogger<{Name}>();
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
 
-    readonly ILogger ___Logger;
     readonly byte[] ___Buffer;
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}

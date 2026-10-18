@@ -14,7 +14,7 @@ public class IBusConnectionGenerator : _BaseGenerator
         Namespace = "gAPI.Generated";
 
         Name = "IBusConnection";
-        FileName = $"Connections/{Name}.g.cs";
+        FileName = $"Bus/{Name}.g.cs";
     }
 
     public Generator Context { get; }

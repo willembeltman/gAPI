@@ -14,8 +14,7 @@ public class MainService(
         {
             yield return "Hoi hoi";
         };
-        await Task.Delay(5000);
-        await busContext.Service1.ToAny.Test(test());
+        await busContext.Service1.ToAny.WriteLineAsync("jdsbaksjd");
         await Task.Delay(5000);
         await busContext.Service2.ToAny.Test(test());
     }

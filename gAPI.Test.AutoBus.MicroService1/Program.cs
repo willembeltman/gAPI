@@ -12,9 +12,12 @@ CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 var builder = Host.CreateApplicationBuilder(args);
 
 #if DEBUG
-using var stream = File.OpenRead("appsettings.Development.json");
-if (stream != null)
-    builder.Configuration.AddJsonStream(stream);
+if (File.Exists("appsettings.Development.json"))
+{
+    using var stream = File.OpenRead("appsettings.Development.json");
+    if (stream != null)
+        builder.Configuration.AddJsonStream(stream);
+}
 #endif
 
 builder.Services.AddAutoBus(builder.Configuration);

@@ -24,6 +24,8 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
     public BusClientContext_Generator[] ClientContexts => Context.ClientContexts;
     public IBusContext_Generator IClientContext => Context.IBusContext;
     public BusContext_Generator ClientContext => Context.BusContext;
+    public SharedReference IBusConnection => Context.IBusConnection;
+    public SharedReference BusConnection => Context.BusConnection;
 
     public SharedReference ServiceBusConfig => Context.SharedReferences.ServiceBusConfig;
 
@@ -90,8 +92,7 @@ public static class {Name}
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Connection
-        //services.AddScoped<IRabbitMQConnectionProvider, RabbitMQConnectionProvider>();
-        //services.AddHostedService<IRabbitMQConnectionProvider>();
+        services.AddScoped<{IBusConnection}, {BusConnection}>();
 
         // Hubs
         services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"

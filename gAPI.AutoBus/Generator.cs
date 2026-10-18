@@ -9,6 +9,7 @@ using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,14 +38,43 @@ public class Generator
         BusContext = new BusContext_Generator(this);
         IBusConnection = new IBusConnectionGenerator(this);
 
+        if (SharedReferences.BaseAzureConnection != null)
+            BusConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
+        
+        if (SharedReferences.BaseRabbitMQConnection != null)
+            if (BusConnection == null)
+                BusConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseRabbitMQConnection);
+            else
+                throw new Exception("You cannot have two service bus providers in the same project");
         if (SharedReferences.BaseFabricConnection != null)
-            FabricConnection = new BusConnectionGenerator(this, "Fabric", SharedReferences.BaseFabricConnection, true);
+            if (BusConnection == null)
+                BusConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseFabricConnection);
+            else
+                throw new Exception("You cannot have two or more service bus providers in the same project");
 
-        if (SharedReferences.BaseRabbitMQConnection != null) 
-            RabbitMQConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseRabbitMQConnection);
 
-        if (SharedReferences.BaseAzureConnection != null) 
-            AzureConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
+        //if (SharedReferences.BaseFabricConnection != null &&
+        //    SharedReferences.BaseRabbitMQConnection == null &&
+        //    SharedReferences.BaseAzureConnection == null)
+        //    FabricConnection = new BusConnectionGenerator(this, "Fabric", SharedReferences.BaseFabricConnection, true);
+
+        //else if (SharedReferences.BaseFabricConnection == null &&
+        //    SharedReferences.BaseRabbitMQConnection != null &&
+        //    SharedReferences.BaseAzureConnection == null)
+        //    RabbitMQConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseRabbitMQConnection);
+
+        //else if (SharedReferences.BaseFabricConnection == null &&
+        //    SharedReferences.BaseRabbitMQConnection == null &&
+        //    SharedReferences.BaseAzureConnection != null)
+        //    AzureConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
+
+        //else if (SharedReferences.BaseFabricConnection == null &&
+        //    SharedReferences.BaseRabbitMQConnection == null &&
+        //    SharedReferences.BaseAzureConnection == null)
+        //    throw new Exception("You have to reference one of the bus nuget packages, like: gAPI.Core.ServiceBus.RabbitMQ");
+
+        //else
+        //    throw new Exception("You cannot have two service bus packages selected.");
 
         AddAutoBusExtension = new AddAutoBusExtensionGenerator(this);
 
@@ -75,26 +105,28 @@ public class Generator
 
     public IBusContext_Generator IBusContext { get; }
     public BusContext_Generator BusContext { get; }
-    public BusConnectionGenerator? FabricConnection { get; }
-    public BusConnectionGenerator? RabbitMQConnection { get; }
-    public BusConnectionGenerator? AzureConnection { get; }
+    //public BusConnectionGenerator? FabricConnection { get; }
+    //public BusConnectionGenerator? RabbitMQConnection { get; }
+    //public BusConnectionGenerator? AzureConnection { get; }
     public IBusConnectionGenerator IBusConnection { get; }
     public AddAutoBusExtensionGenerator AddAutoBusExtension { get; }
     public BusClient_Generator[] ClientHandlers { get; }
     public IBusClientContext_Generator[] IClientHandlerContexts { get; }
     public BusClientContext_Generator[] ClientContexts { get; }
+    public BusConnectionGenerator BusConnection { get; }
 
     public void Generate(SourceProductionContext spc)
     {
         GenerateItem(spc, IBusContext);
         GenerateItem(spc, BusContext);
         GenerateItem(spc, IBusConnection);
-        if (FabricConnection != null)
-            GenerateItem(spc, FabricConnection);
-        if (RabbitMQConnection != null)
-            GenerateItem(spc, RabbitMQConnection);
-        if (AzureConnection != null)
-            GenerateItem(spc, AzureConnection);
+        GenerateItem(spc, BusConnection);
+        //if (FabricConnection != null)
+        //    GenerateItem(spc, FabricConnection);
+        //if (RabbitMQConnection != null)
+        //    GenerateItem(spc, RabbitMQConnection);
+        //if (AzureConnection != null)
+        //    GenerateItem(spc, AzureConnection);
         GenerateItem(spc, AddAutoBusExtension);
 
         foreach (var item in ClientHandlers)

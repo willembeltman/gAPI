@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
+    <ProjectReference Include="..\gAPI.Core.ServiceBus.RabbitMQ\gAPI.Core.ServiceBus.RabbitMQ.csproj" />
   </ItemGroup>
 
 </Project>

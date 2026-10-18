@@ -8,6 +8,7 @@
   <Project Path="gAPI.Core.ServiceBus/gAPI.Core.ServiceBus.csproj" />
   <Project Path="gAPI.Core/gAPI.Core.csproj" />
   <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
+  <Project Path="gAPI.Test.AutoBus.Aspire/gAPI.Test.AutoBus.Aspire.csproj" Id="12150fca-62d9-4fe6-babc-0f331c86539d" />
   <Project Path="gAPI.Test.AutoBus.Fabric/gAPI.Test.AutoBus.Fabric.csproj" />
   <Project Path="gAPI.Test.AutoBus.MainApp/gAPI.Test.AutoBus.MainApp.csproj" Id="e9d94ee5-4f52-4e35-aec3-c53061a05901" />
   <Project Path="gAPI.Test.AutoBus.MicroService1/gAPI.Test.AutoBus.MicroService1.csproj" />
