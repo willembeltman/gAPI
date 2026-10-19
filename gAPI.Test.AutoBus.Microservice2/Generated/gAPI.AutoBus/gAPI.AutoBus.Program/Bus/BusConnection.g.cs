@@ -2,8 +2,8 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
-using gAPI.Core.ServiceBus.AzureServiceBus;
 using gAPI.Core.ServiceBus.Config;
+using gAPI.Core.ServiceBus.RabbitMQ;
 using gAPI.Test.AutoBus.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace gAPI.Generated;
 
 public class BusConnection
-    : BaseAzureConnection, IBusConnection
+    : BaseRabbitMQConnection, IBusConnection
 {
     private readonly ILogger<BusConnection> ___Logger;
 

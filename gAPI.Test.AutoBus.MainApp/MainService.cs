@@ -30,7 +30,6 @@ public class MainService(
             yield return "Hoi hoi";
             yield return "Hoi hoi";
             yield return "Hoi hoi";
-            throw new Exception("hoi");
             yield return "Hoi hoi";
         }
         ;
