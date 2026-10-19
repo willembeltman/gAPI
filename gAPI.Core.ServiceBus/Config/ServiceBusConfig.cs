@@ -2,5 +2,5 @@
 
 public record ServiceBusConfig(
     int? MaxPackageSize,
-    //string QueueName,
+    string QueueName,
     string ConnectionString);

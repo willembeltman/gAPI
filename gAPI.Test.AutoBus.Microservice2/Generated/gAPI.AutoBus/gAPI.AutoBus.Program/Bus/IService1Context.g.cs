@@ -8,7 +8,7 @@ namespace gAPI.Generated;
 
 public interface IService1Context
 {
-    IService1 ToAll(DeliveryMode deliveryMode = DeliveryMode.Transient);
-    IService1 ToAny(DeliveryMode deliveryMode = DeliveryMode.Transient);
-    IService1 ToBusConnectionId(BusConnectionId busConnectionId, DeliveryMode deliveryMode = DeliveryMode.Transient);
+    IService1 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
+    IService1 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
+    IService1 ToBusConnectionId(BusConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
 }

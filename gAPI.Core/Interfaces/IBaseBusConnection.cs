@@ -7,10 +7,10 @@ public interface IBaseBusConnection
 {
     BusConnectionId BusConnectionId { get; }
 
-    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct);
-    Task SendAsync(BusRoutingDto routing, byte[] data, CancellationToken ct);
-    IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationToken ct);
+    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
+    Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
+    IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
 
-    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
+    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts);
     Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
 }

@@ -32,9 +32,9 @@ public interface IFabricClient : IAsyncDisposable
     Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct);
     Task UpdateSession(SessionId sessionId, string? cookieData, CancellationToken ct);
 
-    Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct);
-    Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct);
-    IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationToken ct);
+    Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource cts);
+    Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource cts);
+    IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource cts);
     
     Task BusStreamingRequestAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
     Task BusStreamingResponseAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);

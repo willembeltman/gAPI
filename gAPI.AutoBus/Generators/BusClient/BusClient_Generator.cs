@@ -45,6 +45,7 @@ public class BusClient_Generator : _BaseGenerator
         Reg("gAPI.Core.Serializers");
         Reg("gAPI.Core.Ids");
         Reg("System.Runtime.CompilerServices");
+        Reg("System");
         Reg(Interface);
         Reg(ServiceId);
         Reg(ServiceMethodId);
@@ -78,6 +79,7 @@ namespace {Namespace};
 public class {Name}(
     ILoggerFactory ___loggerFactory,
     {IBusConnection} ___busConnection,
+    TimeSpan? ___timeOut, 
     {DeliveryMode} ___deliveryMode,
     {BusChoiceType} ___to,
     {BusConnectionId}? ___busConnectionId = null)
@@ -117,9 +119,14 @@ public class {Name}(
         return $@"
     public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        // Onafhankelijke CTS met een kortere timeout (30s is zat voor een netwerk-queue actie)
-        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var ___ct = ___internalCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null 
+        ? $@"
+        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});
+        ___internalCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___internalCts.Token;" 
+        : $@"
+        using var ___internalCts = new CancellationTokenSource(___timeOut.Value);
+        var ___ct = ___internalCts.Token;")}
 
         try
         {{
@@ -128,6 +135,7 @@ public class {Name}(
                 {RequestId}.New(),
                 ___ServiceId,
                 new(""{method}""),
+                ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
                 ___busConnectionId
@@ -136,7 +144,7 @@ public class {Name}(
                 {arg.Name}"))});
 
             {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-            ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, ___ct);" : ""))}
+            ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, ___internalCts);" : ""))}
         
             {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
             try" : "")}
@@ -145,7 +153,7 @@ public class {Name}(
                 await ___busConnection.SendFireAndForgetAsync(
                     ___routing,
                     ___payload, 
-                    ___ct);
+                    ___internalCts);
             }}
             {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
             finally
@@ -171,30 +179,36 @@ public class {Name}(
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        //if (___Logger.IsEnabled(LogLevel.Trace))
-        //    ___Logger.LogTrace(""{{now}}, {method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})"", DateTime.Now.ToString(""HH:mm:ss.fff""){string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});
+        ___internalCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___internalCts.Token;"
+        : $@"
+        using var ___internalCts = new CancellationTokenSource(___timeOut.Value);
+        var ___ct = ___internalCts.Token;")}
 
         var ___routing = new {BusRoutingDto}(
             ___busConnection.BusConnectionId,
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            ___timeOut.Value,
             ___deliveryMode,
             ___to,
             ___busConnectionId
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
-
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___internalCts);" : ""))}
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
-                {(ct == null ? "___Cts.Token" : ct.Name)});
+                ___internalCts);
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
@@ -209,14 +223,21 @@ public class {Name}(
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        //if (___Logger.IsEnabled(LogLevel.Trace))
-        //    ___Logger.LogTrace(""{{now}}, {method.Name}({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@"{{{arg.Name}}}"))})"", DateTime.Now.ToString(""HH:mm:ss.fff""){string.Join("", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false).Select(arg => $@", {arg.Name}"))});
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});
+        ___internalCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___internalCts.Token;"
+        : $@"
+        using var ___internalCts = new CancellationTokenSource(___timeOut.Value);
+        var ___ct = ___internalCts.Token;")}
 
         var ___routing = new {BusRoutingDto}(
             ___busConnection.BusConnectionId,
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            ___timeOut.Value,
             ___deliveryMode,
             ___to,
             ___busConnectionId
@@ -224,20 +245,21 @@ public class {Name}(
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___internalCts);" : ""))}
        
         var ___responses = ___busConnection.InvokeAsync(
             ___routing, 
             ___payload, 
-            {(ct == null ? "___Cts.Token" : ct.Name)});
-
+            ___internalCts);
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
             await foreach (var ___response in ___responses)
             {{
-                if ({(ct == null ? "___Cts.Token" : ct.Name)}.IsCancellationRequested)
+                if (___ct.IsCancellationRequested)
                     yield break;
+                
+                ___internalCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);

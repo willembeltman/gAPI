@@ -5,8 +5,8 @@ namespace gAPI.Test.AutoBus.Shared;
 [GenerateBus]
 public interface IService1
 {
-    void WriteLine(string message);
-    Task WriteLineAsync(string message);
-    IAsyncEnumerable<string> Get(string name);
-    Task Test(IAsyncEnumerable<string> test);
+    void WriteLine(string message, CancellationToken ct);
+    Task WriteLineAsync(string message, CancellationToken ct);
+    IAsyncEnumerable<string> Get(string name, CancellationToken ct);
+    Task Test(IAsyncEnumerable<string> test, CancellationToken ct);
 }

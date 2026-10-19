@@ -15,7 +15,7 @@ public abstract class BaseFabricConnection(
     : IBaseFabricConnection
 {
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
-    private readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
+    private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
 
@@ -38,12 +38,12 @@ public abstract class BaseFabricConnection(
         => fabricClient.BusUnsubscribeAsync(this, new(serviceId, BusConnectionId), ct);
 
     // This is called when a service has to be called through the service bus
-    public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
-        => fabricClient.BusSendFireAndForgetAsync(this, new(routing, data), ct);
-    public Task SendAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
-        => fabricClient.BusSendAsync(this, new(routing, data), ct);
-    public IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
-        => fabricClient.BusInvokeAsync(this, new(routing, data), ct);
+    public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)
+        => fabricClient.BusSendFireAndForgetAsync(this, new(routing, data), cts);
+    public Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)
+        => fabricClient.BusSendAsync(this, new(routing, data), cts);
+    public IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)
+        => fabricClient.BusInvokeAsync(this, new(routing, data), cts);
 
     // Callbacks from fabric
     public Task ReceiveFireAndForgetAsync(BusSendRequestDto requestDto, CancellationToken ct)
@@ -139,10 +139,10 @@ public abstract class BaseFabricConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
     {
-        StreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new AsyncEnumerableRegistration<T>(async (
-            ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>> activeStreams,
+        StreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (
+            ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> activeStreams,
             StreamId streamId,
             bool cancelled,
             CancellationToken ct) =>
@@ -151,8 +151,8 @@ public abstract class BaseFabricConnection(
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                    return new AsyncEnumerableRegistrationInstance<T>(
+                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, ct);
+                    return new BusAsyncEnumerableRegistrationInstance<T>(
                         source.GetAsyncEnumerator(linked.Token),
                         new SemaphoreSlim(1, 1),
                         linked);
@@ -189,7 +189,7 @@ public abstract class BaseFabricConnection(
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
-                cancellationToken.IsCancellationRequested)
+                cts.IsCancellationRequested)
             {
                 await Cleanup();
 

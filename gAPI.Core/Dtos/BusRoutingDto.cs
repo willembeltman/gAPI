@@ -10,6 +10,7 @@ public record BusRoutingDto(
     RequestId RequestId,
     ServiceId ServiceId,
     ServiceMethodId MethodId,
+    TimeSpan TimeOut,
     DeliveryMode deliveryMode,
     BusToChoice To,
     BusConnectionId? ToBusConnectionId = null

@@ -108,7 +108,7 @@ public class {Name}
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
     {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
-    {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => GenerateMethods(ref functions, functionNames, Interface)))}
+    {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
     {functions}
 }}";
         Code = $"{GetNamespacesCode()}{Code}";
@@ -141,10 +141,6 @@ public class {Name}
     public async Task SubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
     {{
         await TryConnectAsync(___ct);
-
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{{now}} SubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
-
         await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
         try
         {{
@@ -165,10 +161,6 @@ public class {Name}
     {{
         if (!Initialized)
             return;
-
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{{now}} UnsubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
-
         await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
         try
         {{
@@ -189,8 +181,6 @@ public class {Name}
         var code = $@"
     protected override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{{now}} Send_SendRequest_ToServiceAsync({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
         {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
@@ -254,8 +244,6 @@ public class {Name}
         var code = $@"
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {{
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(""{{now}} Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
 {(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
 
         switch (___invokeRequest.Routing.ServiceId.Value)
@@ -329,98 +317,21 @@ public class {Name}
         return code;
     }
 
-    private string GenerateMethods(ref string functions2, HashSet<string> functionNames, Interface @interface)
+    private string GenerateMethodSerializers(ref string functions2, HashSet<string> functionNames, Interface @interface)
     {
         var functions = "";
-        var code = string.Join("\r\n", @interface.Methods.Select(method => GenerateMethod(ref functions, functionNames, @interface, method)));
+        var code = string.Join("\r\n", @interface.Methods.Select(method => GenerateMethodSerializer(ref functions, functionNames, @interface, method)));
         functions2 += functions;
         return code;
     }
-    private string GenerateMethod(ref string functions2, HashSet<string> functionNames, Interface @interface, InterfaceMethod method)
+    private string GenerateMethodSerializer(ref string functions2, HashSet<string> functionNames, Interface @interface, InterfaceMethod method)
     {
         var code = "";
         var functions = "";
 
-        if (method.ResponseType.IsTask)
-        {
-            //        code += $@"
-            //public async Task {@interface}_{method}(SendRequestDto ___sendRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            //.Select((arg, index) => (arg, index))
-            //.Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //.Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //: $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var ___client in ___clients)
-            //    {{
-            //        await ___client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //    }}
-            //}}";
-        }
-        if (method.ResponseType.IsTaskT)
-        {
-            var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
-            //        code += $@"
-            //public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
-            //        .Select((arg, index) => (arg, index))
-            //        .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //        .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //        ? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //        : $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var client in clients)
-            //    {{
-            //        var response = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //        {(returnTypeInner.IsHubResultT ? $@"
-            //        response.UserId = HttpClient.UserId;
-            //        response.SessionId = HttpClient.SessionId;
-            //        " : "")}
-            //        yield return {@interface}_{method}_Serializer(response);
-            //    }}
-            //}}";
-        }
-
         if (method.ResponseType.IsIAsyncEnumerable)
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
-            //        code = $@"
-            //public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
-            //        .Select((arg, index) => (arg, index))
-            //        .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //        .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //        ? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //        : $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var ___client in ___clients)
-            //    {{
-            //        var responses = ___client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //        await foreach (var response in responses)
-            //        {{{(returnTypeInner.IsHubResultT ? $@"
-            //            response.UserId = HttpClient.UserId;
-            //            response.SessionId = HttpClient.SessionId;
-            //            " : "")}
-            //            yield return {@interface}_{method}_Serializer(response);
-            //        }}
-            //    }}
-            //}}"; 
             code = $@"
     public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
     {{

@@ -1322,16 +1322,13 @@ public sealed class FabricClient : IFabricClient
         throw new NotImplementedException();
     }
 
-    public async Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct)
+    public async Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
     {
-        await Sender.Send_BusSendFireAndForget_ToFabricAsync(request, ct);
+        await Sender.Send_BusSendFireAndForget_ToFabricAsync(request, timeoutCts.Token);
     }
-    public async Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct)
+    public async Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
     {
-        CancellationTokenSource timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(100));
-        timeoutCts.Token.Register(() => { timeoutCts.Dispose(); });
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, ct);
-        ct = cts.Token;
+        var ct = timeoutCts.Token;
 
         var complete = new TaskCompletionSource<BusSendRequestAckDto>();
 
@@ -1341,7 +1338,7 @@ public sealed class FabricClient : IFabricClient
 
         await Sender.Send_BusSend_ToFabricAsync(request, ct);
 
-        var sendRequestAck = await complete.Task.WaitAsync(cts.Token);
+        var sendRequestAck = await complete.Task.WaitAsync(timeoutCts.Token);
     }
     private async Task Receive_BusSendAckAsync(BusSendRequestAckDto request, CancellationToken ct)
     {
@@ -1353,12 +1350,9 @@ public sealed class FabricClient : IFabricClient
         else
             complete.SetException(new Exception(request.Exception));
     }
-    public async IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource timeoutCts)
     {
-        CancellationTokenSource timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(100));
-        timeoutCts.Token.Register(() => { timeoutCts.Dispose(); });
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, ct);
-        ct = cts.Token;
+        var ct = timeoutCts.Token;
 
         var complete = new TaskCompletionSource<BusInvokeRequestAckDto>();
         if (StreamingCache.BusInvokes.TryAdd(request.Routing, complete) == false)

@@ -11,9 +11,9 @@ public static class CreateBusConfigExtension
         var maxPackageSizeStr = m.GetSection("MaxPackageSize").Value;
         int? maxPackageSize = int.TryParse(maxPackageSizeStr, out var parsedSize) ? parsedSize : null;
 
-        // Gebruik .Value of GetValue<string>() in plaats van .ToString() op de sectie
-        //var queueName = m.GetSection("QueueName").Value
-        //    ?? throw new Exception("QueueName not found in config");
+        // Gebruik.Value of GetValue<string>() in plaats van .ToString() op de sectie
+        var queueName = m.GetSection("QueueName").Value
+            ?? throw new Exception("QueueName not found in config");
 
         // Aspire vult dit nu automatisch in omdat de component "ServiceBus" heet in de AppHost
         var connectionString = m.GetConnectionString("ServiceBus")
@@ -21,7 +21,7 @@ public static class CreateBusConfigExtension
 
         return new ServiceBusConfig(
             maxPackageSize,
-            //queueName, 
+            queueName,
             connectionString);
     }
 }

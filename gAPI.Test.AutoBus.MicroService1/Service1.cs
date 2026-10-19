@@ -20,21 +20,21 @@ public class Service1(
         return busConnection.UnsubscribeAsync(this, ct);
     }
 
-    public void WriteLine(string message)
+    public void WriteLine(string message, CancellationToken ct)
     {
         Console.WriteLine($"From Microservice 1: {message}");
     }
 
-    public async Task WriteLineAsync(string message)
+    public async Task WriteLineAsync(string message, CancellationToken ct)
     {
         Console.WriteLine($"From Microservice 1: {message}");
     }
-    public async IAsyncEnumerable<string> Get(string name)
+    public async IAsyncEnumerable<string> Get(string name, CancellationToken ct)
     {
         yield return "hoi van 1";
     }
 
-    public async Task Test(IAsyncEnumerable<string> test)
+    public async Task Test(IAsyncEnumerable<string> test, CancellationToken ct)
     {
         await foreach (var item in test)
         {

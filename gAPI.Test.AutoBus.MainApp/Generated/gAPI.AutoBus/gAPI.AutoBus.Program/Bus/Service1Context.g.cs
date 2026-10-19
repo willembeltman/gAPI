@@ -12,10 +12,10 @@ public class Service1Context(
     IBusConnection busConnection)
     : IService1Context
 {
-    public IService1 ToAll(DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToAll);
-    public IService1 ToAny(DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToAny);
-    public IService1 ToBusConnectionId(BusConnectionId busConnectionId, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Service1Client(loggerFactory, busConnection, deliveryMode, BusToChoice.ToBusConnectionId, busConnectionId);
+    public IService1 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToAll);
+    public IService1 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToAny);
+    public IService1 ToBusConnectionId(BusConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Service1Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToBusConnectionId, busConnectionId);
 }
