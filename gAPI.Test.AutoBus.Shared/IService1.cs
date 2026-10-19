@@ -9,4 +9,6 @@ public interface IService1
     Task WriteLineAsync(string message, CancellationToken ct);
     IAsyncEnumerable<string> Get(string name, CancellationToken ct);
     Task Test(IAsyncEnumerable<string> test, CancellationToken ct);
+    IAsyncEnumerable<double> Ping(CancellationToken ct);
+    Task Pong(CancellationToken ct);
 }

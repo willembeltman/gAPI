@@ -9,4 +9,5 @@ public interface IService2
     Task WriteLineAsync(string message);
     IAsyncEnumerable<string> Get(string name);
     Task Test(IAsyncEnumerable<string> test);
+    Task Ping(CancellationToken ct);
 }

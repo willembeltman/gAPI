@@ -1,22 +1,32 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using gAPI.Generated;
 using gAPI.Test.AutoBus.Shared;
+using Microsoft.Extensions.Hosting;
 
 namespace gAPI.Test.AutoBus.Microservice2;
 
-public class Service2 : IService2, IHostedService
+public class Service2(
+    IBusContext busContext,
+    IBusConnection busConnection)
+    : IService2, IHostedService
 {
     public async IAsyncEnumerable<string> Get(string name)
     {
         yield return "Hoi from 2";
-        
+
+    }
+    public async Task StartAsync(CancellationToken ct)
+    {
+        await busConnection.SubscribeAsync(this, ct);
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken ct)
     {
+        await busConnection.UnsubscribeAsync(this, ct);
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public Task Ping(CancellationToken ct)
     {
+        return busContext.Service1.ToAny().Pong(ct);
     }
 
     public Task Test(IAsyncEnumerable<string> test)

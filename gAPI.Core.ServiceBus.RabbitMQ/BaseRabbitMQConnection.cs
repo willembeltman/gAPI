@@ -567,37 +567,36 @@ public abstract class BaseRabbitMQConnection(
     }
     private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.Token.Register(() =>
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(50);
+                _activeRequests.TryRemove(request.Routing.RequestId, out _);
+                timeoutCts.Dispose();
+            });
+        });
         ct = timeoutCts.Token;
 
+        BusInvokeRequestAckDto ack;
         try
         {
-            BusInvokeRequestAckDto ack;
-            try
-            {
-                var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
-                var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
-                RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-                ack = new BusInvokeRequestAckDto(responseRouting, null);
-            }
-            catch (Exception ex)
-            {
-                ack = new BusInvokeRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, ex.Message);
-            }
-            var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
-            byte[] ackData = CreateInvokeRequestAckData(ack);
-            await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
+            var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
+            var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
+            RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
+            ack = new BusInvokeRequestAckDto(responseRouting, null);
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            // Gecanceld via de bus! Stuur eventueel een geannuleerde ACK terug
+            ack = new BusInvokeRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, ex.Message);
         }
-        finally
-        {
-            _activeRequests.TryRemove(request.Routing.RequestId, out _);
-        }
+        var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
+        byte[] ackData = CreateInvokeRequestAckData(ack);
+        await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
+
     }
     //private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     //{
@@ -749,7 +748,10 @@ public abstract class BaseRabbitMQConnection(
                     }
                     await consumerChannel.BasicAckAsync(ea.DeliveryTag, multiple: false);
                 }
-                catch { await consumerChannel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true); }
+                catch
+                {
+                    await consumerChannel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
+                }
             };
             _streamingConsumerTag = await consumerChannel.BasicConsumeAsync(_streamingQueueName!, autoAck: false, consumer: consumer, cancellationToken: ct);
             _streamingConsumerChannel = consumerChannel;
@@ -981,9 +983,23 @@ public abstract class BaseRabbitMQConnection(
 
                         return response;
                     }
-                    catch (OperationCanceledException ex) { await Cleanup(); return new BusStreamingResponseDto(routing, argumentIndex, streamId, true, true, ex.Message, []); }
-                    catch (Exception ex) { await Cleanup(); return new BusStreamingResponseDto(routing, argumentIndex, streamId, true, false, ex.Message, []); }
-                    finally { if (entered) gate.Release(); }
+                    catch (OperationCanceledException ex)
+                    {
+                        await Cleanup();
+                        return new BusStreamingResponseDto(
+                            routing, argumentIndex, streamId, true, true, ex.Message, []);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Cleanup();
+                        return new BusStreamingResponseDto(
+                            routing, argumentIndex, streamId, true, false, ex.Message, []);
+                    }
+                    finally
+                    {
+                        if (entered)
+                            gate.Release();
+                    }
                 }));
     }
 

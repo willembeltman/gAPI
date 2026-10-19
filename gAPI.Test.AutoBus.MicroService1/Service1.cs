@@ -1,23 +1,27 @@
 ﻿using gAPI.Generated;
 using gAPI.Test.AutoBus.Shared;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace gAPI.Test.AutoBus.MicroService1;
 
 public class Service1(
+    IBusContext busContext,
     IBusConnection busConnection)
     : IService1
     , IHostedService
 {
 
-    public Task StartAsync(CancellationToken ct)
+
+    public async Task StartAsync(CancellationToken ct)
     {
-        return busConnection.SubscribeAsync(this, ct);
+        await busConnection.SubscribeAsync(this, ct);
     }
 
-    public  Task StopAsync(CancellationToken ct)
+    public async Task StopAsync(CancellationToken ct)
     {
-        return busConnection.UnsubscribeAsync(this, ct);
+        await busConnection.UnsubscribeAsync(this, ct);
     }
 
     public void WriteLine(string message, CancellationToken ct)
@@ -39,5 +43,27 @@ public class Service1(
         await foreach (var item in test)
         {
         }
+    }
+
+    Stopwatch? stopwatch;
+    TaskCompletionSource<double>? complete;
+
+    public async IAsyncEnumerable<double> Ping(CancellationToken ct)
+    {
+        for (int i = 0; i < 20; i++)
+        {
+            stopwatch = Stopwatch.StartNew();
+            complete = new TaskCompletionSource<double>();
+
+            await busContext.Service2.ToAny().Ping(ct);
+            yield return await complete.Task.WaitAsync(ct);
+        }
+    }
+
+    public async Task Pong(CancellationToken ct)
+    {
+        if (stopwatch == null || complete == null)
+            return;
+        complete.SetResult(stopwatch.Elapsed.TotalMilliseconds);
     }
 }
