@@ -8,6 +8,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\gAPI.Core.ServiceBus\gAPI.Core.ServiceBus.csproj" />
 	</ItemGroup>
 
