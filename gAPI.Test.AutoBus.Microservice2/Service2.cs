@@ -5,9 +5,10 @@ namespace gAPI.Test.AutoBus.Microservice2;
 
 public class Service2 : IService2, IHostedService
 {
-    public IAsyncEnumerable<string> Get(string name)
+    public async IAsyncEnumerable<string> Get(string name)
     {
-        throw new NotImplementedException();
+        yield return "Hoi from 2";
+        
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)

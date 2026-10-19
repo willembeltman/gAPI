@@ -34,8 +34,11 @@ public class Service1(
         yield return "hoi van 1";
     }
 
-    public Task Test(IAsyncEnumerable<string> test)
+    public async Task Test(IAsyncEnumerable<string> test)
     {
-        throw new NotImplementedException();
+        await foreach (var item in test)
+        {
+
+        }
     }
 }
