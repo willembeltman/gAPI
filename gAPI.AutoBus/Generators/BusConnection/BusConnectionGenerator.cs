@@ -98,7 +98,7 @@ public class {Name}
         ILoggerFactory loggerFactory,{(OverloadFabricClient && IFabricClient != null ? $@"
         {IFabricClient} fabricClient," : "")}
         {ServiceBusConfig} serviceBusConfig)
-        : base({(OverloadFabricClient && IFabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
+        : base(loggerFactory, {(OverloadFabricClient && IFabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
     {{
         ___Logger = loggerFactory.CreateLogger<{Name}>();
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
@@ -150,7 +150,6 @@ public class {Name}
         {{
             {hub.CleanName.ToMultiple()}Lock.Release();
         }}
-
         await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
     }}"));
     }
@@ -170,7 +169,6 @@ public class {Name}
         {{
             {hub.CleanName.ToMultiple()}Lock.Release();
         }}
-
         await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
     }}"));
     }
@@ -180,8 +178,7 @@ public class {Name}
         var functions = "";
         var code = $@"
     protected override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{
-        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
+    {{{(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
             case ""{hub}"":
@@ -232,7 +229,6 @@ public class {Name}
                     break;
                 }}"))}
         }}" : "")}
-
         throw new Exception($""Service \""{{___sendRequest.Routing.ServiceId.Value}}\"" / Method \""{{___sendRequest.Routing.MethodId.Value}}\"" not found"");
     }}";
         functions2 += functions;
@@ -243,9 +239,7 @@ public class {Name}
         var functions2 = "";
         var code = $@"
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
-    {{
-{(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
-
+    {{{(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
             case ""{hub}"":
@@ -310,7 +304,6 @@ public class {Name}
                     break;
                 }}"))}
         }}" : "yield break;")}
-
         throw new Exception($""Service \""{{___invokeRequest.Routing.ServiceId.Value}}\"" / Method \""{{___invokeRequest.Routing.MethodId.Value}}\"" not found"");
     }}";
         functions3 += functions2;

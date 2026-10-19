@@ -30,8 +30,10 @@ public class MainService(
             yield return "Hoi hoi";
             yield return "Hoi hoi";
             yield return "Hoi hoi";
+            throw new Exception("hoi");
             yield return "Hoi hoi";
-        };
+        }
+        ;
         await busContext.Service1.ToAny().Test(test(), ct); 
         // Deze komt aan, doet 1 yield, en valt er dan doorheen de functie uit.
         // Ik heb zelfs het gevoel dat hij eruit valt, wat de enumerator disposed en daardoor helemaal stopt,

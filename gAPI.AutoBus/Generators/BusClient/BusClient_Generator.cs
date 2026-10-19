@@ -163,12 +163,11 @@ public class {Name}(
         }}
         catch (OperationCanceledException)
         {{
-            ___Logger.LogInformation(""Server FireAndForget streaming gecanceld of time-out voor {method.Name}."");
+            ___Logger.LogInformation(""Server FireAndForget streaming canceled or timed out for WriteLine."");
         }}
         catch (Exception ex)
         {{
-            // Voorkomt dat een crash in de netwerk-laag van de fabric je server-instantie omtrekt
-            ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
+            ___Logger.LogError(ex, ""Exception caught in generated server async void method for WriteLine"");
         }}
     }}";
     }

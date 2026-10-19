@@ -38,7 +38,6 @@ public class Service1(
     {
         await foreach (var item in test)
         {
-
         }
     }
 }

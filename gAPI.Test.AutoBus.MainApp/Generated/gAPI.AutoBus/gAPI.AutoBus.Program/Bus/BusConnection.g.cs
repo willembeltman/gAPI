@@ -26,7 +26,7 @@ public class BusConnection
     public BusConnection(
         ILoggerFactory loggerFactory,
         ServiceBusConfig serviceBusConfig)
-        : base(serviceBusConfig)
+        : base(loggerFactory, serviceBusConfig)
     {
         ___Logger = loggerFactory.CreateLogger<BusConnection>();
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
@@ -79,7 +79,6 @@ public class BusConnection
         {
             Service1sLock.Release();
         }
-
         await SendSubscribeAsync(service1, new ServiceId("IService1"), ___ct);
     }
     public async Task SubscribeAsync(IService2 service2, CancellationToken ___ct = default)
@@ -94,7 +93,6 @@ public class BusConnection
         {
             Service2sLock.Release();
         }
-
         await SendSubscribeAsync(service2, new ServiceId("IService2"), ___ct);
     }
     public async Task UnsubscribeAsync(IService1 service1, CancellationToken ___ct = default)
@@ -110,7 +108,6 @@ public class BusConnection
         {
             Service1sLock.Release();
         }
-
         await SendUnsubscribeAsync(service1, new ServiceId("IService1"), ___ct);
     }
     public async Task UnsubscribeAsync(IService2 service2, CancellationToken ___ct = default)
@@ -126,13 +123,11 @@ public class BusConnection
         {
             Service2sLock.Release();
         }
-
         await SendUnsubscribeAsync(service2, new ServiceId("IService2"), ___ct);
     }
     
     protected override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
     {
-        
         switch (___sendRequest.Routing.ServiceId.Value)
         {
             case "IService1":
@@ -229,13 +224,10 @@ public class BusConnection
                     break;
                 }
         }
-
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
-
-
         switch (___invokeRequest.Routing.ServiceId.Value)
         {
             case "IService1":
@@ -288,7 +280,6 @@ public class BusConnection
                     break;
                 }
         }
-
         throw new Exception($"Service \"{___invokeRequest.Routing.ServiceId.Value}\" / Method \"{___invokeRequest.Routing.MethodId.Value}\" not found");
     }
     
