@@ -53,7 +53,8 @@ namespace {Namespace};
 public class {Name}(
     {FabricClient} ___FabricClient,
     {UserId}? ___UserId = null,
-    {SessionId}? ___SessionId = null)
+    {SessionId}? ___SessionId = null,
+    TimeSpan? ___timeOut = null)
     : {Interface}
 {{
     private readonly {ServiceId} ___ServiceId = new {ServiceId}(""{Interface}"");
@@ -135,10 +136,11 @@ public class {Name}(
         {string.Join(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
-    {{{(cancellationToken == null ? $@"
+    {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(cancellationToken == null ? $@"
         var ___cts = new CancellationTokenSource();" : $@"
         var ___cts = CancellationTokenSource.CreateLinkedTokenSource({cancellationToken.Name});")}
-        ___cts.CancelAfter(TimeSpan.FromSeconds(100));
+        ___cts.CancelAfter(___timeOut.Value);
         var ___ct = ___cts.Token;
         _ = Task.Run(async () =>
         {{

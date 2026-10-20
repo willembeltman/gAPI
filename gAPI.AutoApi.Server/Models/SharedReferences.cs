@@ -14,7 +14,7 @@ public class SharedReferences
 
         StreamingRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingRequestClientDto", allSymbols);
         StreamingResponseClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseClientDto", allSymbols);
-        InvokeRequestDoneClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneClientDto", allSymbols);
+        InvokeRequestAckClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckClientDto", allSymbols);
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Sse.SseServiceSubscription", allSymbols);
@@ -52,5 +52,5 @@ public class SharedReferences
     public SharedReference AuthenticationOptions { get; }
     public SharedReference StreamingResponseClientDto { get; }
     public SharedReference StreamingRequestClientDto { get; }
-    public SharedReference InvokeRequestDoneClientDto { get; }
+    public SharedReference InvokeRequestAckClientDto { get; }
 }

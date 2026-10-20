@@ -14,6 +14,7 @@ public enum FabricClientToHostMessageEnum
 
     InvokeRequest,
     InvokeRequestCancelled,
+    InvokeRequestAck,
     InvokeRequestDone,
 
     StreamingRequestServerToClient,
@@ -35,15 +36,13 @@ public enum FabricClientToHostMessageEnum
 
     BusSendRequest,
     BusSendRequestCancelled,
-    BusSendRequestAck,
+    BusSendRequestDone,
 
     BusInvokeRequest,
     BusInvokeRequestCancelled,
     BusInvokeRequestAck,
+    BusInvokeRequestDone,
 
-    BusStreamingRequest_ResponseEnumerable,
-    BusStreamingResponse_ResponseEnumerable,
-
-    BusStreamingRequest_ArgumentEnumerable,
-    BusStreamingResponse_ArgumentEnumerable,
+    BusStreamingRequest,
+    BusStreamingResponse,
 }

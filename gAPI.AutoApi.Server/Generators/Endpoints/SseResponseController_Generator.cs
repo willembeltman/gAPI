@@ -30,7 +30,7 @@ public class SseResponseController_Generator : BaseGenerator
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference BaseResponse => Context.SharedReferences.BaseResponse;
 
-    public SharedReference InvokeRequestDoneClientDto => Context.SharedReferences.InvokeRequestDoneClientDto;
+    public SharedReference InvokeRequestAckClientDto => Context.SharedReferences.InvokeRequestAckClientDto;
     public SharedReference StreamingRequestClientDto => Context.SharedReferences.StreamingRequestClientDto;
     public SharedReference StreamingResponseClientDto => Context.SharedReferences.StreamingResponseClientDto;
 
@@ -53,7 +53,7 @@ public class SseResponseController_Generator : BaseGenerator
         Reg(ServiceId);
         Reg(SseServiceSubscription);
         Reg(BaseResponse);
-        Reg(InvokeRequestDoneClientDto);
+        Reg(InvokeRequestAckClientDto);
         Reg(StreamingResponseClientDto);
         Reg(StreamingCache);
         // TODO AANSLUITEN
@@ -71,12 +71,12 @@ public class SseResponseController(
     : ControllerBase
 {{
     [HttpPost(""invokerequestdone"")]
-    public async Task<ActionResult<{BaseResponse}>> InvokeRequestDone([FromForm] {InvokeRequestDoneClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
+    public async Task<ActionResult<{BaseResponse}>> InvokeRequestAck([FromForm] {InvokeRequestAckClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
     {{
         if (message.StateIsChanged)
             await authenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        await fabricClient.Send_FabricInvokeRequestDone_ToFabricAsync(message, ct);
+        await fabricClient.Send_FabricInvokeRequestAck_ToFabricAsync(message, ct);
 
         return Ok(new {BaseResponse}() {{ Success = true }});
     }}

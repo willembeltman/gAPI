@@ -186,6 +186,10 @@ public abstract class WssServerConnection : IWssServerConnection
                             var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset);
                             await Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
                             break;
+                        case WssClientToServerMessageEnum.FabricInvokeRequestAck:
+                            var fabricInvokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset);
+                            await Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
+                            break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestDone:
                             var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
                             await Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
@@ -400,11 +404,9 @@ public abstract class WssServerConnection : IWssServerConnection
 
                 var stateIsChanged = AuthenticationService.IsStateDataChanged();
                 var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-                await Sender.Send_InvokeRequestDone_ToClientAsync(
-                    new InvokeRequestDoneClientDto(
+                await Sender.Send_InvokeRequestAck_ToClientAsync(
+                    new InvokeRequestAckClientDto(
                         message.Routing,
-                        false,
-                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -445,14 +447,29 @@ public abstract class WssServerConnection : IWssServerConnection
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            await Sender.Send_InvokeRequestDone_ToClientAsync(
-                new InvokeRequestDoneClientDto(
+            await Sender.Send_InvokeRequestAck_ToClientAsync(
+                new InvokeRequestAckClientDto(
                     message.Routing,
-                    true,
-                    null,
                     stateIsChanged,
                     stateData
                 ), ct);
+        }, ct);
+    }
+    private async Task Receive_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_InvokeRequestAck_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (message.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+            // Voor als er geen fabric is
+            if (StreamingCache.PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+                completion.TrySetResult(message);
+            else
+                await FabricClient.Send_FabricInvokeRequestAck_ToFabricAsync(message, ct);
         }, ct);
     }
     private async Task Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
@@ -470,14 +487,6 @@ public abstract class WssServerConnection : IWssServerConnection
                 completion.TrySetResult(message);
             else
                 await FabricClient.Send_FabricInvokeRequestDone_ToFabricAsync(message, ct);
-
-            //if (FabricClient.PendingInvokeRequests.TryRemove(invokeRequestDone.Routing.RequestId, out var completion2))
-            //    completion2.TrySetResult(invokeRequestDone);
-
-            //else if (FabricClient.IsConnected)
-            //    await FabricClient.Send_InvokeRequestDone_ToFabricAsync(invokeRequestDone, ct); //Moet dit?
-
-            //StreamingCache.ArgumentRoutes.TryRemove(invokeRequestDone.Routing, out _);
         }, ct);
     }
 
@@ -623,7 +632,7 @@ public abstract class WssServerConnection : IWssServerConnection
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
-        var completion = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -636,10 +645,7 @@ public abstract class WssServerConnection : IWssServerConnection
             var cancelledFromClient = false;
             try
             {
-                var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
-                if (response.ExceptionMessage != null)
-                    throw new Exception(response.ExceptionMessage);
-                cancelledFromClient = response.Cancelled;
+                await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
             }
             catch (TaskCanceledException)
             {
@@ -647,8 +653,6 @@ public abstract class WssServerConnection : IWssServerConnection
                 stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
                 await Sender.Send_FabricInvokeRequestCancelled_ToClientAsync(new InvokeRequestCancelledClientDto(invokeRequest.Routing, "Task is cancelled", stateIsChanged, stateData), ct);
             }
-            if (cancelledFromClient)
-                throw new TaskCanceledException();
 
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
             await foreach (var item in enumerable)

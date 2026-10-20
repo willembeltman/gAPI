@@ -170,7 +170,7 @@ public class SseServiceSubscription : IServiceSubscription
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
-        var completion = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -186,12 +186,7 @@ public class SseServiceSubscription : IServiceSubscription
 
         try
         {
-            var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
-            if (response.Cancelled)
-                throw new TaskCanceledException();
-            if (response.ExceptionMessage != null)
-                throw new Exception(response.ExceptionMessage);
-
+            var response = await completion.Task.WaitAsync(invokeRequest.Routing.Timeout, ct);
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
             await foreach (var item in enumerable)
                 yield return item;

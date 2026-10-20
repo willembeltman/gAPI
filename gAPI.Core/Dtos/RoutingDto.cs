@@ -11,7 +11,9 @@ public record RoutingDto(
     RequestId RequestId,
     ServiceId ServiceId,
     ServiceMethodId MethodId,
-    
+
+    TimeSpan Timeout,
+
     UserId? UserId,
     SessionId? SessionId
     );

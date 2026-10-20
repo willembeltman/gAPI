@@ -12,6 +12,7 @@ public enum WssClientToServerMessageEnum
 
     InvokeRequest,
     InvokeRequestCancelled,
+    FabricInvokeRequestAck,
     FabricInvokeRequestDone,
 
     StreamingRequest,

@@ -22,8 +22,8 @@ public class SharedReferences
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
-        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
-        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
+        InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
+        InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
         IClientLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
@@ -63,7 +63,7 @@ public class SharedReferences
     public SharedReference UnsubscribeDto { get; }
     public SharedReference InvokeRequestDto { get; }
     public SharedReference StreamingResponseDto { get; }
-    public SharedReference InvokeRequestDoneDto { get; }
+    public SharedReference InvokeRequestAckDto { get; }
     public SharedReference WssClientConnection { get; }
     public SharedReference IClientLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }

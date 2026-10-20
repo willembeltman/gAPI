@@ -10,6 +10,21 @@ public class SseClientSender(SseClient sseClient)
     public SseClient SseClient { get; } = sseClient;
     public IClientAuthenticatedHttpClient HttpClient => SseClient.HttpClient;
 
+    public async Task Send_InvokeRequestAck_ToServerAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    {
+        try
+        {
+            var content = new MultipartFormDataContent();
+            content.Write("message", message);
+
+            using var response = await HttpClient.PostAsync("/SseServiceSubscription/InvokeRequestAck", content, ct);
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
     public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
     {
         try
@@ -59,6 +74,7 @@ public class SseClientSender(SseClient sseClient)
             throw;
         }
     }
+
 
 
 

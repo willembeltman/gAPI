@@ -70,7 +70,7 @@ public abstract class BaseFabricConnection(
         if (StreamingRequestHandlers.TryGetValue(key, out var responseHandler) == false)
             return;
         var response = await responseHandler.Invoke(requestDto.StreamId, requestDto.Cancelled, ct);
-        await SendStreamingResponseAsync(response, ct);
+        await Send_BusStreamingResponse_ToFabricAsync(response, ct);
     }
     public async Task ReceiveStreamingResponseAsync(BusStreamingResponseDto responseDto, CancellationToken ct)
     {
@@ -120,7 +120,7 @@ public abstract class BaseFabricConnection(
 
             requestNext: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
-                return SendStreamingRequestAsync(
+                return Send_BusStreamingResponse_ToFabricAsync(
                     routing,
                     argumentIndex,
                     streamId,
@@ -130,7 +130,7 @@ public abstract class BaseFabricConnection(
 
             cancelled: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator) =>
             {
-                return SendStreamingRequestAsync(
+                return Send_BusStreamingResponse_ToFabricAsync(
                     routing,
                     argumentIndex,
                     streamId,
@@ -236,9 +236,9 @@ public abstract class BaseFabricConnection(
     }
 
     // Fabric proxy methods
-    private Task SendStreamingRequestAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
-        => fabricClient.BusStreamingRequestAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
-    private Task SendStreamingResponseAsync(BusStreamingResponseDto response, CancellationToken ct)
-        => fabricClient.BusStreamingResponseAsync(this, response, ct);
+    private Task Send_BusStreamingResponse_ToFabricAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
+        => fabricClient.Send_BusStreamingRequest_ToFabricAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
+    private Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
+        => fabricClient.Send_BusStreamingResponse_ToFabricAsync(this, response, ct);
 
 }

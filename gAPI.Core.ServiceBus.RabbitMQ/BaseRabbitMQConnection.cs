@@ -25,6 +25,7 @@ public abstract class BaseRabbitMQConnection(
     private const string InvokeRequestType = "invoke-request";
     private const string InvokeRequestCancelledType = "invoke-request-cancelled";
     private const string InvokeRequestAckType = "invoke-ack";
+    private const string InvokeRequestDoneType = "invoke-done";
     private const string StreamingRequestType = "streaming-request";
     private const string StreamingResponseType = "streaming-response";
 
@@ -140,7 +141,7 @@ public abstract class BaseRabbitMQConnection(
             var replyQueue = await replyConsumerChannel.QueueDeclareAsync(
                 queue: "", durable: false, exclusive: true, autoDelete: true, cancellationToken: ct);
 
-            var ackCompletion = new TaskCompletionSource<BusSendRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var ackCompletion = new TaskCompletionSource<BusSendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             var consumer = new AsyncEventingBasicConsumer(replyConsumerChannel);
             consumer.ReceivedAsync += (_, ea) =>
@@ -151,7 +152,7 @@ public abstract class BaseRabbitMQConnection(
                 try
                 {
                     var offset = 0;
-                    var ack = BusSendRequestAckDtoSpanSerializer.ReadBusSendRequestAckDto(ea.Body.Span, ref offset);
+                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(ea.Body.Span, ref offset);
                     ackCompletion.TrySetResult(ack);
                 }
                 catch (Exception ex)
@@ -165,8 +166,8 @@ public abstract class BaseRabbitMQConnection(
 
             await PublishAsync(routing, data, isInvoke: false, ct, replyTo: replyQueue.QueueName, correlationId: correlationId);
 
-            timeoutCts.CancelAfter(routing.TimeOut);
-            var ackResult = await ackCompletion.Task.WaitAsync(routing.TimeOut, ct);
+            timeoutCts.CancelAfter(routing.Timeout);
+            var ackResult = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
             if (ackResult.ExceptionMessage != null)
                 throw new RemoteException(ackResult.ExceptionMessage);
@@ -199,20 +200,44 @@ public abstract class BaseRabbitMQConnection(
             var consumer = new AsyncEventingBasicConsumer(replyConsumerChannel);
             consumer.ReceivedAsync += (_, ea) =>
             {
-                timeoutCts.CancelAfter(routing.TimeOut);
+                timeoutCts.CancelAfter(routing.Timeout);
 
-                if (ea.BasicProperties.CorrelationId != correlationId || ea.BasicProperties.Type != InvokeRequestAckType)
+                if (ea.BasicProperties.CorrelationId != correlationId)
                     return Task.CompletedTask;
 
-                try
+                if (ea.BasicProperties.Type == InvokeRequestAckType)
                 {
-                    var offset = 0;
-                    var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(ea.Body.Span, ref offset);
-                    if (ack != null) ackCompletion.TrySetResult(ack);
+                    try
+                    {
+                        var offset = 0;
+                        var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(ea.Body.Span, ref offset);
+                        if (ack != null) ackCompletion.TrySetResult(ack);
+                    }
+                    catch (Exception ex)
+                    {
+                        ackCompletion.TrySetException(ex);
+                    }
                 }
-                catch (Exception ex)
+                if (ea.BasicProperties.Type == InvokeRequestDoneType)
                 {
-                    ackCompletion.TrySetException(ex);
+                    try
+                    {
+                        var offset = 0;
+                        var ack = BusInvokeRequestDoneDtoSpanSerializer.ReadBusInvokeRequestDoneDto(ea.Body.Span, ref offset);
+                        if (ack != null)
+                        {
+                            if (ack.Cancelled)
+                                ackCompletion.SetCanceled(ct);
+                            else if (ack.ExceptionMessage != null)
+                                ackCompletion.SetException(new RemoteException(ack.ExceptionMessage));
+                            else
+                                ackCompletion.SetCanceled(ct);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ackCompletion.TrySetException(ex);
+                    }
                 }
                 return Task.CompletedTask;
             };
@@ -222,11 +247,8 @@ public abstract class BaseRabbitMQConnection(
             // STAP 1 & 2: => Invoke sturen & wachten op de InvokeAck / InvokeDone
             await PublishAsync(routing, data, isInvoke: true, ct, replyTo: replyQueue.QueueName, correlationId: correlationId);
 
-            timeoutCts.CancelAfter(routing.TimeOut);
-            var ackResult = await ackCompletion.Task.WaitAsync(routing.TimeOut, ct);
-
-            if (ackResult.ExceptionMessage != null)
-                throw new RemoteException(ackResult.ExceptionMessage);
+            timeoutCts.CancelAfter(routing.Timeout);
+            var ackResult = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
             var streamId = StreamId.New();
             var argumentIndex = -1; // -1 representeert de return-stream van de methode
@@ -244,8 +266,8 @@ public abstract class BaseRabbitMQConnection(
                     await SendStreamingRequestAsync(ackResult.Routing, argumentIndex, streamId, cancelled: false, ct);
 
                     // STAP 4 & 6: <= Wacht op de StreamingResponse van de service
-                    timeoutCts.CancelAfter(routing.TimeOut);
-                    var responseResult = await responseCompletion.Task.WaitAsync(routing.TimeOut, ct);
+                    timeoutCts.CancelAfter(routing.Timeout);
+                    var responseResult = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
 
                     if (responseResult.ExceptionMessage != null)
                         throw new RemoteException(responseResult.ExceptionMessage);
@@ -510,7 +532,7 @@ public abstract class BaseRabbitMQConnection(
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
 
         try
@@ -533,21 +555,21 @@ public abstract class BaseRabbitMQConnection(
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
 
         try
         {
-            BusSendRequestAckDto ack;
+            BusSendRequestDoneDto ack;
             try
             {
                 var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token);
-                ack = new BusSendRequestAckDto(responseRouting, false, null);
+                ack = new BusSendRequestDoneDto(responseRouting, false, null);
             }
             catch (Exception ex)
             {
-                ack = new BusSendRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+                ack = new BusSendRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
             }
             var properties = new BasicProperties { Type = SendRequestAckType, CorrelationId = correlationId };
             var ackData = CreateSendRequestAckData(ack);
@@ -569,7 +591,7 @@ public abstract class BaseRabbitMQConnection(
     {
         var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         timeoutCts.Token.Register(() =>
         {
             Task.Run(async () =>
@@ -587,15 +609,18 @@ public abstract class BaseRabbitMQConnection(
             var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
             var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
             RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-            ack = new BusInvokeRequestAckDto(responseRouting, false, null);
+            ack = new BusInvokeRequestAckDto(responseRouting);
+            var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
+            byte[] ackData = CreateInvokeRequestAckData(ack);
+            await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
         }
         catch (Exception ex)
         {
-            ack = new BusInvokeRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+            var done = new BusInvokeRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+            var properties = new BasicProperties { Type = InvokeRequestDoneType, CorrelationId = correlationId };
+            byte[] ackData = CreateInvokeRequestDoneData(done);
+            await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
         }
-        var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
-        byte[] ackData = CreateInvokeRequestAckData(ack);
-        await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
 
     }
     //private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
@@ -1028,14 +1053,14 @@ public abstract class BaseRabbitMQConnection(
         BusSendRequestCancelledDtoSpanSerializer.Write(ref span, ref offset, sendrequestcancelled);
         return payload;
     }
-    private byte[] CreateSendRequestAckData(BusSendRequestAckDto ack)
+    private byte[] CreateSendRequestAckData(BusSendRequestDoneDto ack)
     {
         var offset = 0;
-        var length = BusSendRequestAckDtoSpanSerializer.Length(ref offset, ack);
+        var length = BusSendRequestDoneDtoSpanSerializer.Length(ref offset, ack);
         var ackData = new byte[length];
         offset = 0;
         var span = new Span<byte>(ackData);
-        BusSendRequestAckDtoSpanSerializer.Write(ref span, ref offset, ack);
+        BusSendRequestDoneDtoSpanSerializer.Write(ref span, ref offset, ack);
         return ackData;
     }
     private byte[] CreateInvokeRequestData(BusInvokeRequestDto invokerequest)
@@ -1066,6 +1091,16 @@ public abstract class BaseRabbitMQConnection(
         offset = 0;
         var span = new Span<byte>(data);
         BusInvokeRequestAckDtoSpanSerializer.Write(ref span, ref offset, ack);
+        return data;
+    }
+    private byte[] CreateInvokeRequestDoneData(BusInvokeRequestDoneDto ack)
+    {
+        var offset = 0;
+        var length = BusInvokeRequestDoneDtoSpanSerializer.Length(ref offset, ack);
+        var data = new byte[length];
+        offset = 0;
+        var span = new Span<byte>(data);
+        BusInvokeRequestDoneDtoSpanSerializer.Write(ref span, ref offset, ack);
         return data;
     }
     private byte[] CreateStreamingRequestData(BusStreamingRequestDto request)

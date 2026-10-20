@@ -46,12 +46,12 @@ public class {Name}(
     {FabricClient} fabricClient)
     : {IClientContext.Name}
 {{
-    public {Interface.Name} ToAll
-        => new {SseService.Name}(fabricClient);
-    public {Interface.Name} ToUser({UserId} userId)
-        => new {SseService.Name}(fabricClient, userId);
-    public {Interface.Name} ToSession({SessionId} sessionId)
-        => new {SseService.Name}(fabricClient, null, sessionId);
+    public {Interface.Name} ToAll(TimeSpan? timeOut = null)
+        => new {SseService.Name}(fabricClient, timeOut);
+    public {Interface.Name} ToUser({UserId} userId, TimeSpan? timeOut = null)
+        => new {SseService.Name}(fabricClient, userId, timeOut);
+    public {Interface.Name} ToSession({SessionId} sessionId, TimeSpan? timeOut = null)
+        => new {SseService.Name}(fabricClient, null, sessionId, timeOut);
 }}
 ";
     }

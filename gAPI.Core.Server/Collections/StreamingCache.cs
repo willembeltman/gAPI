@@ -9,13 +9,13 @@ namespace gAPI.Core.Server.Collections;
 public class StreamingCache
 {
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingClientSendRequests = [];
-    public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneDto>> PendingInvokeRequests = [];
+    public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckDto>> PendingInvokeRequests = [];
 
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingFabricSendRequests = [];
-    public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneDto>> PendingFabricInvokeRequests = [];
+    public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckDto>> PendingFabricInvokeRequests = [];
 
     //public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<ServerSendRequestDoneDto>> PendingServerSendRequests = [];
-    //public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<ServerInvokeRequestDoneDto>> PendingServerInvokeRequests = [];
+    //public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<ServerInvokeRequestAckDto>> PendingServerInvokeRequests = [];
 
 
     public readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
@@ -23,14 +23,11 @@ public class StreamingCache
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseDto>> StreamingResponseHandlers = [];
 
-    public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> ServerStreamingRequestHandlers = [];
-    public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<ServerStreamingResponseDto>> ServerStreamingResponseHandlers = [];
-
 
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> BusStreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> BusStreamingResponseHandlers = [];
 
-    public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusSendRequestAckDto>> BusSends = [];
+    public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusSendRequestDoneDto>> BusSends = [];
     public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusInvokeRequestAckDto>> BusInvokes = [];
 
     public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];

@@ -56,7 +56,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
 
     protected abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationToken ct);
     protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationToken ct);
-        
+
     public async Task TryConnectAsync(CancellationToken ct)
     {
         if (Initialized) return;
@@ -162,7 +162,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         var subOptions = new CreateSubscriptionOptions(replyTopic, replySub) { AutoDeleteOnIdle = TimeSpan.FromMinutes(2), RequiresSession = true };
         await _adminClient.CreateSubscriptionAsync(subOptions, ct);
 
-        var ackCompletion = new TaskCompletionSource<BusSendRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ackCompletion = new TaskCompletionSource<BusSendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var sessionProcessor = _client!.CreateSessionProcessor(replyTopic, replySub, new ServiceBusSessionProcessorOptions
         {
@@ -177,7 +177,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                 try
                 {
                     var offset = 0;
-                    var ack = BusSendRequestAckDtoSpanSerializer.ReadBusSendRequestAckDto(args.Message.Body.ToArray().AsSpan(), ref offset);
+                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(args.Message.Body.ToArray().AsSpan(), ref offset);
                     ackCompletion.TrySetResult(ack);
                     await args.CompleteMessageAsync(args.Message);
                 }
@@ -190,8 +190,8 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         try
         {
             await PublishAsync(routing, data, isInvoke: false, ct, replyTo: replyTopic, correlationId: correlationId);
-            timeoutCts.CancelAfter(routing.TimeOut);
-            var ackResult = await ackCompletion.Task.WaitAsync(routing.TimeOut, ct);
+            timeoutCts.CancelAfter(routing.Timeout);
+            var ackResult = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
             if (ackResult.ExceptionMessage != null) throw new RemoteException(ackResult.ExceptionMessage);
         }
@@ -224,7 +224,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         var sessionProcessor = _client!.CreateSessionProcessor(replyTopic, replySub, new ServiceBusSessionProcessorOptions { SessionIds = { BusConnectionId.ToString() } });
         sessionProcessor.ProcessMessageAsync += async args =>
         {
-            timeoutCts.CancelAfter(routing.TimeOut);
+            timeoutCts.CancelAfter(routing.Timeout);
             if (args.Message.CorrelationId == correlationId && args.Message.ApplicationProperties.TryGetValue(MessageTypeKey, out var type) && (string)type == InvokeRequestAckType)
             {
                 try
@@ -242,9 +242,9 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         try
         {
             await PublishAsync(routing, data, isInvoke: true, ct, replyTo: replyTopic, correlationId: correlationId);
-            timeoutCts.CancelAfter(routing.TimeOut);
-            var ackResult = await ackCompletion.Task.WaitAsync(routing.TimeOut, ct);
-            if (ackResult.ExceptionMessage != null) throw new RemoteException(ackResult.ExceptionMessage);
+            timeoutCts.CancelAfter(routing.Timeout);
+            var ackResult = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
+
             var streamId = StreamId.New();
             var argumentIndex = -1;
             var responseKey = new RequestArgumentIndexStreamDto(ackResult.Routing.RequestId, argumentIndex, streamId);
@@ -255,8 +255,8 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                     var responseCompletion = new TaskCompletionSource<BusStreamingResponseDto>(TaskCreationOptions.RunContinuationsAsynchronously);
                     StreamingResponseHandlers[responseKey] = response => responseCompletion.TrySetResult(response);
                     await SendStreamingRequestAsync(ackResult.Routing, argumentIndex, streamId, cancelled: false, ct);
-                    timeoutCts.CancelAfter(routing.TimeOut);
-                    var responseResult = await responseCompletion.Task.WaitAsync(routing.TimeOut, ct);
+                    timeoutCts.CancelAfter(routing.Timeout);
+                    var responseResult = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
                     if (responseResult.ExceptionMessage != null) throw new RemoteException(responseResult.ExceptionMessage);
                     if (responseResult.IsCompleted) break;
                     yield return responseResult.BinaryData;
@@ -375,11 +375,14 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         if (isSession)
         {
             var p = _client!.CreateSessionProcessor(topic, subscription, new ServiceBusSessionProcessorOptions { AutoCompleteMessages = false });
-            p.ProcessMessageAsync += async args => { await HandleIncomingMessageAsync(
+            p.ProcessMessageAsync += async args =>
+            {
+                await HandleIncomingMessageAsync(
                 args.Message,
                 message => args.CompleteMessageAsync(message, ct),
                 message => args.AbandonMessageAsync(message, null, ct),
-                args.CancellationToken); };
+                args.CancellationToken);
+            };
             p.ProcessErrorAsync += ProcessErrorAsync;
             await p.StartProcessingAsync(ct);
             return new SessionProcessorHandle(p);
@@ -387,11 +390,14 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         else
         {
             var p = _client!.CreateProcessor(topic, subscription, new ServiceBusProcessorOptions { AutoCompleteMessages = false });
-            p.ProcessMessageAsync += async args => { await HandleIncomingMessageAsync(
+            p.ProcessMessageAsync += async args =>
+            {
+                await HandleIncomingMessageAsync(
                 args.Message,
                 message => args.CompleteMessageAsync(message, ct),
                 message => args.AbandonMessageAsync(message, null, ct),
-                args.CancellationToken); };
+                args.CancellationToken);
+            };
             p.ProcessErrorAsync += ProcessErrorAsync;
             await p.StartProcessingAsync(ct);
             return new StandardProcessorHandle(p);
@@ -487,19 +493,19 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         try
         {
-            BusSendRequestAckDto ack;
+            BusSendRequestDoneDto ack;
             try
             {
                 var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token);
-                ack = new BusSendRequestAckDto(responseRouting, false, null);
+                ack = new BusSendRequestDoneDto(responseRouting, false, null);
             }
             catch (Exception ex)
             {
-                ack = new BusSendRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+                ack = new BusSendRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
             }
             var ackData = CreateSendRequestAckData(ack);
             var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
@@ -513,7 +519,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         try
         {
             BusInvokeRequestAckDto ack;
@@ -522,17 +528,22 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                 var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
                 RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-                ack = new BusInvokeRequestAckDto(responseRouting, false, null);
+                ack = new BusInvokeRequestAckDto(responseRouting);
+                var ackData = CreateInvokeRequestAckData(ack);
+                var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
+                message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;
+                var sender = _client!.CreateSender(replyTo);
+                await sender.SendMessageAsync(message, timeoutCts.Token);
             }
             catch (Exception ex)
             {
-                ack = new BusInvokeRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+                var done = new BusInvokeRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+                var doneData = CreateInvokeRequestDoneData(done);
+                var message = new ServiceBusMessage(doneData) { CorrelationId = correlationId, SessionId = sessionId };
+                message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;
+                var sender = _client!.CreateSender(replyTo);
+                await sender.SendMessageAsync(message, timeoutCts.Token);
             }
-            var ackData = CreateInvokeRequestAckData(ack);
-            var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
-            message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;
-            var sender = _client!.CreateSender(replyTo);
-            await sender.SendMessageAsync(message, timeoutCts.Token);
         }
         catch (OperationCanceledException) { }
         finally { _activeRequests.TryRemove(request.Routing.RequestId, out _); }
@@ -541,7 +552,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
-        timeoutCts.CancelAfter(request.Routing.TimeOut);
+        timeoutCts.CancelAfter(request.Routing.Timeout);
         try { await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token); }
         finally { _activeRequests.TryRemove(request.Routing.RequestId, out _); }
     }
@@ -691,14 +702,14 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         BusSendRequestCancelledDtoSpanSerializer.Write(ref span, ref offset, sendrequestcancelled);
         return payload;
     }
-    private byte[] CreateSendRequestAckData(BusSendRequestAckDto ack)
+    private byte[] CreateSendRequestAckData(BusSendRequestDoneDto ack)
     {
         var offset = 0;
-        var length = BusSendRequestAckDtoSpanSerializer.Length(ref offset, ack);
+        var length = BusSendRequestDoneDtoSpanSerializer.Length(ref offset, ack);
         var ackData = new byte[length];
         offset = 0;
         var span = new Span<byte>(ackData);
-        BusSendRequestAckDtoSpanSerializer.Write(ref span, ref offset, ack);
+        BusSendRequestDoneDtoSpanSerializer.Write(ref span, ref offset, ack);
         return ackData;
     }
     private byte[] CreateInvokeRequestData(BusInvokeRequestDto invokerequest)
@@ -729,6 +740,16 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         offset = 0;
         var span = new Span<byte>(data);
         BusInvokeRequestAckDtoSpanSerializer.Write(ref span, ref offset, ack);
+        return data;
+    }
+    private byte[] CreateInvokeRequestDoneData(BusInvokeRequestDoneDto ack)
+    {
+        var offset = 0;
+        var length = BusInvokeRequestDoneDtoSpanSerializer.Length(ref offset, ack);
+        var data = new byte[length];
+        offset = 0;
+        var span = new Span<byte>(data);
+        BusInvokeRequestDoneDtoSpanSerializer.Write(ref span, ref offset, ack);
         return data;
     }
     private byte[] CreateStreamingRequestData(BusStreamingRequestDto request)
@@ -770,7 +791,17 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         _lifetimeCts.Dispose(); SubscriptionLock.Dispose(); System.GC.SuppressFinalize(this);
     }
     private interface IProcessorHandle { Task CloseAsync(CancellationToken ct); }
-    private class StandardProcessorHandle(ServiceBusProcessor p) : IProcessorHandle { public Task CloseAsync(CancellationToken ct) => p.CloseAsync(ct); }
-    private class SessionProcessorHandle(ServiceBusSessionProcessor p) : IProcessorHandle { public Task CloseAsync(CancellationToken ct) => p.CloseAsync(ct); }
-    private class ServiceConsumerProcessorRegistration { public int SubscriptionCount { get; set; } public List<IProcessorHandle> Processors { get; } = []; }
+    private class StandardProcessorHandle(ServiceBusProcessor p) : IProcessorHandle
+    {
+        public Task CloseAsync(CancellationToken ct) => p.CloseAsync(ct);
+    }
+    private class SessionProcessorHandle(ServiceBusSessionProcessor p) : IProcessorHandle
+    {
+        public Task CloseAsync(CancellationToken ct) => p.CloseAsync(ct);
+    }
+    private class ServiceConsumerProcessorRegistration
+    {
+        public int SubscriptionCount { get; set; }
+        public List<IProcessorHandle> Processors { get; } = [];
+    }
 }

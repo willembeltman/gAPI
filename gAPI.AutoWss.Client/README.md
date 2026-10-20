@@ -188,7 +188,7 @@ public class ServerApi(
 {
     public async Task DoSomething(CancellationToken ct)
     {
-        await clientContext.ClientHub.ToAll.DoSomething(ct);
+        await clientContext.ClientHub.ToAll().DoSomething(ct);
     }
 
     public async Task<string> GetSomething(CancellationToken ct)
@@ -417,8 +417,8 @@ Beta
 				Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SendLocationAsync({location})", "hoi2");
 
 			authenticationService.State.TestNumber++;
-			await testHub.ToAll.TestCallAsync("Hello world", ct); // Option 1
-			await clientContext.TestHub.ToAll.TestCallAsync("Hello world", ct); // Option 2
+			await testHub.ToAll().TestCallAsync("Hello world", ct); // Option 1
+			await clientContext.TestHub.ToAll().TestCallAsync("Hello world", ct); // Option 2
 		}
 	}
 ```

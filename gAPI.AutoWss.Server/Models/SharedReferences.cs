@@ -27,7 +27,7 @@ public class SharedReferences
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
-        InvokeRequestDoneDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneDto", allSymbols);
+        InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
 
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServerAuthenticationService", allSymbols);
 
@@ -52,13 +52,6 @@ public class SharedReferences
             .Where(a => a.Implementation != null)
             .ToDictionary(a => a.Interface, a => a.Implementation!);
 
-
-        ServerSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerSendRequestDto", allSymbols);
-        ServerSendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerSendRequestCancelledDto", allSymbols);
-        ServerInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerInvokeRequestDto", allSymbols);
-        ServerInvokeRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerInvokeRequestCancelledDto", allSymbols);
-        ServerStreamingRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServerStreamingRequestDto", allSymbols);
-
     }
 
     public SharedReference FabricClient { get; }
@@ -73,8 +66,6 @@ public class SharedReferences
     public SharedReference InvokeRequestDto { get; }
     public SharedReference StreamingResponseDto { get; }
     public SharedReference IServerAuthenticationService { get; }
-    //public SharedReference IServiceRouter { get; }
-    //public SharedReference? OwnServiceRouter { get; }
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference AuthenticationHeaders { get; }
     public SharedReference SendRequestDto { get; }
@@ -85,14 +76,9 @@ public class SharedReferences
     public SharedReference StreamingCache { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference AuthenticationOptions { get; }
-    public SharedReference InvokeRequestDoneDto { get; }
+    public SharedReference InvokeRequestAckDto { get; }
     public SharedReference AuthenticationMiddleware { get; }
     public SharedReference WssServerConnection { get; }
     public SharedReference? OwnServerConnection { get; }
     public Dictionary<Interface, SharedReference> OwnHubs { get; }
-    public SharedReference ServerSendRequestDto { get; }
-    public SharedReference ServerSendRequestCancelledDto { get; }
-    public SharedReference ServerInvokeRequestDto { get; }
-    public SharedReference ServerInvokeRequestCancelledDto { get; }
-    public SharedReference ServerStreamingRequestDto { get; }
 }

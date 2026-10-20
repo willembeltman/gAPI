@@ -42,7 +42,7 @@ public class ServerConnection_Generator : _BaseGenerator
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
-    public SharedReference InvokeRequestDoneDto => Context.SharedReferences.InvokeRequestDoneDto;
+    public SharedReference InvokeRequestAckDto => Context.SharedReferences.InvokeRequestAckDto;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference WssServerConnection => Context.SharedReferences.WssServerConnection;

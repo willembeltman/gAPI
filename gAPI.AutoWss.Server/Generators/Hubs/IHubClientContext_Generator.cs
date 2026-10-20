@@ -39,9 +39,9 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {IClientHandler.Name} ToAll {{ get; }}
-    {IClientHandler.Name} ToUser({UserId} userId);
-    {IClientHandler.Name} ToSession({SessionId} userId);
+    {IClientHandler.Name} ToAll(TimeSpan? timeOut = null);
+    {IClientHandler.Name} ToUser({UserId} userId, TimeSpan? timeOut = null);
+    {IClientHandler.Name} ToSession({SessionId} userId, TimeSpan? timeOut = null);
 }}";
     }
 }

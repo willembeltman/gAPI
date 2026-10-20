@@ -36,7 +36,7 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
-    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneClientDto>> PendingInvokeRequests = [];
+    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequests = [];
     readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
     readonly byte[] ReceiveBuffer;
 
@@ -344,9 +344,9 @@ public abstract class WssClientConnection : IWssClientConnection
                         var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset);
                         await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
                         break;
-                    case WssServerToClientMessageEnum.InvokeRequestDone:
-                        var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
-                        await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
+                    case WssServerToClientMessageEnum.InvokeRequestAck:
+                        var invokeRequestDone = span.ReadInvokeRequestAckClientDto(ref offset);
+                        await Received_InvokeRequestAck_FromServerAsync(invokeRequestDone, ct);
                         break;
 
                     case WssServerToClientMessageEnum.StreamingRequest:
@@ -528,11 +528,9 @@ public abstract class WssClientConnection : IWssClientConnection
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-                await Sender.Send_InvokeRequestDone_ToServerAsync(
-                    new InvokeRequestDoneClientDto(
+                await Sender.Send_InvokeRequestAck_ToServerAsync(
+                    new InvokeRequestAckClientDto(
                         message.Routing,
-                        false,
-                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -573,14 +571,23 @@ public abstract class WssClientConnection : IWssClientConnection
 
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-            await Sender.Send_InvokeRequestDone_ToServerAsync(
-                new InvokeRequestDoneClientDto(
+            await Sender.Send_InvokeRequestAck_ToServerAsync(
+                new InvokeRequestAckClientDto(
                     message.Routing,
-                    true,
-                    null,
                     stateIsChanged,
                     stateData
                 ), ct);
+        }, ct);
+    }
+    private async Task Received_InvokeRequestAck_FromServerAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_InvokeRequestAck_FromServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
+                channel.TrySetResult(message);
         }, ct);
     }
     private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
@@ -590,8 +597,15 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now}: Received_InvokeRequestDone_FromServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var ___channel))
-                ___channel.TrySetResult(message);
+            if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
+            {
+                if (message.Cancelled)
+                    channel.SetCanceled(ct);
+                else if (message.ExceptionMessage != null)
+                    channel.SetException(new RemoteException(message.ExceptionMessage));
+                else
+                    channel.SetResult(new(message.Routing, message.StateIsChanged, message.StateData));
+            }
         }, ct);
     }
 
@@ -725,7 +739,8 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
-            ct.Register(async () => {
+            ct.Register(async () =>
+            {
                 var requestCancelled = new SendRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_SendRequestCancelled_ToServerAsync(requestCancelled, ct);
                 PendingSendRequests.TryRemove(routing.RequestId, out _);
@@ -756,13 +771,14 @@ public abstract class WssClientConnection : IWssClientConnection
 
         var completion = PendingInvokeRequests.GetOrAdd(
             routing.RequestId,
-            _ => new TaskCompletionSource<InvokeRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously));
+            _ => new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously));
 
         await Sender.Send_InvokeRequest_ToServerAsync(invokeRequest, ct);
 
         try
         {
-            ct.Register(async () => {
+            ct.Register(async () =>
+            {
                 var invokeCancelled = new InvokeRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_InvokeRequestCancelled_ToServerAsync(invokeCancelled, ct);
                 PendingSendRequests.TryRemove(routing.RequestId, out _);
@@ -773,9 +789,6 @@ public abstract class WssClientConnection : IWssClientConnection
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
                     ct);
-
-            if (response.ExceptionMessage != null)
-                throw new Exception(response.ExceptionMessage);
 
             var list = RegisterRemoteAsyncEnumerableArgumentByte(routing, -1);
             await foreach (var item in list)

@@ -23,7 +23,7 @@ public interface IFabricClient : IAsyncDisposable
     RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex);
     Task SendAsync(RoutingDto routing, byte[] data, CancellationToken ct);
     Task SendFireAndForgetAsync(RoutingDto routing, byte[] data, CancellationToken ct);
-    Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto message, CancellationToken ct);
+    Task Send_FabricInvokeRequestAck_ToFabricAsync(InvokeRequestAckDto message, CancellationToken ct);
     Task Send_FabricSendRequestDone_ToFabricAsync(SendRequestDoneDto done, CancellationToken ct);
     Task Send_StreamingRequestClientToServer_ToFabricAsync(StreamingRequestDto message, CancellationToken ct);
     Task Send_StreamingResponseClientToServer_ToFabricAsync(StreamingResponseDto message, CancellationToken ct);
@@ -36,8 +36,9 @@ public interface IFabricClient : IAsyncDisposable
     Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource cts);
     IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource cts);
     
-    Task BusStreamingRequestAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
-    Task BusStreamingResponseAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
+    Task Send_BusStreamingRequest_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
+    Task Send_BusStreamingResponse_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
     Task BusSubscribeAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct);
     Task BusUnsubscribeAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct);
+    Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto message, CancellationToken ct);
 }

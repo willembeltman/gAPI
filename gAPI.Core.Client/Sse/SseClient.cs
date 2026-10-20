@@ -273,11 +273,9 @@ public class SseClient : IDisposable
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-                await Sender.Send_InvokeRequestDone_ToServerAsync(
-                    new InvokeRequestDoneClientDto(
+                await Sender.Send_InvokeRequestAck_ToServerAsync(
+                    new InvokeRequestAckClientDto(
                         message.Routing,
-                        false,
-                        null,
                         stateIsChanged,
                         stateData
                     ), ct);

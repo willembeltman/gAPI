@@ -164,6 +164,22 @@ public class WssServerConnectionSender(
             return offset;
         }, ct);
     }
+    public async Task Send_InvokeRequestAck_ToClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_InvokeRequestAck_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_InvokeRequestAck_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.InvokeRequestAck);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
     public async Task Send_InvokeRequestDone_ToClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

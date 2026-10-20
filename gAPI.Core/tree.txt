@@ -78,8 +78,8 @@ D:.
 ¦       InvokeRequestCancelledClientDto.cs
 ¦       InvokeRequestCancelledDto.cs
 ¦       InvokeRequestClientDto.cs
-¦       InvokeRequestDoneClientDto.cs
-¦       InvokeRequestDoneDto.cs
+¦       InvokeRequestAckClientDto.cs
+¦       InvokeRequestAckDto.cs
 ¦       InvokeRequestDto.cs
 ¦       RequestArgumentIndexDto.cs
 ¦       RequestArgumentIndexStreamDto.cs

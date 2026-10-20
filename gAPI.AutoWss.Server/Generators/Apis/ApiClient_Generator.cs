@@ -155,6 +155,7 @@ public class {Name}(
                 ___requestId,
                 ___ServiceId,
                 new(""{method}""),
+                TimeSpan.FromSeconds(100),
                 ___userId,
                 ___sessionId
             );
@@ -197,6 +198,7 @@ public class {Name}(
             ___requestId,
             ___ServiceId,
             new(""{method}""),
+            TimeSpan.FromSeconds(100),
             ___userId,
             ___sessionId
         );
@@ -235,6 +237,7 @@ public class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            TimeSpan.FromSeconds(100),
             ___userId,
             ___sessionId
         );

@@ -50,12 +50,12 @@ public class {Name}(
     ILoggerFactory loggerFactory)
     : {IClientContext}
 {{
-    public {IClient} ToAll
-        => new {Client}(fabricClient, loggerFactory, null, null);
-    public {IClient} ToUser({UserId} userId)
-        => new {Client}(fabricClient, loggerFactory, null, userId);
-    public {IClient} ToSession({SessionId} sessionId)
-        => new {Client}(fabricClient, loggerFactory, sessionId, null);
+    public {IClient} ToAll(TimeSpan? timeOut = null)
+        => new {Client}(fabricClient, loggerFactory, null, null, timeOut);
+    public {IClient} ToUser({UserId} userId, TimeSpan? timeOut = null)
+        => new {Client}(fabricClient, loggerFactory, null, userId, timeOut);
+    public {IClient} ToSession({SessionId} sessionId, TimeSpan? timeOut = null)
+        => new {Client}(fabricClient, loggerFactory, sessionId, null, timeOut);
 }}";
     }
 }

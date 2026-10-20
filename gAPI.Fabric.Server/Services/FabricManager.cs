@@ -328,12 +328,12 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_InvokeRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_InvokeRequestAck_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestAckDto done, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
             if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_InvokeRequestDoneAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+                logger.LogTrace("{now}: Receive_InvokeRequestAckAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
 
             if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
                 return;
@@ -341,7 +341,29 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor?.EnqueueReceive(receiveSize);
 
+            // TODO
             state.ReadyTargets[caller.FabricConnectionId] = 0;
+
+            if (state.ReadyTargets.Count == state.Targets.Length)
+            {
+                await ReadyInvokeAsync(logger, state);
+            }
+        }, ct);
+    }
+    public async Task Receive_InvokeRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_InvokeRequestDone_FromApiAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            state.CompletedTargets[caller.FabricConnectionId] = 0;
             if (done.ExceptionMessage != null)
             {
                 state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
@@ -351,13 +373,26 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.ReadyTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Length)
             {
-                await ReadyInvokeAsync(logger, state);
+                await CompleteInvokeAsync(logger, state);
             }
         }, ct);
     }
     private async Task ReadyInvokeAsync(ILogger<FabricManager> logger, RequestState state)
+    {
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+
+        if (!state.TryReady())
+            return;
+
+        await state.Caller.Send_InvokeRequestAck_ToApiAsync(
+            new InvokeRequestAckDto(
+                state.Routing
+            ), state.Actor);
+    }
+    private async Task CompleteInvokeAsync(ILogger<FabricManager> logger, RequestState state)
     {
         if (logger.IsEnabled(LogLevel.Trace))
             logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
@@ -592,8 +627,8 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (fabricHosts.Length == 0)
             {
-                var ack = new BusSendRequestAckDto(request.Routing, false, $"No active service bus subscribers found for service '{request.Routing.ServiceId}'");
-                await caller.Send_BusSendRequestAck_ToApiAsync(ack, actor);
+                var ack = new BusSendRequestDoneDto(request.Routing, false, $"No active service bus subscribers found for service '{request.Routing.ServiceId}'");
+                await caller.Send_BusSendRequestDone_ToApiAsync(ack, actor);
                 return;
             }
 
@@ -641,7 +676,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusSendRequestAck_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestAckDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -681,8 +716,8 @@ public class FabricManager : IDashboardSnapshotGetter
         OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
 
         var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
-        await state.Caller.Send_BusSendRequestAck_ToApiAsync(
-            new BusSendRequestAckDto(
+        await state.Caller.Send_BusSendRequestDone_ToApiAsync(
+            new BusSendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
                 exceptionMessage
@@ -700,8 +735,8 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (fabricHosts.Length == 0)
             {
-                await caller.Send_BusSendRequestAck_ToApiAsync(
-                    new BusSendRequestAckDto(
+                await caller.Send_BusSendRequestDone_ToApiAsync(
+                    new BusSendRequestDoneDto(
                         request.Routing,
                         false,
                         $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}"),
@@ -767,6 +802,27 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor?.EnqueueReceive(receiveSize);
 
             state.ReadyTargets[caller.FabricConnectionId] = 0;
+
+            if (state.ReadyTargets.Count == state.Targets.Length)
+            {
+                await ReadyBusInvokeAsync(logger, state);
+            }
+        }, ct);
+    }
+    public async Task Receive_BusInvokeRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_BusInvokeRequestDoneAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenBusRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            state.CompletedTargets[caller.FabricConnectionId] = 0;
             if (done.ExceptionMessage != null)
             {
                 state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
@@ -776,9 +832,9 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.ReadyTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Length)
             {
-                await ReadyBusInvokeAsync(logger, state);
+                await CompleteBusInvokeAsync(logger, state);
             }
         }, ct);
     }
@@ -792,104 +848,117 @@ public class FabricManager : IDashboardSnapshotGetter
 
         await state.Caller.Send_BusInvokeRequestAck_ToApiAsync(
             new BusInvokeRequestAckDto(
+                state.Routing
+            ), state.Actor);
+    }
+    private async Task CompleteBusInvokeAsync(ILogger<FabricManager> logger, BusRequestState state)
+    {
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+
+        if (!state.TryReady())
+            return;
+
+        await state.Caller.Send_BusInvokeRequestDone_ToApiAsync(
+            new BusInvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
                 state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
             ), state.Actor);
     }
 
-    // De orginele iteratie op de InvokeRequest:
-    public async Task Receive_BusStreamingRequest_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_BusStreamingRequest_ResponseEnumerable_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+    //// De orginele iteratie op de InvokeRequest:
+    //public async Task Receive_BusStreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_BusStreamingRequest_ResponseEnumerable_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-            if (!OpenBusRequests.TryGetValue(request.Routing.RequestId, out var state))
-                return;
+    //        if (!OpenBusRequests.TryGetValue(request.Routing.RequestId, out var state))
+    //            return;
 
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var target in state.Targets)
-            {
-                await target.Send_BusStreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
-            }
-        }, ct);
-    }
-    public async Task Receive_BusStreamingResponse_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_BusStreamingResponse_ResponseEnumerable_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+    //        foreach (var target in state.Targets)
+    //        {
+    //            await target.Send_BusStreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
+    //        }
+    //    }, ct);
+    //}
+    //public async Task Receive_BusStreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_BusStreamingResponse_ResponseEnumerable_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
 
-            if (!OpenBusRequests.TryGetValue(response.Routing.RequestId, out var state))
-                return;
+    //        if (!OpenBusRequests.TryGetValue(response.Routing.RequestId, out var state))
+    //            return;
 
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
 
-            if (response.IsCompleted ||
-                response.IsCancelled ||
-                response.ExceptionMessage != null)
-            {
-                state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
+    //        if (response.IsCompleted ||
+    //            response.IsCancelled ||
+    //            response.ExceptionMessage != null)
+    //        {
+    //            state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
 
-                if (response.ExceptionMessage != null)
-                {
-                    state.Exceptions.TryAdd(
-                        caller.FabricConnectionId,
-                        response.ExceptionMessage);
-                }
+    //            if (response.ExceptionMessage != null)
+    //            {
+    //                state.Exceptions.TryAdd(
+    //                    caller.FabricConnectionId,
+    //                    response.ExceptionMessage);
+    //            }
 
-                if (response.IsCancelled)
-                {
-                    state.Cancel();
-                }
+    //            if (response.IsCancelled)
+    //            {
+    //                state.Cancel();
+    //            }
 
-                if (state.CompletedTargets.Count == state.Targets.Length &&
-                    state.TryComplete())
-                {
-                    OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
+    //            if (state.CompletedTargets.Count == state.Targets.Length &&
+    //                state.TryComplete())
+    //            {
+    //                OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
 
-                    response = new BusStreamingResponseDto(
-                        response.Routing,
-                        response.ArgumentIndex,
-                        response.StreamId,
-                        true,
-                        state.Cancelled,
-                        state.Exceptions.Count == 0
-                            ? null
-                            : string.Join(", ", state.Exceptions.Values),
-                        response.BinaryData);
+    //                response = new BusStreamingResponseDto(
+    //                    response.Routing,
+    //                    response.ArgumentIndex,
+    //                    response.StreamId,
+    //                    true,
+    //                    state.Cancelled,
+    //                    state.Exceptions.Count == 0
+    //                        ? null
+    //                        : string.Join(", ", state.Exceptions.Values),
+    //                    response.BinaryData);
 
-                    await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
-                        response,
-                        state.Actor);
-                }
+    //                await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
+    //                    response,
+    //                    state.Actor);
+    //            }
 
-                return;
-            }
+    //            return;
+    //        }
 
-            response = new BusStreamingResponseDto(
-                response.Routing,
-                response.ArgumentIndex,
-                response.StreamId,
-                false,
-                false,
-                null,
-                response.BinaryData);
+    //        response = new BusStreamingResponseDto(
+    //            response.Routing,
+    //            response.ArgumentIndex,
+    //            response.StreamId,
+    //            false,
+    //            false,
+    //            null,
+    //            response.BinaryData);
 
-            await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
-                response,
-                state.Actor);
-        }, ct);
-    }
+    //        await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
+    //            response,
+    //            state.Actor);
+    //    }, ct);
+    //}
 
     // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
-    public async Task Receive_BusStreamingRequest_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusStreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -908,7 +977,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusStreamingResponse_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusStreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
