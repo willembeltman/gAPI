@@ -1,4 +1,4 @@
-﻿using gAPI.Core.ServiceBus.Config;
+using gAPI.Core.ServiceBus.Config;
 using Microsoft.Extensions.Configuration;
 
 namespace gAPI.Core.ServiceBus.Extensions;
@@ -11,12 +11,13 @@ public static class CreateBusConfigExtension
         var maxPackageSizeStr = m.GetSection("MaxPackageSize").Value;
         int? maxPackageSize = int.TryParse(maxPackageSizeStr, out var parsedSize) ? parsedSize : null;
 
-        // Gebruik.Value of GetValue<string>() in plaats van .ToString() op de sectie
-        var queueName = m.GetSection("QueueName").Value
-            ?? throw new Exception("QueueName not found in config");
+        var queueName = m.GetSection("QueueName").Value ?? "Standard";
 
         // Aspire vult dit nu automatisch in omdat de component "ServiceBus" heet in de AppHost
         var connectionString = m.GetConnectionString("ServiceBus")
+            ?? m.GetConnectionString("Fabric")
+            ?? m.GetConnectionString("fabric")
+            ?? m.GetSection("FabricConnectionString").Value
             ?? throw new Exception("ServiceBus connectionstring not found in config");
 
         return new ServiceBusConfig(

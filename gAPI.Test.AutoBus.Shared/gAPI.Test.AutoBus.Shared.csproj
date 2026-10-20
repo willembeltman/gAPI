@@ -8,7 +8,8 @@
 
   <ItemGroup>
     <!--<ProjectReference Include="..\gAPI.Core.ServiceBus.AzureServiceBus\gAPI.Core.ServiceBus.AzureServiceBus.csproj" />-->
-    <ProjectReference Include="..\gAPI.Core.ServiceBus.RabbitMQ\gAPI.Core.ServiceBus.RabbitMQ.csproj" />
+    <!--<ProjectReference Include="..\gAPI.Core.ServiceBus.RabbitMQ\gAPI.Core.ServiceBus.RabbitMQ.csproj" />-->
+	  <ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
   </ItemGroup>
 
 </Project>

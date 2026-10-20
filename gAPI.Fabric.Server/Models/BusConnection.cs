@@ -1,0 +1,55 @@
+﻿using gAPI.Core.Ids;
+using gAPI.Fabric.Server.Interfaces;
+using gAPI.Fabric.Server.Services;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+
+namespace gAPI.Fabric.Server.Models;
+
+public class BusConnection : IActor
+{
+    public BusConnection(BusConnectionId busConnectionId, FabricHost connection)
+    {
+        BusConnectionId = busConnectionId;
+        Connection = connection;
+    }
+
+    public BusConnectionId BusConnectionId { get; }
+    public FabricHost Connection { get; }
+
+
+    public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
+
+    private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
+    private readonly ConcurrentQueue<(double time, long bytes)> ReceiveLogger = new();
+
+    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
+    {
+        var interval = 1.0;
+        var now = Stopwatch.Elapsed.TotalSeconds;
+
+        // Verwijder oude entries
+        while (queue.TryPeek(out var entry) && entry.time < now - interval)
+            queue.TryDequeue(out _);
+
+        var bytes = 0L;
+        var count = 0;
+        foreach (var item in queue)
+        {
+            bytes += item.bytes;
+            count++;
+        }
+        return new(count, bytes);
+    }
+    public (int count, long bytes) GetSendSpeed() => GetSpeed(SendLogger);
+    public (int count, long bytes) GetReceiveSpeed() => GetSpeed(ReceiveLogger);
+
+    public void EnqueueSend(long size)
+    {
+        SendLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
+    public void EnqueueReceive(long size)
+    {
+        ReceiveLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
+}

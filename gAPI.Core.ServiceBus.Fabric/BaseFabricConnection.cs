@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Interfaces;
@@ -27,6 +27,10 @@ public abstract class BaseFabricConnection(
     // This is called everytime something wants to subscribe
     public async Task TryConnectAsync(CancellationToken ct)
     {
+        if (!fabricClient.IsConnected)
+        {
+            await fabricClient.ConnectAsync();
+        }
     }
 
     // This is called AFTER the service has been registered for service routing

@@ -5,6 +5,9 @@ public enum FabricClientToHostMessageEnum
     Subscribe,
     Unsubscribe,
 
+    SendAndForgetRequest,
+    SendAndForgetRequestCancelled,
+
     SendRequest,
     SendRequestCancelled,
     SendRequestDone,
@@ -23,4 +26,24 @@ public enum FabricClientToHostMessageEnum
     UpdateSession,
     ClearSession,
     GetSessionCookieData,
+
+    BusSubscribe,
+    BusUnsubscribe,
+
+    BusFireAndForget,
+    BusFireAndForgetCancelled,
+
+    BusSendRequest,
+    BusSendRequestCancelled,
+    BusSendRequestAck,
+
+    BusInvokeRequest,
+    BusInvokeRequestCancelled,
+    BusInvokeRequestAck,
+
+    BusStreamingRequest_ResponseEnumerable,
+    BusStreamingResponse_ResponseEnumerable,
+
+    BusStreamingRequest_ArgumentEnumerable,
+    BusStreamingResponse_ArgumentEnumerable,
 }

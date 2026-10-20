@@ -1,4 +1,4 @@
-﻿using gAPI.AutoBus.Generators;
+using gAPI.AutoBus.Generators;
 using gAPI.AutoBus.Generators.BusClient;
 using gAPI.AutoBus.Generators.BusClientContext;
 using gAPI.AutoBus.Generators.BusConnection;
@@ -48,7 +48,7 @@ public class Generator
                 throw new Exception("You cannot have two service bus providers in the same project");
         if (SharedReferences.BaseFabricConnection != null)
             if (BusConnection == null)
-                BusConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseFabricConnection);
+                BusConnection = new BusConnectionGenerator(this, "Fabric", SharedReferences.BaseFabricConnection, overloadFabricClient: true);
             else
                 throw new Exception("You cannot have two or more service bus providers in the same project");
 

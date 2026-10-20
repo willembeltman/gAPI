@@ -1,4 +1,4 @@
-﻿using gAPI.Fabric.Server.Config;
+using gAPI.Fabric.Server.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -13,9 +13,15 @@ public static class CreateFabricConfigExtention
         {
             logLevel = logLevel2;
         }
+        var portStr = m["Port"];
+        int port = 9494;
+        if (int.TryParse(portStr, out var p) && p > 0)
+        {
+            port = p;
+        }
         var config = new FabricConfig()
         {
-            Port = Convert.ToInt32(m["Port"]),
+            Port = port,
             LogLevel = logLevel
         };
         return config;

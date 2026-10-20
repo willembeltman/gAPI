@@ -1,4 +1,4 @@
-﻿using gAPI.AutoBus.Helpers;
+using gAPI.AutoBus.Helpers;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,8 +29,11 @@ public class SharedReferences
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
         
         IFabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Interfaces.IFabricClient", allSymbols);
+        FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
+        SessionCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.SessionCache", allSymbols);
+        StreamingCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
+        ServiceSubscriptionCollection = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         DeliveryMode = SharedReferenceFinder.Find("gAPI.Core.Enums.DeliveryMode", allSymbols);
-
     }
 
     public SharedReference ServiceId { get; }
@@ -48,5 +51,9 @@ public class SharedReferences
     public SharedReference? BaseRabbitMQConnection { get; }
     public SharedReference? BaseAzureConnection { get; }
     public SharedReference? IFabricClient { get; }
+    public SharedReference? FabricClient { get; }
+    public SharedReference? SessionCache { get; }
+    public SharedReference? StreamingCache { get; }
+    public SharedReference? ServiceSubscriptionCollection { get; }
     public SharedReference DeliveryMode { get; }
 }

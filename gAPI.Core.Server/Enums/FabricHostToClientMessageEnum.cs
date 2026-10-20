@@ -2,6 +2,14 @@ namespace gAPI.Core.Server.Enums;
 
 public enum FabricHostToClientMessageEnum
 {
+    GetSessionCookieDataResponse,
+    SynchronizeFabricIds,
+    Log,
+
+
+    FabricSendAndForgetRequest,
+    FabricSendAndForgetRequestCancelled,
+
     FabricSendRequest,
     FabricSendRequestCancelled,
     SendRequestDone,
@@ -15,16 +23,23 @@ public enum FabricHostToClientMessageEnum
     StreamingRequestClientToServer,
     StreamingResponseClientToServer,
 
-    GetSessionCookieDataResponse,
-    SynchronizeFabricIds,
-    Log,
+
     BusSubscribeAck,
     BusUnsubscribeAck,
+
     BusFireAndForget,
+    BusFireAndForgetCancelled,
+
     BusSendRequest,
+    BusSendRequestCancelled,
     BusSendRequestAck,
+
     BusInvokeRequest,
+    BusInvokeRequestCancelled,
     BusInvokeRequestAck,
-    BusStreamingRequest,
-    BusStreamingResponse
+
+    BusStreamingRequest_ResponseEnumerable,
+    BusStreamingResponse_ResponseEnumerable,
+    BusStreamingRequest_ArgumentEnumerable,
+    BusStreamingResponse_ArgumentEnumerable
 }

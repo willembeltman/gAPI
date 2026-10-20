@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Server.Dashboard;
 using gAPI.Fabric.Server.Config;
-using gAPI.Fabric.Server.Interfaces;
 using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Net.Sockets;

@@ -26,6 +26,12 @@ public class ServiceCollection : IEnumerable<Service>
     public FabricManager FabricManager { get; }
 
     public IEnumerator<Service> GetEnumerator() => Services.Values.GetEnumerator();
+
+    internal void RemoveConnection(FabricHost host)
+    {
+        throw new NotImplementedException();
+    }
+
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 }

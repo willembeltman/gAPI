@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Enums;
+using gAPI.Core.Ids;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Services;
@@ -10,8 +11,10 @@ namespace gAPI.Fabric.Server.Models;
 public record Service(ServiceId Id, FabricManager FabricManager) : IActor
 {
     public ServiceId Id { get; } = Id;
+    public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
     public UserCollection Users { get; } = new();
     public SessionCollection Sessions { get; } = new();
+    public BusConnectionCollection BusConnections { get; } = new();
 
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
@@ -23,12 +26,24 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
     {
         Users.TryAdd(userId, connection);
         Sessions.TryAdd(sessionId, connection);
+        Connections.TryAdd(connection.FabricConnectionId, connection);
         EnqueueReceive(receiveSize);
     }
     public async Task Unsubscribe(FabricHost connection, UserId userId, SessionId sessionId, long receiveSize)
     {
         Users.TryRemove(userId, connection);
         Sessions.TryRemove(sessionId, connection);
+        Connections.TryRemove(connection.FabricConnectionId, out _);
+        EnqueueReceive(receiveSize);
+    }
+    public async Task BusSubscribe(FabricHost connection, BusConnectionId busConnectionId, long receiveSize)
+    {
+        BusConnections.TryAdd(busConnectionId, connection);
+        EnqueueReceive(receiveSize);
+    }
+    public async Task BusUnsubscribe(FabricHost connection, BusConnectionId busConnectionId, long receiveSize)
+    {
+        BusConnections.TryRemove(busConnectionId, connection);
         EnqueueReceive(receiveSize);
     }
 
@@ -48,7 +63,26 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         }
         else
         {
-            return (FabricManager.Connections, this);
+            return (Connections.Values, this);
+        }
+    }
+    public (IEnumerable<FabricHost>, IActor) GetFabricHosts(BusToChoice To, BusConnectionId? ToBusConnectionId)
+    {
+        if (To == BusToChoice.ToAny)
+        {
+            var busConnection = BusConnections.FirstOrDefault(); // TODO iets met loadbalancing doen
+            if (busConnection == null) return ([], this);
+            return ([busConnection.Connection], busConnection);
+        }
+        else if (To == BusToChoice.ToBusConnectionId && ToBusConnectionId != null)
+        {
+            var busConnection = BusConnections.TryGet(ToBusConnectionId);
+            if (busConnection == null) return ([], this);
+            return ([busConnection.Connection], busConnection);
+        }
+        else
+        {
+            return (BusConnections.Select(a => a.Connection), this);
         }
     }
 
