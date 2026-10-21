@@ -323,6 +323,15 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
                         break;
 
+                    case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
+                        var sendAndForgetRequest = span.ReadSendRequestClientDto(ref offset);
+                        await Received_FabricSendAndForgetRequest_FromServer(sendAndForgetRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled:
+                        var sendAndForgetRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset);
+                        await Received_FabricSendAndForgetRequestCancelled_FromServer(sendAndForgetRequestCancelled, ct);
+                        break;
+
                     case WssServerToClientMessageEnum.FabricSendRequest:
                         var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset);
                         await Received_FabricSendRequest_FromServer(sendArgumentedRequest, ct);
@@ -345,8 +354,12 @@ public abstract class WssClientConnection : IWssClientConnection
                         await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
                         break;
                     case WssServerToClientMessageEnum.InvokeRequestAck:
-                        var invokeRequestDone = span.ReadInvokeRequestAckClientDto(ref offset);
-                        await Received_InvokeRequestAck_FromServerAsync(invokeRequestDone, ct);
+                        var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset);
+                        await Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
+                        break;
+                    case WssServerToClientMessageEnum.InvokeRequestDone:
+                        var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
+                        await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
                         break;
 
                     case WssServerToClientMessageEnum.StreamingRequest:
@@ -355,7 +368,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.StreamingResponse:
                         var argumentResponse = span.ReadStreamingResponseClientDto(ref offset);
-                        await Received_StreamingResponse_FromServer(argumentResponse, ct);
+                        await Received_StreamingResponse_FromServerAsync(argumentResponse, ct);
                         break;
 
                     case WssServerToClientMessageEnum.FabricStreamingRequest:
@@ -364,7 +377,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.FabricStreamingResponse:
                         var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset);
-                        await Received_FabricStreamingResponse_FromServer(fabricArgumentResponse, ct);
+                        await Received_FabricStreamingResponse_FromServerAsync(fabricArgumentResponse, ct);
                         break;
                 }
             }
@@ -412,6 +425,49 @@ public abstract class WssClientConnection : IWssClientConnection
             ClientConnectionId = synchronizeClientIds.ClientConnectionId;
         }, ct);
     }
+
+    private async Task Received_FabricSendAndForgetRequest_FromServer(SendRequestClientDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
+            Timeouts[message.Routing.RequestId] = cts;
+
+            try
+            {
+                if (message.StateIsChanged)
+                    await HttpClient.UpdateStateDataAsync(message.StateData, cts.Token);
+
+                await Send_SendRequest_ToServiceAsync(message, cts.Token);
+            }
+            catch (Exception ex)
+            {
+                cts.Dispose();
+                Timeouts.TryRemove(message.Routing.RequestId, out _);
+            }
+        }, ct);
+    }
+    private async Task Received_FabricSendAndForgetRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (message.StateIsChanged)
+                await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+
+            if (Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+        }, ct);
+    }
+
 
     private async Task Received_FabricSendRequest_FromServer(SendRequestClientDto message, CancellationToken ct)
     {
@@ -639,7 +695,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }, ct);
     }
-    private async Task Received_StreamingResponse_FromServer(StreamingResponseClientDto message, CancellationToken ct)
+    private async Task Received_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -671,7 +727,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }, ct);
     }
-    private async Task Received_FabricStreamingResponse_FromServer(StreamingResponseClientDto message, CancellationToken ct)
+    private async Task Received_FabricStreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {

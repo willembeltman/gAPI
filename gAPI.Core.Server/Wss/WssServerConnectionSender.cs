@@ -82,6 +82,39 @@ public class WssServerConnectionSender(
         Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} WssServerConnection {wssServerConnection.ClientConnectionId} started");
 
     }
+    public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_FabricSendAndForgetRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricSendAndForgetRequest_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendAndForgetRequest);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_FabricSendAndForgetRequestCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_FabricSendAndForgetRequestCancelled_ToClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
+
 
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
     {

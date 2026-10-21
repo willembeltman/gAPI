@@ -593,6 +593,20 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #region Sender
 
+    public async Task SendAndForgetRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    {
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
+        await Sender.Send_FabricSendAndForgetRequest_ToClientAsync(sendRequestClient, ct);
+        ct.Register(async () =>
+        {
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            var sendRequestClient = new SendRequestCancelledClientDto(sendRequest.Routing, "Task is cancelled", stateIsChanged, stateData);
+            await Sender.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(sendRequestClient, ct);
+        });
+    }
     public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
@@ -665,6 +679,22 @@ public abstract class WssServerConnection : IWssServerConnection
     }
 
     // Directe calls
+    public Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
+    {
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
+        return Sender.Send_FabricSendAndForgetRequest_ToClientAsync(sendRequestClient, ct);
+    }
+    public Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+    {
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var invokeRequestCancelledClient = new SendRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
+        return Sender.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
+    }
+
+
     public Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
@@ -675,6 +705,17 @@ public abstract class WssServerConnection : IWssServerConnection
         var sendRequestClient = new SendRequestClientDto(sendRequest.Routing, sendRequest.BinaryData, stateIsChanged, stateData);
         return Sender.Send_FabricSendRequest_ToClientAsync(sendRequestClient, ct);
     }
+    public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+    {
+        //if (Logger.IsEnabled(LogLevel.Trace))
+        //    Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({cancel})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel);
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var invokeRequestCancelledClient = new SendRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
+        return Sender.Send_FabricSendRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
+    }
+
     public Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
@@ -695,17 +736,7 @@ public abstract class WssServerConnection : IWssServerConnection
         var invokeRequestCancelledClient = new InvokeRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
         return Sender.Send_FabricInvokeRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
     }
-    public Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
-    {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace("{now} Send_FabricSendRequestCancelled_ToClientAsync({cancel})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel);
-
-        var stateIsChanged = AuthenticationService.IsStateDataChanged();
-        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var invokeRequestCancelledClient = new SendRequestCancelledClientDto(cancel.Routing, cancel.Reason, stateIsChanged, stateData);
-        return Sender.Send_FabricSendRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
-    }
-
+    
     public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestDto request, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))

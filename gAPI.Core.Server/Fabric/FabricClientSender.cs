@@ -108,6 +108,35 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }, ct);
     }
 
+    public async Task Send_SendAndForgetRequest_ToFabricAsync(SendRequestDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SendAndForgetRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequest);
+            writer.Write(message);
+        }, ct);
+    }
+    public async Task Send_SendAndForgetRequestCancelled_ToFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SendAndForgetRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequestCancelled);
+            writer.Write(message);
+        }, ct);
+    }
+
     public async Task Send_SendRequest_ToFabricAsync(SendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -287,7 +316,6 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(subscribe);
         }, ct);
     }
-
     internal async Task Send_BusUnsubscribe_ToFabricAsync(BusUnsubscribeDto unsubscribe, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
@@ -305,6 +333,14 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(request);
         }, ct);
     }
+    internal async Task Send_BusSendFireAndForgetCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForgetCancelled);
+            writer.Write(request);
+        }, ct);
+    }
 
     internal async Task Send_BusSend_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
     {
@@ -314,7 +350,14 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(request);
         }, ct);
     }
-
+    internal async Task Send_BusSendCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestCancelled);
+            writer.Write(request);
+        }, ct);
+    }
     internal async Task Send_BusSendAck_ToFabricAsync(BusSendRequestDoneDto ack, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
@@ -332,13 +375,28 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(request);
         }, ct);
     }
-
-    internal async Task Send_BusInvokeAck_ToFabricAsync(BusInvokeRequestAckDto ack, CancellationToken ct)
+    internal async Task Send_BusInvokeCancelled_ToFabricAsync(BusInvokeRequestCancelledDto request, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestCancelled);
+            writer.Write(request);
+        }, ct);
+    }
+    internal async Task Send_BusInvokeRequestAck_ToFabricAsync(BusInvokeRequestAckDto ack, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestAck);
             writer.Write(ack);
+        }, ct);
+    }
+    internal async Task Send_BusInvokeRequestDone_ToFabricAsync(BusInvokeRequestDoneDto done, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestDone);
+            writer.Write(done);
         }, ct);
     }
 

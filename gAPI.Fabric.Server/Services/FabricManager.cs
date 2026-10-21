@@ -203,14 +203,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            state.Exceptions[caller.FabricConnectionId] = $"Task cancelled: {cancel.Reason}";
-            state.CompletedTargets[caller.FabricConnectionId] = 1;
-            state.Cancel();
+            foreach (var host in state.Targets)
+                await host.Send_SendRequestCancelled_ToApiAsync(cancel, state.Actor);
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
-            {
-                await CompleteRequestAsync(logger, state);
-            }
+            state.Cancel();
         }, ct);
     }
     public async Task Receive_SendRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestDoneDto done, long receiveSize, CancellationToken ct)
@@ -318,14 +314,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            state.Exceptions[caller.FabricConnectionId] = $"Task cancelled: {cancel.Reason}";
-            state.CompletedTargets[caller.FabricConnectionId] = 1;
-            state.Cancel();
+            foreach (var host in state.Targets)
+                await host.Send_InvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
-            {
-                await ReadyInvokeAsync(logger, state);
-            }
+            state.Cancel();
         }, ct);
     }
     public async Task Receive_InvokeRequestAck_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestAckDto done, long receiveSize, CancellationToken ct)
@@ -409,7 +401,7 @@ public class FabricManager : IDashboardSnapshotGetter
     }
 
     // De orginele iteratie op de InvokeRequest:
-    public async Task Receive_StreamingRequestServerToClient_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingRequest_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -428,7 +420,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_StreamingResponseClientToServer_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingResponse_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -499,7 +491,7 @@ public class FabricManager : IDashboardSnapshotGetter
     }
 
     // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
-    public async Task Receive_StreamingRequestClientToServer_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingRequest_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -518,7 +510,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_StreamingResponseServerToClient_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingResponse_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -547,20 +539,6 @@ public class FabricManager : IDashboardSnapshotGetter
 
     public async Task Receive_BusSubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSubscribeDto subscribe, long receiveSize, CancellationToken ct)
     {
-        //_ = Task.Run(async () =>
-        //{
-        //    if (logger.IsEnabled(LogLevel.Trace))
-        //        logger.LogTrace("{now}: Receive_BusSubscribe_FromApiAsync({serviceId}, {connectionId})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe.ServiceId, subscribe.BusConnectionId);
-
-        //    BusConnections.TryAdd(subscribe.BusConnectionId, caller);
-
-        //    BusHosts[subscribe.BusConnectionId] = caller;
-        //    var subscribers = BusSubscriptions.GetOrAdd(subscribe.ServiceId, _ => new());
-        //    subscribers[subscribe.BusConnectionId] = caller;
-
-        //    await caller.Send_BusSubscribeAck_ToApiAsync(subscribe, System);
-        //}, ct);
-
         _ = Task.Run(async () =>
         {
             if (logger.IsEnabled(LogLevel.Trace))
@@ -568,24 +546,12 @@ public class FabricManager : IDashboardSnapshotGetter
 
             await Services[subscribe.ServiceId]
                 .BusSubscribe(caller, subscribe.BusConnectionId, receiveSize);
+
+            await caller.Send_BusSubscribeAck_ToApiAsync(subscribe, System);
         }, ct);
     }
     public async Task Receive_BusUnsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusUnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
     {
-        //_ = Task.Run(async () =>
-        //{
-        //    if (logger.IsEnabled(LogLevel.Trace))
-        //        logger.LogTrace("{now}: Receive_BusUnsubscribe_FromApiAsync({serviceId}, {connectionId})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe.ServiceId, unsubscribe.BusConnectionId);
-
-        //    BusHosts.TryRemove(unsubscribe.BusConnectionId, out _);
-        //    if (BusSubscriptions.TryGetValue(unsubscribe.ServiceId, out var subscribers))
-        //    {
-        //        subscribers.TryRemove(unsubscribe.BusConnectionId, out _);
-        //    }
-
-        //    await caller.Send_BusUnsubscribeAck_ToApiAsync(unsubscribe, System);
-        //}, ct);
-
         _ = Task.Run(async () =>
         {
             if (logger.IsEnabled(LogLevel.Trace))
@@ -593,6 +559,8 @@ public class FabricManager : IDashboardSnapshotGetter
 
             await Services[unsubscribe.ServiceId]
                 .BusUnsubscribe(caller, unsubscribe.BusConnectionId, receiveSize);
+
+            await caller.Send_BusUnsubscribeAck_ToApiAsync(unsubscribe, System);
         }, ct);
     }
 
@@ -666,14 +634,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            state.Exceptions[caller.FabricConnectionId] = $"Task cancelled: {cancel.Reason}";
-            state.CompletedTargets[caller.FabricConnectionId] = 1;
-            state.Cancel();
+            foreach (var host in state.Targets)
+                await host.Send_BusSendRequestCancelled_ToApiAsync(cancel, state.Actor);
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
-            {
-                await CompleteBusRequestAsync(logger, state);
-            }
+            state.Cancel();
         }, ct);
     }
     public async Task Receive_BusSendRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestDoneDto done, long receiveSize, CancellationToken ct)
@@ -778,14 +742,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            state.Exceptions[caller.FabricConnectionId] = $"Task cancelled: {cancel.Reason}";
-            state.CompletedTargets[caller.FabricConnectionId] = 1;
-            state.Cancel();
+            foreach (var host in state.Targets)
+                await host.Send_BusInvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
-            {
-                await ReadyBusInvokeAsync(logger, state);
-            }
+            state.Cancel();
         }, ct);
     }
     public async Task Receive_BusInvokeRequestAck_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestAckDto done, long receiveSize, CancellationToken ct)
@@ -971,9 +931,19 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+            if (request.ArgumentIndex < 0)
             {
-                await state.Caller.Send_BusStreamingRequest_ArgumentEnumerable_ToApiAsync(request, state.Actor);
+                foreach (var target in state.Targets)
+                {
+                    await target.Send_BusStreamingRequest_ToApiAsync(request, state.Actor);
+                }
+            }
+            else
+            {
+                if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+                {
+                    await state.Caller.Send_BusStreamingRequest_ToApiAsync(request, state.Actor);
+                }
             }
         }, ct);
     }
@@ -990,9 +960,19 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+            if (response.ArgumentIndex < 0)
             {
-                await sender.Send_BusStreamingResponse_ArgumentEnumerable_ToApiAsync(response, state.Actor);
+                foreach (var target in state.Targets)
+                {
+                    await target.Send_BusStreamingResponse_ToApiAsync(response, state.Actor);
+                }
+            }
+            else
+            {
+                if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+                {
+                    await sender.Send_BusStreamingResponse_ToApiAsync(response, state.Actor);
+                }
             }
         }, ct);
     }

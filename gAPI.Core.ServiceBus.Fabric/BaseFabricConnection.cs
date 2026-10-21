@@ -163,11 +163,15 @@ public abstract class BaseFabricConnection(
                         linked);
                 });
 
-            async Task Cleanup()
+            async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
                 await enumerator.DisposeAsync();
                 linkedCts.Dispose();
+                if (argumentIndex == -1)
+                {
+                    await fabricClient.Send_BusInvokeRequestDone_ToFabricAsync(new BusInvokeRequestDoneDto(routing, false, ex == null ? null : ex.Message), ct);
+                }
             }
 
             var entered = false;
@@ -196,7 +200,7 @@ public abstract class BaseFabricConnection(
                 ct.IsCancellationRequested ||
                 cts.IsCancellationRequested)
             {
-                await Cleanup();
+                await Cleanup(ex);
 
                 return new BusStreamingResponseDto(
                     routing,
@@ -209,7 +213,7 @@ public abstract class BaseFabricConnection(
             }
             catch (Exception ex)
             {
-                await Cleanup();
+                await Cleanup(ex);
 
                 return new BusStreamingResponseDto(
                     routing,

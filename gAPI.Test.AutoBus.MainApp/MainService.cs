@@ -9,7 +9,7 @@ public class MainService(
 {
     public async Task StartAsync(CancellationToken ct)
     {
-        await Task.Delay(5000);
+        await Task.Delay(2000);
 
         var duration = busContext.Service1.ToAny().Ping(ct);
         await foreach(var item in duration)

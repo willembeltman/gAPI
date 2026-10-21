@@ -105,6 +105,63 @@ public class SseServiceSubscription : IServiceSubscription
         }
     }
 
+    // SEND AND FORGET
+    public async Task SendAndForgetRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    {
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(
+            sendRequest.Routing,
+            sendRequest.BinaryData,
+            stateIsChanged,
+            stateData);
+        var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
+        await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
+    public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
+    {
+        // TODO kijken waarom dit zo complex is
+        Requests.TryAdd(sendRequest.Routing.RequestId, 0);
+        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+            return;
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        var sendRequestClient = new SendRequestClientDto(
+            sendRequest.Routing,
+            sendRequest.BinaryData,
+            stateIsChanged,
+            stateData);
+        var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
+        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+            return;
+
+        await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
+        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+            return;
+
+        if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
+        {
+        }
+    }
+    public async Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
+    {
+        if (Requests.TryRemove(cancel.Routing.RequestId, out _))
+        {
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            var cancelClient = new SendRequestCancelledClientDto(
+                cancel.Routing,
+                cancel.Reason,
+                stateIsChanged,
+                stateData);
+            var sseEvent = new SseEvent("SendAndForgetRequestCancelledClientDto", cancelClient);
+            await Channel.Writer.WriteAsync(sseEvent, ct);
+        }
+    }
+
+
+
     // SEND
     public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
@@ -379,6 +436,5 @@ public class SseServiceSubscription : IServiceSubscription
     {
         ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
-
 
 }

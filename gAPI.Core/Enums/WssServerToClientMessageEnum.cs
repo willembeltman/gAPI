@@ -3,7 +3,10 @@ namespace gAPI.Core.Enums;
 public enum WssServerToClientMessageEnum
 {
     SynchronizeClientIds,
-    
+
+    FabricSendAndForgetRequest,
+    FabricSendAndForgetRequestCancelled,
+
     FabricSendRequest,
     FabricSendRequestCancelled,
     SendRequestDone,
