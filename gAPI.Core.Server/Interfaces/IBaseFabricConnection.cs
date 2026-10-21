@@ -8,6 +8,17 @@ public interface IBaseFabricConnection : IBaseBusConnection
     Task ReceiveFireAndForgetAsync(BusSendRequestDto requestDto, CancellationToken ct);
     Task ReceiveSendRequestAsync(BusSendRequestDto requestDto, CancellationToken ct);
     IAsyncEnumerable<byte[]> ReceiveInvokeRequestAsync(BusInvokeRequestDto requestDto, CancellationToken ct);
-    Task ReceiveStreamingRequestAsync(BusStreamingRequestDto requestDto, CancellationToken ct);
-    Task ReceiveStreamingResponseAsync(BusStreamingResponseDto responseDto, CancellationToken ct);
+    //Task ReceiveStreamingRequestAsync(BusStreamingRequestDto requestDto, CancellationToken ct);
+    //Task ReceiveStreamingResponseAsync(BusStreamingResponseDto responseDto, CancellationToken ct);
+
+
+    Task ReceiveStreamingRequestAsync(BusStreamingRequestDto message, CancellationToken ct);
+    Task ReceiveStreamingResponseAsync(BusStreamingResponseDto message, CancellationToken ct);
+
+    Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct);
+    Task Send_FabricSendAndForgetRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct);
+    Task Send_FabricSendRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct);
+    Task Send_FabricSendRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct);
+    Task Send_FabricInvokeRequest_ToClientAsync(BusInvokeRequestDto message, CancellationToken ct);
+    Task Send_FabricInvokeRequestCancelled_ToClientAsync(BusInvokeRequestCancelledDto message, CancellationToken ct);
 }

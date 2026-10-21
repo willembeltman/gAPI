@@ -55,8 +55,8 @@ public class SseServiceSubscription : IServiceSubscription
         SessionId = sessionId;
         UserId = userId;
         Channel = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
+        ClientConnectionId = serverConnectionCollection.Add(this);
         ServiceSubscriptionId = serviceSubscriptionCollection.Add(this, serviceId);
-        ClientConnectionId = serverConnectionCollection.AddConnection(this);
         Stopwatch = Stopwatch.StartNew();
     }
 

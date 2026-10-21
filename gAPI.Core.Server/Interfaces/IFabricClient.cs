@@ -36,8 +36,8 @@ public interface IFabricClient : IAsyncDisposable
     Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource cts);
     IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource cts);
     
-    Task Send_BusStreamingRequest_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
-    Task Send_BusStreamingResponse_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
+    Task Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
+    Task Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
     Task BusSubscribeAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct);
     Task BusUnsubscribeAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct);
     Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto message, CancellationToken ct);

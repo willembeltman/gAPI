@@ -24,7 +24,7 @@ public class StreamingCache
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseDto>> StreamingResponseHandlers = [];
 
 
-    public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> BusStreamingRequestHandlers = [];
+    public readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> BusStreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> BusStreamingResponseHandlers = [];
 
     public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusSendRequestDoneDto>> BusSends = [];

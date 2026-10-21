@@ -47,8 +47,9 @@ public static class AddAutoBusExtension
             var sessionCache = new SessionCache();
             var streamingCache = new StreamingCache();
             var subscriptions = new ServiceSubscriptionCollection();
+            var busConnections = new BusConnectionCollection();
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new FabricClient(sessionCache, streamingCache, subscriptions, loggerFactory, config.ConnectionString);
+            return new FabricClient(sessionCache, streamingCache, subscriptions, busConnections, loggerFactory, config.ConnectionString);
         });
 
         // Connection

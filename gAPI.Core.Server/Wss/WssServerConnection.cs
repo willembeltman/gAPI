@@ -60,7 +60,7 @@ public abstract class WssServerConnection : IWssServerConnection
         ConnectedServiceSubscriptions = [];
         ReceiveBuffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
 
-        ClientConnectionId = connections.AddConnection(this);
+        ClientConnectionId = connections.Add(this);
         Sender = new WssServerConnectionSender(this, loggerFactory);
         Stopwatch = Stopwatch.StartNew();
     }

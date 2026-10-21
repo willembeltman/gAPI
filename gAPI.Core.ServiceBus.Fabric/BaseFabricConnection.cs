@@ -241,8 +241,43 @@ public abstract class BaseFabricConnection(
 
     // Fabric proxy methods
     private Task Send_BusStreamingResponse_ToFabricAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
-        => fabricClient.Send_BusStreamingRequest_ToFabricAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
+        => fabricClient.Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
     private Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
-        => fabricClient.Send_BusStreamingResponse_ToFabricAsync(this, response, ct);
+        => fabricClient.Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(this, response, ct);
 
+
+
+
+
+
+    public Task Send_FabricSendAndForgetRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+
+    public Task Send_FabricSendRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricSendRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricInvokeRequest_ToClientAsync(BusInvokeRequestDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Send_FabricInvokeRequestCancelled_ToClientAsync(BusInvokeRequestCancelledDto message, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -81,8 +81,9 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             var sessionCache = new {Context.SharedReferences.SessionCache}();
             var streamingCache = new {Context.SharedReferences.StreamingCache}();
             var subscriptions = new {Context.SharedReferences.ServiceSubscriptionCollection}();
+            var busConnections = new BusConnectionCollection();
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new {Context.SharedReferences.FabricClient}(sessionCache, streamingCache, subscriptions, loggerFactory, config.ConnectionString);
+            return new {Context.SharedReferences.FabricClient}(sessionCache, streamingCache, subscriptions, busConnections, loggerFactory, config.ConnectionString);
         }});";
             }
         }

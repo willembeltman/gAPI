@@ -9,7 +9,7 @@ public sealed class ServerConnectionCollection
     private long _nextId;
     private readonly ConcurrentDictionary<ClientConnectionId, IServerConnection> Clients = new();
 
-    public ClientConnectionId AddConnection(IServerConnection client)
+    public ClientConnectionId Add(IServerConnection client)
     {
         var id = new ClientConnectionId(Interlocked.Increment(ref _nextId));
         Clients[id] = client;
