@@ -31,11 +31,11 @@ public abstract class BaseFabricConnection(
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.Send_BusSubscribe_ToFabricAsync(this, new(serviceId, BusConnectionId), ct);
+        => fabricClient.BusSubscribeAsync(this, new(serviceId, BusConnectionId), ct);
     // This is called AFTER the service has been unregistered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.Send_BusUnsubscribe_ToFabricAsync(this, new(serviceId, BusConnectionId), ct);
+        => fabricClient.BusUnsubscribeAsync(this, new(serviceId, BusConnectionId), ct);
 
     // This is called when a service has to be called through the service bus
     public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)

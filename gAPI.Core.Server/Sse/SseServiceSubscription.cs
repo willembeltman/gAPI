@@ -60,7 +60,7 @@ public class SseServiceSubscription : IServiceSubscription
         Stopwatch = Stopwatch.StartNew();
     }
 
-    readonly ConcurrentDictionary<RequestId, int> Requests = [];
+    //readonly ConcurrentDictionary<RequestId, int> Requests = [];
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
     {
@@ -106,7 +106,33 @@ public class SseServiceSubscription : IServiceSubscription
     }
 
     // SEND AND FORGET
-    public async Task SendAndForgetRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    //public async Task SendAndForgetRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    //{
+    //    // TODO kijken waarom dit zo complex is
+    //    Requests.TryAdd(sendRequest.Routing.RequestId, 0);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+    //    var sendRequestClient = new SendRequestClientDto(
+    //        sendRequest.Routing,
+    //        sendRequest.BinaryData,
+    //        stateIsChanged,
+    //        stateData);
+    //    var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
+    //    {
+    //    }
+    //}
+    public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -118,35 +144,10 @@ public class SseServiceSubscription : IServiceSubscription
         var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
-    public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
-    {
-        // TODO kijken waarom dit zo complex is
-        Requests.TryAdd(sendRequest.Routing.RequestId, 0);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        var stateIsChanged = AuthenticationService.IsStateDataChanged();
-        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new SendRequestClientDto(
-            sendRequest.Routing,
-            sendRequest.BinaryData,
-            stateIsChanged,
-            stateData);
-        var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
-        {
-        }
-    }
     public async Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
     {
-        if (Requests.TryRemove(cancel.Routing.RequestId, out _))
+        // Jij hoeft niet zo slim te zijn hahaha
+        //if (Requests.TryRemove(cancel.Routing.RequestId, out _))
         {
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -163,7 +164,36 @@ public class SseServiceSubscription : IServiceSubscription
 
 
     // SEND
-    public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    //public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
+    //{
+    //    // TODO kijken waarom dit zo complex is
+    //    Requests.TryAdd(sendRequest.Routing.RequestId, 0);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+    //    var sendRequestClient = new SendRequestClientDto(
+    //        sendRequest.Routing,
+    //        sendRequest.BinaryData,
+    //        stateIsChanged,
+    //        stateData);
+    //    var sseEvent = new SseEvent("SendRequestClientDto", sendRequestClient);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
+    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
+    //        return;
+
+    //    if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
+    //    {
+    //        // TODO ja deze done moet wel verstuurt worden, want we wachten niet bij SSE
+    //        var done = new SendRequestDoneDto(sendRequest.Routing, false, null);
+    //        await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, Cts.Token);
+    //    }
+    //}
+    public async Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
         var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -175,38 +205,9 @@ public class SseServiceSubscription : IServiceSubscription
         var sseEvent = new SseEvent("SendRequestClientDto", sendRequestClient);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
-    public async Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
-    {
-        // TODO kijken waarom dit zo complex is
-        Requests.TryAdd(sendRequest.Routing.RequestId, 0);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        var stateIsChanged = AuthenticationService.IsStateDataChanged();
-        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var sendRequestClient = new SendRequestClientDto(
-            sendRequest.Routing,
-            sendRequest.BinaryData,
-            stateIsChanged,
-            stateData);
-        var sseEvent = new SseEvent("SendRequestClientDto", sendRequestClient);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
-        if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-            return;
-
-        if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
-        {
-            // TODO ja deze done moet wel verstuurt worden, want we wachten niet bij SSE
-            var done = new SendRequestDoneDto(sendRequest.Routing, false, null);
-            await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, Cts.Token);
-        }
-    }
     public async Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
     {
-        if (Requests.TryRemove(cancel.Routing.RequestId, out _))
+        //if (Requests.TryRemove(cancel.Routing.RequestId, out _))
         {
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -217,42 +218,43 @@ public class SseServiceSubscription : IServiceSubscription
                 stateData);
             var sseEvent = new SseEvent("SendRequestCancelledClientDto", cancelClient);
             await Channel.Writer.WriteAsync(sseEvent, ct);
-            var done = new SendRequestDoneDto(cancel.Routing, true, null);
-            await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, ct);
+            //var done = new SendRequestDoneDto(cancel.Routing, true, null);
+            //await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, ct);
         }
     }
 
-    public async IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
-    {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
+    //public async IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    //if (Logger.IsEnabled(LogLevel.Trace))
+    //    //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
 
-        var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
+    //    var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+    //    StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
 
-        var stateIsChanged = AuthenticationService.IsStateDataChanged();
-        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        var invokeRequestClient = new InvokeRequestClientDto(
-            invokeRequest.Routing, 
-            invokeRequest.BinaryData, 
-            stateIsChanged, 
-            stateData);
+    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+    //    var invokeRequestClient = new InvokeRequestClientDto(
+    //        invokeRequest.Routing, 
+    //        invokeRequest.BinaryData, 
+    //        stateIsChanged, 
+    //        stateData);
 
-        var sseEvent = new SseEvent("InvokeRequestClientDto", invokeRequestClient);
-        await Channel.Writer.WriteAsync(sseEvent, ct);
+    //    var sseEvent = new SseEvent("InvokeRequestClientDto", invokeRequestClient);
+    //    await Channel.Writer.WriteAsync(sseEvent, ct);
 
-        try
-        {
-            var response = await completion.Task.WaitAsync(invokeRequest.Routing.Timeout, ct);
-            var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
-            await foreach (var item in enumerable)
-                yield return item;
-        }
-        finally
-        {
-            StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
-        }
-    }
+    //    try
+    //    {
+    //        var response = await completion.Task.WaitAsync(invokeRequest.Routing.Timeout, ct);
+    //        var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
+    //        await foreach (var item in enumerable)
+    //            yield return item;
+    //    }
+    //    finally
+    //    {
+    //        StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
+    //    }
+    //}
+    
     public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -342,67 +344,6 @@ public class SseServiceSubscription : IServiceSubscription
         var sseEvent = new SseEvent("FabricStreamingResponseClientDto", streamingResponse);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
-
-
-    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
-    {
-        return new RemoteAsyncEnumerable<byte[]>(
-            construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
-            {
-                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
-                {
-                    if (response.IsCancelled)
-                    {
-                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
-                        return;
-                    }
-
-                    if (response.ExceptionMessage != null)
-                    {
-                        enumerator.Complete(new RemoteException(response.ExceptionMessage));
-                        return;
-                    }
-
-                    if (response.IsCompleted)
-                    {
-                        enumerator.Complete();
-                        return;
-                    }
-
-                    enumerator.Push(response.BinaryData);
-                });
-            },
-
-            requestNext: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
-            {
-                return Send_FabricStreamingRequest_ToClientAsync(
-                    new StreamingRequestDto(
-                        routing,
-                        argumentIndex,
-                        streamId,
-                        false),
-                    ct);
-            },
-
-            cancelled: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator) =>
-            {
-                return Send_FabricStreamingRequest_ToClientAsync(
-                    new StreamingRequestDto(
-                        routing,
-                        argumentIndex,
-                        streamId,
-                        true),
-                    default);
-            },
-
-            dispose: (StreamId streamId) =>
-            {
-                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
-            });
-    }
-
 
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();

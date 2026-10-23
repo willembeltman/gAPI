@@ -7,9 +7,9 @@ public interface IWssServerConnection : IServerConnection, IAsyncDisposable
     //Task Send_SendRequest_ToClientAsync(SendRequestDto message, CancellationToken ct);
     //IAsyncEnumerable<byte[]> Send_InvokeRequest_ToClientAsync(InvokeRequestDto request, CancellationToken ct);
 
-    Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct); 
-    Task SendRequestAsync(SendRequestDto message, CancellationToken ct);
-    IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct);
+    //Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct); 
+    //Task SendRequestAsync(SendRequestDto message, CancellationToken ct);
+    //IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct);
 
     Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto message, CancellationToken ct);
     Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto message, CancellationToken ct);

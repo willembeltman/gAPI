@@ -11,9 +11,9 @@ public interface IServiceSubscription : ISpeedGetter
     SessionId SessionId { get; }
     UserId UserId { get; }
 
-    Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct);
-    Task SendRequestAsync(SendRequestDto message, CancellationToken ct);
-    IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto message, CancellationToken ct);
+    //Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct);
+    //Task SendRequestAsync(SendRequestDto message, CancellationToken ct);
+    //IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto message, CancellationToken ct);
 
     Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto message, CancellationToken ct);
     Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto message, CancellationToken ct);

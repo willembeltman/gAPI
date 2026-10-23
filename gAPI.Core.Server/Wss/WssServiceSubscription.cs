@@ -49,12 +49,12 @@ public class WssServiceSubscription
     public UserId UserId { get; }
     public SessionId SessionId { get; }
 
-    public Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct)
-        => Connection.SendAndForgetRequestAsync(message, ct);
-    public Task SendRequestAsync(SendRequestDto message, CancellationToken ct)
-        => Connection.SendRequestAsync(message, ct);
-    public IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct)
-        => Connection.InvokeRequestAsync(request, ct);
+    //public Task SendAndForgetRequestAsync(SendRequestDto message, CancellationToken ct)
+    //    => Connection.SendAndForgetRequestAsync(message, ct);
+    //public Task SendRequestAsync(SendRequestDto message, CancellationToken ct)
+    //    => Connection.SendRequestAsync(message, ct);
+    //public IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto request, CancellationToken ct)
+    //    => Connection.InvokeRequestAsync(request, ct);
 
     public Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto message, CancellationToken ct)
         => Connection.Send_FabricSendAndForgetRequest_ToClientAsync(message, ct);

@@ -34,7 +34,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
-    //public SharedReference IServiceRouter => Context.SharedReferences.IServiceRouter;
+    public SharedReference BusConnectionCollection => Context.SharedReferences.BusConnectionCollection;
 
     public override void GenerateCode()
     {
@@ -45,6 +45,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServerConfig);
         Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
+        Reg(BusConnectionCollection);
         Reg(SessionCache);
         //Reg(IServiceRouter);
         //Reg(ServiceRouter);
@@ -168,11 +169,14 @@ public static class {Name}
         var sessionCache = new {SessionCache}();
         services.AddSingleton(sessionCache);
 
-        var requestCache = new {StreamingCache}();
-        services.AddSingleton(requestCache);
+        var streamingCache = new {StreamingCache}();
+        services.AddSingleton(streamingCache);
 
-        var serviceSubscriptionCollection = new {ServiceSubscriptionCollection}();
-        services.AddSingleton(serviceSubscriptionCollection);
+        var serviceSubscriptions = new {ServiceSubscriptionCollection}();
+        services.AddSingleton(serviceSubscriptions);
+
+        var busSubscriptions = new {BusConnectionCollection}();
+        services.AddSingleton(busSubscriptions);
 
         var serverConnectionCollection = new {ServerConnectionCollection}();
         services.AddSingleton(serverConnectionCollection);
@@ -180,9 +184,9 @@ public static class {Name}
         services.AddScoped<{ServerConnection}>();
         services.AddSingleton(sp => new {FabricClient}(
             sessionCache,
-            requestCache,
-            serviceSubscriptionCollection,
-            //sp.GetRequiredService<IServiceRouter>(),
+            streamingCache,
+            serviceSubscriptions,
+            busSubscriptions,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
