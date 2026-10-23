@@ -3,6 +3,7 @@ using gAPI.Test.AutoBus.Shared;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Test.AutoBus.MicroService1;
 
@@ -48,7 +49,7 @@ public class Service1(
     Stopwatch? stopwatch;
     TaskCompletionSource<double>? complete;
 
-    public async IAsyncEnumerable<double> Ping(CancellationToken ct)
+    public async IAsyncEnumerable<double> Ping([EnumeratorCancellation] CancellationToken ct)
     {
         for (int i = 0; i < 20; i++)
         {

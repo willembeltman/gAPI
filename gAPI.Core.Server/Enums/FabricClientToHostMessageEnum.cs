@@ -43,8 +43,6 @@ public enum FabricClientToHostMessageEnum
     BusInvokeRequestAck,
     BusInvokeRequestDone,
 
-    BusStreamingRequest_ResponseEnumerable,
-    BusStreamingResponse_ResponseEnumerable,
-    BusStreamingRequest_ArgumentEnumerable,
-    BusStreamingResponse_ArgumentEnumerable,
+    BusStreamingRequest,
+    BusStreamingResponse,
 }

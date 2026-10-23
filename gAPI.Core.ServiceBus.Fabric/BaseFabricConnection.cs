@@ -1,6 +1,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.ServiceBus.Config;
 using gAPI.Core.ServiceBus.Helpers;
@@ -15,14 +16,8 @@ public abstract class BaseFabricConnection(
     ServiceBusConfig busConfig)
     : IBaseFabricConnection
 {
-    private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
-    private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
-
-    // Calling this will route the request to service
-    protected abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationToken ct);
-    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationToken ct);
 
     // This is called everytime something wants to subscribe
     public async Task TryConnectAsync(CancellationToken ct)
@@ -36,11 +31,11 @@ public abstract class BaseFabricConnection(
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.BusSubscribeAsync(this, new(serviceId, BusConnectionId), ct);
+        => fabricClient.Send_BusSubscribe_ToFabricAsync(this, new(serviceId, BusConnectionId), ct);
     // This is called AFTER the service has been unregistered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.BusUnsubscribeAsync(this, new(serviceId, BusConnectionId), ct);
+        => fabricClient.Send_BusUnsubscribe_ToFabricAsync(this, new(serviceId, BusConnectionId), ct);
 
     // This is called when a service has to be called through the service bus
     public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)
@@ -50,234 +45,180 @@ public abstract class BaseFabricConnection(
     public IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts)
         => fabricClient.BusInvokeAsync(this, new(routing, data), cts);
 
-    // Callbacks from fabric
-    public Task ReceiveFireAndForgetAsync(BusSendRequestDto requestDto, CancellationToken ct)
+    // Therse functions are called when there are Enumerable arguments 
+    public IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
-        return Send_SendRequest_ToServiceAsync(requestDto, ct);
-    }
-    public Task ReceiveSendRequestAsync(BusSendRequestDto requestDto, CancellationToken ct)
-    {
-        return Send_SendRequest_ToServiceAsync(requestDto, ct);
-    }
-    public IAsyncEnumerable<byte[]> ReceiveInvokeRequestAsync(BusInvokeRequestDto requestDto, CancellationToken ct)
-    {
-        return Send_InvokeRequest_ToServiceAsync(requestDto, ct);
-    }
+        return fabricClient.RegisterBusRemoteAsyncEnumerableArgument<T>(routing, argumentIndex, deserializer);
+        //return new RemoteAsyncEnumerable<T>(
+        //    construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
+        //    {
+        //        var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
+        //        BusStreamingResponseHandlers.TryAdd(key, response =>
+        //        {
+        //            if (response.IsCancelled)
+        //            {
+        //                enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
+        //                return;
+        //            }
 
-    public async Task ReceiveStreamingRequestAsync(BusStreamingRequestDto requestDto, CancellationToken ct)
-    {
-        var key = new RequestArgumentIndexDto(requestDto.Routing.RequestId, requestDto.ArgumentIndex);
-        if (StreamingRequestHandlers.TryGetValue(key, out var responseHandler) == false)
-            return;
-        var response = await responseHandler.Invoke(requestDto.StreamId, requestDto.Cancelled, ct);
-        await Send_BusStreamingResponse_ToFabricAsync(response, ct);
-    }
-    public async Task ReceiveStreamingResponseAsync(BusStreamingResponseDto responseDto, CancellationToken ct)
-    {
-        var key = new RequestArgumentIndexStreamDto(responseDto.Routing.RequestId, responseDto.ArgumentIndex, responseDto.StreamId);
-        if (StreamingResponseHandlers.TryGetValue(key, out var responseHandler) == false)
-            return;
-        responseHandler.Invoke(responseDto);
-    }
+        //            if (response.ExceptionMessage != null)
+        //            {
+        //                enumerator.Complete(new RemoteException(response.ExceptionMessage));
+        //                return;
+        //            }
 
-    // Enumerable arguments
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
-    {
-        return new RemoteAsyncEnumerable<T>(
-            construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
-            {
-                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingResponseHandlers.TryAdd(key, response =>
-                {
-                    if (response.IsCancelled)
-                    {
-                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
-                        return;
-                    }
+        //            if (response.IsCompleted)
+        //            {
+        //                enumerator.Complete();
+        //                return;
+        //            }
 
-                    if (response.ExceptionMessage != null)
-                    {
-                        enumerator.Complete(new RemoteException(response.ExceptionMessage));
-                        return;
-                    }
+        //            try
+        //            {
+        //                enumerator.Push(deserializer.Invoke(response.BinaryData));
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                enumerator.Complete(ex);
+        //            }
+        //        });
+        //    },
 
-                    if (response.IsCompleted)
-                    {
-                        enumerator.Complete();
-                        return;
-                    }
+        //    requestNext: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
+        //    {
+        //        return Send_BusStreamingResponse_ToFabricAsync(
+        //            routing,
+        //            argumentIndex,
+        //            streamId,
+        //            false,
+        //            ct);
+        //    },
 
-                    try
-                    {
-                        enumerator.Push(deserializer.Invoke(response.BinaryData));
-                    }
-                    catch (Exception ex)
-                    {
-                        enumerator.Complete(ex);
-                    }
-                });
-            },
+        //    cancelled: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator) =>
+        //    {
+        //        return Send_BusStreamingResponse_ToFabricAsync(
+        //            routing,
+        //            argumentIndex,
+        //            streamId,
+        //            true,
+        //            default);
+        //    },
 
-            requestNext: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
-            {
-                return Send_BusStreamingResponse_ToFabricAsync(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    false,
-                    ct);
-            },
-
-            cancelled: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator) =>
-            {
-                return Send_BusStreamingResponse_ToFabricAsync(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    default);
-            },
-
-            dispose: (StreamId streamId) =>
-            {
-                var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingResponseHandlers.TryRemove(key, out _);
-            });
+        //    dispose: (StreamId streamId) =>
+        //    {
+        //        var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
+        //        BusStreamingResponseHandlers.TryRemove(key, out _);
+        //    });
     }
     public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
     {
-        StreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (
-            ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> activeStreams,
-            StreamId streamId,
-            bool cancelled,
-            CancellationToken ct) =>
-        {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
-                streamId,
-                _ =>
-                {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, ct);
-                    return new BusAsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(linked.Token),
-                        new SemaphoreSlim(1, 1),
-                        linked);
-                });
+        fabricClient.RegisterBusAsyncEnumerableArgument<T>(routing, argumentIndex, source, serializer, cts);
+        //BusStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (
+        //    ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> activeStreams,
+        //    StreamId streamId,
+        //    bool cancelled,
+        //    CancellationToken ct) =>
+        //{
+        //    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+        //        streamId,
+        //        _ =>
+        //        {
+        //            var linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, ct);
+        //            return new BusAsyncEnumerableRegistrationInstance<T>(
+        //                source.GetAsyncEnumerator(linked.Token),
+        //                new SemaphoreSlim(1, 1),
+        //                linked);
+        //        });
 
-            async Task Cleanup(Exception? ex = null)
-            {
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                if (argumentIndex == -1)
-                {
-                    await fabricClient.Send_BusInvokeRequestDone_ToFabricAsync(new BusInvokeRequestDoneDto(routing, false, ex == null ? null : ex.Message), ct);
-                }
-            }
+        //    async Task Cleanup(Exception? ex = null)
+        //    {
+        //        activeStreams.TryRemove(streamId, out _);
+        //        await enumerator.DisposeAsync();
+        //        linkedCts.Dispose();
+        //        if (argumentIndex == -1)
+        //        {
+        //            await fabricClient.Send_BusInvokeRequestDone_ToFabricAsync(new BusInvokeRequestDoneDto(routing, false, ex == null ? null : ex.Message), ct);
+        //        }
+        //    }
 
-            var entered = false;
-            try
-            {
-                await gate.WaitAsync(ct);
-                entered = true;
+        //    var entered = false;
+        //    try
+        //    {
+        //        await gate.WaitAsync(ct);
+        //        entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+        //        var hasNext = !cancelled && await enumerator.MoveNextAsync();
 
-                var response = new BusStreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    !hasNext,
-                    cancelled,
-                    null,
-                    hasNext ? serializer(enumerator.Current) : []);
+        //        var response = new BusStreamingResponseDto(
+        //            routing,
+        //            argumentIndex,
+        //            streamId,
+        //            !hasNext,
+        //            cancelled,
+        //            null,
+        //            hasNext ? serializer(enumerator.Current) : []);
 
-                if (!hasNext)
-                    await Cleanup();
+        //        if (!hasNext)
+        //            await Cleanup();
 
-                return response;
-            }
-            catch (OperationCanceledException ex) when (
-                ct.IsCancellationRequested ||
-                cts.IsCancellationRequested)
-            {
-                await Cleanup(ex);
+        //        return response;
+        //    }
+        //    catch (OperationCanceledException ex) when (
+        //        ct.IsCancellationRequested ||
+        //        cts.IsCancellationRequested)
+        //    {
+        //        await Cleanup(ex);
 
-                return new BusStreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    true,
-                    ex.Message,
-                    []);
-            }
-            catch (Exception ex)
-            {
-                await Cleanup(ex);
+        //        return new BusStreamingResponseDto(
+        //            routing,
+        //            argumentIndex,
+        //            streamId,
+        //            true,
+        //            true,
+        //            ex.Message,
+        //            []);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await Cleanup(ex);
 
-                return new BusStreamingResponseDto(
-                    routing,
-                    argumentIndex,
-                    streamId,
-                    true,
-                    false,
-                    ex.Message,
-                    []);
-            }
-            finally
-            {
-                if (entered)
-                    gate.Release();
-            }
-        }));
+        //        return new BusStreamingResponseDto(
+        //            routing,
+        //            argumentIndex,
+        //            streamId,
+        //            true,
+        //            false,
+        //            ex.Message,
+        //            []);
+        //    }
+        //    finally
+        //    {
+        //        if (entered)
+        //            gate.Release();
+        //    }
+        //}));
     }
     public async Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex)
     {
-        if (StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
-        {
-            await registration.DisposeAsync();
-        }
-    }
+        await fabricClient.UnRegisterBusAsyncEnumerableArgument(routing, argumentIndex);
 
-    // Fabric proxy methods
-    private Task Send_BusStreamingResponse_ToFabricAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
-        => fabricClient.Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(this, new(routing, argumentIndex, streamId, cancelled), ct);
-    private Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
-        => fabricClient.Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(this, response, ct);
-
-
-
-
-
-
-    public Task Send_FabricSendAndForgetRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
+        //if (BusStreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
+        //{
+        //    await registration.DisposeAsync();
+        //}
     }
 
 
-    public Task Send_FabricSendRequest_ToClientAsync(BusSendRequestDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    // Callbacks from fabric (to the actual services)
+    public Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct) 
+        => Send_SendRequest_ToServiceAsync(requestDto, ct);
+    public Task Receive_BusSendRequest_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct)
+        => Send_SendRequest_ToServiceAsync(requestDto, ct);
+    public IAsyncEnumerable<byte[]> Receive_BusInvokeRequest_FromFabricAsync(BusInvokeRequestDto requestDto, CancellationToken ct)
+        => Send_InvokeRequest_ToServiceAsync(requestDto, ct);
 
-    public Task Send_FabricSendRequestCancelled_ToClientAsync(BusSendRequestCancelledDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    // Calling this will route the request to service
+    protected abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationToken ct);
+    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationToken ct);
 
-    public Task Send_FabricInvokeRequest_ToClientAsync(BusInvokeRequestDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Send_FabricInvokeRequestCancelled_ToClientAsync(BusInvokeRequestCancelledDto message, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
 }

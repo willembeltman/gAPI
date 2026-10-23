@@ -397,35 +397,19 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }, ct);
     }
 
-    internal async Task Send_BusStreamingRequest_ResponseEnumerable_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
+    internal async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest_ResponseEnumerable);
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest);
             writer.Write(busStreamingRequestDto);
         }, ct);
     }
-    internal async Task Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
+    internal async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse_ResponseEnumerable);
-            writer.Write(response);
-        }, ct);
-    }
-    internal async Task Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest_ArgumentEnumerable);
-            writer.Write(busStreamingRequestDto);
-        }, ct);
-    }
-    internal async Task Send_BusStreamingResponse_ArgumentEnumerable_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse_ArgumentEnumerable);
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse);
             writer.Write(response);
         }, ct);
     }

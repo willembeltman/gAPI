@@ -1,7 +1,6 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 
 namespace gAPI.Core.Server.Interfaces;
 
@@ -18,9 +17,6 @@ public interface IFabricClient : IAsyncDisposable
     IAsyncEnumerable<byte[]> InvokeAsync(RoutingDto routing, byte[] data, CancellationToken ct);
     Task ReceiveKernel(CancellationToken ct);
     Task ReconnectAsync(CancellationToken ct);
-    void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
-    void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken);
-    RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex);
     Task SendAsync(RoutingDto routing, byte[] data, CancellationToken ct);
     Task SendFireAndForgetAsync(RoutingDto routing, byte[] data, CancellationToken ct);
     Task Send_FabricInvokeRequestAck_ToFabricAsync(InvokeRequestAckDto message, CancellationToken ct);
@@ -28,7 +24,6 @@ public interface IFabricClient : IAsyncDisposable
     Task Send_StreamingRequestClientToServer_ToFabricAsync(StreamingRequestDto message, CancellationToken ct);
     Task Send_StreamingResponseClientToServer_ToFabricAsync(StreamingResponseDto message, CancellationToken ct);
     Task SubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct);
-    Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
     Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct);
     Task UpdateSession(SessionId sessionId, string? cookieData, CancellationToken ct);
 
@@ -36,11 +31,25 @@ public interface IFabricClient : IAsyncDisposable
     Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource cts);
     IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource cts);
     
-    Task Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
-    Task Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
-    Task BusSubscribeAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct);
-    Task BusUnsubscribeAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct);
+    Task Send_BusSubscribe_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct);
+    Task Send_BusUnsubscribe_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct);
+   
+    //Task Send_BusStreamingRequest_ArgumentEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingRequestDto request, CancellationToken ct);
+    //Task Send_BusStreamingResponse_ResponseEnumerable_ToFabricAsync(IBaseFabricConnection baseBusConnection, BusStreamingResponseDto response, CancellationToken ct);
+
+
     Task Send_FabricInvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto message, CancellationToken ct);
     Task Send_BusInvokeRequestDone_ToFabricAsync(BusInvokeRequestDoneDto message, CancellationToken ct);
     Task Send_BusInvokeRequestAck_ToFabricAsync(BusInvokeRequestAckDto message, CancellationToken ct);
+
+
+    void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
+    void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken);
+    Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
+
+    RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex);
+    IAsyncEnumerable<T> RegisterBusRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer);
+    void RegisterBusAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts);
+    Task UnRegisterBusAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
+    RemoteAsyncEnumerable<byte[]> RegisterBusRemoteAsyncEnumerableArgumentByte(BusRoutingDto routing, int argumentIndex);
 }
