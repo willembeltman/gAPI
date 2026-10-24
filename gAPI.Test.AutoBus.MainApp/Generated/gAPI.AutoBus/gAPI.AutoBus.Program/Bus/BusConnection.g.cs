@@ -2,7 +2,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
-using gAPI.Core.Server.Interfaces;
+using gAPI.Core.Server.Fabric;
 using gAPI.Core.ServiceBus.Config;
 using gAPI.Core.ServiceBus.Fabric;
 using gAPI.Test.AutoBus.Shared;
@@ -26,7 +26,7 @@ public class BusConnection
 
     public BusConnection(
         ILoggerFactory loggerFactory,
-        IFabricClient fabricClient,
+        FabricClient fabricClient,
         ServiceBusConfig serviceBusConfig)
         : base(loggerFactory, fabricClient, serviceBusConfig)
     {

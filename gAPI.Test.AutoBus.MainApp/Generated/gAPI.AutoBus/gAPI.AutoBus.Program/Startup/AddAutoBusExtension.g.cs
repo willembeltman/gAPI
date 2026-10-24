@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
-using gAPI.Core.Server.Interfaces;
 using gAPI.Core.ServiceBus.Config;
 using gAPI.Core.ServiceBus.Extensions;
 using gAPI.Test.AutoBus.Shared;
@@ -42,7 +41,7 @@ public static class AddAutoBusExtension
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Fabric Client
-        services.TryAddSingleton<IFabricClient>(sp =>
+        services.TryAddSingleton<FabricClient>(sp =>
         {
             var sessionCache = new SessionCache();
             var streamingCache = new StreamingCache();

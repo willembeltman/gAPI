@@ -28,7 +28,6 @@ public class SharedReferences
         BaseRabbitMQConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.BaseRabbitMQConnection", allSymbols);
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
         
-        IFabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Interfaces.IFabricClient", allSymbols);
         FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         SessionCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         StreamingCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
@@ -50,7 +49,6 @@ public class SharedReferences
     public SharedReference? BaseFabricConnection { get; }
     public SharedReference? BaseRabbitMQConnection { get; }
     public SharedReference? BaseAzureConnection { get; }
-    public SharedReference? IFabricClient { get; }
     public SharedReference? FabricClient { get; }
     public SharedReference? SessionCache { get; }
     public SharedReference? StreamingCache { get; }

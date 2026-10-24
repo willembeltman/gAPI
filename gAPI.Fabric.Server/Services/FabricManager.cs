@@ -399,26 +399,26 @@ public class FabricManager : IDashboardSnapshotGetter
     }
 
     // De orginele iteratie op de InvokeRequest:
-    public async Task Receive_StreamingRequest_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_StreamingRequestServerToClient_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+    //public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_StreamingRequestServerToClient_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
 
-            if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
-                return;
+    //        if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
+    //            return;
 
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var target in state.Targets)
-            {
-                await target.Send_StreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
-            }
-        }, ct);
-    }
-    public async Task Receive_StreamingResponse_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    //        foreach (var target in state.Targets)
+    //        {
+    //            await target.Send_StreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
+    //        }
+    //    }, ct);
+    //}
+    public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -465,7 +465,7 @@ public class FabricManager : IDashboardSnapshotGetter
                             : string.Join(", ", state.Exceptions.Values),
                         response.BinaryData);
 
-                    await state.Caller.Send_StreamingResponse_ResponseEnumerable_ToApiAsync(
+                    await state.Caller.Send_StreamingResponse_ToApiAsync(
                         response,
                         state.Actor);
                 }
@@ -482,14 +482,14 @@ public class FabricManager : IDashboardSnapshotGetter
                 null,
                 response.BinaryData);
 
-            await state.Caller.Send_StreamingResponse_ResponseEnumerable_ToApiAsync(
+            await state.Caller.Send_StreamingResponse_ToApiAsync(
                 response,
                 state.Actor);
         }, ct);
     }
 
     // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
-    public async Task Receive_StreamingRequest_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -504,29 +504,29 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (state.StreamRoutes.TryAdd(request.StreamId, caller))
             {
-                await state.Caller.Send_StreamingRequest_ArgumentEnumerable_ToApiAsync(request, state.Actor);
+                await state.Caller.Send_StreamingRequest_ToApiAsync(request, state.Actor);
             }
         }, ct);
     }
-    public async Task Receive_StreamingResponse_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_StreamingResponseServerToClient_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+    //public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_StreamingResponseServerToClient_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
 
-            if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
-                return;
+    //        if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
+    //            return;
 
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
 
-            if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
-            {
-                await sender.Send_StreamingResponse_ArgumentEnumerable_ToApiAsync(response, state.Actor);
-            }
-        }, ct);
-    }
+    //        if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+    //        {
+    //            await sender.Send_StreamingResponse_ArgumentEnumerable_ToApiAsync(response, state.Actor);
+    //        }
+    //    }, ct);
+    //}
 
 
 

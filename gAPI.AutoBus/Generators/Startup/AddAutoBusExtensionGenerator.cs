@@ -64,9 +64,9 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
 
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         var fabricClientCode = "";
-        if (Context.SharedReferences.BaseFabricConnection != null && Context.SharedReferences.IFabricClient != null)
+        if (Context.SharedReferences.BaseFabricConnection != null && Context.SharedReferences.FabricClient != null)
         {
-            Reg(Context.SharedReferences.IFabricClient);
+            Reg(Context.SharedReferences.FabricClient);
             if (Context.SharedReferences.FabricClient != null) Reg(Context.SharedReferences.FabricClient);
             if (Context.SharedReferences.SessionCache != null) Reg(Context.SharedReferences.SessionCache);
             if (Context.SharedReferences.StreamingCache != null) Reg(Context.SharedReferences.StreamingCache);
@@ -76,7 +76,7 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             {
                 fabricClientCode = $@"
         // Fabric Client
-        services.TryAddSingleton<{Context.SharedReferences.IFabricClient}>(sp =>
+        services.TryAddSingleton<{Context.SharedReferences.FabricClient}>(sp =>
         {{
             var sessionCache = new {Context.SharedReferences.SessionCache}();
             var streamingCache = new {Context.SharedReferences.StreamingCache}();

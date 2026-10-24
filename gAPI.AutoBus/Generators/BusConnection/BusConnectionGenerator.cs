@@ -37,7 +37,7 @@ public class BusConnectionGenerator : _BaseGenerator
     public SharedReference BusSendRequestDto => Context.SharedReferences.BusSendRequestDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
-    public SharedReference? IFabricClient => Context.SharedReferences.IFabricClient;
+    public SharedReference? FabricClient => Context.SharedReferences.FabricClient;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -65,8 +65,8 @@ public class BusConnectionGenerator : _BaseGenerator
         Reg(StreamingResponseDto);
         Reg(ServiceBusConfig);
         Reg(BaseConnection);
-        if (OverloadFabricClient && IFabricClient != null)
-            Reg(IFabricClient);
+        if (OverloadFabricClient && FabricClient != null)
+            Reg(FabricClient);
         foreach (var @interface in Context.ServiceContext.HubInterfaces)
         {
             Reg(@interface);
@@ -95,10 +95,10 @@ public class {Name}
     private readonly ILogger<{Name}> ___Logger;
 
     public {Name}(
-        ILoggerFactory loggerFactory,{(OverloadFabricClient && IFabricClient != null ? $@"
-        {IFabricClient} fabricClient," : "")}
+        ILoggerFactory loggerFactory,{(OverloadFabricClient && FabricClient != null ? $@"
+        {FabricClient} fabricClient," : "")}
         {ServiceBusConfig} serviceBusConfig)
-        : base(loggerFactory, {(OverloadFabricClient && IFabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
+        : base(loggerFactory, {(OverloadFabricClient && FabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
     {{
         ___Logger = loggerFactory.CreateLogger<{Name}>();
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];

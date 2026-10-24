@@ -19,10 +19,8 @@ public enum FabricHostToClientMessageEnum
     InvokeRequestAck,
     InvokeRequestDone,
 
-    StreamingRequest_ResponseEnumerable,
-    StreamingResponse_ArgumentEnumerable,
-    StreamingRequest_ArgumentEnumerable,
-    StreamingResponse_ResponseEnumerable,
+    StreamingRequest,
+    StreamingResponse,
 
 
     BusFireAndForget,
