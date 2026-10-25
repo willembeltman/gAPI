@@ -1,8 +1,6 @@
 ﻿using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
@@ -92,104 +90,104 @@ public class AuthenticationStateFactory<TUser>(
         TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
         CancellationToken ct)
     {
-        if (UseMemoryDatabase)
+        //if (UseMemoryDatabase)
         {
             return await DoTheRest_EFCore(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
         }
-        return await DoTheRest_StoredProcedure(dbUser?.Id, dbToken?.Id, dbIp.Id, headers.SessionId.Value, headers.Path, ct);
+        //return await DoTheRest_StoredProcedure(dbUser?.Id, dbToken?.Id, dbIp.Id, headers.SessionId.Value, headers.Path, ct);
     }
 
-    public async Task<RequestIds> DoTheRest_StoredProcedure(
-        Guid? userId, long? tokenId, long ipId, string sessionCode, string routePath, CancellationToken ct)
-    {
-        using var db = await dbFactory.CreateDbContextAsync(ct);
-        var now = dateTime.GetUtcNow().UtcDateTime;
+    //public async Task<RequestIds> DoTheRest_StoredProcedure(
+    //    Guid? userId, long? tokenId, long ipId, string sessionCode, string routePath, CancellationToken ct)
+    //{
+    //    using var db = await dbFactory.CreateDbContextAsync(ct);
+    //    var now = dateTime.GetUtcNow().UtcDateTime;
 
-        // Deze query is 100% geldig in Postgres en voert alles in één transactie/roundtrip uit
-        var sql = @"
-    WITH 
-    ins_session AS (
-        INSERT INTO ""Sessions"" (""SessionId"") VALUES (@pSessionCode)
-        ON CONFLICT (""SessionId"") DO UPDATE SET ""SessionId"" = EXCLUDED.""SessionId"" RETURNING ""Id""
-    ),
-    ins_route AS (
-        INSERT INTO ""Routes"" (""RouteName"") VALUES (@pRoutePath)
-        ON CONFLICT (""RouteName"") DO UPDATE SET ""RouteName"" = EXCLUDED.""RouteName"" RETURNING ""Id""
-    ),
-    ins_userip AS (
-        INSERT INTO ""UserIps"" (""UserId"", ""IpId"") VALUES (@pUserId, @pIpId)
-        ON CONFLICT (""UserId"", ""IpId"") DO UPDATE SET ""UserId"" = EXCLUDED.""UserId"" RETURNING ""Id""
-    ),
-    ins_useripsession AS (
-        INSERT INTO ""UserIpSessions"" (""UserIpId"", ""SessionId"") 
-        SELECT ins_userip.""Id"", ins_session.""Id"" FROM ins_userip, ins_session
-        ON CONFLICT (""UserIpId"", ""SessionId"") DO UPDATE SET ""UserIpId"" = EXCLUDED.""UserIpId"" RETURNING ""Id""
-    ),
-    ins_useripsessiontoken AS (
-        INSERT INTO ""UserIpSessionTokens"" (""UserIpSessionId"", ""TokenId"") 
-        SELECT ins_useripsession.""Id"", @pTokenId FROM ins_useripsession
-        ON CONFLICT (""UserIpSessionId"", ""TokenId"") DO UPDATE SET ""UserIpSessionId"" = EXCLUDED.""UserIpSessionId"" RETURNING ""Id""
-    ),
-    ins_useripsessiontokenroute AS (
-        INSERT INTO ""UserIpSessionTokenRoutes"" (""UserIpSessionTokenId"", ""RouteId"") 
-        SELECT ins_useripsessiontoken.""Id"", ins_route.""Id"" FROM ins_useripsessiontoken, ins_route
-        ON CONFLICT (""UserIpSessionTokenId"", ""RouteId"") DO UPDATE SET ""UserIpSessionTokenId"" = EXCLUDED.""UserIpSessionTokenId"" RETURNING ""Id""
-    ),
-    ins_request AS (
-        INSERT INTO ""UserIpSessionTokenRouteRequests"" (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"", ""Count"")
-        SELECT ins_useripsessiontokenroute.""Id"", EXTRACT(YEAR FROM @pNow)::int, EXTRACT(MONTH FROM @pNow)::int, EXTRACT(DAY FROM @pNow)::int, EXTRACT(HOUR FROM @pNow)::int, 1
-        FROM ins_useripsessiontokenroute
-        ON CONFLICT (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"") 
-        DO UPDATE SET ""Count"" = ""UserIpSessionTokenRouteRequests"".""Count"" + 1 RETURNING ""Id"", ""Count""
-    )
-    SELECT 
-        (SELECT ""Id"" FROM ins_session) AS SessionId,
-        (SELECT ""Id"" FROM ins_route) AS RouteId,
-        (SELECT ""Id"" FROM ins_userip) AS UserIpId,
-        (SELECT ""Id"" FROM ins_useripsession) AS UserIpSessionId,
-        (SELECT ""Id"" FROM ins_useripsessiontoken) AS UserIpSessionTokenId,
-        (SELECT ""Id"" FROM ins_useripsessiontokenroute) AS UserIpSessionTokenRouteId,
-        (SELECT ""Id"" FROM ins_request) AS UserIpSessionTokenRouteRequestId,
-        (SELECT ""Count"" FROM ins_request) AS Counter;";
+    //    // Deze query is 100% geldig in Postgres en voert alles in één transactie/roundtrip uit
+    //    var sql = @"
+    //WITH 
+    //ins_session AS (
+    //    INSERT INTO ""Sessions"" (""SessionId"") VALUES (@pSessionCode)
+    //    ON CONFLICT (""SessionId"") DO UPDATE SET ""SessionId"" = EXCLUDED.""SessionId"" RETURNING ""Id""
+    //),
+    //ins_route AS (
+    //    INSERT INTO ""Routes"" (""RouteName"") VALUES (@pRoutePath)
+    //    ON CONFLICT (""RouteName"") DO UPDATE SET ""RouteName"" = EXCLUDED.""RouteName"" RETURNING ""Id""
+    //),
+    //ins_userip AS (
+    //    INSERT INTO ""UserIps"" (""UserId"", ""IpId"") VALUES (@pUserId, @pIpId)
+    //    ON CONFLICT (""UserId"", ""IpId"") DO UPDATE SET ""UserId"" = EXCLUDED.""UserId"" RETURNING ""Id""
+    //),
+    //ins_useripsession AS (
+    //    INSERT INTO ""UserIpSessions"" (""UserIpId"", ""SessionId"") 
+    //    SELECT ins_userip.""Id"", ins_session.""Id"" FROM ins_userip, ins_session
+    //    ON CONFLICT (""UserIpId"", ""SessionId"") DO UPDATE SET ""UserIpId"" = EXCLUDED.""UserIpId"" RETURNING ""Id""
+    //),
+    //ins_useripsessiontoken AS (
+    //    INSERT INTO ""UserIpSessionTokens"" (""UserIpSessionId"", ""TokenId"") 
+    //    SELECT ins_useripsession.""Id"", @pTokenId FROM ins_useripsession
+    //    ON CONFLICT (""UserIpSessionId"", ""TokenId"") DO UPDATE SET ""UserIpSessionId"" = EXCLUDED.""UserIpSessionId"" RETURNING ""Id""
+    //),
+    //ins_useripsessiontokenroute AS (
+    //    INSERT INTO ""UserIpSessionTokenRoutes"" (""UserIpSessionTokenId"", ""RouteId"") 
+    //    SELECT ins_useripsessiontoken.""Id"", ins_route.""Id"" FROM ins_useripsessiontoken, ins_route
+    //    ON CONFLICT (""UserIpSessionTokenId"", ""RouteId"") DO UPDATE SET ""UserIpSessionTokenId"" = EXCLUDED.""UserIpSessionTokenId"" RETURNING ""Id""
+    //),
+    //ins_request AS (
+    //    INSERT INTO ""UserIpSessionTokenRouteRequests"" (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"", ""Count"")
+    //    SELECT ins_useripsessiontokenroute.""Id"", EXTRACT(YEAR FROM @pNow)::int, EXTRACT(MONTH FROM @pNow)::int, EXTRACT(DAY FROM @pNow)::int, EXTRACT(HOUR FROM @pNow)::int, 1
+    //    FROM ins_useripsessiontokenroute
+    //    ON CONFLICT (""UserIpSessionTokenRouteId"", ""Year"", ""Month"", ""Day"", ""Hour"") 
+    //    DO UPDATE SET ""Count"" = ""UserIpSessionTokenRouteRequests"".""Count"" + 1 RETURNING ""Id"", ""Count""
+    //)
+    //SELECT 
+    //    (SELECT ""Id"" FROM ins_session) AS SessionId,
+    //    (SELECT ""Id"" FROM ins_route) AS RouteId,
+    //    (SELECT ""Id"" FROM ins_userip) AS UserIpId,
+    //    (SELECT ""Id"" FROM ins_useripsession) AS UserIpSessionId,
+    //    (SELECT ""Id"" FROM ins_useripsessiontoken) AS UserIpSessionTokenId,
+    //    (SELECT ""Id"" FROM ins_useripsessiontokenroute) AS UserIpSessionTokenRouteId,
+    //    (SELECT ""Id"" FROM ins_request) AS UserIpSessionTokenRouteRequestId,
+    //    (SELECT ""Count"" FROM ins_request) AS Counter;";
 
-        // We openen de connectie handmatig en maken een command aan om EF te passeren
-        var connection = db.Database.GetDbConnection();
-        if (connection.State != ConnectionState.Open)
-        {
-            await connection.OpenAsync(ct);
-        }
+    //    // We openen de connectie handmatig en maken een command aan om EF te passeren
+    //    var connection = db.Database.GetDbConnection();
+    //    if (connection.State != ConnectionState.Open)
+    //    {
+    //        await connection.OpenAsync(ct);
+    //    }
 
-        await using var cmd = connection.CreateCommand();
-        cmd.CommandText = sql;
-        cmd.CommandType = CommandType.Text;
+    //    await using var cmd = connection.CreateCommand();
+    //    cmd.CommandText = sql;
+    //    cmd.CommandType = CommandType.Text;
 
-        // Parameters toevoegen
-        cmd.Parameters.Add(new NpgsqlParameter("@pSessionCode", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = sessionCode });
-        cmd.Parameters.Add(new NpgsqlParameter("@pRoutePath", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = routePath });
-        cmd.Parameters.Add(new NpgsqlParameter("@pUserId", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = (object?)userId ?? DBNull.Value });
-        cmd.Parameters.Add(new NpgsqlParameter("@pTokenId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (object?)tokenId ?? DBNull.Value });
-        cmd.Parameters.Add(new NpgsqlParameter("@pIpId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = ipId });
-        cmd.Parameters.Add(new NpgsqlParameter("@pNow", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = now });
+    //    // Parameters toevoegen
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pSessionCode", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = sessionCode });
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pRoutePath", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = routePath });
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pUserId", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = (object?)userId ?? DBNull.Value });
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pTokenId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (object?)tokenId ?? DBNull.Value });
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pIpId", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = ipId });
+    //    cmd.Parameters.Add(new NpgsqlParameter("@pNow", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = now });
 
-        // Voer uit en lees direct uit in één roundtrip
-        await using var reader = await cmd.ExecuteReaderAsync(ct);
-        if (await reader.ReadAsync(ct))
-        {
-            return new RequestIds
-            {
-                SessionId = reader.GetInt64(reader.GetOrdinal("SessionId")),
-                RouteId = reader.GetInt64(reader.GetOrdinal("RouteId")),
-                UserIpId = reader.GetInt64(reader.GetOrdinal("UserIpId")),
-                UserIpSessionId = reader.GetInt64(reader.GetOrdinal("UserIpSessionId")),
-                UserIpSessionTokenId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenId")),
-                UserIpSessionTokenRouteId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteId")),
-                UserIpSessionTokenRouteRequestId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteRequestId")),
-                Counter = reader.GetInt32(reader.GetOrdinal("Counter"))
-            };
-        }
+    //    // Voer uit en lees direct uit in één roundtrip
+    //    await using var reader = await cmd.ExecuteReaderAsync(ct);
+    //    if (await reader.ReadAsync(ct))
+    //    {
+    //        return new RequestIds
+    //        {
+    //            SessionId = reader.GetInt64(reader.GetOrdinal("SessionId")),
+    //            RouteId = reader.GetInt64(reader.GetOrdinal("RouteId")),
+    //            UserIpId = reader.GetInt64(reader.GetOrdinal("UserIpId")),
+    //            UserIpSessionId = reader.GetInt64(reader.GetOrdinal("UserIpSessionId")),
+    //            UserIpSessionTokenId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenId")),
+    //            UserIpSessionTokenRouteId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteId")),
+    //            UserIpSessionTokenRouteRequestId = reader.GetInt64(reader.GetOrdinal("UserIpSessionTokenRouteRequestId")),
+    //            Counter = reader.GetInt32(reader.GetOrdinal("Counter"))
+    //        };
+    //    }
 
-        throw new InvalidOperationException("PostgreSQL keerde geen resultaat terug.");
-    }
+    //    throw new InvalidOperationException("PostgreSQL keerde geen resultaat terug.");
+    //}
 
 
     //public async Task<RequestIds> DoTheRest_StoredProcedure(

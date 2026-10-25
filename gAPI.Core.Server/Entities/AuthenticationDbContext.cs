@@ -80,7 +80,6 @@ public class AuthenticationDbContext<TUser> : DbContext
         modelBuilder.Entity<UserIpSession<TUser>>().ToTable("UserIpSessions");
         modelBuilder.Entity<UserIpSessionToken<TUser>>().ToTable("UserIpSessionTokens");
         modelBuilder.Entity<UserIpSessionTokenRoute<TUser>>().ToTable("UserIpSessionTokenRoutes");
-        modelBuilder.Entity<UserIpSessionTokenRouteRequest<TUser>>()
-            .ToTable("UserIpSessionTokenRouteRequests");
+        modelBuilder.Entity<UserIpSessionTokenRouteRequest<TUser>>().ToTable("UserIpSessionTokenRouteRequests");
     }
 }

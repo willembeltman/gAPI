@@ -120,8 +120,8 @@ public static class {Name}
         services.AddSingleton<{IBusConnection}, {BusConnection}>();
 
         // Hubs
-        services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
-        services.AddScoped<{a.IClientContext.Name}, {a.Name}>();"))}
+        services.AddSingleton<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
+        services.AddSingleton<{a.IClientContext.Name}, {a.Name}>();"))}
 
         return services;
     }}

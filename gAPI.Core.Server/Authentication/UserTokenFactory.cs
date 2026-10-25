@@ -1,9 +1,5 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Interfaces;
-using Microsoft.Data.SqlClient;
+﻿using gAPI.Core.Server.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
 

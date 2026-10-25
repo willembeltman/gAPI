@@ -55,6 +55,8 @@ public class SharedReferences
         AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
         AuthenticationMiddleware = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationMiddleware", allSymbols);
 
+        HasNpg = SharedReferenceFinder.TryFind("Microsoft.EntityFrameworkCore.NpgsqlDbContextOptionsBuilderExtensions", allSymbols) != null;
+        HasSqlServer = SharedReferenceFinder.TryFind("Microsoft.EntityFrameworkCore.SqlServerDbContextOptionsExtensions", allSymbols) != null;
     }
 
 
@@ -94,5 +96,7 @@ public class SharedReferences
     public SharedReference? CustomStateMapping { get; }
     public SharedReference AuthenticationOptions { get; }
     public SharedReference AuthenticationMiddleware { get; }
+    public bool HasNpg { get; }
+    public bool HasSqlServer { get; }
     public SharedReference IAuthenticationServiceT { get; }
 }

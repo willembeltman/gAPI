@@ -1,30 +1,35 @@
 <Solution>
-    <Project Path="gAPI.AutoApi.Client/gAPI.AutoApi.Client.csproj" />
-    <Project Path="gAPI.AutoApi.Server/gAPI.AutoApi.Server.csproj" />
-    <Project Path="gAPI.AutoAuth.Client/gAPI.AutoAuth.Client.csproj" />
-    <Project Path="gAPI.AutoAuth.Server/gAPI.AutoAuth.Server.csproj" />
-    <Project Path="gAPI.AutoComponent/gAPI.AutoComponent.csproj" />
-    <Project Path="gAPI.AutoPage/gAPI.AutoPage.csproj" />
-    <Project Path="gAPI.AutoSerializer/gAPI.AutoSerializer.csproj" />
-    <Project Path="gAPI.AutoWss.Client/gAPI.AutoWss.Client.csproj" />
-    <Project Path="gAPI.AutoWss.Server/gAPI.AutoWss.Server.csproj" />
-    <Project Path="gAPI.CodeGen.Backend/gAPI.CodeGen.Backend.csproj" />
-    <Project Path="gAPI.CodeGen.Frontend/gAPI.CodeGen.Frontend.csproj" />
-    <Project Path="gAPI.Core.Client/gAPI.Core.Client.csproj" />
-    <Project Path="gAPI.Core.Server/gAPI.Core.Server.csproj" />
-    <Project Path="gAPI.Core/gAPI.Core.csproj" />
-    <Project Path="gAPI.EntityFrameworkDisk/gAPI.EntityFrameworkDisk.csproj" />
-    <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
-    <Project Path="gAPI.Llm.Client/gAPI.Llm.Client.csproj" />
-    <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
-  <Project Path="gAPI.AutoBus/gAPI.AutoBus.csproj" />
-  <Project Path="gAPI.Core.ServiceBus.AzureServiceBus/gAPI.Core.ServiceBus.AzureServiceBus.csproj" />
-  <Project Path="gAPI.Core.ServiceBus.Fabric/gAPI.Core.ServiceBus.Fabric.csproj" />
-  <Project Path="gAPI.Core.ServiceBus.RabbitMQ/gAPI.Core.ServiceBus.RabbitMQ.csproj" />
-  <Project Path="gAPI.Core.ServiceBus/gAPI.Core.ServiceBus.csproj" />
-    <Project Path="gAPI.Test.AutoBus.Fabric/gAPI.Test.AutoBus.Fabric.csproj" />
-  <Project Path="gAPI.Test.AutoBus.MainApp/gAPI.Test.AutoBus.MainApp.csproj" Id="e9d94ee5-4f52-4e35-aec3-c53061a05901" />
-  <Project Path="gAPI.Test.AutoBus.MicroService1/gAPI.Test.AutoBus.MicroService1.csproj" />
-  <Project Path="gAPI.Test.AutoBus.Microservice2/gAPI.Test.AutoBus.Microservice2.csproj" Id="9757da20-2633-4396-bac1-73bd08b917c8" />
-  <Project Path="gAPI.Test.AutoBus.Shared/gAPI.Test.AutoBus.Shared.csproj" Id="49b08df6-30a4-4007-bf8a-b6702b018d66" />
+    <Folder Name="/gAPI/">
+        <Project Path="gAPI.AutoApi.Client/gAPI.AutoApi.Client.csproj" />
+        <Project Path="gAPI.AutoApi.Server/gAPI.AutoApi.Server.csproj" />
+        <Project Path="gAPI.AutoAuth.Client/gAPI.AutoAuth.Client.csproj" />
+        <Project Path="gAPI.AutoAuth.Server/gAPI.AutoAuth.Server.csproj" />
+        <Project Path="gAPI.AutoBus/gAPI.AutoBus.csproj" />
+        <Project Path="gAPI.AutoComponent/gAPI.AutoComponent.csproj" />
+        <Project Path="gAPI.AutoPage/gAPI.AutoPage.csproj" />
+        <Project Path="gAPI.AutoSerializer/gAPI.AutoSerializer.csproj" />
+        <Project Path="gAPI.AutoWss.Client/gAPI.AutoWss.Client.csproj" />
+        <Project Path="gAPI.AutoWss.Server/gAPI.AutoWss.Server.csproj" />
+        <Project Path="gAPI.CodeGen.Backend/gAPI.CodeGen.Backend.csproj" />
+        <Project Path="gAPI.CodeGen.Frontend/gAPI.CodeGen.Frontend.csproj" />
+        <Project Path="gAPI.Core.Client/gAPI.Core.Client.csproj" />
+        <Project Path="gAPI.Core.Server/gAPI.Core.Server.csproj" />
+        <Project Path="gAPI.Core.ServiceBus.AzureServiceBus/gAPI.Core.ServiceBus.AzureServiceBus.csproj" />
+        <Project Path="gAPI.Core.ServiceBus.Fabric/gAPI.Core.ServiceBus.Fabric.csproj" />
+        <Project Path="gAPI.Core.ServiceBus.RabbitMQ/gAPI.Core.ServiceBus.RabbitMQ.csproj" />
+        <Project Path="gAPI.Core/gAPI.Core.csproj" />
+        <Project Path="gAPI.EntityFrameworkDisk/gAPI.EntityFrameworkDisk.csproj" />
+        <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
+        <Project Path="gAPI.Llm.Client/gAPI.Llm.Client.csproj" />
+        <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
+    </Folder>
+    <Project Path="gAPI.Test.Aspire/gAPI.Test.Aspire.csproj" />
+    <Project Path="gAPI.Test.Fabric/gAPI.Test.Fabric.csproj" />
+    <Project Path="gAPI.Test.MainApi/gAPI.Test.Main.Server.csproj" />
+    <Project Path="gAPI.Test.MainApp/gAPI.Test.Main.Client.csproj" />
+    <Project Path="gAPI.Test.MicroService1/gAPI.Test.MicroService1.csproj" />
+    <Project Path="gAPI.Test.Microservice2/gAPI.Test.Microservice2.csproj" DisplayName="gAPI.Test.MicroService2" />
+    <Project Path="gAPI.Test.Shared.Private/gAPI.Test.Shared.Private.csproj" />
+    <Project Path="gAPI.Test.Shared.Public/gAPI.Test.Shared.Public.csproj" />
+    <Project Path="gAPI.Test.Storage/gAPI.Test.Storage.csproj" />
 </Solution>

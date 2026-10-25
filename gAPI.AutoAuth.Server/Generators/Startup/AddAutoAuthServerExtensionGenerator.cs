@@ -215,15 +215,19 @@ public static class {Name}
         {{
             options.UseInMemoryDatabase(""InMemoryDb"");
         }}
-        else if (dbConnectionString != null && dbConnectionString.StartsWith(""Host="", System.StringComparison.OrdinalIgnoreCase))
-        {{
-            options.UseNpgsql(dbConnectionString);
-        }}
         else
         {{
-            options.UseSqlServer(
-                dbConnectionString,
-                sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
+            if (dbConnectionString != null && dbConnectionString.StartsWith(""Host="", System.StringComparison.OrdinalIgnoreCase))
+            {{{(Context.SharedReferences.HasNpg ? $@"
+                options.UseNpgsql(dbConnectionString);" : $@"
+                throw new Exception(""You have to reference Microsoft.EntityFrameworkCore.NpgsqlDbContextOptionsBuilderExtensions"");")}
+            }}
+            else
+            {{{(Context.SharedReferences.HasSqlServer ? $@"
+                options.UseSqlServer(
+                    dbConnectionString,
+                    sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));" : "")}
+            }}
         }}
     }});
 
@@ -240,15 +244,19 @@ public static class {Name}
         {{
             options.UseInMemoryDatabase(""InMemoryDb"");
         }}
-        else if (dbConnectionString != null && dbConnectionString.StartsWith(""Host="", System.StringComparison.OrdinalIgnoreCase))
-        {{
-            options.UseNpgsql(dbConnectionString);
-        }}
         else
         {{
-            options.UseSqlServer(
-                dbConnectionString,
-                sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
+            if (dbConnectionString != null && dbConnectionString.StartsWith(""Host="", System.StringComparison.OrdinalIgnoreCase))
+            {{{(Context.SharedReferences.HasNpg ? $@"
+                options.UseNpgsql(dbConnectionString);" : $@"
+                throw new Exception(""You have to reference Microsoft.EntityFrameworkCore.NpgsqlDbContextOptionsBuilderExtensions"");")}
+            }}
+            else
+            {{{(Context.SharedReferences.HasSqlServer ? $@"
+                options.UseSqlServer(
+                    dbConnectionString,
+                    sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));" : "")}
+            }}
         }}
     }});
 
