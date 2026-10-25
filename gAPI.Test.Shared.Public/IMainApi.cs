@@ -5,7 +5,7 @@ namespace gAPI.Test.Shared.Public;
 [GenerateApi]
 public interface IMainApi
 {
-    Task StartServerTests(CancellationToken ct);
+    Task StartServerTests(double time, CancellationToken ct);
 
     void SendAndForget(string message, CancellationToken ct);
     void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct);

@@ -1,21 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
+using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Dashboard;
 
 public class ConsoleBuffer : ILoggerProvider
 {
-    public ConcurrentQueue<ColorLine> Lines { get; } = [];
+    public Channel<ColorLine> Lines { get; } = Channel.CreateUnbounded<ColorLine>();
 
     // Bestaande methoden voor handmatige writes
     public void WriteError(string message, Exception ex)
     {
-        Lines.Enqueue(new ColorLine() { Color = ConsoleColor.Red, Text = $"{message}\r\n{ex?.Message}" });
+        Lines.Writer.TryWrite(new ColorLine() { Color = ConsoleColor.Red, Text = $"{message}\r\n{ex?.Message}" });
     }
 
     public void WriteInfo(string message)
     {
-        Lines.Enqueue(new ColorLine() { Color = ConsoleColor.White, Text = message });
+        Lines.Writer.TryWrite(new ColorLine() { Color = ConsoleColor.White, Text = message });
     }
 
     // ILoggerProvider implementatie

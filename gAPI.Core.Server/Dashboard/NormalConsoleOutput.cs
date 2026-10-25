@@ -1,34 +1,54 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Server.Dashboard;
 
-public sealed class NormalConsoleOutput(ConsoleBuffer ConsoleBuffer) : IHostedService
+public sealed class NormalConsoleOutput(
+    ILoggerFactory loggerFactory,
+    ConsoleBuffer ConsoleBuffer)
+    : IHostedService
 {
+    private readonly ILogger Logger = loggerFactory.CreateLogger<NormalConsoleOutput>();
     private CancellationTokenSource? Cts;
 
-    public async Task StartAsync(CancellationToken ct2)
+    public async Task StartAsync(CancellationToken ct)
     {
-        Cts = CancellationTokenSource.CreateLinkedTokenSource(ct2);
-        var ct = Cts.Token;
         _ = Task.Run(async () =>
         {
-            while (!ct.IsCancellationRequested)
+            Cts = new CancellationTokenSource();
+            try
             {
-                await Task.Delay(40, ct);
-
-                while (ConsoleBuffer.Lines.TryDequeue(out var line))
+                while (!ct.IsCancellationRequested)
                 {
-                    Console.WriteLine(line.Text, line.Color);
+                    await Task.Delay(40, Cts.Token);
+
+                    while (ConsoleBuffer.Lines.Reader.TryRead(out var line))
+                    {
+                        Console.WriteLine(line.Text, line.Color);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "StartAsync");
+            }
+            finally
+            {
+                if (Cts != null)
+                {
+                    await Cts.CancelAsync();
+                    Cts.Dispose();
                 }
             }
         }, ct);
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken ct)
     {
         if (Cts == null)
             return;
         await Cts.CancelAsync();
         Cts.Dispose();
+        Cts = null;
     }
 }

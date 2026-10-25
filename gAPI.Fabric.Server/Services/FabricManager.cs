@@ -54,7 +54,6 @@ public class FabricManager : IDashboardSnapshotGetter
         var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
     }
-
     public void StartNewBusFabricHost(TcpClient tcpClient)
     {
         // FabricHost abonneert zichzelf op connections
@@ -405,75 +404,6 @@ public class FabricManager : IDashboardSnapshotGetter
             ), state.Actor);
     }
 
-    public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_StreamingResponseClientToServer_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-            if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
-                return;
-
-            state.ResetTimeout();
-            state.Actor.EnqueueReceive(receiveSize);
-
-            if (response.IsCompleted ||
-                response.IsCancelled ||
-                response.ExceptionMessage != null)
-            {
-                state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
-
-                if (response.ExceptionMessage != null)
-                {
-                    state.Exceptions.TryAdd(
-                        caller.FabricConnectionId,
-                        response.ExceptionMessage);
-                }
-
-                if (response.IsCancelled)
-                {
-                    state.Cancel();
-                }
-
-                if (state.CompletedTargets.Count == state.Targets.Length &&
-                    state.TryComplete())
-                {
-                    OpenRequests.TryRemove(state.Routing.RequestId, out _);
-
-                    response = new StreamingResponseDto(
-                        response.Routing,
-                        response.ArgumentIndex,
-                        response.StreamId,
-                        true,
-                        state.Cancelled,
-                        state.Exceptions.Count == 0
-                            ? null
-                            : string.Join(", ", state.Exceptions.Values),
-                        response.BinaryData);
-
-                    await state.Caller.Send_StreamingResponse_ToApiAsync(
-                        response,
-                        state.Actor);
-                }
-
-                return;
-            }
-
-            response = new StreamingResponseDto(
-                response.Routing,
-                response.ArgumentIndex,
-                response.StreamId,
-                false,
-                false,
-                null,
-                response.BinaryData);
-
-            await state.Caller.Send_StreamingResponse_ToApiAsync(
-                response,
-                state.Actor);
-        }, ct);
-    }
     public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -489,11 +419,110 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (state.StreamRoutes.TryAdd(request.StreamId, caller))
             {
-                await state.Caller.Send_StreamingRequest_ToApiAsync(request, state.Actor);
+                if (request.ArgumentIndex < 0)
+                {
+                    foreach (var target in state.Targets)
+                    {
+                        await target.Send_StreamingRequest_ToApiAsync(request, state.Actor);
+                    }
+                }
+                else
+                {
+                    await state.Caller.Send_StreamingRequest_ToApiAsync(request, state.Actor);
+                }
             }
         }, ct);
     }
 
+    //public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    //{
+    //    _ = Task.Run(async () =>
+    //    {
+    //        if (logger.IsEnabled(LogLevel.Trace))
+    //            logger.LogTrace("{now}: Receive_StreamingResponseClientToServer_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+
+    //        if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
+    //            return;
+
+    //        state.ResetTimeout();
+    //        state.Actor.EnqueueReceive(receiveSize);
+
+    //        if (response.IsCompleted ||
+    //            response.IsCancelled ||
+    //            response.ExceptionMessage != null)
+    //        {
+    //            state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
+
+    //            if (response.ExceptionMessage != null)
+    //            {
+    //                state.Exceptions.TryAdd(
+    //                    caller.FabricConnectionId,
+    //                    response.ExceptionMessage);
+    //            }
+
+    //            if (response.IsCancelled)
+    //            {
+    //                state.Cancel();
+    //            }
+
+    //            if (state.CompletedTargets.Count == state.Targets.Length &&
+    //                state.TryComplete())
+    //            {
+    //                OpenRequests.TryRemove(state.Routing.RequestId, out _);
+
+    //                response = new StreamingResponseDto(
+    //                    response.Routing,
+    //                    response.ArgumentIndex,
+    //                    response.StreamId,
+    //                    true,
+    //                    state.Cancelled,
+    //                    state.Exceptions.Count == 0
+    //                        ? null
+    //                        : string.Join(", ", state.Exceptions.Values),
+    //                    response.BinaryData);
+
+    //                await state.Caller.Send_StreamingResponse_ToApiAsync(
+    //                    response,
+    //                    state.Actor);
+    //            }
+
+    //            return;
+    //        }
+
+    //        response = new StreamingResponseDto(
+    //            response.Routing,
+    //            response.ArgumentIndex,
+    //            response.StreamId,
+    //            false,
+    //            false,
+    //            null,
+    //            response.BinaryData);
+
+    //        await state.Caller.Send_StreamingResponse_ToApiAsync(
+    //            response,
+    //            state.Actor);
+    //    }, ct);
+    //}
+
+    public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_StreamingResponse_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+
+            if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+            {
+                await sender.Send_StreamingResponse_ToApiAsync(response, state.Actor);
+            }
+        }, ct);
+    }
 
 
 

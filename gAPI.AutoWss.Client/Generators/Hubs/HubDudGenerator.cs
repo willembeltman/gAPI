@@ -22,6 +22,8 @@ public class HubDud_Generator : _BaseGenerator
     public Interface Interface { get; }
     public SharedReference? OwnImplementation { get; }
 
+    public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
+
     public override void GenerateCode()
     {
         if (OwnImplementation != null)
@@ -33,6 +35,7 @@ public class HubDud_Generator : _BaseGenerator
         Reg("System");
         Reg("System.Collections.Generic");
         Reg("System.Threading.Tasks");
+        Reg(IsHubProxyAttribute);
         Reg(Interface);
 
         // Zorg dat alle namespaces van argumenten en return types netjes geladen worden
@@ -53,6 +56,7 @@ public class HubDud_Generator : _BaseGenerator
 namespace {Namespace};
 
 // Marker: HubDud Proxy Class om cross-compilatie te ondersteunen zonder netwerk-overhead
+[{IsHubProxyAttribute}]
 public sealed class {Name} : {Interface}
 {{
 {methodsCode}

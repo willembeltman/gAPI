@@ -1,36 +1,52 @@
 ﻿using gAPI.Generated;
 using gAPI.Test.Shared.Public;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace gAPI.Test.Main.Server;
 
 public class MainApi(
+    ILoggerFactory loggerFactory, 
     IAuthenticationService authenticationService,
     IBusConnection busConnection,
     IBusContext busContext,
     IClientContext clientContext)
     : IMainApi
 {
+    private readonly ILogger Logger = loggerFactory.CreateLogger<MainApi>();
     private async IAsyncEnumerable<string> MyList()
     {
         yield return "1";
+        Logger.LogInformation($"MyList - 1");
         yield return "2";
+        Logger.LogInformation($"MyList - 2");
         yield return "3";
+        Logger.LogInformation($"MyList - 3");
     }
-    public async Task StartServerTests(CancellationToken ct)
+    public async Task StartServerTests(double time, CancellationToken ct)
     {
+        var sw = Stopwatch.StartNew();
+
         // Terug naar client
         clientContext.MainHub.ToSession(authenticationService.SessionId).SendAndForget("hoi", ct);
+        Logger.LogInformation($"clientContext.MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
         await clientContext.MainHub.ToSession(authenticationService.SessionId).Send("hoi", ct);
+        Logger.LogInformation($"clientContext.MainHub.Send - {sw.ElapsedMilliseconds}ms");
+
         var result = string.Empty;
         await foreach (var item in clientContext.MainHub.ToSession(authenticationService.SessionId).InvokeList("hoi", ct))
         {
             result = item;
+            Logger.LogInformation($"mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
         await foreach (var item in clientContext.MainHub.ToSession(authenticationService.SessionId).InvokeListWithList(MyList(), ct))
         {
             result = item;
+            Logger.LogInformation($"mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
+
+        Logger.LogInformation($"mainApi ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
 
     public async void SendAndForget(string message, CancellationToken ct)

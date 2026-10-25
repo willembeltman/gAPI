@@ -59,9 +59,6 @@ public sealed class DashboardConsoleOutput : IHostedService
             var stopwatch = Stopwatch.StartNew();
             var nextRefresh = 0;
 
-            //void OnChanged(object? sender, EventArgs eventArgs) => Dirty = true;
-            //Manager.Changed += OnChanged;
-
             try
             {
                 while (!ct.IsCancellationRequested)
@@ -80,7 +77,7 @@ public sealed class DashboardConsoleOutput : IHostedService
                         RenderSnapshot(Manager.GetDashboardSnapshot());
                     }
 
-                    while (ConsoleBuffer.Lines.TryDequeue(out var line))
+                    while (ConsoleBuffer.Lines.Reader.TryRead(out var line))
                     {
                         LogWindow.WriteLine(line.Text, line.Color);
                     }
