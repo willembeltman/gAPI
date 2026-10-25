@@ -1,5 +1,5 @@
 ﻿using gAPI.CodeGen.Frontend.Enums;
-using gAPI.CodeGen.Frontend.Models.CrudsModels;
+using gAPI.CodeGen.Frontend.Models.CrudModels;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 
 namespace gAPI.CodeGen.Frontend.Models;

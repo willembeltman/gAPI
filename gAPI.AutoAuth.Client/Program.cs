@@ -1,10 +1,9 @@
-﻿using gAPI.AutoSerializer;
-using gAPI.AutoAuth.Client.Helpers;
+﻿using gAPI.AutoAuth.Client.Helpers;
 using gAPI.AutoAuth.Client.Models;
+using gAPI.AutoSerializer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 

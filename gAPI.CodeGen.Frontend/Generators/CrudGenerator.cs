@@ -4,7 +4,7 @@ using gAPI.CodeGen.Frontend.Generators.Razor;
 using gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 using gAPI.CodeGen.Frontend.Models;
 using gAPI.CodeGen.Frontend.Models.Configs;
-using gAPI.CodeGen.Frontend.Models.CrudsModels;
+using gAPI.CodeGen.Frontend.Models.CrudModels;
 
 namespace gAPI.CodeGen.Frontend.Generators;
 

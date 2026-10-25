@@ -1,9 +1,9 @@
-﻿using gAPI.AutoSerializer;
-using gAPI.AutoSerializer.Generators;
-using gAPI.AutoAuth.Client.Generators;
+﻿using gAPI.AutoAuth.Client.Generators;
 using gAPI.AutoAuth.Client.Generators.Authentication;
 using gAPI.AutoAuth.Client.Generators.Startup;
 using gAPI.AutoAuth.Client.Models;
+using gAPI.AutoSerializer;
+using gAPI.AutoSerializer.Generators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;

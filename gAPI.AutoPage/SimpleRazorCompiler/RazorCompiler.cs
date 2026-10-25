@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace gAPI.SimpleRazorCompiler;
+namespace gAPI.AutoPage.SimpleRazorCompiler;
 
 public static class RazorCompiler
 {

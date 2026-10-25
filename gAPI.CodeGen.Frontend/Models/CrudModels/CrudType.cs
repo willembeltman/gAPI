@@ -8,7 +8,7 @@ using gAPI.Core.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 
-namespace gAPI.CodeGen.Frontend.Models.CrudsModels;
+namespace gAPI.CodeGen.Frontend.Models.CrudModels;
 
 /// <summary>
 /// Een Crud is een verzameling van methoden die CRUD (Create, Read, Update, Delete) operaties uitvoeren op een bepaald 

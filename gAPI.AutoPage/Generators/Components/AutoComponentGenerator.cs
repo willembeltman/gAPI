@@ -1,5 +1,5 @@
 ﻿using gAPI.AutoPage.Models.CrudModels;
-using gAPI.SimpleRazorCompiler;
+using gAPI.AutoPage.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Components
 {

@@ -1,6 +1,6 @@
 using gAPI.AutoAuth.Server.Models;
 
-namespace gAPI.AutoAuth.Server.Generators.Authentication;
+namespace gAPI.AutoAuth.Server.Generators.Startup;
 
 public class MapAutoAuthServerExtensionGenerator : _BaseGenerator
 {

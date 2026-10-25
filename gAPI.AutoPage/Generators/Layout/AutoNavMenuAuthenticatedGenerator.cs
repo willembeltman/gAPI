@@ -1,4 +1,4 @@
-﻿using gAPI.SimpleRazorCompiler;
+﻿using gAPI.AutoPage.SimpleRazorCompiler;
 
 namespace gAPI.AutoPage.Generators.Layout
 {

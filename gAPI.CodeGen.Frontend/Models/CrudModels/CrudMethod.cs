@@ -3,7 +3,7 @@ using gAPI.CodeGen.Frontend.Enums;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.ServiceModels;
 
-namespace gAPI.CodeGen.Frontend.Models.CrudsModels;
+namespace gAPI.CodeGen.Frontend.Models.CrudModels;
 
 public class CrudMethod : ICrudMethod
 {

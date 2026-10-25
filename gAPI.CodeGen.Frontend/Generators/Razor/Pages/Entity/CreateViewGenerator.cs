@@ -1,7 +1,7 @@
 ﻿using gAPI.AutoComponent.Interfaces;
 using gAPI.CodeGen.Frontend.Helpers;
 using gAPI.CodeGen.Frontend.Models.Configs;
-using gAPI.CodeGen.Frontend.Models.CrudsModels;
+using gAPI.CodeGen.Frontend.Models.CrudModels;
 
 namespace gAPI.CodeGen.Frontend.Generators.Razor.Pages.Entity;
 

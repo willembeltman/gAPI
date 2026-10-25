@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoAuth.Server.Generators;
 using gAPI.AutoAuth.Server.Generators.Authentication;
+using gAPI.AutoAuth.Server.Generators.Startup;
 using gAPI.AutoAuth.Server.Models;
 using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
