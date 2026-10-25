@@ -239,14 +239,15 @@ public class {Name}
         var functions2 = "";
         var code = $@"
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
-    {{{(Context.ServiceContext.BusInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
+    {{{(Context.ServiceContext.BusInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable))
+        .Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable).Select(method =>
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable).Select(method =>
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
             return
@@ -265,7 +266,7 @@ public class {Name}
                                 var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
-                                    var response = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                    var response = await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
                                         ___ct"))});
                                     yield return {hub}_{method}_Serializer(response);
@@ -322,7 +323,7 @@ public class {Name}
         var code = "";
         var functions = "";
 
-        if (method.ResponseType.IsIAsyncEnumerable)
+        if (method.ResponseType.IsTaskT || method.ResponseType.IsIAsyncEnumerable)
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
             code = $@"

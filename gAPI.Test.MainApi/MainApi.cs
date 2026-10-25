@@ -46,6 +46,32 @@ public class MainApi(
             Logger.LogInformation($"mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
+
+        busContext.Service1.ToAny().SendAndForget("hoi", ct);
+        Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
+        await busContext.Service1.ToAny().Send("hoi", ct);
+        Logger.LogInformation("mainApi.Send");
+
+        result = await busContext.Service1.ToAny().InvokeTask("hoi", ct);
+        Logger.LogInformation($"mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+
+        await foreach (var item in busContext.Service1.ToAny().InvokeList("hoi", ct))
+        {
+            result = item;
+            Logger.LogInformation($"mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+        result = await busContext.Service1.ToAny().InvokeTaskWithList(MyList(), ct);
+        Logger.LogInformation($"mainApi.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
+
+        await foreach (var item in busContext.Service1.ToAny().InvokeListWithList(MyList(), ct))
+        {
+            result = item;
+            Logger.LogInformation($"mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+
         Logger.LogInformation($"mainApi ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
 
