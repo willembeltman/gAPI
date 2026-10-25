@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
 namespace gAPI.Test.Shared.Private;
 
@@ -13,5 +14,5 @@ public interface IMainService
     Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
-
+    Task StartServiceTests(SessionId sessionId, CancellationToken ct);
 }

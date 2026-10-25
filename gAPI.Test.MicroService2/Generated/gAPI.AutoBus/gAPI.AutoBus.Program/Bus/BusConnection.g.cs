@@ -235,6 +235,19 @@ public class BusConnection
                                 }
                                 return;
                             }
+                        case "StartServiceTests":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    await client.StartServiceTests(
+                                        sessionId,
+                                        ___ct);
+                                }
+                                return;
+                            }
                     }
                     break;
                 }
@@ -270,6 +283,19 @@ public class BusConnection
                                 return;
                             }
                     
+                        case "StartServiceTests":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    await client.StartServiceTests(
+                                        sessionId,
+                                        ___ct);
+                                }
+                                return;
+                            }
                         case "Send":
                             {
                                 var ___offset = 0;
@@ -371,6 +397,19 @@ public class BusConnection
                                 foreach (var client in clients)
                                 {
                                     await client.Ping(
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "StartServiceTests":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    await client.StartServiceTests(
+                                        sessionId,
                                         ___ct);
                                 }
                                 return;
@@ -672,6 +711,8 @@ public class BusConnection
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
+
+
     public string IService1_SendAndForgetWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
@@ -798,6 +839,7 @@ public class BusConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
 
     
 }

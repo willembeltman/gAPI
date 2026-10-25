@@ -1,10 +1,13 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
 namespace gAPI.Test.Shared.Private;
 
 [GenerateBus]
 public interface IService1
 {
+    Task StartServiceTests(SessionId sessionId, CancellationToken ct);
+
     void SendAndForget(string message, CancellationToken ct);
     void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct);
     Task Send(string message, CancellationToken ct);
@@ -13,8 +16,6 @@ public interface IService1
     Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
-
-
 
     IAsyncEnumerable<double> Ping(CancellationToken ct);
     Task Pong(CancellationToken ct);

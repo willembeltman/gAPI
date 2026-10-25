@@ -30,6 +30,48 @@ public class Service1Client(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<Service1Client>();
     readonly ServiceId ___ServiceId = new("IService1");
 
+    public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
+    {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        ___internalCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___internalCts.Token;
+
+        var ___routing = new BusRoutingDto(
+            ___busConnection.BusConnectionId,
+            RequestId.New(),
+            ___ServiceId,
+            new("StartServiceTests"),
+            ___timeOut.Value,
+            ___deliveryMode,
+            ___to,
+            ___busConnectionId
+        );
+        var ___payload = ___StartServiceTests_Serializer(
+            sessionId);
+        
+        
+        {
+            await ___busConnection.SendAsync(
+                ___routing,
+                ___payload, 
+                ___internalCts);
+        }
+    }
+    private byte[] ___StartServiceTests_Serializer(SessionId sessionId)
+    {
+        var ___offset = 0;
+        SessionIdSpanSerializer.Length(ref ___offset, sessionId);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, sessionId);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
     public async void SendAndForget(string message, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);

@@ -1,16 +1,22 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Ids;
+using gAPI.Generated;
 using gAPI.Test.Shared.Private;
 using System.ClientModel.Primitives;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace gAPI.Test.Main.Server;
 
 public class MainService(
+    ILoggerFactory loggerFactory,
+    IClientContext clientContext,
     IBusConnection busConnection,
     IBusContext busContext)
     : IHostedService
     , IMainService
 {
+    private readonly ILogger Logger = loggerFactory.CreateLogger<MainService>();
+
     private CancellationTokenSource? Cts;
     async Task IHostedService.StartAsync(CancellationToken ct)
     {
@@ -29,6 +35,46 @@ public class MainService(
         Cts.Dispose();
         Cts = null;
     }
+
+
+
+    private async IAsyncEnumerable<string> MyList()
+    {
+        yield return "1";
+        Logger.LogInformation($"MyList - 1");
+        yield return "2";
+        Logger.LogInformation($"MyList - 2");
+        yield return "3";
+        Logger.LogInformation($"MyList - 3");
+    }
+    public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew();
+
+        clientContext.MainHub.ToSession(sessionId).SendAndForget("hoi", ct);
+        Logger.LogInformation($"MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
+        await clientContext.MainHub.ToSession(sessionId).Send("hoi", ct);
+        Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
+
+        var result = string.Empty;
+        await foreach (var item in clientContext.MainHub.ToSession(sessionId).InvokeList("hoi", ct))
+        {
+            result = item;
+            Logger.LogInformation($"MainHub.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+        await foreach (var item in clientContext.MainHub.ToSession(sessionId).InvokeListWithList(MyList(), ct))
+        {
+            result = item;
+            Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+        Logger.LogInformation($"MainService ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
+    }
+
+
+
 
     public async void SendAndForget(string message, CancellationToken ct)
     {

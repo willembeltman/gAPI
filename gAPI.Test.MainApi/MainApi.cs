@@ -1,4 +1,5 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Ids;
+using gAPI.Generated;
 using gAPI.Test.Shared.Public;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -26,53 +27,55 @@ public class MainApi(
     public async Task StartServerTests(double time, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
+        var sessionId = authenticationService.SessionId;
 
         // Terug naar client
-        clientContext.MainHub.ToSession(authenticationService.SessionId).SendAndForget("hoi", ct);
-        Logger.LogInformation($"clientContext.MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
+        clientContext.MainHub.ToSession(sessionId).SendAndForget("hoi", ct);
+        Logger.LogInformation($"MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
-        await clientContext.MainHub.ToSession(authenticationService.SessionId).Send("hoi", ct);
-        Logger.LogInformation($"clientContext.MainHub.Send - {sw.ElapsedMilliseconds}ms");
+        await clientContext.MainHub.ToSession(sessionId).Send("hoi", ct);
+        Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
 
         var result = string.Empty;
-        await foreach (var item in clientContext.MainHub.ToSession(authenticationService.SessionId).InvokeList("hoi", ct))
+        await foreach (var item in clientContext.MainHub.ToSession(sessionId).InvokeList("hoi", ct))
         {
             result = item;
-            Logger.LogInformation($"mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"MainHub.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
-        await foreach (var item in clientContext.MainHub.ToSession(authenticationService.SessionId).InvokeListWithList(MyList(), ct))
+        await foreach (var item in clientContext.MainHub.ToSession(sessionId).InvokeListWithList(MyList(), ct))
         {
             result = item;
-            Logger.LogInformation($"mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
 
         busContext.Service1.ToAny().SendAndForget("hoi", ct);
-        Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Service1.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
         await busContext.Service1.ToAny().Send("hoi", ct);
-        Logger.LogInformation("mainApi.Send");
+        Logger.LogInformation("Service1.Send");
 
         result = await busContext.Service1.ToAny().InvokeTask("hoi", ct);
-        Logger.LogInformation($"mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Service1.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
 
         await foreach (var item in busContext.Service1.ToAny().InvokeList("hoi", ct))
         {
             result = item;
-            Logger.LogInformation($"mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"Service1.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
         result = await busContext.Service1.ToAny().InvokeTaskWithList(MyList(), ct);
-        Logger.LogInformation($"mainApi.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Service1.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
 
         await foreach (var item in busContext.Service1.ToAny().InvokeListWithList(MyList(), ct))
         {
             result = item;
-            Logger.LogInformation($"mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"Service1.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
+        await busContext.Service1.ToAny().StartServiceTests(sessionId, ct);
 
-        Logger.LogInformation($"mainApi ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Service1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
 
     public async void SendAndForget(string message, CancellationToken ct)

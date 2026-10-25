@@ -1,5 +1,5 @@
 ﻿using gAPI.Generated;
-using gAPI.Test.MicroService1;
+using gAPI.Test.MicroService2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
