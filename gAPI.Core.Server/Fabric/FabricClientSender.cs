@@ -237,21 +237,6 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }, ct);
     }
 
-    //public async Task Send_StreamingRequest_ToFabricAsync(StreamingRequestDto message, CancellationToken ct)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("{now} QUEUED Send_StreamingRequest_ResponseEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        if (Logger.IsEnabled(LogLevel.Trace))
-    //            Logger.LogTrace("{now} Send_StreamingRequest_ResponseEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.StreamingRequest_ResponseEnumerable);
-    //        writer.Write(message);
-    //    }, ct);
-    //}
-    
     public async Task Send_StreamingResponse_ToFabricAsync(StreamingResponseDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -280,20 +265,7 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
             writer.Write(message);
         }, ct);
     }
-    //public async Task Send_StreamingResponse_ToFabricAsync(StreamingResponseDto message, CancellationToken ct)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ArgumentEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        if (Logger.IsEnabled(LogLevel.Trace))
-    //            Logger.LogTrace("{now} Send_StreamingResponse_ArgumentEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.StreamingResponse_ArgumentEnumerable);
-    //        writer.Write(message);
-    //    }, ct);
-    //}
 
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
@@ -306,112 +278,112 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }
     }
 
-    internal async Task Send_BusSubscribe_ToFabricAsync(BusSubscribeDto subscribe, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSubscribe);
-            writer.Write(subscribe);
-        }, ct);
-    }
-    internal async Task Send_BusUnsubscribe_ToFabricAsync(BusUnsubscribeDto unsubscribe, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusUnsubscribe);
-            writer.Write(unsubscribe);
-        }, ct);
-    }
+    //internal async Task Send_BusSubscribe_ToFabricAsync(BusSubscribeDto subscribe, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSubscribe);
+    //        writer.Write(subscribe);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusUnsubscribe_ToFabricAsync(BusUnsubscribeDto unsubscribe, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusUnsubscribe);
+    //        writer.Write(unsubscribe);
+    //    }, ct);
+    //}
 
-    internal async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForget);
-            writer.Write(request);
-        }, ct);
-    }
-    internal async Task Send_BusSendAndForgetRequestCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForgetCancelled);
-            writer.Write(request);
-        }, ct);
-    }
+    //internal async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForget);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusSendAndForgetRequestCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForgetCancelled);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
 
-    internal async Task Send_BusSendRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequest);
-            writer.Write(request);
-        }, ct);
-    }
-    internal async Task Send_BusSendCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestCancelled);
-            writer.Write(request);
-        }, ct);
-    }
-    internal async Task Send_BusSendRequestDone_ToFabricAsync(BusSendRequestDoneDto ack, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestDone);
-            writer.Write(ack);
-        }, ct);
-    }
+    //internal async Task Send_BusSendRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequest);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusSendCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestCancelled);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusSendRequestDone_ToFabricAsync(BusSendRequestDoneDto ack, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestDone);
+    //        writer.Write(ack);
+    //    }, ct);
+    //}
 
-    internal async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequest);
-            writer.Write(request);
-        }, ct);
-    }
-    internal async Task Send_BusInvokeRequestCancelled_ToFabricAsync(BusInvokeRequestCancelledDto request, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestCancelled);
-            writer.Write(request);
-        }, ct);
-    }
-    internal async Task Send_BusInvokeRequestAck_ToFabricAsync(BusInvokeRequestAckDto ack, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestAck);
-            writer.Write(ack);
-        }, ct);
-    }
-    internal async Task Send_BusInvokeRequestDone_ToFabricAsync(BusInvokeRequestDoneDto done, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestDone);
-            writer.Write(done);
-        }, ct);
-    }
+    //internal async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequest);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusInvokeRequestCancelled_ToFabricAsync(BusInvokeRequestCancelledDto request, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestCancelled);
+    //        writer.Write(request);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusInvokeRequestAck_ToFabricAsync(BusInvokeRequestAckDto ack, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestAck);
+    //        writer.Write(ack);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusInvokeRequestDone_ToFabricAsync(BusInvokeRequestDoneDto done, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestDone);
+    //        writer.Write(done);
+    //    }, ct);
+    //}
 
-    internal async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest);
-            writer.Write(busStreamingRequestDto);
-        }, ct);
-    }
-    internal async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
-    {
-        await EnqueueAsync(writer =>
-        {
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse);
-            writer.Write(response);
-        }, ct);
-    }
+    //internal async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest);
+    //        writer.Write(busStreamingRequestDto);
+    //    }, ct);
+    //}
+    //internal async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
+    //{
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse);
+    //        writer.Write(response);
+    //    }, ct);
+    //}
 }

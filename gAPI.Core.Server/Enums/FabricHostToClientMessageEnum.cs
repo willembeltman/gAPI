@@ -22,19 +22,4 @@ public enum FabricHostToClientMessageEnum
     StreamingRequest,
     StreamingResponse,
 
-
-    BusFireAndForget,
-    BusFireAndForgetCancelled,
-
-    BusSendRequest,
-    BusSendRequestCancelled,
-    BusSendRequestDone,
-
-    BusInvokeRequest,
-    BusInvokeRequestCancelled,
-    BusInvokeRequestAck,
-    BusInvokeRequestDone,
-
-    BusStreamingRequest,
-    BusStreamingResponse
 }

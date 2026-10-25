@@ -52,33 +52,9 @@ public class Generator
             else
                 throw new Exception("You cannot have two or more service bus providers in the same project");
 
-
-        //if (SharedReferences.BaseFabricConnection != null &&
-        //    SharedReferences.BaseRabbitMQConnection == null &&
-        //    SharedReferences.BaseAzureConnection == null)
-        //    FabricConnection = new BusConnectionGenerator(this, "Fabric", SharedReferences.BaseFabricConnection, true);
-
-        //else if (SharedReferences.BaseFabricConnection == null &&
-        //    SharedReferences.BaseRabbitMQConnection != null &&
-        //    SharedReferences.BaseAzureConnection == null)
-        //    RabbitMQConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseRabbitMQConnection);
-
-        //else if (SharedReferences.BaseFabricConnection == null &&
-        //    SharedReferences.BaseRabbitMQConnection == null &&
-        //    SharedReferences.BaseAzureConnection != null)
-        //    AzureConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
-
-        //else if (SharedReferences.BaseFabricConnection == null &&
-        //    SharedReferences.BaseRabbitMQConnection == null &&
-        //    SharedReferences.BaseAzureConnection == null)
-        //    throw new Exception("You have to reference one of the bus nuget packages, like: gAPI.Core.ServiceBus.RabbitMQ");
-
-        //else
-        //    throw new Exception("You cannot have two service bus packages selected.");
-
         AddAutoBusExtension = new AddAutoBusExtensionGenerator(this);
 
-        ClientHandlers = serviceContext.HubInterfaces
+        ClientHandlers = serviceContext.BusInterfaces
             .Select(@interface => new BusClient_Generator(this, @interface))
             .ToArray();
 
@@ -89,10 +65,6 @@ public class Generator
         ClientContexts = IClientHandlerContexts
             .Select(iclientHandler => new BusClientContext_Generator(this, iclientHandler))
             .ToArray();
-
-
-        //IStateParser = new IStateParserGenerator(this);
-        //StateParser = new StateParserGenerator(this);
     }
 
     public ServiceContext ServiceContext { get; }

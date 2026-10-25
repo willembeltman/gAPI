@@ -16,11 +16,11 @@ public class BusConnectionCollection : IEnumerable<BusConnection>
             return null;
         return item;
     }
-    public BusConnection TryAdd(BusConnectionId busConnectionId, FabricHost connection)
+    public BusConnection TryAdd(BusConnectionId busConnectionId, FabricBusHost connection)
     {
         return BusConnections.GetOrAdd(busConnectionId, busConnectionId => new BusConnection(busConnectionId, connection));
     }
-    public BusConnection? TryRemove(BusConnectionId busConnectionId, FabricHost connection)
+    public BusConnection? TryRemove(BusConnectionId busConnectionId, FabricBusHost connection)
     {
         if (BusConnections.TryRemove(busConnectionId, out var busConnection) == false)
             return null;

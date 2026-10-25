@@ -11,13 +11,13 @@ public sealed class BusRequestState : IDisposable
 {
     public required BusRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
-    public required FabricHost Caller { get; init; }
-    public required FabricHost[] Targets { get; init; }
+    public required FabricBusHost Caller { get; init; }
+    public required FabricBusHost[] Targets { get; init; }
 
-    public ConcurrentDictionary<FabricConnectionId, byte> ReadyTargets { get; } = [];
-    public ConcurrentDictionary<FabricConnectionId, byte> CompletedTargets { get; } = [];
-    public ConcurrentDictionary<StreamId, FabricHost> StreamRoutes { get; } = [];
-    public ConcurrentDictionary<FabricConnectionId, string> Exceptions { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, byte> ReadyTargets { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, byte> CompletedTargets { get; } = [];
+    public ConcurrentDictionary<StreamId, FabricBusHost> StreamRoutes { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, string> Exceptions { get; } = [];
 
     private int _cancelled;
     public bool Cancelled => Volatile.Read(ref _cancelled) != 0;

@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.ServiceBus.Config;
+﻿namespace gAPI.Core.Server.Config;
 
 public record ServiceBusConfig(
     int? MaxPackageSize,

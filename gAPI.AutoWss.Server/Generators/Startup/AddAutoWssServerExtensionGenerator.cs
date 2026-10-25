@@ -186,10 +186,8 @@ public static class {Name}
             sessionCache,
             streamingCache,
             serviceSubscriptions,
-            busSubscriptions,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
-
 
         if (fabricConnectionString == null)
         {{

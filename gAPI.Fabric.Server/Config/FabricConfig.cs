@@ -1,29 +1,13 @@
 ﻿using gAPI.Core.Server.Dashboard;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace gAPI.Fabric.Server.Config;
 
 public class FabricConfig : IDashboardName
 {
     public int Port { get; set; } = 9494;
+    public int BusPort { get; set; } = 9595;
     public LogLevel LogLevel { get; set; }
 
-    public string DashboardName => $"Port {Port} LogLevel {LogLevel}";
-
-    //public async static Task<FabricConfig> LoadAsync()
-    //{
-    //    if (!File.Exists("config.json"))
-    //    {
-    //        var newConfig = new FabricConfig();
-    //        await using var newStream = File.Create("config.json");
-    //        await JsonSerializer.SerializeAsync(newStream, newConfig, new JsonSerializerOptions { WriteIndented = true });
-    //        return newConfig;
-    //    }
-    //    var stream = File.OpenRead("config.json");
-    //    if (stream == null)
-    //        return new FabricConfig();
-    //    var config = await JsonSerializer.DeserializeAsync<FabricConfig>(stream);
-    //    return config ?? new FabricConfig();
-    //}
+    public string DashboardName => $"Port {Port} / BusPort {BusPort} / LogLevel {LogLevel}";
 }

@@ -1,7 +1,7 @@
-using gAPI.Core.ServiceBus.Config;
+using gAPI.Core.Server.Config;
 using Microsoft.Extensions.Configuration;
 
-namespace gAPI.Core.ServiceBus.Extensions;
+namespace gAPI.Core.Server.Extensions;
 
 public static class CreateBusConfigExtension
 {

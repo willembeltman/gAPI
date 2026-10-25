@@ -36,12 +36,12 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         Connections.TryRemove(connection.FabricConnectionId, out _);
         EnqueueReceive(receiveSize);
     }
-    public async Task BusSubscribe(FabricHost connection, BusConnectionId busConnectionId, long receiveSize)
+    public async Task BusSubscribe(FabricBusHost connection, BusConnectionId busConnectionId, long receiveSize)
     {
         BusConnections.TryAdd(busConnectionId, connection);
         EnqueueReceive(receiveSize);
     }
-    public async Task BusUnsubscribe(FabricHost connection, BusConnectionId busConnectionId, long receiveSize)
+    public async Task BusUnsubscribe(FabricBusHost connection, BusConnectionId busConnectionId, long receiveSize)
     {
         BusConnections.TryRemove(busConnectionId, connection);
         EnqueueReceive(receiveSize);
@@ -66,7 +66,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
             return (Connections.Values, this);
         }
     }
-    public (IEnumerable<FabricHost>, IActor) GetFabricHosts(BusToChoice To, BusConnectionId? ToBusConnectionId)
+    public (IEnumerable<FabricBusHost>, IActor) GetFabricBusHosts(BusToChoice To, BusConnectionId? ToBusConnectionId)
     {
         if (To == BusToChoice.ToAny)
         {

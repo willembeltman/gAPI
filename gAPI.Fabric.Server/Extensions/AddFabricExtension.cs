@@ -2,6 +2,7 @@ using gAPI.Core.Server.Dashboard;
 using gAPI.Fabric.Server.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace gAPI.Fabric.Server.Extensions;
 
@@ -14,6 +15,7 @@ public static class AddFabricExtension
 
         var consoleBuffer = new ConsoleBuffer();
         builder.Services.AddSingleton(consoleBuffer);
+        builder.Logging.AddProvider(consoleBuffer);
 
         var manager = new FabricManager(config, consoleBuffer);
         builder.Services.AddSingleton(manager);
@@ -25,6 +27,8 @@ public static class AddFabricExtension
 
         // Hosted services starten
         builder.Services.AddHostedService<FabricServer>();
+        builder.Services.AddHostedService<FabricBusServer>();
+
         if (useConsoleDashboard && CanRenderConsole())
             builder.Services.AddHostedService<DashboardConsoleOutput>();
         else

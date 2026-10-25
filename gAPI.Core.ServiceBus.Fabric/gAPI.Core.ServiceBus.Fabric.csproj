@@ -9,7 +9,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
-	  <ProjectReference Include="..\gAPI.Core.ServiceBus\gAPI.Core.ServiceBus.csproj" />
 	</ItemGroup>
 
 </Project>

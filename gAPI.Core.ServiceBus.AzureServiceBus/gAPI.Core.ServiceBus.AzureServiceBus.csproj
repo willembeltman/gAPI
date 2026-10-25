@@ -12,7 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\gAPI.Core.ServiceBus\gAPI.Core.ServiceBus.csproj" />
+	  <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
 	</ItemGroup>
 
 </Project>

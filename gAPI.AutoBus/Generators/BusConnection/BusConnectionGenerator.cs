@@ -67,7 +67,7 @@ public class BusConnectionGenerator : _BaseGenerator
         Reg(BaseConnection);
         if (OverloadFabricClient && FabricClient != null)
             Reg(FabricClient);
-        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
             foreach (var method in @interface.Methods)
@@ -108,7 +108,7 @@ public class {Name}
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
     {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
-    {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
+    {string.Join("", Context.ServiceContext.BusInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
     {functions}
 }}";
         Code = $"{GetNamespacesCode()}{Code}";
@@ -116,7 +116,7 @@ public class {Name}
 
     private string GenerateHubProperties()
     {
-        return string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
+        return string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
 
     readonly List<{@interface}> {@interface.CleanName.ToMultiple()} = [];
     readonly SemaphoreSlim {@interface.CleanName.ToMultiple()}Lock = new(1, 1);
@@ -137,7 +137,7 @@ public class {Name}
 
     private string GenerateSubscribe()
     {
-        return string.Join("", Context.ServiceContext.HubInterfaces.Select(hub => $@"
+        return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
     public async Task SubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
     {{
         await TryConnectAsync(___ct);
@@ -155,7 +155,7 @@ public class {Name}
     }
     private string GenerateUnsubscibe()
     {
-        return string.Join("", Context.ServiceContext.HubInterfaces.Select(hub => $@"
+        return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
     public async Task UnsubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
     {{
         if (!Initialized)
@@ -178,9 +178,9 @@ public class {Name}
         var functions = "";
         var code = $@"
     protected override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{{(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
+    {{{(Context.ServiceContext.BusInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
@@ -239,9 +239,9 @@ public class {Name}
         var functions2 = "";
         var code = $@"
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
-    {{{(Context.ServiceContext.HubInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
+    {{{(Context.ServiceContext.BusInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();

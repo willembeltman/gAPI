@@ -20,6 +20,7 @@ public class FabricManager : IDashboardSnapshotGetter
     public readonly FabricConfig Config;
     public readonly FabricManagerId FabricManagerId;
     public readonly FabricHostCollection AllConnections;
+    public readonly FabricBusHostCollection AllBusConnections;
     public readonly ServiceCollection Services;
     public readonly ConcurrentDictionary<RequestId, RequestState> OpenRequests;
     public readonly ConcurrentDictionary<RequestId, BusRequestState> OpenBusRequests;
@@ -37,6 +38,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
         SessionCache = new();
         AllConnections = new();
+        AllBusConnections = new();
         Services = new(this);
         OpenRequests = new();
         OpenBusRequests = new();
@@ -51,8 +53,13 @@ public class FabricManager : IDashboardSnapshotGetter
         // FabricHost abonneert zichzelf op connections
         var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
+    }
 
-        //NotifyChanged();
+    public void StartNewBusFabricHost(TcpClient tcpClient)
+    {
+        // FabricHost abonneert zichzelf op connections
+        var fabricBusHost = new FabricBusHost(this, tcpClient);
+        fabricBusHost.Start();
     }
 
     public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
@@ -178,7 +185,7 @@ public class FabricManager : IDashboardSnapshotGetter
             if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+            state.StartTimeout(request.Routing.Timeout, () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
                 _ = CompleteRequestAsync(logger, state);
@@ -289,7 +296,7 @@ public class FabricManager : IDashboardSnapshotGetter
             if (!OpenRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+            state.StartTimeout(request.Routing.Timeout, () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
                 _ = ReadyInvokeAsync(logger, state);
@@ -532,7 +539,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
 
 
-    public async Task Receive_BusSubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSubscribeDto subscribe, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSubscribe_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSubscribeDto subscribe, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -543,7 +550,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 .BusSubscribe(caller, subscribe.BusConnectionId, receiveSize);
         }, ct);
     }
-    public async Task Receive_BusUnsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusUnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusUnsubscribe_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusUnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -555,7 +562,7 @@ public class FabricManager : IDashboardSnapshotGetter
         }, ct);
     }
 
-    public async Task Receive_BusSendFireAndForget_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendFireAndForget_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -566,7 +573,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusSendFireAndForgetCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendFireAndForgetCancelled_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -578,7 +585,7 @@ public class FabricManager : IDashboardSnapshotGetter
         }, ct);
     }
 
-    public async Task Receive_BusSendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -602,7 +609,7 @@ public class FabricManager : IDashboardSnapshotGetter
             if (!OpenBusRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+            state.StartTimeout(request.Routing.Timeout, () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
                 _ = CompleteBusRequestAsync(logger, state);
@@ -612,7 +619,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 await host.Send_BusSendRequest_ToApiAsync(request, actor);
         }, ct);
     }
-    public async Task Receive_BusSendRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendRequestCancelled_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -631,7 +638,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Cancel();
         }, ct);
     }
-    public async Task Receive_BusSendRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusSendRequestDoneDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusSendRequestDone_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -679,7 +686,7 @@ public class FabricManager : IDashboardSnapshotGetter
             ), state.Actor);
     }
 
-    public async Task Receive_BusInvokeRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusInvokeRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusInvokeRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -710,7 +717,7 @@ public class FabricManager : IDashboardSnapshotGetter
             if (!OpenBusRequests.TryAdd(request.Routing.RequestId, state))
                 return;
 
-            state.StartTimeout(TimeSpan.FromSeconds(100), () =>
+            state.StartTimeout(request.Routing.Timeout, () =>
             {
                 state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
                 _ = ReadyBusInvokeAsync(logger, state);
@@ -720,7 +727,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 await host.Send_BusInvokeRequest_ToApiAsync(request, actor);
         }, ct);
     }
-    public async Task Receive_BusInvokeRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusInvokeRequestCancelled_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusInvokeRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -739,7 +746,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Cancel();
         }, ct);
     }
-    public async Task Receive_BusInvokeRequestAck_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestAckDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusInvokeRequestAck_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusInvokeRequestAckDto done, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -760,7 +767,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusInvokeRequestDone_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusInvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusInvokeRequestDone_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusInvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -953,7 +960,7 @@ public class FabricManager : IDashboardSnapshotGetter
     //    }, ct);
     //}
 
-    public async Task Receive_BusStreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusStreamingRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -982,7 +989,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusStreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
+    public async Task Receive_BusStreamingResponse_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -1006,7 +1013,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
 
 
-    private (FabricHost[], IActor) ResolveBusTargets(BusRoutingDto routing, long receiveSize)
+    private (FabricBusHost[], IActor) ResolveBusTargets(BusRoutingDto routing, long receiveSize)
     {
         var service = Services[routing.ServiceId];
         service.EnqueueReceive(receiveSize);
@@ -1051,6 +1058,13 @@ public class FabricManager : IDashboardSnapshotGetter
                 OpenRequests.TryRemove(item);
             }
         }
+    }
+    public void Disconnected(FabricBusHost host)
+    {
+        var connectionId = host.FabricConnectionId;
+
+        AllBusConnections.RemoveConnection(connectionId);
+        Services.RemoveBusConnection(host);
 
         foreach (var item in OpenBusRequests)
         {

@@ -25,21 +25,4 @@ public enum FabricClientToHostMessageEnum
     ClearSession,
     GetSessionCookieData,
 
-    BusSubscribe,
-    BusUnsubscribe,
-
-    BusFireAndForget,
-    BusFireAndForgetCancelled,
-
-    BusSendRequest,
-    BusSendRequestCancelled,
-    BusSendRequestDone,
-
-    BusInvokeRequest,
-    BusInvokeRequestCancelled,
-    BusInvokeRequestAck,
-    BusInvokeRequestDone,
-
-    BusStreamingRequest,
-    BusStreamingResponse,
 }

@@ -34,7 +34,7 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
         Reg(IClientContext);
         Reg(ClientContext);
         Reg(ServiceBusConfig);
-        Reg("gAPI.Core.ServiceBus.Extensions");
+        Reg("gAPI.Core.Server.Extensions");
         Reg("System.Net");
         Reg("Microsoft.Extensions.Primitives");
         Reg("Microsoft.Extensions.DependencyInjection");
@@ -49,7 +49,7 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             Reg(clientHandlerContext.IClientContext);
         }
 
-        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
             foreach (var method in @interface.Methods)
@@ -80,10 +80,10 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
         {{
             var sessionCache = new {Context.SharedReferences.SessionCache}();
             var streamingCache = new {Context.SharedReferences.StreamingCache}();
-            var subscriptions = new {Context.SharedReferences.ServiceSubscriptionCollection}();
-            var busConnections = new BusConnectionCollection();
+            var busConnections = new {Context.SharedReferences.BusConnectionCollection}();
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new {Context.SharedReferences.FabricClient}(sessionCache, streamingCache, subscriptions, busConnections, loggerFactory, config.ConnectionString);
+            return new {Context.SharedReferences.FabricClient}(
+                sessionCache, streamingCache, busConnections, loggerFactory, config.ConnectionString);
         }});";
             }
         }
@@ -117,7 +117,7 @@ public static class {Name}
 {fabricClientCode}
 
         // Connection
-        services.AddScoped<{IBusConnection}, {BusConnection}>();
+        services.AddSingleton<{IBusConnection}, {BusConnection}>();
 
         // Hubs
         services.AddScoped<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"

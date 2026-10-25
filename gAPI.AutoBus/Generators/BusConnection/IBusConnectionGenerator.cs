@@ -23,7 +23,7 @@ public class IBusConnectionGenerator : _BaseGenerator
     public override void GenerateCode()
     {
         Reg(IBaseBusConnection);
-        foreach (var item in Context.ServiceContext.HubInterfaces)
+        foreach (var item in Context.ServiceContext.BusInterfaces)
         {
             Reg(item);
         }
@@ -34,7 +34,7 @@ public class IBusConnectionGenerator : _BaseGenerator
 namespace {Namespace};
 
 public interface {Name} : {IBaseBusConnection}
-{{{string.Join("", Context.ServiceContext.HubInterfaces.Select(hub => $@"
+{{{string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
     Task SubscribeAsync({hub} implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync({hub} implementation, CancellationToken ___ct = default);"))}
 }}";

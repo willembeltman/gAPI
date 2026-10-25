@@ -8,14 +8,14 @@ namespace gAPI.Fabric.Server.Models;
 
 public class BusConnection : IActor
 {
-    public BusConnection(BusConnectionId busConnectionId, FabricHost connection)
+    public BusConnection(BusConnectionId busConnectionId, FabricBusHost connection)
     {
         BusConnectionId = busConnectionId;
         Connection = connection;
     }
 
     public BusConnectionId BusConnectionId { get; }
-    public FabricHost Connection { get; }
+    public FabricBusHost Connection { get; }
 
 
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();

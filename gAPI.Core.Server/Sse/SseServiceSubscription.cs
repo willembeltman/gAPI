@@ -4,6 +4,7 @@ using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
+using gAPI.Core.Sse;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -12,7 +13,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
-namespace gAPI.Core.Sse;
+namespace gAPI.Core.Server.Sse;
 
 public class SseServiceSubscription : IServiceSubscription
     , IServerConnection

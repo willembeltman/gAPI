@@ -1,8 +1,10 @@
 ﻿using gAPI.AutoBus.Models;
 using gAPI.AutoSerializer;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace gAPI.AutoBus.Generators.BusClient;
 
@@ -55,7 +57,7 @@ public class BusClient_Generator : _BaseGenerator
         Reg(BusConnectionId);
         Reg(DeliveryMode);
 
-        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
             foreach (var method in @interface.Methods)
@@ -104,6 +106,8 @@ public class {Name}(
             code += GenerateVoid(method);
         if (method.ResponseType.IsTask)
             code += GenerateTask(method);
+        if (method.ResponseType.IsTaskT)
+            code += GenerateTaskT(method, ref functions, functionNames);
         if (method.ResponseType.IsIAsyncEnumerable)
             code += GenerateIAsyncEnumerable(method, ref functions, functionNames);
         code += GenerateSerializer(method);
@@ -215,6 +219,64 @@ public class {Name}(
         }}" : "")}
     }}";
     }
+    private string GenerateTaskT(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
+    {
+        var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
+        var responseInnerType = method.ResponseType.UnderlayingTypes.Single();
+        return $@"
+    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
+    {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});
+        ___internalCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___internalCts.Token;"
+        : $@"
+        using var ___internalCts = new CancellationTokenSource(___timeOut.Value);
+        var ___ct = ___internalCts.Token;")}
+
+        var ___routing = new {BusRoutingDto}(
+            ___busConnection.BusConnectionId,
+            {RequestId}.New(),
+            ___ServiceId,
+            new(""{method}""),
+            ___timeOut.Value,
+            ___deliveryMode,
+            ___to,
+            ___busConnectionId
+        );
+        var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+            {arg}"))});
+        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___internalCts);" : ""))}
+       
+        var ___responses = ___busConnection.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ___internalCts);
+        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        try" : "")}
+        {{
+            await foreach (var ___response in ___responses)
+            {{
+                if (___ct.IsCancellationRequested)
+                    throw new TaskCanceledException();
+                
+                ___internalCts.CancelAfter(___timeOut.Value);
+
+                var ___offset = 0;
+                var ___span = new Span<byte>(___response);
+                return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
+            }}
+        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        finally
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
+        }}" : "")}
+        throw new KeyNotFoundException();
+    }}";
+    }
+
     private string GenerateIAsyncEnumerable(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);

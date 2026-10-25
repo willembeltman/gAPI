@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
+using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Fabric;
-using gAPI.Core.ServiceBus.Config;
-using gAPI.Core.ServiceBus.Extensions;
 using gAPI.Test.AutoBus.Shared;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,18 +41,18 @@ public static class AddAutoBusExtension
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Fabric Client
-        services.TryAddSingleton<FabricClient>(sp =>
+        services.TryAddSingleton<BusFabricClient>(sp =>
         {
             var sessionCache = new SessionCache();
             var streamingCache = new StreamingCache();
-            var subscriptions = new ServiceSubscriptionCollection();
             var busConnections = new BusConnectionCollection();
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new FabricClient(sessionCache, streamingCache, subscriptions, busConnections, loggerFactory, config.ConnectionString);
+            return new BusFabricClient(
+                sessionCache, streamingCache, busConnections, loggerFactory, config.ConnectionString);
         });
 
         // Connection
-        services.AddScoped<IBusConnection, BusConnection>();
+        services.AddSingleton<IBusConnection, BusConnection>();
 
         // Hubs
         services.AddScoped<IBusContext, BusContext>();

@@ -180,16 +180,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
         }, actor);
     }
 
-    //public async Task Send_StreamingRequest_ResponseEnumerable_ToApiAsync(StreamingRequestDto message, IActor actor)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("{now}: Send_StreamingRequestServerToClient_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-    //    await Enqueue(writer =>
-    //    {
-    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingRequest_ResponseEnumerable);
-    //        writer.Write(message);
-    //    }, actor);
-    //}
     public async Task Send_StreamingResponse_ToApiAsync(StreamingResponseDto message, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -200,7 +190,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
             writer.Write(message);
         }, actor);
     }
-
     public async Task Send_StreamingRequest_ToApiAsync(StreamingRequestDto message, IActor actor)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -211,16 +200,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
             writer.Write(message);
         }, actor);
     }
-    //public async Task Send_StreamingResponse_ArgumentEnumerable_ToApiAsync(StreamingResponseDto message, IActor actor)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace("{now}: Send_StreamingResponseServerToClient_ToApiAsync({response}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-    //    await Enqueue(writer =>
-    //    {
-    //        FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingResponse_ArgumentEnumerable);
-    //        writer.Write(message);
-    //    }, actor);
-    //}
 
 
     public async Task Send_GetSessionCookieDataResponse_ToApiAsync(SendGetSessionCookieDataResponseDto message, IActor actor)
@@ -243,103 +222,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
             writer.Write(message);
         }, actor);
     }
-
-    public async Task Send_BusFireAndForget_ToApiAsync(BusSendRequestDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusFireAndForget);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusFireAndForgetCancelled_ToApiAsync(BusSendRequestCancelledDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusFireAndForgetCancelled);
-            writer.Write(message);
-        }, actor);
-    }
-
-    public async Task Send_BusSendRequest_ToApiAsync(BusSendRequestDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusSendRequest);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusSendRequestCancelled_ToApiAsync(BusSendRequestCancelledDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusSendRequestCancelled);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusSendRequestDone_ToApiAsync(BusSendRequestDoneDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusSendRequestDone);
-            writer.Write(message);
-        }, actor);
-    }
-
-    public async Task Send_BusInvokeRequest_ToApiAsync(BusInvokeRequestDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusInvokeRequest);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusInvokeRequestCancelled_ToApiAsync(BusInvokeRequestCancelledDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusInvokeRequestCancelled);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusInvokeRequestAck_ToApiAsync(BusInvokeRequestAckDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusInvokeRequestAck);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusInvokeRequestDone_ToApiAsync(BusInvokeRequestDoneDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusInvokeRequestDone);
-            writer.Write(message);
-        }, actor);
-    }
-
-    public async Task Send_BusStreamingRequest_ToApiAsync(BusStreamingRequestDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_BusStreamingRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusStreamingRequest);
-            writer.Write(message);
-        }, actor);
-    }
-    public async Task Send_BusStreamingResponse_ToApiAsync(BusStreamingResponseDto message, IActor actor)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_BusStreamingResponse_ToApiAsync({response}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.BusStreamingResponse);
-            writer.Write(message);
-        }, actor);
-    }
-
 
     private async Task SendLoop()
     {
@@ -514,97 +396,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
                         }
                         break;
 
-                    case FabricClientToHostMessageEnum.BusSubscribe:
-                        {
-                            var busSubscribe = reader.ReadBusSubscribeDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSubscribe_FromApiAsync(this, ManagerLogger, busSubscribe, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusUnsubscribe:
-                        {
-                            var busUnsubscribe = reader.ReadBusUnsubscribeDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusUnsubscribe_FromApiAsync(this, ManagerLogger, busUnsubscribe, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusFireAndForget:
-                        {
-                            var busFireAndForget = reader.ReadBusSendRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendFireAndForget_FromApiAsync(this, ManagerLogger, busFireAndForget, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusFireAndForgetCancelled:
-                        {
-                            var busFireAndForgetCancelled = reader.ReadBusSendRequestCancelledDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendFireAndForgetCancelled_FromApiAsync(this, ManagerLogger, busFireAndForgetCancelled, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusSendRequest:
-                        {
-                            var busSendRequest = reader.ReadBusSendRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequest_FromApiAsync(this, ManagerLogger, busSendRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusSendRequestCancelled:
-                        {
-                            var busSendRequestCancelled = reader.ReadBusSendRequestCancelledDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequestCancelled_FromApiAsync(this, ManagerLogger, busSendRequestCancelled, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusSendRequestDone:
-                        {
-                            var busSendRequestAck = reader.ReadBusSendRequestDoneDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequestDone_FromApiAsync(this, ManagerLogger, busSendRequestAck, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusInvokeRequest:
-                        {
-                            var busInvokeRequest = reader.ReadBusInvokeRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequest_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusInvokeRequestCancelled:
-                        {
-                            var busInvokeRequest = reader.ReadBusInvokeRequestCancelledDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestCancelled_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusInvokeRequestAck:
-                        {
-                            var busInvokeRequestAck = reader.ReadBusInvokeRequestAckDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestAck_FromApiAsync(this, ManagerLogger, busInvokeRequestAck, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusInvokeRequestDone:
-                        {
-                            var busInvokeRequestDone = reader.ReadBusInvokeRequestDoneDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestDone_FromApiAsync(this, ManagerLogger, busInvokeRequestDone, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusStreamingRequest:
-                        {
-                            var busStreamingRequest = reader.ReadBusStreamingRequestDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusStreamingRequest_FromApiAsync(this, ManagerLogger, busStreamingRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.BusStreamingResponse:
-                        {
-                            var busStreamingResponse = reader.ReadBusStreamingResponseDto();
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusStreamingResponse_FromApiAsync(this, ManagerLogger, busStreamingResponse, receiveSize, Cts.Token);
-                        }
-                        break;
                 }
 
                 var size2 = counter.BytesRead - previousBytesRead;

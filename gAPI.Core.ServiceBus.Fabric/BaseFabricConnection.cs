@@ -2,14 +2,14 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
-using gAPI.Core.ServiceBus.Config;
+using gAPI.Core.Server.Config;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.ServiceBus.Fabric;
 
 public abstract class BaseFabricConnection(
     ILoggerFactory loggerFactory,
-    FabricClient fabricClient,
+    BusFabricClient fabricClient,
     ServiceBusConfig busConfig)
     : IBaseFabricConnection
 {

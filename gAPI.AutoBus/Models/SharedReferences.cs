@@ -9,11 +9,13 @@ public class SharedReferences
 {
     public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
+        BusConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.BusConnectionCollection", allSymbols);
+        
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
-
-        ServiceBusConfig = SharedReferenceFinder.Find("gAPI.Core.ServiceBus.Config.ServiceBusConfig", allSymbols);
+        
+        ServiceBusConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServiceBusConfig", allSymbols);
         BusRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusRoutingDto", allSymbols);
         BusSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusSendRequestDto", allSymbols);
         BusInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusInvokeRequestDto", allSymbols);
@@ -28,13 +30,14 @@ public class SharedReferences
         BaseRabbitMQConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.BaseRabbitMQConnection", allSymbols);
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
         
-        FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
+        FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.BusFabricClient", allSymbols);
         SessionCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         StreamingCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
         ServiceSubscriptionCollection = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
         DeliveryMode = SharedReferenceFinder.Find("gAPI.Core.Enums.DeliveryMode", allSymbols);
     }
 
+    public SharedReference BusConnectionCollection { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference RequestId { get; }
