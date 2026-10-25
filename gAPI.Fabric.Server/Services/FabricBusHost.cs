@@ -25,7 +25,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
     private readonly Channel<SendQueueItem> SendQueue;
     private readonly CancellationTokenSource Cts;
 
-    public FabricBusConnectionId FabricConnectionId { get; }
+    public FabricBusConnectionId FabricBusConnectionId { get; }
     public ILogger<FabricHost> Logger { get; }
     public ILogger<FabricManager> ManagerLogger { get; }
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
@@ -76,7 +76,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
         Cts = new CancellationTokenSource();
         Stream = tcpClient.GetStream();
         SendQueue = Channel.CreateUnbounded<SendQueueItem>();
-        FabricConnectionId = BusConnections.AddConnection(this);
+        FabricBusConnectionId = BusConnections.AddConnection(this);
         Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
         ManagerLogger = ((ILoggerFactory)this).CreateLogger<FabricManager>();
     }
@@ -202,7 +202,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
 
         await Send_SynchronizeFabricIds_ToApiAsync(new SynchronizeBusFabricIdsDto(
             Manager.FabricManagerId,
-            FabricConnectionId), Manager.System);
+            FabricBusConnectionId), Manager.System);
 
         var previous = counter.BytesWritten;
         await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
@@ -225,7 +225,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
 
     private async Task ReceiveLoop()
     {
-        Console.WriteInfo($"FabricHost {FabricConnectionId} started");
+        Console.WriteInfo($"FabricHost {FabricBusConnectionId} started");
 
         try
         {
@@ -340,11 +340,11 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
         catch (Exception ex)
         {
             Logger.LogError(ex, "ReceiveLoop");
-            Console.WriteError($"FabricClient #{FabricConnectionId.Value}: receive loop failed.", ex);
+            Console.WriteError($"FabricClient #{FabricBusConnectionId.Value}: receive loop failed.", ex);
         }
         Dispose();
 
-        Console.WriteInfo($"FabricHost {FabricConnectionId} stopped");
+        Console.WriteInfo($"FabricHost {FabricBusConnectionId} stopped");
     }
 
     public void Dispose()

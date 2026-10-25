@@ -405,26 +405,6 @@ public class FabricManager : IDashboardSnapshotGetter
             ), state.Actor);
     }
 
-    // De orginele iteratie op de InvokeRequest:
-    //public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_StreamingRequestServerToClient_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-    //        if (!OpenRequests.TryGetValue(request.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        foreach (var target in state.Targets)
-    //        {
-    //            await target.Send_StreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
-    //        }
-    //    }, ct);
-    //}
     public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -494,8 +474,6 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Actor);
         }, ct);
     }
-
-    // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
     public async Task Receive_StreamingRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -515,25 +493,6 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    //public async Task Receive_StreamingResponse_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, StreamingResponseDto response, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_StreamingResponseServerToClient_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-    //        if (!OpenRequests.TryGetValue(response.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
-    //        {
-    //            await sender.Send_StreamingResponse_ArgumentEnumerable_ToApiAsync(response, state.Actor);
-    //        }
-    //    }, ct);
-    //}
 
 
 
@@ -611,7 +570,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, "Invoke request timed out.");
                 _ = CompleteBusRequestAsync(logger, state);
             });
 
@@ -651,10 +610,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            state.CompletedTargets[caller.FabricConnectionId] = 1;
+            state.CompletedTargets[caller.FabricBusConnectionId] = 1;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, done.ExceptionMessage);
             }
             if (done.Cancelled)
             {
@@ -719,7 +678,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, "Invoke request timed out.");
                 _ = ReadyBusInvokeAsync(logger, state);
             });
 
@@ -759,7 +718,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor?.EnqueueReceive(receiveSize);
 
-            state.ReadyTargets[caller.FabricConnectionId] = 0;
+            state.ReadyTargets[caller.FabricBusConnectionId] = 0;
 
             if (state.ReadyTargets.Count == state.Targets.Length)
             {
@@ -780,10 +739,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor?.EnqueueReceive(receiveSize);
 
-            state.CompletedTargets[caller.FabricConnectionId] = 0;
+            state.CompletedTargets[caller.FabricBusConnectionId] = 0;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, done.ExceptionMessage);
             }
             if (done.Cancelled)
             {
@@ -824,141 +783,6 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
             ), state.Actor);
     }
-
-
-    // De orginele iteratie op de InvokeRequest:
-
-
-    // De orginele iteratie op de InvokeRequest:
-    //public async Task Receive_BusStreamingRequest_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_BusStreamingRequest_ResponseEnumerable_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-    //        if (!OpenBusRequests.TryGetValue(request.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        foreach (var target in state.Targets)
-    //        {
-    //            await target.Send_BusStreamingRequest_ResponseEnumerable_ToApiAsync(request, state.Actor);
-    //        }
-    //    }, ct);
-    //}
-    //public async Task Receive_BusStreamingResponse_ResponseEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_BusStreamingResponse_ResponseEnumerable_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-    //        if (!OpenBusRequests.TryGetValue(response.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        if (response.IsCompleted ||
-    //            response.IsCancelled ||
-    //            response.ExceptionMessage != null)
-    //        {
-    //            state.CompletedTargets.TryAdd(caller.FabricConnectionId, 0);
-
-    //            if (response.ExceptionMessage != null)
-    //            {
-    //                state.Exceptions.TryAdd(
-    //                    caller.FabricConnectionId,
-    //                    response.ExceptionMessage);
-    //            }
-
-    //            if (response.IsCancelled)
-    //            {
-    //                state.Cancel();
-    //            }
-
-    //            if (state.CompletedTargets.Count == state.Targets.Length &&
-    //                state.TryComplete())
-    //            {
-    //                OpenRequests.TryRemove(state.Routing.RequestId, out _);
-
-    //                response = new BusStreamingResponseDto(
-    //                    response.Routing,
-    //                    response.ArgumentIndex,
-    //                    response.StreamId,
-    //                    true,
-    //                    state.Cancelled,
-    //                    state.Exceptions.Count == 0
-    //                        ? null
-    //                        : string.Join(", ", state.Exceptions.Values),
-    //                    response.BinaryData);
-
-    //                await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
-    //                    response,
-    //                    state.Actor);
-    //            }
-
-    //            return;
-    //        }
-
-    //        response = new BusStreamingResponseDto(
-    //            response.Routing,
-    //            response.ArgumentIndex,
-    //            response.StreamId,
-    //            false,
-    //            false,
-    //            null,
-    //            response.BinaryData);
-
-    //        await state.Caller.Send_BusStreamingResponse_ResponseEnumerable_ToApiAsync(
-    //            response,
-    //            state.Actor);
-    //    }, ct);
-    //}
-
-    // De argument iteraties die meegegeven zijn bij de SendRequest / InvokeRequest:
-
-    //public async Task Receive_BusStreamingRequest_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_BusStreamingRequest_ArgumentEnumerable_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
-
-    //        if (!OpenBusRequests.TryGetValue(request.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        if (state.StreamRoutes.TryAdd(request.StreamId, caller))
-    //        {
-    //            await state.Caller.Send_BusStreamingRequest_ArgumentEnumerable_ToApiAsync(request, state.Actor);
-    //        }
-    //    }, ct);
-    //}
-    //public async Task Receive_BusStreamingResponse_ArgumentEnumerable_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, BusStreamingResponseDto response, long receiveSize, CancellationToken ct)
-    //{
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (logger.IsEnabled(LogLevel.Trace))
-    //            logger.LogTrace("{now}: Receive_BusStreamingResponse_ArgumentEnumerable_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
-
-    //        if (!OpenBusRequests.TryGetValue(response.Routing.RequestId, out var state))
-    //            return;
-
-    //        state.ResetTimeout();
-    //        state.Actor.EnqueueReceive(receiveSize);
-
-    //        if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
-    //        {
-    //            await sender.Send_BusStreamingResponse_ArgumentEnumerable_ToApiAsync(response, state.Actor);
-    //        }
-    //    }, ct);
-    //}
 
     public async Task Receive_BusStreamingRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
@@ -1010,9 +834,6 @@ public class FabricManager : IDashboardSnapshotGetter
     }
 
 
-
-
-
     private (FabricBusHost[], IActor) ResolveBusTargets(BusRoutingDto routing, long receiveSize)
     {
         var service = Services[routing.ServiceId];
@@ -1040,9 +861,6 @@ public class FabricManager : IDashboardSnapshotGetter
         return ([hosts[idx]], service);
     }
 
-
-
-
     public void Disconnected(FabricHost host)
     {
         var connectionId = host.FabricConnectionId;
@@ -1061,14 +879,14 @@ public class FabricManager : IDashboardSnapshotGetter
     }
     public void Disconnected(FabricBusHost host)
     {
-        var connectionId = host.FabricConnectionId;
+        var connectionId = host.FabricBusConnectionId;
 
         AllBusConnections.RemoveConnection(connectionId);
         Services.RemoveBusConnection(host);
 
         foreach (var item in OpenBusRequests)
         {
-            if (item.Value.Caller.FabricConnectionId == connectionId)
+            if (item.Value.Caller.FabricBusConnectionId == connectionId)
             {
                 OpenBusRequests.TryRemove(item);
             }
@@ -1084,18 +902,33 @@ public class FabricManager : IDashboardSnapshotGetter
 
     public FabricDashboardSnapshot GetDashboardSnapshot()
     {
-        var connections = AllConnections
+        var connections1 = AllConnections
             .Select(connection =>
             {
                 var send = connection.GetSendBytesPerSecond();
                 var receive = connection.GetReceiveBytesPerSecond();
                 return new FabricConnectionSnapshot(
-                    connection.FabricConnectionId.Value.ToString(),
+                    "#" + connection.FabricConnectionId.Value.ToString(),
                     send.bytes,
                     receive.bytes,
                     send.count,
                     receive.count);
-            })
+            });
+        var connections2 = AllBusConnections
+            .Select(connection =>
+            {
+                var send = connection.GetSendBytesPerSecond();
+                var receive = connection.GetReceiveBytesPerSecond();
+                return new FabricConnectionSnapshot(
+                    "Bus #" + connection.FabricBusConnectionId.Value.ToString(),
+                    send.bytes,
+                    receive.bytes,
+                    send.count,
+                    receive.count);
+            });
+
+        var connections = connections1
+            .Concat(connections2)
             .OrderBy(connection => connection.ConnectionId)
             .ToArray();
 
@@ -1121,7 +954,12 @@ public class FabricManager : IDashboardSnapshotGetter
                     sendSpeed += sendUser.bytes;
                     sendCount += sendUser.count;
                 }
-
+                foreach (var busconnection in service.BusConnections)
+                {
+                    var sendUser = busconnection.GetSendSpeed();
+                    sendSpeed += sendUser.bytes;
+                    sendCount += sendUser.count;
+                }
 
                 var receivedSpeed = 0L;
                 var receivedCount = 0;
