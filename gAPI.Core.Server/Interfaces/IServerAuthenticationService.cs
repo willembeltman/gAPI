@@ -22,7 +22,6 @@ public interface IServerAuthenticationService
         string? sessionData,
         string? stateData,
         CancellationToken ct);
-    //Task<AuthenticationInitializeResult> ReInitializeAsync(CancellationToken ct);
 
     bool IsStateDataChanged();
     string? GetStateData();

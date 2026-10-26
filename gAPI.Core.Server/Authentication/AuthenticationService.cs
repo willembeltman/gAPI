@@ -175,6 +175,7 @@ public class AuthenticationService<TUser, TStateDto>(
         if (stateData == null)
             return _Result ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 
+        // TODO wat wil ik hier doen, waarom moet alles helemaal opnieuw?
         _Headers.StateData = stateData;
 
         return await Make(_Headers, ct);
