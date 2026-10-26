@@ -72,7 +72,7 @@ public class UseCasesGenerator : BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {DbContext.Name} db,
+    IDbFactory<{DbContext.Name}> dbFactory,
     {IAuthenticationService}<{User.FullName}, {StateDto.FullName}> authenticationService)
     : {IUseCase.FullName}<{Entity.FullName}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
