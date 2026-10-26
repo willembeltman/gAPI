@@ -129,7 +129,9 @@ public class FabricManager : IDashboardSnapshotGetter
             actor.EnqueueReceive(receiveSize);
 
             foreach (var fabricHost in fabricHosts)
+            {
                 await fabricHost.Send_SendAndForgetRequest_ToApiAsync(request, actor);
+            }
         }, ct);
     }
     public async Task Receive_SendAndForgetRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)

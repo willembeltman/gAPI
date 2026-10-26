@@ -88,7 +88,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
 
     private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
-        var interval = 1.0;
+        var interval = 3.0;
         var now = Stopwatch.Elapsed.TotalSeconds;
 
         // Verwijder oude entries
@@ -102,7 +102,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
             bytes += item.bytes;
             count++;
         }
-        return new(count, bytes);
+        return new((int)(count / interval), (int)(bytes / interval));
     }
     public (int count, long bytes) GetSendSpeed() => GetSpeed(SendLogger);
     public (int count, long bytes) GetReceiveSpeed() => GetSpeed(ReceiveLogger);

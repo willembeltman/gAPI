@@ -149,14 +149,9 @@ public class {Name}(
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
-// Veranderd naar async void voor pure, lekvrije server-side streaming
 public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
 {{
-    ___timeOut ??= TimeSpan.FromSeconds(100);{(ct == null ? $@"
-    var ___internalCts = new CancellationTokenSource();" : $@"
-    var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});")}
-    ___internalCts.CancelAfter(___timeOut.Value);
-    var ___ct = ___internalCts.Token;
+    ___timeOut ??= TimeSpan.FromSeconds(100);
 
     try
     {{
@@ -167,7 +162,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             ___requestId,
             ___ServiceId,
             new(""{method}""),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -175,7 +170,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             {arg.Name}"))});
 
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, ___ct);" : ""))}
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, {(ct != null ? ct : "CancellationToken.None")});" : ""))}
         
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
@@ -184,7 +179,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
                 ___payload, 
-                ___ct);
+                {(ct != null ? ct : "CancellationToken.None")});
         }}
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
@@ -198,7 +193,6 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
     }}
     catch (Exception ex)
     {{
-        // Voorkomt dat een crash in de netwerk-laag van de fabric je server-instantie omtrekt
         ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
     }}
 }}";
@@ -209,6 +203,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___requestId = {RequestId}.New();
         var ___routing = new {RoutingDto}(
             ___fabricClient.FabricManagerId,
@@ -216,7 +212,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             ___requestId,
             ___ServiceId,
             new(""{method}""),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -246,13 +242,15 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___routing = new {RoutingDto}(
             ___fabricClient.FabricManagerId,
             ___fabricClient.FabricConnectionId,
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
