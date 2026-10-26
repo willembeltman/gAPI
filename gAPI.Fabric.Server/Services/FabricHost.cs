@@ -8,7 +8,6 @@ using gAPI.Core.Wss;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Helpers;
 using gAPI.Fabric.Server.Interfaces;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;

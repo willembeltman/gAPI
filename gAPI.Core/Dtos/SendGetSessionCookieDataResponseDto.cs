@@ -5,5 +5,5 @@ namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public record SendGetSessionCookieDataResponseDto(
-    SessionId SessionId, 
+    SessionId SessionId,
     string? CookieData);

@@ -28,7 +28,7 @@ public class BusClientContext_Generator : _BaseGenerator
     public SharedReference IBusConnection => Context.IBusConnection;
     public BusClient_Generator Client => IClientContext.ClientHandler;
     public Interface IClient => Client.Interface;
-  
+
     public override void GenerateCode()
     {
         Reg(IClientContext);

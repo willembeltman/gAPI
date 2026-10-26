@@ -130,7 +130,7 @@ public class FrontendGenerator
         if (PageIndexes != null)
             foreach (var pageIndex in PageIndexes) pageIndex.GenerateCode();
 
-        foreach (var crud in Cruds) 
+        foreach (var crud in Cruds)
             crud.GenerateCode();
 
         //ItemDataSource.GenerateCode();

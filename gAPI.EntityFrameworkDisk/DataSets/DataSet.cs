@@ -1,9 +1,9 @@
 ﻿using gAPI.EntityFrameworkDisk.Comparers;
-using gAPI.EntityFrameworkDisk.Serializers;
 using gAPI.EntityFrameworkDisk.EntityDefinitions;
 using gAPI.EntityFrameworkDisk.IndexSets;
 using gAPI.EntityFrameworkDisk.Interfaces;
 using gAPI.EntityFrameworkDisk.Locks;
+using gAPI.EntityFrameworkDisk.Serializers;
 using System.Collections;
 using System.Linq.Expressions;
 

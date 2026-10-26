@@ -10,5 +10,5 @@ public record StreamingRequestClientDto(
     StreamId StreamId,
     bool Cancelled,
     bool StateIsChanged,
-    string? StateData) 
+    string? StateData)
     : StreamingRequestDto(Routing, ArgumentIndex, StreamId, Cancelled);

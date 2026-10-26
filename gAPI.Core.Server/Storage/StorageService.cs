@@ -101,17 +101,17 @@ public class StorageService : IStorageService
         Implementation.GetStorageFileInfo(storageFile, ct);
     public Task<GetStorageFileInfoResponse> GetStorageFileInfo(string key, CancellationToken ct) =>
         Implementation.GetStorageFileInfo(key, ct);
-    
+
     public Task<string?> GetStorageFileUrlAsync(IStorageFile storageFile, CancellationToken ct) =>
         Implementation.GetStorageFileUrlAsync(storageFile, ct);
     public Task<string?> GetStorageFileUrlAsync(string key, CancellationToken ct) =>
         Implementation.GetStorageFileUrlAsync(key, ct);
-    
+
     public Task<string?> SaveStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true) =>
         Implementation.SaveStorageFileAsync(storageFile, fileName, mimeType, stream, ct, allowOverwrite);
     public Task<string?> SaveStorageFileAsync(string key, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowOverwrite = true) =>
         Implementation.SaveStorageFileAsync(key, fileName, mimeType, stream, ct, allowOverwrite);
-    
+
     public Task<string?> AppendStorageFileAsync(IStorageFile storageFile, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true) =>
         Implementation.AppendStorageFileAsync(storageFile, fileName, mimeType, stream, ct, allowCreate);
     public Task<string?> AppendStorageFileAsync(string key, string fileName, string mimeType, Stream stream, CancellationToken ct, bool allowCreate = true) =>

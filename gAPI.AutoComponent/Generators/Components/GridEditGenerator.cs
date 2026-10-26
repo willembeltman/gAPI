@@ -190,7 +190,7 @@ else
     private string GetPropertyCellMarkup(ICrudProperty p)
     {
         var modelPrefix = "item.Model!";
-        
+
         if (p.ForeignKeyType != null && p.ForeignKeyNameProperty != null)
         {
             var drop = p.PropertyType.IsNullable

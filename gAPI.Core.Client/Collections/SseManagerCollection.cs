@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Client.Interfaces;
-using gAPI.Core.Client.Sse;
+﻿using gAPI.Core.Client.Sse;
 using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 

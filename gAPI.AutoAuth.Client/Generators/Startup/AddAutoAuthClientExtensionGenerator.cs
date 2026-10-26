@@ -1,5 +1,4 @@
 using gAPI.AutoAuth.Client.Models;
-using System.Linq;
 
 namespace gAPI.AutoAuth.Client.Generators.Startup;
 
@@ -110,8 +109,7 @@ public static class {Name}
         // Configure named client for WebAssembly with cookies
         services
             .AddHttpClient(""WithCookies"", opt => opt.BaseAddress = new Uri(apiAddress))
-            .AddHttpMessageHandler<{WithCookiesHandler}>();{
-(IClientAuthenticatedHttpClientImplementation == null ? $@"
+            .AddHttpMessageHandler<{WithCookiesHandler}>();{(IClientAuthenticatedHttpClientImplementation == null ? $@"
 
         // Register global client authentication service
         services.AddSingleton<{AuthenticatedHttpClient}>();

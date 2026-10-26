@@ -2,7 +2,7 @@
 
 namespace gAPI.Core.Dtos;
 
-public class AuthStateUserDto 
+public class AuthStateUserDto
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();

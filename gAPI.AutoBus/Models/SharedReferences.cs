@@ -1,7 +1,5 @@
 using gAPI.AutoBus.Helpers;
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace gAPI.AutoBus.Models;
 
@@ -10,17 +8,17 @@ public class SharedReferences
     public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
         BusConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.BusConnectionCollection", allSymbols);
-        
+
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
-        
+
         ServiceBusConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServiceBusConfig", allSymbols);
         BusRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusRoutingDto", allSymbols);
         BusSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusSendRequestDto", allSymbols);
         BusInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusInvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
-    
+
         IBaseBusConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IBaseBusConnection", allSymbols);
 
         BusToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.BusToChoice", allSymbols);
@@ -29,7 +27,7 @@ public class SharedReferences
         BaseFabricConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.Fabric.BaseFabricConnection", allSymbols);
         BaseRabbitMQConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.BaseRabbitMQConnection", allSymbols);
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
-        
+
         FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.BusFabricClient", allSymbols);
         SessionCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         StreamingCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.StreamingCache", allSymbols);

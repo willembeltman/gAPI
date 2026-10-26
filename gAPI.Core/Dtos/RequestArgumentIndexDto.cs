@@ -3,5 +3,5 @@
 namespace gAPI.Core.Dtos;
 
 public record RequestArgumentIndexDto(
-    RequestId RequestId, 
+    RequestId RequestId,
     int ArgumentIndex);

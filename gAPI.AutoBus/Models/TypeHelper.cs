@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
 using System.Linq;
 
 namespace gAPI.AutoBus.Models;
@@ -57,7 +56,7 @@ public class TypeHelper : SharedReference
 
                 if (typeSymbol is INamedTypeSymbol namedType)
                 {
-                   
+
                     IsNullable = IsNullable || namedType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated);
                     IsGenericType = namedType.IsGenericType;
                     UnderlayingTypes = [.. namedType.TypeArguments.Select(t => new TypeHelper(dataModel, t))];
@@ -83,7 +82,7 @@ public class TypeHelper : SharedReference
                 }
                 else
                 {
-                   
+
                     IsTask = NameInner.StartsWith("Task");
                     IsBaseResponse = NameInner.StartsWith("BaseResponse");
                 }

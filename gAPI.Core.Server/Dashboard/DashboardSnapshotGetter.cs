@@ -14,7 +14,8 @@ public class DashboardSnapshotGetter(
     public FabricDashboardSnapshot GetDashboardSnapshot()
     {
         var connections = Connections.All
-            .Select(connection => {
+            .Select(connection =>
+            {
                 var send = connection.GetSendBytesPerSecond();
                 var receive = connection.GetReceiveBytesPerSecond();
                 return new FabricConnectionSnapshot(

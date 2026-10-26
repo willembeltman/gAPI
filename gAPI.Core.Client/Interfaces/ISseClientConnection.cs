@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
 
 namespace gAPI.Core.Client.Interfaces;
 
@@ -18,7 +17,7 @@ public interface ISseClientConnection : IDisposable
     IAsyncEnumerable<byte[]> InvokeRequest_ReceivedAsync(
         ServiceId serviceId,
         ServiceMethodId methodId,
-        byte[] data, 
+        byte[] data,
         CancellationToken ct);
 
 }

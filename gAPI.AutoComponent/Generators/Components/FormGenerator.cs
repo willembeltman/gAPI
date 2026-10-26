@@ -115,7 +115,7 @@ else
                 <button type=""button"" class=""btn btn-sm btn-link text-danger"" @onclick=""DataSource.CancelFileSelected"">❌ Remove file</button>
             </div>
         }}
-    </div>": "")}" : "")}
+    </div>" : "")}" : "")}
 {propertySections}
 }}
 

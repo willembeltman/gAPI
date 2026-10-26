@@ -1,7 +1,6 @@
 ﻿using gAPI.Core.Extensions;
 using gAPI.Core.Ids;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using System.Net;
 
 namespace gAPI.Core.Server.Authentication;

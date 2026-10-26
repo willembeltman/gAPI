@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Server.Storage;
 using System.ComponentModel.DataAnnotations;
 
 namespace gAPI.Core.Server.Entities;
@@ -7,7 +6,7 @@ namespace gAPI.Core.Server.Entities;
 [IsAuthorized]
 [IsUser]
 [IsEntryPoint]
-public class AuthUser 
+public class AuthUser
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -24,7 +23,7 @@ public class AuthUser
     [StringLength(128)]
     [Required]
     public string UserName { get; set; } = string.Empty;
-    
+
     [IsState]
     [StringLength(255)]
     [Required]

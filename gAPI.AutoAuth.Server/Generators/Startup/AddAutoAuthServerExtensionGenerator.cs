@@ -205,7 +205,7 @@ public static class {Name}
         this IServiceCollection services,
         bool useMemoryDatabase = false,
         string? dbConnectionString = null)
-{{{(CustomDbContext == null 
+{{{(CustomDbContext == null
 ? $@"
 
     // ✅ Factory voor {ApplicationDbContext}

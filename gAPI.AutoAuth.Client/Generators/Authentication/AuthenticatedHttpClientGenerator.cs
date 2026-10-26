@@ -1,5 +1,4 @@
 using gAPI.AutoAuth.Client.Models;
-using System.Linq;
 
 namespace gAPI.AutoAuth.Client.Generators.Authentication;
 

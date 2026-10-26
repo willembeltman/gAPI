@@ -161,7 +161,7 @@ public class WssClientConnectionSender
             return offset;
         }, ct);
     }
-    
+
     public async Task Send_InvokeRequest_ToServerAsync(InvokeRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

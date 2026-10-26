@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
 
@@ -7,7 +6,7 @@ namespace gAPI.Core.Server.Collections;
 
 public sealed class BusConnectionCollection
 {
-    readonly ConcurrentDictionary<BusConnectionId, IBaseFabricConnection> BusConnections = new(); 
+    readonly ConcurrentDictionary<BusConnectionId, IBaseFabricConnection> BusConnections = new();
     public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<BusConnectionId, IBaseFabricConnection>> Services = [];
 
     public IEnumerable<IBaseFabricConnection> All => BusConnections.Values;

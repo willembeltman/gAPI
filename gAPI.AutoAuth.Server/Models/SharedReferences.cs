@@ -1,7 +1,5 @@
 ﻿using gAPI.AutoAuth.Server.Helpers;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
 
 namespace gAPI.AutoAuth.Server.Models;
 
@@ -22,7 +20,7 @@ public class SharedReferences
         IAuthenticationSecurity = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IAuthenticationSecurity", allSymbols);
         AuthenticationHandler = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHandler", allSymbols);
         NoDbServerAuthenticationServiceT = new("gAPI.Core.Server.Authentication.NoDbServerAuthenticationService");
-        
+
         AccountServiceApiT = new("gAPI.Core.Server.Authentication.AccountServiceApi");
         AuthenticationSecurityT = new("gAPI.Core.Server.Authentication.AuthenticationSecurity");
         IAuthenticationStateFactoryT = new("gAPI.Core.Server.Interfaces.IAuthenticationStateFactory");

@@ -49,7 +49,7 @@ public class SpanSerializerGenerator
         // --- VersionHash: hash van schema (properties + nested types) ---
         SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.ToDisplayString()} {a.Property.Name}")));
 
-        PropertyHelper = new GeneratePropertyHelper([], [..customSpanSerializers], [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [.. customSpanSerializers], [], Reg, NeededSerializers);
     }
 
     public string Generate()
@@ -125,8 +125,8 @@ public static class {Name}
     }
     public (string readprops, string functions) CreateReadProps()
     {
-        var readProps = string.Empty; 
-        var functions = string.Empty; 
+        var readProps = string.Empty;
+        var functions = string.Empty;
         var functionNames = new HashSet<string>();
 
         if (IsRecord)

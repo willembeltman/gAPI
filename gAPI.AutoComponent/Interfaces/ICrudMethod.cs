@@ -3,7 +3,7 @@
 namespace gAPI.AutoComponent.Interfaces;
 
 public interface ICrudMethod
-{   
+{
     ISharedReference Interface { get; }
     ITypeHelper Type { get; }
     ITypeDigger TypeDigger { get; }

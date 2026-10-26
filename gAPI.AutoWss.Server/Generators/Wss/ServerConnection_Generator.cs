@@ -165,7 +165,7 @@ public class {Name} : {WssServerConnection}
                         {{
                             ___logger.LogWarning(""Ongeautoriseerde SendRequest poging voor {{Service}}/{{Method}}"", ___sendRequest.Routing.ServiceId.Value, ___sendRequest.Routing.MethodId.Value);
                             throw new UnauthorizedAccessException(""Niet geautoriseerd."");
-                        }}":"")}
+                        }}" : "")}
                         return;"; // Aangepast van return Task.CompletedTask; omdat de methode nu async is
         })))}
             {(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>

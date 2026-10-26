@@ -165,7 +165,7 @@ public class CrudGenerator
 
     public void GenerateCode()
     {
-        CreateViewGenerator.GenerateCode(); 
+        CreateViewGenerator.GenerateCode();
         CreateViewGenerator.Save(Config.OverwritePages);
 
         EditViewGenerator.GenerateCode();
@@ -179,7 +179,7 @@ public class CrudGenerator
 
         FormGenerator.GenerateCode();
         if (Config.GenerateComponents)
-        FormGenerator.Save(Config.OverwriteComponents);
+            FormGenerator.Save(Config.OverwriteComponents);
 
         DetailsGenerator.GenerateCode();
         if (Config.GenerateComponents)

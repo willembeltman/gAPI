@@ -147,6 +147,6 @@ public class IndexViewGenerator : BaseGenerator
     }}
 }}";
 
-        
+
     }
 }

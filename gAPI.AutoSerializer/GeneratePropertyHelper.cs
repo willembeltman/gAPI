@@ -633,7 +633,7 @@ public class GeneratePropertyHelper(
             .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
 
         var name = fromApiClient
-            ? $@"""{fieldName}""" 
+            ? $@"""{fieldName}"""
             : $@"$""{{___prefix}}{fieldName}""";
 
         // CUSTOM SERIALIZER

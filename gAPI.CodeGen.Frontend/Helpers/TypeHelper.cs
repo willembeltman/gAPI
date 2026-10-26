@@ -31,7 +31,7 @@ public class TypeHelper : ITypeHelper
         if (nullablePrimitive)
         {
             _Name = GetSimpleCsTypeByName(type.Name);
-            IsDateTime = _Name == "DateTime" || 
+            IsDateTime = _Name == "DateTime" ||
                 _Name == "DateTimeOffset";
             IsGuid = _Name == "Guid";
             IsCheckbox = _Name == "bool";
@@ -133,7 +133,7 @@ public class TypeHelper : ITypeHelper
 
     public string _Name { get; }
     public bool IsEnum { get; }
-    public bool IsDateTime { get; } 
+    public bool IsDateTime { get; }
     public bool IsGuid { get; }
     public bool IsCheckbox { get; }
     public bool IsArray { get; }

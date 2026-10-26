@@ -15,7 +15,7 @@ public class SharedReferences
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         IsApiProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsApiProxyAttribute", allSymbols);
-        
+
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
@@ -40,7 +40,7 @@ public class SharedReferences
         ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         StreamingCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
-        
+
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         AuthenticationOptions = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationOptions", allSymbols);
         AuthenticationMiddleware = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationMiddleware", allSymbols);

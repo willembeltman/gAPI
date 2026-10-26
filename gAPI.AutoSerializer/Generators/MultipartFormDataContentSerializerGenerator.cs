@@ -37,7 +37,7 @@ public class MultipartFormDataContentSerializerGenerator
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
 
-        PropertyHelper = new GeneratePropertyHelper([], [], [..customMultipartFormDataContentSerializers], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [], [.. customMultipartFormDataContentSerializers], Reg, NeededSerializers);
     }
 
     public string Generate()

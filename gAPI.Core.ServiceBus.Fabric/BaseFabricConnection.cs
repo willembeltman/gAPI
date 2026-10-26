@@ -1,8 +1,8 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
-using gAPI.Core.Server.Config;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.ServiceBus.Fabric;
@@ -207,7 +207,7 @@ public abstract class BaseFabricConnection(
 
 
     // Callbacks from fabric (to the actual services)
-    public Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct) 
+    public Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct)
         => Send_SendRequest_ToServiceAsync(requestDto, ct);
     public Task Receive_BusSendRequest_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct)
         => Send_SendRequest_ToServiceAsync(requestDto, ct);

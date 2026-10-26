@@ -1,5 +1,4 @@
 ﻿using gAPI.AutoApi.Server.Models;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators.Endpoints;

@@ -1,6 +1,4 @@
-﻿using gAPI.CodeGen.Backend.Models.Config;
-
-namespace gAPI.CodeGen.Backend.Models;
+﻿namespace gAPI.CodeGen.Backend.Models;
 
 public class SharedReferences()
 {

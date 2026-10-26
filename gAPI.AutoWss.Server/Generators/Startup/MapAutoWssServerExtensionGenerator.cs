@@ -1,5 +1,4 @@
 using gAPI.AutoWss.Server.Generators.Hubs;
-using gAPI.AutoWss.Server.Models;
 using System.Linq;
 
 namespace gAPI.AutoWss.Server.Generators.Startup;

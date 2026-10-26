@@ -1,7 +1,6 @@
 ﻿using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace gAPI.Core.Client.Sse;
 

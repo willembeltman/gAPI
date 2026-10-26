@@ -5,7 +5,7 @@ namespace gAPI.Core.Wss;
 
 public sealed class FabricLogger(
     string category,
-    IFabricLoggerFactory hub) 
+    IFabricLoggerFactory hub)
     : ILogger
 {
     public string Category { get; } = category;

@@ -99,7 +99,7 @@ public class TypeHelper : ITypeHelper
         IsCheckbox = NameInner == "bool" || NameInner == "bool?";
         IsString = NameInner == "string" || NameInner == "string?";
         IsGuid = NameInner == "Guid" || NameInner == "Guid?";
-        IsDateTime = NameInner == "DateTime" || NameInner == "DateTime?" || 
+        IsDateTime = NameInner == "DateTime" || NameInner == "DateTime?" ||
             NameInner == "DateTimeOffset" || NameInner == "DateTimeOffset?";
         IsNumber =
             NameInner == "byte" || NameInner == "byte?" ||

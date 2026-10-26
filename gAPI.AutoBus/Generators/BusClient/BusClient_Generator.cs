@@ -121,11 +121,11 @@ public class {Name}(
         return $@"
     public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null 
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
         ? $@"
         using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource({ct});
         ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;" 
+        var ___ct = ___internalCts.Token;"
         : $@"
         using var ___internalCts = new CancellationTokenSource(___timeOut.Value);
         var ___ct = ___internalCts.Token;")}

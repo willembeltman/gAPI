@@ -1,15 +1,12 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Sse;
-using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.ServerSentEvents;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
@@ -255,7 +252,7 @@ public class SseServiceSubscription : IServiceSubscription
     //        StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
     //    }
     //}
-    
+
     public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();

@@ -102,9 +102,9 @@ public class DtoGenerator : BaseGenerator
                 propertiesCode += $"[HasLink(\"{link.Text}\", \"{link.Controller}, \"{link.Action}\"\")]\r\n";
             }
         }
-        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.HasIStorageFileInterface 
-            ?   Entity.HasIReadonlyStorageFileInterface 
-                ? ", IReadonlyStorageFileDto" 
+        propertiesCode += $"public class {Name} : ICrudEntity{(Entity.HasIStorageFileInterface
+            ? Entity.HasIReadonlyStorageFileInterface
+                ? ", IReadonlyStorageFileDto"
                 : ", IStorageFileDto"
             : "")}\r\n";
         propertiesCode += $"{{\r\n";

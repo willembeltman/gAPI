@@ -17,7 +17,7 @@ namespace gAPI.AutoApi.Client;
 public class Generator
 {
     public Generator(
-        ServiceContext serviceContext, 
+        ServiceContext serviceContext,
         SharedReferences sharedReferences,
         CustomObjectMethod[] customMultipartFormDataContentSerializers)
     {

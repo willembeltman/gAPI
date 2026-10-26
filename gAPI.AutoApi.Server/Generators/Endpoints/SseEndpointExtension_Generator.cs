@@ -1,6 +1,4 @@
 ﻿using gAPI.AutoApi.Server.Models;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace gAPI.AutoApi.Server.Generators.Endpoints;
 
@@ -20,7 +18,7 @@ public class SseEndpointExtension_Generator : BaseGenerator
     public Generator Context { get; }
 
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
-    
+
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;

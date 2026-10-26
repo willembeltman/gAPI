@@ -7,5 +7,5 @@ public record SendRequestClientDto(
     RoutingDto Routing,
     byte[] BinaryData,
     bool StateIsChanged,
-    string? StateData) 
+    string? StateData)
     : SendRequestDto(Routing, BinaryData);

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
-using System.Data.Common;
 using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Client.Razor;
@@ -184,7 +183,7 @@ public class ListDataSource<T, TKey>(
     {
         // 🎯 FIX 1: Eerst controleren, dan pas tokens muteren!
         // Als we al laden of er is geen data meer, direct de methode verlaten.
-        if (IsLoading || !HasMore) 
+        if (IsLoading || !HasMore)
             return;
 
         IsLoading = true;
@@ -201,7 +200,7 @@ public class ListDataSource<T, TKey>(
 
             await foreach (var item in newItems)
             {
-                if (token.IsCancellationRequested) 
+                if (token.IsCancellationRequested)
                     return;
                 Items.Add(item);
                 count++;

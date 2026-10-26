@@ -10,10 +10,10 @@ public class AuthenticationStateMapping<TUser, TStateDto>
     where TStateDto : AuthStateDto, new()
 {
     public virtual async Task<TStateDto> ToDtoAsync(
-        TUser? dbUser, 
-        UserToken<TUser>? dbToken, 
+        TUser? dbUser,
+        UserToken<TUser>? dbToken,
         Ip<TUser>? dbIp,
-        TStateDto? receivedClientState, 
+        TStateDto? receivedClientState,
         CancellationToken ct)
     {
         receivedClientState ??= new TStateDto

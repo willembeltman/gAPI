@@ -1,4 +1,3 @@
-using gAPI.Core.Server.Config;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
 

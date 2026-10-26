@@ -47,7 +47,7 @@ public class SerializerGenerator
         // --- VersionHash: hash van schema (properties + nested types) ---
         SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.ToDisplayString()} {a.Property.Name}")));
 
-        PropertyHelper = new GeneratePropertyHelper([..customSerializers], [], [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([.. customSerializers], [], [], Reg, NeededSerializers);
     }
 
     public string Generate()

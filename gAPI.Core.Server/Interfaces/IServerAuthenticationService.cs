@@ -15,10 +15,10 @@ public interface IServerAuthenticationService
     AuthenticationHeaders Headers { get; }
 
     Task<AuthenticationInitializeResult> InitializeAsync(
-        PathString path, 
+        PathString path,
         QueryString query,
         IPAddress? ipAddress,
-        string? cookieData, 
+        string? cookieData,
         string? sessionData,
         string? stateData,
         CancellationToken ct);

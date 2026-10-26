@@ -3,7 +3,6 @@ using gAPI.AutoPage.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -16,14 +15,14 @@ public class Program : IIncrementalGenerator
     {
         context.RegisterSourceOutput(context.CompilationProvider, (spc, compilation) =>
         {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch(); // Triggert dialoog om te attachen
-//            }
-//#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch(); // Triggert dialoog om te attachen
+            //            }
+            //#endif
 
-            try 
+            try
             {
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
                 var sharedReferences = new SharedReferences(compilation, allSymbols);
@@ -31,7 +30,7 @@ public class Program : IIncrementalGenerator
                 var crudContext = new CrudContext(serviceContext);
                 var generator = new Generator(sharedReferences, serviceContext, crudContext, spc);
                 generator.Generate();
-            } 
+            }
             catch (Exception ex)
             {
                 ShowError(ex.ToString(), spc);

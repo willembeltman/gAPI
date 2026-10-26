@@ -24,7 +24,7 @@ public class ApiClient_Generator : _BaseGenerator
             Namespace = "gAPI.Generated";
             Name = @interface.CleanName;
         }
-        
+
         FileName = $"Clients/{Name}.g.cs";
         Directory = "";
 
@@ -114,7 +114,7 @@ public sealed class {Name}(
         if (method.ResponseType.IsTask)
             code += GenerateMethodForTask(method);
         if (method.ResponseType.IsTaskT)
-            code += GenerateMethodForTaskT(method, ref functions, functionNames) ;
+            code += GenerateMethodForTaskT(method, ref functions, functionNames);
         if (method.ResponseType.IsIAsyncEnumerable)
             code += GenerateMethodForIAsyncEnumerable(method, ref functions, functionNames);
 

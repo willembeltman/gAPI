@@ -40,7 +40,7 @@ public class Generator
 
         if (SharedReferences.BaseAzureConnection != null)
             BusConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
-        
+
         if (SharedReferences.BaseRabbitMQConnection != null)
             if (BusConnection == null)
                 BusConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.BaseRabbitMQConnection);

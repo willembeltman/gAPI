@@ -166,7 +166,7 @@ public class {Name}(
 
         {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(new {responseType}() {{ Success = true }});" :
-       
+
         $@"
         await {Service.Name.ToCamelCase()}.{method.Name}({methodCallArguments});
         return Ok(new {responseType}() {{ Success = true }});"
