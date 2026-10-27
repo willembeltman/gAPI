@@ -3,6 +3,7 @@ using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
@@ -12,9 +13,6 @@ using System.Net.Sockets;
 
 namespace gAPI.Core.Server.Fabric;
 
-// Deze class houd alle communicatie consistentie in de gate, en routeert alles. Voor de WssServerConnection is dit gewoon het doorgeef luik "doe call naar client"
-// De fabricReceiver is wel autonoom wat betreft de afhandeling richting fabric, dus als er een bericht terug moet naar de fabric doet hij dit zelf.
-// De fabricSender is zo dom mogelijk
 public sealed class BusFabricClient
 {
     public BusFabricClient(
@@ -22,7 +20,7 @@ public sealed class BusFabricClient
         StreamingCache streamingCache,
         BusConnectionCollection busConnections,
         ILoggerFactory loggerFactory,
-        string? fabricConnectionString)
+        ServiceBusConfig serviceBusConfig)
     {
         Sender = new BusFabricClientSender(this, loggerFactory);
 
@@ -31,11 +29,11 @@ public sealed class BusFabricClient
         BusConnections = busConnections;
         Logger = loggerFactory.CreateLogger<FabricClient>();
 
-        if (!string.IsNullOrEmpty(fabricConnectionString))
+        if (!string.IsNullOrEmpty(serviceBusConfig.ConnectionString))
         {
-            if (fabricConnectionString.Contains('='))
+            if (serviceBusConfig.ConnectionString.Contains('='))
             {
-                var parts = fabricConnectionString!.Split(';')
+                var parts = serviceBusConfig.ConnectionString!.Split(';')
                     .Where(x => x.Contains('='))
                     .Select(x => x.Split(['='], 2))
                     .ToDictionary(x => x[0].Trim(), x => x[1].Trim(), StringComparer.OrdinalIgnoreCase);
@@ -50,20 +48,20 @@ public sealed class BusFabricClient
                 Host = host;
                 Port = port;
             }
-            else if (Uri.TryCreate(fabricConnectionString, UriKind.Absolute, out var uri))
+            else if (Uri.TryCreate(serviceBusConfig.ConnectionString, UriKind.Absolute, out var uri))
             {
                 Host = uri.Host;
                 Port = uri.Port > 0 ? uri.Port : 9000;
             }
-            else if (fabricConnectionString.Contains(':'))
+            else if (serviceBusConfig.ConnectionString.Contains(':'))
             {
-                var split = fabricConnectionString.Split(':');
+                var split = serviceBusConfig.ConnectionString.Split(':');
                 Host = split[0].Trim();
                 Port = int.TryParse(split[1].Trim(), out var p) ? p : 9000;
             }
             else
             {
-                Host = fabricConnectionString.Trim();
+                Host = serviceBusConfig.ConnectionString.Trim();
                 Port = 9000;
             }
 

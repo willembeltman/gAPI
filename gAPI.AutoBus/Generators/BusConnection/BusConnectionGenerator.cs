@@ -137,40 +137,81 @@ public class {Name}
 
     private string GenerateSubscribe()
     {
-        return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-    public async Task SubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
+        return $@"
+    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {{
         await TryConnectAsync(___ct);
-        await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-        try
+
+        {string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
+        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
         {{
-            {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
-        }}
-        finally
-        {{
-            {hub.CleanName.ToMultiple()}Lock.Release();
-        }}
-        await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
-    }}"));
+            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            try
+            {{
+                {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
+            }}
+            finally
+            {{
+                {hub.CleanName.ToMultiple()}Lock.Release();
+            }}
+            await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
+        }}"))}
+    }}";
+
+    //    return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
+    //public async Task SubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
+    //{{
+    //    await TryConnectAsync(___ct);
+    //    await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+    //    try
+    //    {{
+    //        {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
+    //    }}
+    //    finally
+    //    {{
+    //        {hub.CleanName.ToMultiple()}Lock.Release();
+    //    }}
+    //    await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
+    //}}"));
     }
     private string GenerateUnsubscibe()
     {
-        return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-    public async Task UnsubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
+        return $@"
+    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {{
         if (!Initialized)
             return;
-        await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-        try
+        {string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
+        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
         {{
-            {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
-        }}
-        finally
-        {{
-            {hub.CleanName.ToMultiple()}Lock.Release();
-        }}
-        await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
-    }}"));
+            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            try
+            {{
+                {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
+            }}
+            finally
+            {{
+                {hub.CleanName.ToMultiple()}Lock.Release();
+            }}
+            await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
+        }}"))}
+    }}";
+        //    return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
+        //public async Task UnsubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
+        //{{
+        //    if (!Initialized)
+        //        return;
+        //    await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+        //    try
+        //    {{
+        //        {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
+        //    }}
+        //    finally
+        //    {{
+        //        {hub.CleanName.ToMultiple()}Lock.Release();
+        //    }}
+        //    await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
+        //}}"));
     }
 
     private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)

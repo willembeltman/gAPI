@@ -75,16 +75,10 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             if (Context.SharedReferences.FabricClient != null)
             {
                 fabricClientCode = $@"
-        // Fabric Client
-        services.TryAddSingleton<{Context.SharedReferences.FabricClient}>(sp =>
-        {{
-            var sessionCache = new {Context.SharedReferences.SessionCache}();
-            var streamingCache = new {Context.SharedReferences.StreamingCache}();
-            var busConnections = new {Context.SharedReferences.BusConnectionCollection}();
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new {Context.SharedReferences.FabricClient}(
-                sessionCache, streamingCache, busConnections, loggerFactory, config.ConnectionString);
-        }});";
+        services.AddSingleton<{Context.SharedReferences.SessionCache}>();
+        services.AddSingleton<{Context.SharedReferences.StreamingCache}>();
+        services.AddSingleton<{Context.SharedReferences.BusConnectionCollection}>();
+        services.AddSingleton<{Context.SharedReferences.FabricClient}>();";
             }
         }
 

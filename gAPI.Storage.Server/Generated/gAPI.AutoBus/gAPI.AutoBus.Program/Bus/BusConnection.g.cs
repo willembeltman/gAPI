@@ -55,34 +55,43 @@ public class BusConnection
         }
     }
     
-    public async Task SubscribeAsync(IGapiStorageService gapiStorageService, CancellationToken ___ct = default)
+    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         await TryConnectAsync(___ct);
-        await GapiStorageServicesLock.WaitAsync(___ct);
-        try
+
+        
+        if (implementation is IGapiStorageService gapiStorageService)
         {
-            GapiStorageServices.Add(gapiStorageService);
+            await GapiStorageServicesLock.WaitAsync(___ct);
+            try
+            {
+                GapiStorageServices.Add(gapiStorageService);
+            }
+            finally
+            {
+                GapiStorageServicesLock.Release();
+            }
+            await SendSubscribeAsync(gapiStorageService, new ServiceId("IGapiStorageService"), ___ct);
         }
-        finally
-        {
-            GapiStorageServicesLock.Release();
-        }
-        await SendSubscribeAsync(gapiStorageService, new ServiceId("IGapiStorageService"), ___ct);
     }
-    public async Task UnsubscribeAsync(IGapiStorageService gapiStorageService, CancellationToken ___ct = default)
+    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         if (!Initialized)
             return;
-        await GapiStorageServicesLock.WaitAsync(___ct);
-        try
+        
+        if (implementation is IGapiStorageService gapiStorageService)
         {
-            GapiStorageServices.Remove(gapiStorageService);
+            await GapiStorageServicesLock.WaitAsync(___ct);
+            try
+            {
+                GapiStorageServices.Remove(gapiStorageService);
+            }
+            finally
+            {
+                GapiStorageServicesLock.Release();
+            }
+            await SendUnsubscribeAsync(gapiStorageService, new ServiceId("IGapiStorageService"), ___ct);
         }
-        finally
-        {
-            GapiStorageServicesLock.Release();
-        }
-        await SendUnsubscribeAsync(gapiStorageService, new ServiceId("IGapiStorageService"), ___ct);
     }
     
     protected override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)

@@ -34,9 +34,12 @@ public class IBusConnectionGenerator : _BaseGenerator
 namespace {Namespace};
 
 public interface {Name} : {IBaseBusConnection}
-{{{string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-    Task SubscribeAsync({hub} implementation, CancellationToken ___ct = default);
-    Task UnsubscribeAsync({hub} implementation, CancellationToken ___ct = default);"))}
+{{
+    Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
+    Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);{string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
+
+    //Task SubscribeAsync({hub} implementation, CancellationToken ___ct = default);
+    //Task UnsubscribeAsync({hub} implementation, CancellationToken ___ct = default);"))}
 }}";
     }
 }

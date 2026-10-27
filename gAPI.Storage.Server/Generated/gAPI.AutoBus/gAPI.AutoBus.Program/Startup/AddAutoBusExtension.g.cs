@@ -42,16 +42,10 @@ public static class AddAutoBusExtension
         services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
-        // Fabric Client
-        services.TryAddSingleton<BusFabricClient>(sp =>
-        {
-            var sessionCache = new SessionCache();
-            var streamingCache = new StreamingCache();
-            var busConnections = new BusConnectionCollection();
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new BusFabricClient(
-                sessionCache, streamingCache, busConnections, loggerFactory, config.ConnectionString);
-        });
+        services.AddSingleton<SessionCache>();
+        services.AddSingleton<StreamingCache>();
+        services.AddSingleton<BusConnectionCollection>();
+        services.AddSingleton<BusFabricClient>();
 
         // Connection
         services.AddSingleton<IBusConnection, BusConnection>();
