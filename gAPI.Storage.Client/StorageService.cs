@@ -1,9 +1,10 @@
 ﻿using gAPI.Core.Server.Storage.AzureStorage;
 using gAPI.Core.Server.Storage.Mock;
 using gAPI.Core.Server.Storage.StorageServer;
-using gAPI.Core.Server.Storage.StorageServer.Dtos;
 using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
-using Microsoft.Extensions.Configuration;
+using gAPI.Storage.Client;
+using gAPI.Storage.Client.StorageServer;
+using gAPI.Storage.Server.Services;
 using Microsoft.Extensions.Options;
 
 namespace gAPI.Core.Server.Storage;
@@ -12,21 +13,22 @@ public class StorageService : IStorageService
 {
     private readonly IStorageService Implementation;
 
+    public StorageConfig Config { get; }
+    public IGapiStorageService? GapiStorageServices { get; }
+
     public StorageService(
-        IConfiguration configuration,
-        TimeProvider dateTime) :
-        this(configuration.GetConnectionString("StorageConnection"), dateTime)
-    {
-    }
-    public StorageService(
-        string? connectionString,
+        IEnumerable<IGapiStorageService> gapiStorageServices,
+        StorageConfig config,
         TimeProvider dateTime)
     {
-        if (string.IsNullOrWhiteSpace(connectionString))
+        Config = config;
+        GapiStorageServices = gapiStorageServices.LastOrDefault();
+
+        if (string.IsNullOrWhiteSpace(config.StorageConnectionString))
             throw new Exception("StorageConnection ConnectionString is required");
 
         // Parse connection string
-        var parts = connectionString!.Split(';')
+        var parts = config.StorageConnectionString!.Split(';')
             .Where(x => x.Contains('='))
             .Select(x => x.Split(['='], 2))
             .ToDictionary(x => x[0].Trim(), x => x[1].Trim(), StringComparer.OrdinalIgnoreCase);
@@ -69,31 +71,23 @@ public class StorageService : IStorageService
 
         return new AzureStorageService(Options.Create(remoteConfig));
     }
-    private static StorageServerService CreateStorageServerService(Dictionary<string, string> parts, TimeProvider dateTime)
+    private StorageServerService CreateStorageServerService(Dictionary<string, string> parts, TimeProvider dateTime)
     {
-        var remoteConfig = new StorageServerConfig();
+        if (GapiStorageServices == null)
+            throw new Exception("AutoBus is not installed");
 
-        if (parts.TryGetValue("UrlTimeout", out var urlTimeoutString))
-            if (int.TryParse(urlTimeoutString, out var urlTimeout))
-                remoteConfig.UrlTimeoutSeconds = urlTimeout;
+        if (parts.TryGetValue("UrlTimeout", out var urlTimeoutString) == false)
+            throw new Exception("Cannot find UrlTimeout");
+        if (int.TryParse(urlTimeoutString, out var urlTimeout) == false)
+            throw new Exception("Cannot find UrlTimeout");
 
         if (parts.TryGetValue("AuthenticateTimeout", out var AuthenticateTimeoutString))
-            if (int.TryParse(AuthenticateTimeoutString, out var authenticateTimeout))
-                remoteConfig.AuthenticateTimeoutMinutes = authenticateTimeout;
+            throw new Exception("Cannot find authenticateTimeout");
+        if (int.TryParse(AuthenticateTimeoutString, out var authenticateTimeout))
+            throw new Exception("Cannot find authenticateTimeout");
 
-        if (parts.TryGetValue("Server", out var serverUrl))
-            remoteConfig.ServerUrl = serverUrl;
-
-        if (parts.TryGetValue("Username", out var username) && parts.TryGetValue("Password", out var password))
-        {
-            remoteConfig.Credential = new Credential
-            {
-                UserName = username,
-                Password = password
-            };
-        }
-
-        return new StorageServerService(Options.Create(remoteConfig), new HttpClient(), dateTime);
+        var remoteConfig = new StorageServerConfig(urlTimeout, authenticateTimeout, Config.MaxPackageSize);
+        return new StorageServerService(remoteConfig, GapiStorageServices, dateTime);
     }
 
     // Delegate alle calls naar de gekozen implementation

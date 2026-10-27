@@ -7,7 +7,10 @@ using System.Security.Cryptography;
 
 namespace gAPI.Storage.Server.Services;
 
-public class LocalStorageService(ApplicationDbContext db)
+public class LocalStorageService(
+    ApplicationDbContext db,
+    LocalStorageServerConfig config) 
+    : IGapiStorageService
 {
     const string BaseFolder = "Content";
     static readonly DirectoryInfo Directory = new("Files");
@@ -92,7 +95,7 @@ public class LocalStorageService(ApplicationDbContext db)
         return new GetStorageFileInfoResponse()
         {
             Success = true,
-            BaseUrl = model.BaseUrl,
+            BaseUrl =config.BaseUrl,
             BaseFolder = BaseFolder,
             FileInfo = new()
             {
@@ -105,7 +108,7 @@ public class LocalStorageService(ApplicationDbContext db)
         };
     }
 
-    public async Task<SaveResponse> SaveStorageFile(SaveRequest model, Stream inputStream, CancellationToken ct)
+    public async Task<SaveResponse> SaveStorageFile(SaveRequest model, IAsyncEnumerable<ReadOnlyMemory<byte>> inputStream, CancellationToken ct)
     {
         var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
         if (info.FullName.StartsWith(Directory.FullName) == false)
@@ -128,14 +131,17 @@ public class LocalStorageService(ApplicationDbContext db)
         var length = 0L;
         var sha256 = string.Empty;
 
-        using (inputStream)
+        //using (inputStream)
         using (var outputStream = File.Open(fullName, FileMode.OpenOrCreate))
         using (var hasher = SHA256.Create())
         {
-            var buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+            //var buffer = new byte[8192];
+            //int bytesRead;
+            //while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+            await foreach (var item in inputStream) 
             {
+                var buffer = item.ToArray();
+                var bytesRead = item.Length;
                 hasher.TransformBlock(buffer, 0, bytesRead, null, 0);
                 await outputStream.WriteAsync(buffer, 0, bytesRead, ct);
                 length += bytesRead;
@@ -188,8 +194,7 @@ public class LocalStorageService(ApplicationDbContext db)
 
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
-            StorageKey = model.StorageKey,
-            BaseUrl = model.BaseUrl
+            StorageKey = model.StorageKey
         };
         var externalUrlResponse = await GetStorageFileUrl(externalUrlRequest, ct);
 
@@ -206,7 +211,7 @@ public class LocalStorageService(ApplicationDbContext db)
             },
         };
     }
-    public async Task<AppendResponse> AppendStorageFile(AppendRequest model, Stream inputStream, CancellationToken ct)
+    public async Task<AppendResponse> AppendStorageFile(AppendRequest model, IAsyncEnumerable<ReadOnlyMemory<byte>> inputStream, CancellationToken ct)
     {
         var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
         if (info.FullName.StartsWith(Directory.FullName) == false)
@@ -248,12 +253,15 @@ public class LocalStorageService(ApplicationDbContext db)
                 }
             }
 
-            using (inputStream)
+            //using (inputStream)
             using (var outputStream = File.Open(fullName, FileMode.Append))
             {
-                int bytesRead;
-                while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+                //int bytesRead;
+                //while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+                await foreach (var item in inputStream)
                 {
+                    buffer = item.ToArray();
+                    var bytesRead = item.Length;
                     hasher.TransformBlock(buffer, 0, bytesRead, null, 0);
                     await outputStream.WriteAsync(buffer, 0, bytesRead, ct);
                     length += bytesRead;
@@ -295,7 +303,6 @@ public class LocalStorageService(ApplicationDbContext db)
         var externalUrlRequest = new GetStorageFileInfoRequest()
         {
             StorageKey = model.StorageKey,
-            BaseUrl = model.BaseUrl
         };
         var externalUrlResponse = await GetStorageFileUrl(externalUrlRequest, ct);
 
@@ -398,7 +405,6 @@ public class LocalStorageService(ApplicationDbContext db)
         //    },
         //};
     }
-
     public async Task<DeleteResponse> DeleteStorageFile(DeleteRequest model, CancellationToken ct)
     {
         var info = new FileInfo(Path.Combine(Directory.FullName, model.StorageKey.Replace("/", "\\")));
@@ -489,21 +495,6 @@ public class LocalStorageService(ApplicationDbContext db)
         };
     }
 
-
-
-
-    //private static (string directoryName, string fileName) GetDirectoryAndFileName(string storageKey)
-    //{
-    //    var split = storageKey.Split('/');
-    //    var directoryName = "_";
-    //    var fileName = storageKey;
-    //    if (split.Length > 1)
-    //    {
-    //        directoryName = split[0];
-    //        fileName = storageKey.Substring(directoryName.Length + 1);
-    //    }
-    //    return new(directoryName, fileName);
-    //}
     private static string ToHexStringLower(byte[] bytes)
     {
         var chars = new char[bytes.Length * 2];
@@ -546,4 +537,17 @@ public class LocalStorageService(ApplicationDbContext db)
         }
         return false;
     }
+
+    //private static (string directoryName, string fileName) GetDirectoryAndFileName(string storageKey)
+    //{
+    //    var split = storageKey.Split('/');
+    //    var directoryName = "_";
+    //    var fileName = storageKey;
+    //    if (split.Length > 1)
+    //    {
+    //        directoryName = split[0];
+    //        fileName = storageKey.Substring(directoryName.Length + 1);
+    //    }
+    //    return new(directoryName, fileName);
+    //}
 }

@@ -38,8 +38,22 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+
 	</PropertyGroup>
 
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Remove="Test\**" />
@@ -48,16 +62,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
-	  <ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
-	  <ProjectReference Include="..\gAPI.EntityFrameworkDisk\gAPI.EntityFrameworkDisk.csproj" />
+		<ProjectReference Include="..\gAPI.EntityFrameworkDisk\gAPI.EntityFrameworkDisk.csproj" />
+		<ProjectReference Include="..\gAPI.Storage.Core\gAPI.Storage.Core.csproj" />
+		<!--<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
+		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
 	</ItemGroup>
 
 	<ItemGroup>
@@ -65,6 +78,10 @@
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Config\" />
 	</ItemGroup>
 
 </Project>

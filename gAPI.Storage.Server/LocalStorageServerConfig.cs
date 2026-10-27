@@ -1,13 +1,13 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Dtos;
-using System.Text;
+﻿using System.Text;
 
-namespace gAPI.Storage.Server.Config;
+namespace gAPI.Storage.Server;
 
-public class LocalStorageServerConfig
+public record LocalStorageServerConfig(
+    string SuperSecretKey,
+    string BaseUrl,
+    int? MaxPackageSize = null,
+    string? BusConnectionString = null)
 {
-    public string SuperSecretKey { get; set; } = string.Empty;
-    public Credential Credentials { get; set; } = new Credential();
-
     private byte[]? _SuperSecretKeyArray { get; set; }
     public byte[] SuperSecretKeyArray
     {

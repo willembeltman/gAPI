@@ -40,14 +40,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Storage.Blobs" Version="12.30.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
 		<PackageReference Include="Npgsql" Version="10.0.3" />
 		<PackageReference Include="System.Linq.Async" Version="7.0.1" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -57,6 +55,10 @@
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Storage\" />
 	</ItemGroup>
 
 </Project>
