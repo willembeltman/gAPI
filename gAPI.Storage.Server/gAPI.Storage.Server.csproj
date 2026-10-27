@@ -38,12 +38,13 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+		
+		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 
 	</PropertyGroup>
 
-	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -53,7 +54,7 @@
 
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<Compile Remove="Test\**" />
@@ -69,8 +70,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.EntityFrameworkDisk\gAPI.EntityFrameworkDisk.csproj" />
 		<ProjectReference Include="..\gAPI.Storage.Core\gAPI.Storage.Core.csproj" />
-		<!--<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
-		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
+		<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
+		<!--<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
 	</ItemGroup>
 
 	<ItemGroup>
