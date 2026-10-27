@@ -31,13 +31,9 @@ public class MainHub(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<MainHub>();
     readonly ServiceId ___ServiceId = new("IMainHub");
 
-// Veranderd naar async void voor pure, lekvrije server-side streaming
 public async void SendAndForget(string message, CancellationToken ct)
 {
     ___timeOut ??= TimeSpan.FromSeconds(100);
-    var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-    ___internalCts.CancelAfter(___timeOut.Value);
-    var ___ct = ___internalCts.Token;
 
     try
     {
@@ -48,7 +44,7 @@ public async void SendAndForget(string message, CancellationToken ct)
             ___requestId,
             ___ServiceId,
             new("SendAndForget"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -63,7 +59,7 @@ public async void SendAndForget(string message, CancellationToken ct)
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
                 ___payload, 
-                ___ct);
+                ct);
         }
         
     }
@@ -73,7 +69,6 @@ public async void SendAndForget(string message, CancellationToken ct)
     }
     catch (Exception ex)
     {
-        // Voorkomt dat een crash in de netwerk-laag van de fabric je server-instantie omtrekt
         ___Logger.LogError(ex, "Fout opgevangen in gegenereerde server async void methode voor SendAndForget");
     }
 }
@@ -91,13 +86,9 @@ public async void SendAndForget(string message, CancellationToken ct)
         return ___buffer;
     }
 
-// Veranderd naar async void voor pure, lekvrije server-side streaming
 public async void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct)
 {
     ___timeOut ??= TimeSpan.FromSeconds(100);
-    var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-    ___internalCts.CancelAfter(___timeOut.Value);
-    var ___ct = ___internalCts.Token;
 
     try
     {
@@ -108,14 +99,14 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             ___requestId,
             ___ServiceId,
             new("SendAndForgetWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
         var ___payload = ___SendAndForgetWithList_Serializer();
 
         
-        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendAndForgetWithList_0_Serializer, ___ct);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendAndForgetWithList_0_Serializer, ct);
         
         
         try
@@ -124,7 +115,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
                 ___payload, 
-                ___ct);
+                ct);
         }
         
         finally
@@ -138,7 +129,6 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
     }
     catch (Exception ex)
     {
-        // Voorkomt dat een crash in de netwerk-laag van de fabric je server-instantie omtrekt
         ___Logger.LogError(ex, "Fout opgevangen in gegenereerde server async void methode voor SendAndForgetWithList");
     }
 }
@@ -161,6 +151,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
 
     public async Task Send(string message, CancellationToken ct)
     {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
@@ -168,7 +160,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             ___requestId,
             ___ServiceId,
             new("Send"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -200,6 +192,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
 
     public async Task SendWithList(IAsyncEnumerable<string> list, CancellationToken ct)
     {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
@@ -207,7 +201,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             ___requestId,
             ___ServiceId,
             new("SendWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -247,13 +241,15 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
 
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
             ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );
@@ -295,13 +291,15 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
 
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
             ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeListWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___userId,
             ___sessionId
         );

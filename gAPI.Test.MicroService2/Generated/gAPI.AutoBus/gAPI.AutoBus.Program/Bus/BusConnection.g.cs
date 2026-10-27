@@ -186,7 +186,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     client.SendAndForget(
@@ -213,7 +213,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.Send(
@@ -239,7 +239,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -260,7 +260,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     client.SendAndForget(
@@ -287,7 +287,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -300,7 +300,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.Send(
@@ -343,7 +343,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     client.SendAndForget(
@@ -370,7 +370,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.Send(
@@ -405,7 +405,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -433,7 +433,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTask(
@@ -461,7 +461,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeList(
@@ -503,7 +503,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTask(
@@ -531,7 +531,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeList(
@@ -586,7 +586,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTask(
@@ -614,7 +614,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeList(

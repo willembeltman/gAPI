@@ -1,13 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
 
-  <ItemGroup>
-	  <ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Core\gAPI.Core.csproj" />
+	</ItemGroup>
 
 </Project>
