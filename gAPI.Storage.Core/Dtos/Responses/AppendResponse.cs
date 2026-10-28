@@ -1,4 +1,6 @@
-﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+﻿using gAPI.Storage.Core.Dtos;
+
+namespace gAPI.Storage.Core.Dtos.Responses;
 
 
 public class AppendResponse : Response

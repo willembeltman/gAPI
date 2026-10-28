@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+﻿namespace gAPI.Storage.Core.Dtos.Responses;
 
 
 public class DeleteResponse : Response

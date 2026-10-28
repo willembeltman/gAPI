@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Storage;
+﻿namespace gAPI.Storage.Core;
 
 public interface IReadonlyStorageFile : IStorageFile
 {

@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
+﻿namespace gAPI.Storage.Core.Dtos.Requests;
 
 
 public class SaveRequest : Request

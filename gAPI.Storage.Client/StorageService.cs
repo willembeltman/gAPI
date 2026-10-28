@@ -1,23 +1,21 @@
-﻿using gAPI.Core.Server.Storage.AzureStorage;
-using gAPI.Core.Server.Storage.Mock;
-using gAPI.Core.Server.Storage.StorageServer;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
-using gAPI.Storage.Client;
+﻿using gAPI.Storage.Client.AzureStorage;
+using gAPI.Storage.Client.Mock;
 using gAPI.Storage.Client.StorageServer;
-using gAPI.Storage.Server.Services;
+using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos.Responses;
 using Microsoft.Extensions.Options;
 
-namespace gAPI.Core.Server.Storage;
+namespace gAPI.Storage.Client;
 
 public class StorageService : IStorageService
 {
     private readonly IStorageService Implementation;
 
     public StorageConfig Config { get; }
-    public IGapiStorageService? GapiStorageServices { get; }
+    public IStorageServiceBus? GapiStorageServices { get; }
 
     public StorageService(
-        IEnumerable<IGapiStorageService> gapiStorageServices,
+        IEnumerable<IStorageServiceBus> gapiStorageServices,
         StorageConfig config,
         TimeProvider dateTime)
     {

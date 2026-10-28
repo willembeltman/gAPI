@@ -1,18 +1,17 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
-using gAPI.Storage.Client.StorageServer;
-using gAPI.Storage.Server.Services;
+﻿using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos.Requests;
+using gAPI.Storage.Core.Dtos.Responses;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 #nullable enable
-namespace gAPI.Core.Server.Storage.StorageServer;
+namespace gAPI.Storage.Client.StorageServer;
 
 public record StorageFileCacheValue(string? Url, DateTimeOffset Created);
 
 public class StorageServerService(
     StorageServerConfig config,
-    IGapiStorageService gapiStorageService,
+    IStorageServiceBus gapiStorageService,
     TimeProvider dateTime)
     : IStorageService
 {

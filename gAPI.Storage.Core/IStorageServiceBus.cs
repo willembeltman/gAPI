@@ -1,11 +1,11 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+using gAPI.Storage.Core.Dtos.Requests;
+using gAPI.Storage.Core.Dtos.Responses;
 
-namespace gAPI.Storage.Server.Services;
+namespace gAPI.Storage.Core;
 
 [GenerateBus]
-public interface IGapiStorageService
+public interface IStorageServiceBus
 {
     Task<AppendResponse> AppendStorageFile(AppendRequest model, IAsyncEnumerable<ReadOnlyMemory<byte>> inputStream, CancellationToken ct);
     Task<DeleteResponse> DeleteStorageFile(DeleteRequest model, CancellationToken ct);

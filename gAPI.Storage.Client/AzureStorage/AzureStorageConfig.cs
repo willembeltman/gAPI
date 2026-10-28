@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Storage.AzureStorage;
+﻿namespace gAPI.Storage.Client.AzureStorage;
 
 // Configuration class
 public class AzureStorageConfig

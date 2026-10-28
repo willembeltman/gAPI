@@ -23,9 +23,13 @@ public class IBusConnectionGenerator : _BaseGenerator
     public override void GenerateCode()
     {
         Reg(IBaseBusConnection);
-        foreach (var item in Context.ServiceContext.BusInterfaces)
+        foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
-            Reg(item);
+            foreach (var service in @interface.Services)
+            {
+                Reg(service);
+            }
+            Reg(@interface);
         }
 
         Code = @$"{GetNamespacesCode()}

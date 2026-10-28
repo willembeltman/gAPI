@@ -70,6 +70,10 @@ public class BusConnectionGenerator : _BaseGenerator
         foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
+            foreach (var service in @interface.Services)
+            {
+                Reg(service);
+            }
             foreach (var method in @interface.Methods)
             {
                 RegRecursive(method.ResponseType);

@@ -1,9 +1,11 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+﻿using gAPI.Storage.Client;
+using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos.Responses;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
 #nullable enable
-namespace gAPI.Core.Server.Storage.Mock;
+namespace gAPI.Storage.Client.Mock;
 
 public class MockStorageService(IOptions<MockStorageConfig> config) : IStorageService
 {

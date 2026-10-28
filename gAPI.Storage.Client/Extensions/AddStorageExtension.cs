@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Server.Storage;
-using gAPI.Storage.Client.Extensions;
+﻿using gAPI.Storage.Client.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

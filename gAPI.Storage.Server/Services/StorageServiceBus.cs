@@ -1,16 +1,17 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Requests;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
-using gAPI.Core.Server.Storage.StorageServer.Enums;
+﻿using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos.Requests;
+using gAPI.Storage.Core.Dtos.Responses;
+using gAPI.Storage.Core.Enums;
 using gAPI.Storage.Server.Data;
 using gAPI.Storage.Server.Data.Entities;
 using System.Security.Cryptography;
 
 namespace gAPI.Storage.Server.Services;
 
-public class LocalStorageService(
+public class StorageServiceBus(
     ApplicationDbContext db,
     LocalStorageServerConfig config) 
-    : IGapiStorageService
+    : IStorageServiceBus
 {
     const string BaseFolder = "Content";
     static readonly DirectoryInfo Directory = new("Files");

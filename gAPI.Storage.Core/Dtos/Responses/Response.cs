@@ -1,6 +1,6 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Enums;
+﻿using gAPI.Storage.Core.Enums;
 
-namespace gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+namespace gAPI.Storage.Core.Dtos.Responses;
 
 
 public class Response

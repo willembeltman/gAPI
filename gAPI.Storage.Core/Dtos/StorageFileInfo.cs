@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 
-namespace gAPI.Core.Server.Storage;
+namespace gAPI.Storage.Core.Dtos;
 
 public class StorageFileInfo
 {

@@ -1,8 +1,7 @@
-﻿using gAPI.Storage.Client;
-using gAPI.Storage.Server;
+﻿using gAPI.Storage.Server;
 using Microsoft.Extensions.Configuration;
 
-namespace gAPI.Storage.Client.Extensions;
+namespace gAPI.Storage.Server.Extensions;
 
 public static class CreateLocalStorageServerConfigExtension
 {

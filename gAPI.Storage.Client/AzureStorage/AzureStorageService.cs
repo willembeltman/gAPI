@@ -2,12 +2,14 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
-using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
-using gAPI.Core.Server.Storage.StorageServer.Enums;
+using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos;
+using gAPI.Storage.Core.Dtos.Responses;
+using gAPI.Storage.Core.Enums;
 using Microsoft.Extensions.Options;
 
 #nullable enable
-namespace gAPI.Core.Server.Storage.AzureStorage;
+namespace gAPI.Storage.Client.AzureStorage;
 
 public class AzureStorageService : IStorageService
 {

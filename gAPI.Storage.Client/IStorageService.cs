@@ -1,6 +1,7 @@
-﻿using gAPI.Core.Server.Storage.StorageServer.Dtos.Responses;
+﻿using gAPI.Storage.Core;
+using gAPI.Storage.Core.Dtos.Responses;
 
-namespace gAPI.Core.Server.Storage;
+namespace gAPI.Storage.Client;
 
 
 public interface IStorageService

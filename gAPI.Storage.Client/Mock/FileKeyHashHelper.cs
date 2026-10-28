@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace gAPI.Core.Server.Storage.Mock;
+namespace gAPI.Storage.Client.Mock;
 
 public static class FileKeyHashHelper
 {

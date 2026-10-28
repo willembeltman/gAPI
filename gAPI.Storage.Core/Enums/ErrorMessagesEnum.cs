@@ -1,4 +1,4 @@
-﻿namespace gAPI.Core.Server.Storage.StorageServer.Enums;
+﻿namespace gAPI.Storage.Core.Enums;
 
 public enum ErrorMessagesEnum
 {
