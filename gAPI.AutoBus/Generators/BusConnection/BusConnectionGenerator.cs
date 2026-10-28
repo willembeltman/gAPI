@@ -104,7 +104,11 @@ public class {Name}
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
 
-    readonly byte[] ___Buffer;
+    private readonly byte[] ___Buffer;
+
+    {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"
+    public {service}? {service} {{ get; set; }}"))))}
+
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
     {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}

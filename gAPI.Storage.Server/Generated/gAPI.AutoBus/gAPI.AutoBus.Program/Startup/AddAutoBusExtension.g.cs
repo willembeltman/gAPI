@@ -42,6 +42,7 @@ public static class AddAutoBusExtension
         services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
+        // Fabric client
         services.AddSingleton<SessionCache>();
         services.AddSingleton<StreamingCache>();
         services.AddSingleton<BusConnectionCollection>();
@@ -49,6 +50,7 @@ public static class AddAutoBusExtension
 
         // Connection
         services.AddSingleton<IBusConnection, BusConnection>();
+        services.AddHostedService<BusHostedService>();
 
         // Hubs
         services.AddSingleton<IBusContext, BusContext>();

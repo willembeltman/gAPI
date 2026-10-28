@@ -37,6 +37,7 @@ public class Generator
         IBusContext = new IBusContext_Generator(this);
         BusContext = new BusContext_Generator(this);
         IBusConnection = new IBusConnectionGenerator(this);
+        BusHostedService = new BusHostedServiceGenerator(this);
 
         if (SharedReferences.BaseAzureConnection != null)
             BusConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.BaseAzureConnection);
@@ -81,6 +82,7 @@ public class Generator
     //public BusConnectionGenerator? RabbitMQConnection { get; }
     //public BusConnectionGenerator? AzureConnection { get; }
     public IBusConnectionGenerator IBusConnection { get; }
+    public BusHostedServiceGenerator BusHostedService { get; }
     public AddAutoBusExtensionGenerator AddAutoBusExtension { get; }
     public BusClient_Generator[] ClientHandlers { get; }
     public IBusClientContext_Generator[] IClientHandlerContexts { get; }
@@ -93,6 +95,8 @@ public class Generator
         GenerateItem(spc, BusContext);
         GenerateItem(spc, IBusConnection);
         GenerateItem(spc, BusConnection);
+        GenerateItem(spc, BusHostedService);
+
         //if (FabricConnection != null)
         //    GenerateItem(spc, FabricConnection);
         //if (RabbitMQConnection != null)

@@ -47,12 +47,12 @@ public class Interface : SharedReference
             .Select(methodSymbol => new InterfaceMethod(dataModel, this, methodSymbol))
             .ToArray();
 
-        Service = allSymbols
+        Services = allSymbols
             .Where(a =>
                 a.TypeKind == TypeKind.Class &&
                 a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
             .Select(a => new Service(this, a))
-            .FirstOrDefault(a => a.IsApiProxy == false);
+            .ToArray();
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }
@@ -64,7 +64,7 @@ public class Interface : SharedReference
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
-    public Service Service { get; }
+    public Service[] Services { get; }
 
     public override string ToString()
     {

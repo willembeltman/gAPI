@@ -26,6 +26,7 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
     public BusContext_Generator ClientContext => Context.BusContext;
     public SharedReference IBusConnection => Context.IBusConnection;
     public SharedReference BusConnection => Context.BusConnection;
+    public SharedReference BusHostedService => Context.BusHostedService;
 
     public SharedReference ServiceBusConfig => Context.SharedReferences.ServiceBusConfig;
 
@@ -34,6 +35,9 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
         Reg(IClientContext);
         Reg(ClientContext);
         Reg(ServiceBusConfig);
+        Reg(BusHostedService);
+        Reg(BusConnection);
+        Reg(IBusConnection);
         Reg("gAPI.Core.Server.Extensions");
         Reg("System.Net");
         Reg("Microsoft.Extensions.Primitives");
@@ -75,6 +79,7 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             if (Context.SharedReferences.FabricClient != null)
             {
                 fabricClientCode = $@"
+        // Fabric client
         services.AddSingleton<{Context.SharedReferences.SessionCache}>();
         services.AddSingleton<{Context.SharedReferences.StreamingCache}>();
         services.AddSingleton<{Context.SharedReferences.BusConnectionCollection}>();
@@ -112,6 +117,7 @@ public static class {Name}
 
         // Connection
         services.AddSingleton<{IBusConnection}, {BusConnection}>();
+        services.AddHostedService<{BusHostedService}>();
 
         // Hubs
         services.AddSingleton<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"

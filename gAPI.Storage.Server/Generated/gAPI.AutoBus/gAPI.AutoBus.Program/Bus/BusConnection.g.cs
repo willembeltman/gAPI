@@ -36,7 +36,11 @@ public class BusConnection
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
-    readonly byte[] ___Buffer;
+    private readonly byte[] ___Buffer;
+
+    
+    public LocalStorageService? LocalStorageService { get; set; }
+
     
 
     readonly List<IGapiStorageService> GapiStorageServices = [];

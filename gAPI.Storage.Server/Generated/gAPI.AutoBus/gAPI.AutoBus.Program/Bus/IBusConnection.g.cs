@@ -7,9 +7,10 @@ namespace gAPI.Generated;
 
 public interface IBusConnection : IBaseBusConnection
 {
+
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
 
-    //Task SubscribeAsync(IGapiStorageService implementation, CancellationToken ___ct = default);
-    //Task UnsubscribeAsync(IGapiStorageService implementation, CancellationToken ___ct = default);
+    
+    LocalStorageService? LocalStorageService { get; set; }
 }
