@@ -2,6 +2,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
@@ -23,7 +24,7 @@ public sealed class FabricClient
         StreamingCache streamingCache,
         ServiceSubscriptionCollection serviceSubscriptions,
         ILoggerFactory loggerFactory,
-        string? fabricConnectionString)
+        ServerConfig config)
     {
         Sender = new FabricClientSender(this, loggerFactory);
 
@@ -33,11 +34,11 @@ public sealed class FabricClient
         Logger = loggerFactory.CreateLogger<FabricClient>();
         //ServerServiceRouter = serverServiceRouter;
 
-        if (!string.IsNullOrEmpty(fabricConnectionString))
+        if (!string.IsNullOrEmpty(config.FabricConnectionString))
         {
-            if (fabricConnectionString.Contains('='))
+            if (config.FabricConnectionString.Contains('='))
             {
-                var parts = fabricConnectionString!.Split(';')
+                var parts = config.FabricConnectionString!.Split(';')
                     .Where(x => x.Contains('='))
                     .Select(x => x.Split(['='], 2))
                     .ToDictionary(x => x[0].Trim(), x => x[1].Trim(), StringComparer.OrdinalIgnoreCase);
@@ -52,20 +53,20 @@ public sealed class FabricClient
                 Host = host;
                 Port = port;
             }
-            else if (Uri.TryCreate(fabricConnectionString, UriKind.Absolute, out var uri))
+            else if (Uri.TryCreate(config.FabricConnectionString, UriKind.Absolute, out var uri))
             {
                 Host = uri.Host;
                 Port = uri.Port > 0 ? uri.Port : 9000;
             }
-            else if (fabricConnectionString.Contains(':'))
+            else if (config.FabricConnectionString.Contains(':'))
             {
-                var split = fabricConnectionString.Split(':');
+                var split = config.FabricConnectionString.Split(':');
                 Host = split[0].Trim();
                 Port = int.TryParse(split[1].Trim(), out var p) ? p : 9000;
             }
             else
             {
-                Host = fabricConnectionString.Trim();
+                Host = config.FabricConnectionString.Trim();
                 Port = 9000;
             }
 
@@ -936,186 +937,186 @@ public sealed class FabricClient
     #region Call's vanuit gegenereerde code
 
     #region Wss / Sse
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
+    //public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
-        StreamingCache.StreamingRequestHandlers.TryAdd(
-            new(routing.RequestId, argumentIndex),
-            new AsyncEnumerableRegistration<T>(
-                async (activeStreams, streamId, cancelled, ct) =>
-                {
-                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
-                        streamId,
-                        _ =>
-                        {
-                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                            return new AsyncEnumerableRegistrationInstance<T>(
-                                source.GetAsyncEnumerator(linked.Token),
-                                new SemaphoreSlim(1, 1),
-                                linked);
-                        });
+    //    StreamingCache.StreamingRequestHandlers.TryAdd(
+    //        new(routing.RequestId, argumentIndex),
+    //        new AsyncEnumerableRegistration<T>(
+    //            async (activeStreams, streamId, cancelled, ct) =>
+    //            {
+    //                var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+    //                    streamId,
+    //                    _ =>
+    //                    {
+    //                        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+    //                        return new AsyncEnumerableRegistrationInstance<T>(
+    //                            source.GetAsyncEnumerator(linked.Token),
+    //                            new SemaphoreSlim(1, 1),
+    //                            linked);
+    //                    });
 
-                    async Task Cleanup()
-                    {
-                        activeStreams.TryRemove(streamId, out _);
-                        await enumerator.DisposeAsync();
-                        linkedCts.Dispose();
-                    }
+    //                async Task Cleanup()
+    //                {
+    //                    activeStreams.TryRemove(streamId, out _);
+    //                    await enumerator.DisposeAsync();
+    //                    linkedCts.Dispose();
+    //                }
 
-                    var entered = false;
-                    try
-                    {
-                        await gate.WaitAsync(ct);
-                        entered = true;
+    //                var entered = false;
+    //                try
+    //                {
+    //                    await gate.WaitAsync(ct);
+    //                    entered = true;
 
-                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
+    //                    var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
 
-                        var response = new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            !hasNext,
-                            cancelled,
-                            null,
-                            hasNext ? serializer(enumerator.Current) : []);
+    //                    var response = new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        !hasNext,
+    //                        cancelled,
+    //                        null,
+    //                        hasNext ? serializer(enumerator.Current) : []);
 
-                        if (!hasNext)
-                            await Cleanup();
+    //                    if (!hasNext)
+    //                        await Cleanup();
 
-                        return response;
-                    }
-                    catch (OperationCanceledException ex) when (
-                        ct.IsCancellationRequested ||
-                        cancellationToken.IsCancellationRequested)
-                    {
-                        await Cleanup();
+    //                    return response;
+    //                }
+    //                catch (OperationCanceledException ex) when (
+    //                    ct.IsCancellationRequested ||
+    //                    cancellationToken.IsCancellationRequested)
+    //                {
+    //                    await Cleanup();
 
-                        return new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            true,
-                            true,
-                            ex.Message,
-                            []);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Cleanup();
+    //                    return new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        true,
+    //                        true,
+    //                        ex.Message,
+    //                        []);
+    //                }
+    //                catch (Exception ex)
+    //                {
+    //                    await Cleanup();
 
-                        return new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            true,
-                            false,
-                            ex.Message,
-                            []);
-                    }
-                    finally
-                    {
-                        if (entered)
-                            gate.Release();
-                    }
-                }));
-    }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
+    //                    return new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        true,
+    //                        false,
+    //                        ex.Message,
+    //                        []);
+    //                }
+    //                finally
+    //                {
+    //                    if (entered)
+    //                        gate.Release();
+    //                }
+    //            }));
+    //}
+    //public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
-        StreamingCache.StreamingRequestHandlers.TryAdd(
-            new(routing.RequestId, argumentIndex),
-            new AsyncEnumerableRegistration<byte[]>(
-                async (activeStreams, streamId, cancelled, ct) =>
-                {
-                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
-                        streamId,
-                        _ =>
-                        {
-                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                            return new AsyncEnumerableRegistrationInstance<byte[]>(
-                                source.GetAsyncEnumerator(linked.Token),
-                                new SemaphoreSlim(1, 1),
-                                linked);
-                        });
+    //    StreamingCache.StreamingRequestHandlers.TryAdd(
+    //        new(routing.RequestId, argumentIndex),
+    //        new AsyncEnumerableRegistration<byte[]>(
+    //            async (activeStreams, streamId, cancelled, ct) =>
+    //            {
+    //                var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+    //                    streamId,
+    //                    _ =>
+    //                    {
+    //                        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+    //                        return new AsyncEnumerableRegistrationInstance<byte[]>(
+    //                            source.GetAsyncEnumerator(linked.Token),
+    //                            new SemaphoreSlim(1, 1),
+    //                            linked);
+    //                    });
 
-                    async Task Cleanup()
-                    {
-                        activeStreams.TryRemove(streamId, out _);
-                        await enumerator.DisposeAsync();
-                        linkedCts.Dispose();
-                    }
+    //                async Task Cleanup()
+    //                {
+    //                    activeStreams.TryRemove(streamId, out _);
+    //                    await enumerator.DisposeAsync();
+    //                    linkedCts.Dispose();
+    //                }
 
-                    var entered = false;
-                    try
-                    {
-                        await gate.WaitAsync(ct);
-                        entered = true;
+    //                var entered = false;
+    //                try
+    //                {
+    //                    await gate.WaitAsync(ct);
+    //                    entered = true;
 
-                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
+    //                    var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
 
-                        var response = new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            !hasNext,
-                            cancelled,
-                            null,
-                            hasNext ? enumerator.Current : []);
+    //                    var response = new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        !hasNext,
+    //                        cancelled,
+    //                        null,
+    //                        hasNext ? enumerator.Current : []);
 
-                        if (!hasNext)
-                            await Cleanup();
+    //                    if (!hasNext)
+    //                        await Cleanup();
 
-                        return response;
-                    }
-                    catch (OperationCanceledException ex) when (
-                        ct.IsCancellationRequested ||
-                        cancellationToken.IsCancellationRequested)
-                    {
-                        await Cleanup();
+    //                    return response;
+    //                }
+    //                catch (OperationCanceledException ex) when (
+    //                    ct.IsCancellationRequested ||
+    //                    cancellationToken.IsCancellationRequested)
+    //                {
+    //                    await Cleanup();
 
-                        return new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            true,
-                            true,
-                            ex.Message,
-                            []);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Cleanup();
+    //                    return new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        true,
+    //                        true,
+    //                        ex.Message,
+    //                        []);
+    //                }
+    //                catch (Exception ex)
+    //                {
+    //                    await Cleanup();
 
-                        return new StreamingResponseDto(
-                            routing,
-                            argumentIndex,
-                            streamId,
-                            true,
-                            false,
-                            ex.Message,
-                            []);
-                    }
-                    finally
-                    {
-                        if (entered)
-                            gate.Release();
-                    }
-                }));
-    }
-    public async Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} UnRegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId);
+    //                    return new StreamingResponseDto(
+    //                        routing,
+    //                        argumentIndex,
+    //                        streamId,
+    //                        true,
+    //                        false,
+    //                        ex.Message,
+    //                        []);
+    //                }
+    //                finally
+    //                {
+    //                    if (entered)
+    //                        gate.Release();
+    //                }
+    //            }));
+    //}
+    //public async Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now} UnRegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId);
 
-        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
-        {
-            await registration.DisposeAsync();
-        }
-    }
+    //    if (StreamingCache.StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
+    //    {
+    //        await registration.DisposeAsync();
+    //    }
+    //}
 
     public RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
     {

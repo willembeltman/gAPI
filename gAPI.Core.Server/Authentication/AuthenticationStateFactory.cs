@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
@@ -22,7 +23,7 @@ public class AuthenticationStateFactory<TUser>(
         var shortago = dateTime.GetUtcNow().AddHours(ShortHoursAgo);
         var longago = dateTime.GetUtcNow().AddHours(LongHoursAgo);
 
-        UserToken<TUser>? dbToken = null;
+        UserToken? dbToken = null;
         TUser? dbUser = null;
 
         if (headers.CookieHash != null)
@@ -47,7 +48,7 @@ public class AuthenticationStateFactory<TUser>(
                 if (dbToken.Date < shortago)
                 {
                     var cookieHash = headers.CreateNewCookie();
-                    dbToken = new UserToken<TUser>(dbUser.Id, cookieHash);
+                    dbToken = new UserToken(dbUser.Id, cookieHash);
                     await db.Tokens.AddAsync(dbToken, ct);
                     await db.SaveChangesAsync(ct);
                 }
@@ -63,18 +64,24 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbIp == null)
         {
-            dbIp = new Ip<TUser>(headers.IpAdress.ToString());
+            dbIp = new Ip(headers.IpAdress.ToString());
             await db.Ips.AddAsync(dbIp, ct);
             await db.SaveChangesAsync(ct);
         }
 
-        //_ = Task.Run(async () =>
-        //{
-        //    using var cts = new CancellationTokenSource();
-        //    cts.CancelAfter(TimeSpan.FromSeconds(100));
-        //    var ct = cts.Token;
-        //    await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
-        //});
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(100));
+                var ct = cts.Token;
+                await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
+            }
+            catch (Exception ex)
+            {
+            }
+        });
 
         var authState = new AuthenticationState<TUser>(
             dbUser,
@@ -87,7 +94,7 @@ public class AuthenticationStateFactory<TUser>(
     public async Task<RequestIds> DoTheRest(
         AuthenticationHeaders headers,
         Guid? userId, long? authenticationTokenId,
-        TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
+        TUser? dbUser, UserToken? dbToken, Ip dbIp,
         CancellationToken ct)
     {
         //if (UseMemoryDatabase)
@@ -373,10 +380,10 @@ public class AuthenticationStateFactory<TUser>(
     //}
 
     public async Task<RequestIds> DoTheRest_EFCore(
-                AuthenticationHeaders headers,
-                Guid? userId, long? authenticationTokenId,
-                TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp,
-                CancellationToken ct)
+        AuthenticationHeaders headers,
+        Guid? userId, long? authenticationTokenId,
+        TUser? dbUser, UserToken? dbToken, Ip dbIp,
+        CancellationToken ct)
     {
         using var db = await dbFactory.CreateDbContextAsync(ct);
         var dbSession = await db.Sessions
@@ -385,7 +392,7 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbSession == null)
         {
-            dbSession = new Session<TUser>(headers.SessionId.Value);
+            dbSession = new Session(headers.SessionId.Value);
             await db.Sessions.AddAsync(dbSession, ct);
             await db.SaveChangesAsync(ct); // Gaat goed
         }
@@ -396,7 +403,7 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbRoute == null)
         {
-            dbRoute = new Route<TUser>(headers.EncodedPath);
+            dbRoute = new Route(headers.EncodedPath);
             await db.Routes.AddAsync(dbRoute, ct);
             await db.SaveChangesAsync(ct); // Gaat goed
         }
@@ -408,7 +415,7 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbUserIp == null)
         {
-            dbUserIp = new UserIp<TUser>(userId, dbIp); // userId = null
+            dbUserIp = new UserIp(userId, dbIp.Id); // userId = null
             await db.UserIps.AddAsync(dbUserIp, ct);
             await db.SaveChangesAsync(ct); // Gaat fout: error kan `iets` niet toevoegen dat al bestaat.
         }
@@ -420,7 +427,7 @@ public class AuthenticationStateFactory<TUser>(
                     ct);
         if (dbUserIpSession == null)
         {
-            dbUserIpSession = new UserIpSession<TUser>(dbUserIp, dbSession);
+            dbUserIpSession = new UserIpSession(dbUserIp, dbSession);
             await db.UserIpSessions.AddAsync(dbUserIpSession, ct);
             await db.SaveChangesAsync(ct);
         }
@@ -432,7 +439,7 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbUserIpSessionToken == null)
         {
-            dbUserIpSessionToken = new UserIpSessionToken<TUser>(dbUserIpSession, dbToken);
+            dbUserIpSessionToken = new UserIpSessionToken(dbUserIpSession, dbToken);
             await db.UserIpSessionTokens.AddAsync(dbUserIpSessionToken, ct);
             await db.SaveChangesAsync(ct);
         }
@@ -444,12 +451,12 @@ public class AuthenticationStateFactory<TUser>(
                 ct);
         if (dbUserIpSessionTokenRoute == null)
         {
-            dbUserIpSessionTokenRoute = new UserIpSessionTokenRoute<TUser>(dbUserIpSessionToken, dbRoute);
+            dbUserIpSessionTokenRoute = new UserIpSessionTokenRoute(dbUserIpSessionToken, dbRoute);
             await db.UserIpSessionTokenRoutes.AddAsync(dbUserIpSessionTokenRoute, ct);
             await db.SaveChangesAsync(ct);
         }
 
-        var dbUserIpSessionTokenRouteRequest = new UserIpSessionTokenRouteRequest<TUser>(dbUserIpSessionTokenRoute, dateTime.GetUtcNow());
+        var dbUserIpSessionTokenRouteRequest = new UserIpSessionTokenRouteRequest(dbUserIpSessionTokenRoute, dateTime.GetUtcNow());
         await db.UserIpSessionTokenRouteRequests.AddAsync(dbUserIpSessionTokenRouteRequest, ct);
         await db.SaveChangesAsync(ct);
 

@@ -113,11 +113,11 @@ public class AuthenticationSecurity<TUser, TStateDto>(
             ct: ct);
 
     private async Task<bool> CheckAndUpdateIpLockout(
-        Ip<TUser>? ip,
-        Func<Ip<TUser>, int> getAttempts,
-        Action<Ip<TUser>, int> setAttempts,
-        Func<Ip<TUser>, DateTimeOffset?> getLockedOutDate,
-        Action<Ip<TUser>, DateTimeOffset?> setLockedOutDate,
+        Ip? ip,
+        Func<Ip, int> getAttempts,
+        Action<Ip, int> setAttempts,
+        Func<Ip, DateTimeOffset?> getLockedOutDate,
+        Action<Ip, DateTimeOffset?> setLockedOutDate,
         int maxAttempts,
         TimeSpan lockoutDuration,
         bool success,

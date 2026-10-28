@@ -8,11 +8,11 @@ public class UserTokenFactory<TUser>(
     : IUserTokenFactory<TUser>
     where TUser : AuthUser
 {
-    public async Task<UserToken<TUser>> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
+    public async Task<UserToken> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct)
     {
         using var db = await dbFactory.CreateDbContextAsync(ct);
         // Add new token hash to database
-        var dbToken = new UserToken<TUser>()
+        var dbToken = new UserToken()
         {
             UserId = Guid.Parse(userId),
             TokenHash = cookieHash

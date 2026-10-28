@@ -5,5 +5,5 @@ namespace gAPI.Core.Server.Authentication;
 public interface IUserTokenFactory<TUser>
     where TUser : AuthUser
 {
-    Task<UserToken<TUser>> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct);
+    Task<UserToken> SaveTokenAsync(string userId, string cookieHash, CancellationToken ct);
 }

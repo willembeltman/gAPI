@@ -5,12 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class UserIpSessionTokenRouteRequest<TUser>
-    where TUser : AuthUser
+public class UserIpSessionTokenRouteRequest
 {
     public UserIpSessionTokenRouteRequest() { }
     public UserIpSessionTokenRouteRequest(
-        UserIpSessionTokenRoute<TUser>? userIpSessionCompanyTokenRoute,
+        UserIpSessionTokenRoute? userIpSessionCompanyTokenRoute,
         DateTimeOffset date)
     {
         UserIpSessionTokenRoute = userIpSessionCompanyTokenRoute;
@@ -26,7 +25,7 @@ public class UserIpSessionTokenRouteRequest<TUser>
     public long Id { get; set; }
 
     public long UserIpSessionTokenRouteId { get; set; }
-    public virtual UserIpSessionTokenRoute<TUser>? UserIpSessionTokenRoute { get; set; }
+    public virtual UserIpSessionTokenRoute? UserIpSessionTokenRoute { get; set; }
 
     public short Year { get; set; }
     public byte Month { get; set; }

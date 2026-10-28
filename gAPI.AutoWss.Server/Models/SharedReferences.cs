@@ -29,6 +29,7 @@ public class SharedReferences
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
         InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
 
+        SessionCacheCleaner = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCacheCleaner", allSymbols);
         IServerAuthenticationService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServerAuthenticationService", allSymbols);
 
         //IServiceRouter = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IServiceRouter", allSymbols);
@@ -79,6 +80,7 @@ public class SharedReferences
     public SharedReference AuthStateDto { get; }
     public SharedReference AuthenticationOptions { get; }
     public SharedReference InvokeRequestAckDto { get; }
+    public SharedReference SessionCacheCleaner { get; }
     public SharedReference AuthenticationMiddleware { get; }
     public SharedReference WssServerConnection { get; }
     public SharedReference? OwnServerConnection { get; }

@@ -4,8 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class Ip<TUser>
-    where TUser : AuthUser
+public class Ip
 {
     public Ip() { }
     public Ip(string ipAdress)
@@ -28,5 +27,5 @@ public class Ip<TUser>
     public int ChangePasswordAttempts { get; set; }
     public DateTimeOffset? ChangePasswordLockedOutDate { get; set; }
 
-    public virtual ICollection<UserIp<TUser>>? UserIps { get; set; }
+    public virtual ICollection<UserIp>? UserIps { get; set; }
 }

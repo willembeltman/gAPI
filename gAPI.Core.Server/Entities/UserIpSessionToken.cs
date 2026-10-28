@@ -5,13 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class UserIpSessionToken<TUser>
-    where TUser : AuthUser
+public class UserIpSessionToken
 {
     public UserIpSessionToken() { }
     public UserIpSessionToken(
-        UserIpSession<TUser> userIpSessionCompany,
-        UserToken<TUser>? token)
+        UserIpSession userIpSessionCompany,
+        UserToken? token)
     {
         UserIpSession = userIpSessionCompany;
         Token = token;
@@ -22,10 +21,10 @@ public class UserIpSessionToken<TUser>
     public long Id { get; set; }
 
     public long? TokenId { get; set; }
-    public virtual UserToken<TUser>? Token { get; set; }
+    public virtual UserToken? Token { get; set; }
 
     public long UserIpSessionId { get; set; }
-    public virtual UserIpSession<TUser>? UserIpSession { get; set; }
+    public virtual UserIpSession? UserIpSession { get; set; }
 
-    public virtual ICollection<UserIpSessionTokenRoute<TUser>>? UserIpSessionTokenRoutes { get; set; }
+    public virtual ICollection<UserIpSessionTokenRoute>? UserIpSessionTokenRoutes { get; set; }
 }

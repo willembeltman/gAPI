@@ -4,8 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class Session<TUser>
-    where TUser : AuthUser
+public class Session
 {
     public Session() { }
     public Session(string sessionId)
@@ -19,5 +18,5 @@ public class Session<TUser>
     [StringLength(256)]
     public string SessionId { get; set; } = string.Empty;
 
-    public virtual ICollection<UserIpSession<TUser>>? UserIpSessions { get; set; }
+    public virtual ICollection<UserIpSession>? UserIpSessions { get; set; }
 }

@@ -34,6 +34,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference BusConnectionCollection => Context.SharedReferences.BusConnectionCollection;
+    public SharedReference SessionCacheCleaner => Context.SharedReferences.SessionCacheCleaner;
 
     public override void GenerateCode()
     {
@@ -46,8 +47,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServiceSubscriptionCollection);
         Reg(BusConnectionCollection);
         Reg(SessionCache);
-        //Reg(IServiceRouter);
-        //Reg(ServiceRouter);
+        Reg(SessionCacheCleaner);
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.Extensions.Primitives");
@@ -164,41 +164,18 @@ public static class {Name}
                 }});
             }});
         }}
-
-        var sessionCache = new {SessionCache}();
-        services.AddSingleton(sessionCache);
-
-        var streamingCache = new {StreamingCache}();
-        services.AddSingleton(streamingCache);
-
-        var serviceSubscriptions = new {ServiceSubscriptionCollection}();
-        services.AddSingleton(serviceSubscriptions);
-
-        var busSubscriptions = new {BusConnectionCollection}();
-        services.AddSingleton(busSubscriptions);
-
-        var serverConnectionCollection = new {ServerConnectionCollection}();
-        services.AddSingleton(serverConnectionCollection);
-
         services.AddScoped<{ServerConnection}>();
-        services.AddSingleton(sp => new {FabricClient}(
-            sessionCache,
-            streamingCache,
-            serviceSubscriptions,
-            sp.GetRequiredService<ILoggerFactory>(), 
-            fabricConnectionString));
+
+        services.AddSingleton<{SessionCache}>();
+        services.AddSingleton<{StreamingCache}>();
+        services.AddSingleton<{ServiceSubscriptionCollection}>();
+        services.AddSingleton<{BusConnectionCollection}>();
+        services.AddSingleton<{ServerConnectionCollection}>();
+        services.AddSingleton<{FabricClient}>();
 
         if (fabricConnectionString == null)
         {{
-            // Session cleaner, niet nodig als de fabric wordt gebruikt.
-            _ = Task.Run(async () =>
-            {{
-                while (true)
-                {{
-                    sessionCache.Cleanup();
-                    await Task.Delay(TimeSpan.FromMinutes(5));
-                }}
-            }});
+            services.AddHostedService<{SessionCacheCleaner}>();
         }}
 
         // Hubs

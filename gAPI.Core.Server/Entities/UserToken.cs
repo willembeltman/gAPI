@@ -4,8 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class UserToken<TUser>
-    where TUser : AuthUser
+public class UserToken
 {
     public UserToken() { }
     public UserToken(Guid userId, string tokenHash)
@@ -18,11 +17,10 @@ public class UserToken<TUser>
     public long Id { get; set; }
 
     public Guid UserId { get; set; }
-    public virtual TUser User { get; set; } = default!;
 
     [StringLength(280)]
     public string TokenHash { get; set; } = string.Empty;
     public DateTimeOffset Date { get; set; } = DateTimeOffset.UtcNow;
 
-    public virtual ICollection<UserIpSessionToken<TUser>>? UserIpSessionTokens { get; set; }
+    public virtual ICollection<UserIpSessionToken>? UserIpSessionTokens { get; set; }
 }

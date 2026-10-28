@@ -5,7 +5,7 @@ namespace gAPI.Core.Server.Authentication;
 public class AuthenticationState<TUser>
     where TUser : AuthUser
 {
-    public AuthenticationState(TUser? dbUser, UserToken<TUser>? dbToken, Ip<TUser> dbIp)
+    public AuthenticationState(TUser? dbUser, UserToken? dbToken, Ip dbIp)
     {
         User = dbUser;
         Token = dbToken;
@@ -13,6 +13,6 @@ public class AuthenticationState<TUser>
     }
 
     public TUser? User { get; }
-    public UserToken<TUser>? Token { get; }
-    public Ip<TUser> Ip { get; }
+    public UserToken? Token { get; }
+    public Ip Ip { get; }
 }

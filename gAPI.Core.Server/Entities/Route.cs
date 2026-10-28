@@ -5,8 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace gAPI.Core.Server.Entities;
 
 [IsHidden]
-public class Route<TUser>
-    where TUser : AuthUser
+public class Route
 {
     public Route() { }
     public Route(string route)
@@ -20,5 +19,5 @@ public class Route<TUser>
 
     public string? RouteName { get; set; } = string.Empty;
 
-    public virtual ICollection<UserIpSessionTokenRoute<TUser>>? UserIpSessionTokenRoutes { get; set; }
+    public virtual ICollection<UserIpSessionTokenRoute>? UserIpSessionTokenRoutes { get; set; }
 }
