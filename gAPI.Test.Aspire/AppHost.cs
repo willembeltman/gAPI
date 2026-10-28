@@ -6,9 +6,8 @@ var backplane = builder.AddProject<Projects.gAPI_Test_Fabric>("backplane")
     .WithEnvironment("BusPort", "9595");
 
 var storage = builder.AddProject<Projects.gAPI_Test_Storage>("storage")
-    .WithEnvironment("LocalStorageServerConfig__SuperSecretKey", "SUPERSECRETKEYOF32CHARACTERSLONG")
-    .WithEnvironment("LocalStorageServerConfig__Credentials__UserName", "USERNAME")
-    .WithEnvironment("LocalStorageServerConfig__Credentials__Password", "PASSWORD");
+    .WithEnvironment("BaseUrl", "https://localhost:7275")
+    .WithEnvironment("ConnectionStrings__ServiceBus", "Server=localhost;Port=9595");
 
 var mainServer = builder.AddProject<Projects.gAPI_Test_Main_Server>("mainserver")
     .WithReference(backplane)
@@ -19,7 +18,7 @@ var mainServer = builder.AddProject<Projects.gAPI_Test_Main_Server>("mainserver"
     .WithEnvironment("UseMemoryDatabase", "true")
     .WithEnvironment("QueueName", "Standard")
     .WithEnvironment("ConnectionStrings__DefaultConnection", "UsingMemoryDatabase_SoNoConnectionstring")
-    .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;Server=https://localhost:7275;Username=USERNAME;Password=PASSWORD;UrlTimeout=1;AuthenticateTimeout=15")
+    .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;UrlTimeout=1;AuthenticateTimeout=15")
     .WithEnvironment("ConnectionStrings__FabricConnection", "Server=localhost;Port=9494")
     .WithEnvironment("ConnectionStrings__ServiceBus", "Server=localhost;Port=9595");
 

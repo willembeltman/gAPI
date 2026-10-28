@@ -5,7 +5,7 @@ namespace gAPI.Generated;
 
 public interface IBusContext
 {    
-    public IMainServiceContext MainService { get; }    
-    public IService1Context Service1 { get; }    
-    public IService2Context Service2 { get; }
+    public IBus1Context Bus1 { get; }    
+    public IBus2Context Bus2 { get; }    
+    public IMainBusContext MainBus { get; }
 }

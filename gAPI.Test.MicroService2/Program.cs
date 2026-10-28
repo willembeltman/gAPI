@@ -21,7 +21,7 @@ if (File.Exists("appsettings.Development.json"))
 #endif
 
 builder.Services.AddAutoBus(builder.Configuration);
-builder.Services.AddHostedService<Service2>();
+//builder.Services.AddHostedService<Service2>();
 
 var app = builder.Build();
 app.Run();

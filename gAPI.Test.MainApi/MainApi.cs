@@ -15,6 +15,7 @@ public class MainApi(
     : IMainApi
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainApi>();
+
     private async IAsyncEnumerable<string> MyList()
     {
         yield return "1";
@@ -48,34 +49,34 @@ public class MainApi(
             Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-
-        busContext.Service1.ToAny().SendAndForget("hoi", ct);
+        // Naar de eerste service over de bus
+        busContext.Bus1.ToAny().SendAndForget("hoi", ct);
         Logger.LogInformation($"Service1.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
-        await busContext.Service1.ToAny().Send("hoi", ct);
+        await busContext.Bus1.ToAny().Send("hoi", ct);
         Logger.LogInformation("Service1.Send");
 
-        result = await busContext.Service1.ToAny().InvokeTask("hoi", ct);
+        result = await busContext.Bus1.ToAny().InvokeTask("hoi", ct);
         Logger.LogInformation($"Service1.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
 
-        await foreach (var item in busContext.Service1.ToAny().InvokeList("hoi", ct))
+        await foreach (var item in busContext.Bus1.ToAny().InvokeList("hoi", ct))
         {
             result = item;
             Logger.LogInformation($"Service1.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        result = await busContext.Service1.ToAny().InvokeTaskWithList(MyList(), ct);
+        result = await busContext.Bus1.ToAny().InvokeTaskWithList(MyList(), ct);
         Logger.LogInformation($"Service1.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
 
-        await foreach (var item in busContext.Service1.ToAny().InvokeListWithList(MyList(), ct))
+        await foreach (var item in busContext.Bus1.ToAny().InvokeListWithList(MyList(), ct))
         {
             result = item;
             Logger.LogInformation($"Service1.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        await busContext.Service1.ToAny().StartServiceTests(sessionId, ct);
+        await busContext.Bus1.ToAny().StartServiceTests(sessionId, ct);
 
-        Logger.LogInformation($"Service1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Bus1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
 
     public async void SendAndForget(string message, CancellationToken ct)

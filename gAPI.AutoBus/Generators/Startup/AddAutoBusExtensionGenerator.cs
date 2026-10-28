@@ -56,6 +56,10 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
         foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
+            foreach (var service in @interface.Services)
+            {
+                Reg(service);
+            }
             foreach (var method in @interface.Methods)
             {
                 RegRecursive(method.ResponseType);
@@ -116,7 +120,8 @@ public static class {Name}
 {fabricClientCode}
 
         // Connection
-        services.AddSingleton<{IBusConnection}, {BusConnection}>();
+        services.AddSingleton<{IBusConnection}, {BusConnection}>();{string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"
+        services.AddScoped<{service}>();"))))}
         services.AddHostedService<{BusHostedService}>();
 
         // Hubs

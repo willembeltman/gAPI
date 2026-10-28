@@ -13,7 +13,7 @@
 
 namespace System.Runtime.CompilerServices
 {
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     file sealed class InterceptsLocationAttribute : System.Attribute
     {
@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.OpenApi;
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file record XmlComment(
         string? Summary,
         string? Description,
@@ -54,13 +54,13 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         List<XmlParameterComment>? Parameters,
         List<XmlResponseComment>? Responses);
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file record XmlParameterComment(string? Name, string? Description, string? Example, bool Deprecated);
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file record XmlResponseComment(string Code, string? Description, string? Example);
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file static class XmlCommentCache
     {
         private static Dictionary<string, XmlComment>? _cache;
@@ -75,7 +75,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file static class DocumentationCommentIdHelper
     {
         /// <summary>
@@ -338,7 +338,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file class XmlCommentOperationTransformer : IOpenApiOperationTransformer
     {
         public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
@@ -504,7 +504,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file class XmlCommentSchemaTransformer : IOpenApiSchemaTransformer
     {
         public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
@@ -562,7 +562,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file static class JsonNodeExtensions
     {
         public static JsonNode? Parse(this string? json)
@@ -591,7 +591,7 @@ namespace Microsoft.AspNetCore.OpenApi.Generated
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.13.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.13.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.AspNetCore.OpenApi.SourceGenerators, Version=10.0.14.0, Culture=neutral, PublicKeyToken=adb9793829ddae60", "10.0.14.0")]
     file static class GeneratedServiceCollectionExtensions
     {
 

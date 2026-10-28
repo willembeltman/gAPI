@@ -4,12 +4,12 @@
 namespace gAPI.Generated;
 
 public class BusContext(    
-    IMainServiceContext mainService,    
-    IService1Context service1,    
-    IService2Context service2)
+    IBus1Context bus1,    
+    IBus2Context bus2,    
+    IMainBusContext mainBus)
     : IBusContext
 {    
-    public IMainServiceContext MainService { get; } = mainService;    
-    public IService1Context Service1 { get; } = service1;    
-    public IService2Context Service2 { get; } = service2;
+    public IBus1Context Bus1 { get; } = bus1;    
+    public IBus2Context Bus2 { get; } = bus2;    
+    public IMainBusContext MainBus { get; } = mainBus;
 }

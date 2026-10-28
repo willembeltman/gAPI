@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoBus(builder.Configuration);
 builder.Services.AddAutoWssServer(builder.Configuration);
 builder.Services.AddAutoAuthServer(builder.Configuration);
-builder.Services.AddHostedService<MainService>();
+//builder.Services.AddHostedService<MainService>();
 
 
 var app = builder.Build();

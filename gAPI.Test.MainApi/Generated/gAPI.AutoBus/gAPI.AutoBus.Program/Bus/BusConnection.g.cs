@@ -5,6 +5,7 @@ using gAPI.Core.Serializers;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.ServiceBus.Fabric;
+using gAPI.Test.Main.Server;
 using gAPI.Test.Shared.Private;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,152 +35,159 @@ public class BusConnection
         ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
-    readonly byte[] ___Buffer;
+    private readonly byte[] ___Buffer;
+
+    
+    public MainBus? MainBus { get; set; }
+
     
 
-    readonly List<IMainService> MainServices = [];
-    readonly SemaphoreSlim MainServicesLock = new(1, 1);
+    readonly List<IBus1> Bus1s = [];
+    readonly SemaphoreSlim Bus1sLock = new(1, 1);
 
-    private async Task<IMainService[]> GetMainServicesSnapshotAsync()
+    private async Task<IBus1[]> GetBus1sSnapshotAsync()
     {
-        await MainServicesLock.WaitAsync();
+        await Bus1sLock.WaitAsync();
         try
         {
-            return [.. MainServices];
+            return [.. Bus1s];
         }
         finally
         {
-            MainServicesLock.Release();
+            Bus1sLock.Release();
         }
     }
 
-    readonly List<IService1> Service1s = [];
-    readonly SemaphoreSlim Service1sLock = new(1, 1);
+    readonly List<IBus2> Bus2s = [];
+    readonly SemaphoreSlim Bus2sLock = new(1, 1);
 
-    private async Task<IService1[]> GetService1sSnapshotAsync()
+    private async Task<IBus2[]> GetBus2sSnapshotAsync()
     {
-        await Service1sLock.WaitAsync();
+        await Bus2sLock.WaitAsync();
         try
         {
-            return [.. Service1s];
+            return [.. Bus2s];
         }
         finally
         {
-            Service1sLock.Release();
+            Bus2sLock.Release();
         }
     }
 
-    readonly List<IService2> Service2s = [];
-    readonly SemaphoreSlim Service2sLock = new(1, 1);
+    readonly List<IMainBus> MainBuss = [];
+    readonly SemaphoreSlim MainBussLock = new(1, 1);
 
-    private async Task<IService2[]> GetService2sSnapshotAsync()
+    private async Task<IMainBus[]> GetMainBussSnapshotAsync()
     {
-        await Service2sLock.WaitAsync();
+        await MainBussLock.WaitAsync();
         try
         {
-            return [.. Service2s];
+            return [.. MainBuss];
         }
         finally
         {
-            Service2sLock.Release();
+            MainBussLock.Release();
         }
     }
     
-    public async Task SubscribeAsync(IMainService mainService, CancellationToken ___ct = default)
+    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         await TryConnectAsync(___ct);
-        await MainServicesLock.WaitAsync(___ct);
-        try
+
+        
+        if (implementation is IBus1 bus1)
         {
-            MainServices.Add(mainService);
+            await Bus1sLock.WaitAsync(___ct);
+            try
+            {
+                Bus1s.Add(bus1);
+            }
+            finally
+            {
+                Bus1sLock.Release();
+            }
+            await SendSubscribeAsync(bus1, new ServiceId("IBus1"), ___ct);
         }
-        finally
+        if (implementation is IBus2 bus2)
         {
-            MainServicesLock.Release();
+            await Bus2sLock.WaitAsync(___ct);
+            try
+            {
+                Bus2s.Add(bus2);
+            }
+            finally
+            {
+                Bus2sLock.Release();
+            }
+            await SendSubscribeAsync(bus2, new ServiceId("IBus2"), ___ct);
         }
-        await SendSubscribeAsync(mainService, new ServiceId("IMainService"), ___ct);
+        if (implementation is IMainBus mainBus)
+        {
+            await MainBussLock.WaitAsync(___ct);
+            try
+            {
+                MainBuss.Add(mainBus);
+            }
+            finally
+            {
+                MainBussLock.Release();
+            }
+            await SendSubscribeAsync(mainBus, new ServiceId("IMainBus"), ___ct);
+        }
     }
-    public async Task SubscribeAsync(IService1 service1, CancellationToken ___ct = default)
-    {
-        await TryConnectAsync(___ct);
-        await Service1sLock.WaitAsync(___ct);
-        try
-        {
-            Service1s.Add(service1);
-        }
-        finally
-        {
-            Service1sLock.Release();
-        }
-        await SendSubscribeAsync(service1, new ServiceId("IService1"), ___ct);
-    }
-    public async Task SubscribeAsync(IService2 service2, CancellationToken ___ct = default)
-    {
-        await TryConnectAsync(___ct);
-        await Service2sLock.WaitAsync(___ct);
-        try
-        {
-            Service2s.Add(service2);
-        }
-        finally
-        {
-            Service2sLock.Release();
-        }
-        await SendSubscribeAsync(service2, new ServiceId("IService2"), ___ct);
-    }
-    public async Task UnsubscribeAsync(IMainService mainService, CancellationToken ___ct = default)
+    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         if (!Initialized)
             return;
-        await MainServicesLock.WaitAsync(___ct);
-        try
+        
+        if (implementation is IBus1 bus1)
         {
-            MainServices.Remove(mainService);
+            await Bus1sLock.WaitAsync(___ct);
+            try
+            {
+                Bus1s.Remove(bus1);
+            }
+            finally
+            {
+                Bus1sLock.Release();
+            }
+            await SendUnsubscribeAsync(bus1, new ServiceId("IBus1"), ___ct);
         }
-        finally
+        if (implementation is IBus2 bus2)
         {
-            MainServicesLock.Release();
+            await Bus2sLock.WaitAsync(___ct);
+            try
+            {
+                Bus2s.Remove(bus2);
+            }
+            finally
+            {
+                Bus2sLock.Release();
+            }
+            await SendUnsubscribeAsync(bus2, new ServiceId("IBus2"), ___ct);
         }
-        await SendUnsubscribeAsync(mainService, new ServiceId("IMainService"), ___ct);
-    }
-    public async Task UnsubscribeAsync(IService1 service1, CancellationToken ___ct = default)
-    {
-        if (!Initialized)
-            return;
-        await Service1sLock.WaitAsync(___ct);
-        try
+        if (implementation is IMainBus mainBus)
         {
-            Service1s.Remove(service1);
+            await MainBussLock.WaitAsync(___ct);
+            try
+            {
+                MainBuss.Remove(mainBus);
+            }
+            finally
+            {
+                MainBussLock.Release();
+            }
+            await SendUnsubscribeAsync(mainBus, new ServiceId("IMainBus"), ___ct);
         }
-        finally
-        {
-            Service1sLock.Release();
-        }
-        await SendUnsubscribeAsync(service1, new ServiceId("IService1"), ___ct);
-    }
-    public async Task UnsubscribeAsync(IService2 service2, CancellationToken ___ct = default)
-    {
-        if (!Initialized)
-            return;
-        await Service2sLock.WaitAsync(___ct);
-        try
-        {
-            Service2s.Remove(service2);
-        }
-        finally
-        {
-            Service2sLock.Release();
-        }
-        await SendUnsubscribeAsync(service2, new ServiceId("IService2"), ___ct);
     }
     
     protected override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         switch (___sendRequest.Routing.ServiceId.Value)
         {
-            case "IMainService":
+            case "IBus1":
                 {
-                    var clients = await GetMainServicesSnapshotAsync();
+                    var clients = await GetBus1sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -199,81 +207,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainService_SendAndForgetWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForgetWithList(
-                                        test,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                    
-                        case "Send":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    await client.Send(
-                                        message,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                        case "SendWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainService_SendWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    await client.SendWithList(
-                                        test,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                        case "StartServiceTests":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    await client.StartServiceTests(
-                                        sessionId,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                    }
-                    break;
-                }
-            case "IService1":
-                {
-                    var clients = await GetService1sSnapshotAsync();
-                    switch (___sendRequest.Routing.MethodId.Value)
-                    {
-                        case "SendAndForget":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForget(
-                                        message,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                        case "SendAndForgetWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IService1_SendAndForgetWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus1_SendAndForgetWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     client.SendAndForgetWithList(
@@ -313,7 +247,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IService1_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus1_SendWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
@@ -334,9 +268,9 @@ public class BusConnection
                     }
                     break;
                 }
-            case "IService2":
+            case "IBus2":
                 {
-                    var clients = await GetService2sSnapshotAsync();
+                    var clients = await GetBus2sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -356,7 +290,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IService2_SendAndForgetWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendAndForgetWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     client.SendAndForgetWithList(
@@ -383,7 +317,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IService2_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
@@ -417,6 +351,80 @@ public class BusConnection
                     }
                     break;
                 }
+            case "IMainBus":
+                {
+                    var clients = await GetMainBussSnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {
+                        case "SendAndForget":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForget(
+                                        message,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "SendAndForgetWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainBus_SendAndForgetWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForgetWithList(
+                                        test,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                    
+                        case "Send":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    await client.Send(
+                                        message,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "SendWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainBus_SendWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    await client.SendWithList(
+                                        test,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "StartServiceTests":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    await client.StartServiceTests(
+                                        sessionId,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                    }
+                    break;
+                }
         }
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
@@ -424,9 +432,9 @@ public class BusConnection
     {
         switch (___invokeRequest.Routing.ServiceId.Value)
         {
-            case "IMainService":
+            case "IBus1":
                 {
-                    var clients = await GetMainServicesSnapshotAsync();
+                    var clients = await GetBus1sSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -439,7 +447,7 @@ public class BusConnection
                                     var response = await client.InvokeTask(
                                         name,
                                         ___ct);
-                                    yield return IMainService_InvokeTask_Serializer(response);
+                                    yield return IBus1_InvokeTask_Serializer(response);
                                 }
                             }
                             yield break;
@@ -447,13 +455,13 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IMainService_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeTaskWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
                                         ___ct);
-                                    yield return IMainService_InvokeTaskWithList_Serializer(response);
+                                    yield return IBus1_InvokeTaskWithList_Serializer(response);
                                 }
                             }
                             yield break;
@@ -469,7 +477,7 @@ public class BusConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IMainService_InvokeList_Serializer(response);
+                                        yield return IBus1_InvokeList_Serializer(response);
                                     }
                                 }
                             }
@@ -478,7 +486,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IMainService_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeListWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
@@ -486,77 +494,7 @@ public class BusConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IMainService_InvokeListWithList_Serializer(response);
-                                    }
-                                }
-                            }
-                            yield break;
-                    }
-                    break;
-                }
-            case "IService1":
-                {
-                    var clients = await GetService1sSnapshotAsync();
-                    switch (___invokeRequest.Routing.MethodId.Value)
-                    {
-                        case "InvokeTask":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    var response = await client.InvokeTask(
-                                        name,
-                                        ___ct);
-                                    yield return IService1_InvokeTask_Serializer(response);
-                                }
-                            }
-                            yield break;
-                        case "InvokeTaskWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IService1_InvokeTaskWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    var response = await client.InvokeTaskWithList(
-                                        list,
-                                        ___ct);
-                                    yield return IService1_InvokeTaskWithList_Serializer(response);
-                                }
-                            }
-                            yield break;
-                        case "InvokeList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    var responses = client.InvokeList(
-                                        name,
-                                        ___ct);
-                                    await foreach (var response in responses)
-                                    {
-                                        yield return IService1_InvokeList_Serializer(response);
-                                    }
-                                }
-                            }
-                            yield break;
-                        case "InvokeListWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IService1_InvokeListWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    var responses = client.InvokeListWithList(
-                                        list,
-                                        ___ct);
-                                    await foreach (var response in responses)
-                                    {
-                                        yield return IService1_InvokeListWithList_Serializer(response);
+                                        yield return IBus1_InvokeListWithList_Serializer(response);
                                     }
                                 }
                             }
@@ -569,7 +507,7 @@ public class BusConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IService1_Ping_Serializer(response);
+                                        yield return IBus1_Ping_Serializer(response);
                                     }
                                 }
                             }
@@ -577,9 +515,9 @@ public class BusConnection
                     }
                     break;
                 }
-            case "IService2":
+            case "IBus2":
                 {
-                    var clients = await GetService2sSnapshotAsync();
+                    var clients = await GetBus2sSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -592,7 +530,7 @@ public class BusConnection
                                     var response = await client.InvokeTask(
                                         name,
                                         ___ct);
-                                    yield return IService2_InvokeTask_Serializer(response);
+                                    yield return IBus2_InvokeTask_Serializer(response);
                                 }
                             }
                             yield break;
@@ -600,13 +538,13 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IService2_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeTaskWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
                                         ___ct);
-                                    yield return IService2_InvokeTaskWithList_Serializer(response);
+                                    yield return IBus2_InvokeTaskWithList_Serializer(response);
                                 }
                             }
                             yield break;
@@ -622,7 +560,7 @@ public class BusConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IService2_InvokeList_Serializer(response);
+                                        yield return IBus2_InvokeList_Serializer(response);
                                     }
                                 }
                             }
@@ -631,7 +569,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IService2_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeListWithList_0_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
@@ -639,7 +577,77 @@ public class BusConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IService2_InvokeListWithList_Serializer(response);
+                                        yield return IBus2_InvokeListWithList_Serializer(response);
+                                    }
+                                }
+                            }
+                            yield break;
+                    }
+                    break;
+                }
+            case "IMainBus":
+                {
+                    var clients = await GetMainBussSnapshotAsync();
+                    switch (___invokeRequest.Routing.MethodId.Value)
+                    {
+                        case "InvokeTask":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    var response = await client.InvokeTask(
+                                        name,
+                                        ___ct);
+                                    yield return IMainBus_InvokeTask_Serializer(response);
+                                }
+                            }
+                            yield break;
+                        case "InvokeTaskWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IMainBus_InvokeTaskWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    var response = await client.InvokeTaskWithList(
+                                        list,
+                                        ___ct);
+                                    yield return IMainBus_InvokeTaskWithList_Serializer(response);
+                                }
+                            }
+                            yield break;
+                        case "InvokeList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
+                                string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    var responses = client.InvokeList(
+                                        name,
+                                        ___ct);
+                                    await foreach (var response in responses)
+                                    {
+                                        yield return IMainBus_InvokeList_Serializer(response);
+                                    }
+                                }
+                            }
+                            yield break;
+                        case "InvokeListWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IMainBus_InvokeListWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    var responses = client.InvokeListWithList(
+                                        list,
+                                        ___ct);
+                                    await foreach (var response in responses)
+                                    {
+                                        yield return IMainBus_InvokeListWithList_Serializer(response);
                                     }
                                 }
                             }
@@ -652,7 +660,8 @@ public class BusConnection
     }
     
 
-    public string IMainService_SendAndForgetWithList_0_Deserializer(byte[] value)
+
+    public string IBus1_SendAndForgetWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
@@ -660,14 +669,14 @@ public class BusConnection
     }
 
 
-    public string IMainService_SendWithList_0_Deserializer(byte[] value)
+    public string IBus1_SendWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-    public byte[] IMainService_InvokeTask_Serializer(string value)
+    public byte[] IBus1_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -675,21 +684,21 @@ public class BusConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IMainService_InvokeTaskWithList_Serializer(string value)
+    public byte[] IBus1_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public string IMainService_InvokeTaskWithList_0_Deserializer(byte[] value)
+    public string IBus1_InvokeTaskWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-    public byte[] IMainService_InvokeList_Serializer(string value)
+    public byte[] IBus1_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -697,82 +706,21 @@ public class BusConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IMainService_InvokeListWithList_Serializer(string value)
+    public byte[] IBus1_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public string IMainService_InvokeListWithList_0_Deserializer(byte[] value)
+    public string IBus1_InvokeListWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-
-
-    public string IService1_SendAndForgetWithList_0_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
-
-    public string IService1_SendWithList_0_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
-    public byte[] IService1_InvokeTask_Serializer(string value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-
-    public byte[] IService1_InvokeTaskWithList_Serializer(string value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-    public string IService1_InvokeTaskWithList_0_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
-    public byte[] IService1_InvokeList_Serializer(string value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-
-    public byte[] IService1_InvokeListWithList_Serializer(string value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-    public string IService1_InvokeListWithList_0_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
-    public byte[] IService1_Ping_Serializer(double value)
+    public byte[] IBus1_Ping_Serializer(double value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -781,7 +729,7 @@ public class BusConnection
     }
 
 
-    public string IService2_SendAndForgetWithList_0_Deserializer(byte[] value)
+    public string IBus2_SendAndForgetWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
@@ -789,14 +737,14 @@ public class BusConnection
     }
 
 
-    public string IService2_SendWithList_0_Deserializer(byte[] value)
+    public string IBus2_SendWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-    public byte[] IService2_InvokeTask_Serializer(string value)
+    public byte[] IBus2_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -804,21 +752,21 @@ public class BusConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IService2_InvokeTaskWithList_Serializer(string value)
+    public byte[] IBus2_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public string IService2_InvokeTaskWithList_0_Deserializer(byte[] value)
+    public string IBus2_InvokeTaskWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-    public byte[] IService2_InvokeList_Serializer(string value)
+    public byte[] IBus2_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
@@ -826,20 +774,80 @@ public class BusConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IService2_InvokeListWithList_Serializer(string value)
+    public byte[] IBus2_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public string IService2_InvokeListWithList_0_Deserializer(byte[] value)
+    public string IBus2_InvokeListWithList_0_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
+
+
+    public string IMainBus_SendAndForgetWithList_0_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+
+    public string IMainBus_SendWithList_0_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public byte[] IMainBus_InvokeTask_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IMainBus_InvokeTaskWithList_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    public string IMainBus_InvokeTaskWithList_0_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public byte[] IMainBus_InvokeList_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IMainBus_InvokeListWithList_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    public string IMainBus_InvokeListWithList_0_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
 
     
 }

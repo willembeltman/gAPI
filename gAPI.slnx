@@ -21,6 +21,8 @@
         <Project Path="gAPI.EntityFrameworkDisk/gAPI.EntityFrameworkDisk.csproj" />
         <Project Path="gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
         <Project Path="gAPI.Llm.Client/gAPI.Llm.Client.csproj" />
+        <Project Path="gAPI.Storage.Client/gAPI.Storage.Client.csproj" />
+        <Project Path="gAPI.Storage.Core/gAPI.Storage.Core.csproj" />
         <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
     </Folder>
     <Project Path="gAPI.Test.Aspire/gAPI.Test.Aspire.csproj" />
@@ -28,7 +30,7 @@
     <Project Path="gAPI.Test.MainApi/gAPI.Test.Main.Server.csproj" />
     <Project Path="gAPI.Test.MainApp/gAPI.Test.Main.Client.csproj" />
     <Project Path="gAPI.Test.MicroService1/gAPI.Test.MicroService1.csproj" />
-    <Project Path="gAPI.Test.Microservice2/gAPI.Test.Microservice2.csproj" DisplayName="gAPI.Test.MicroService2" />
+    <Project Path="gAPI.Test.Microservice2/gAPI.Test.Microservice2.csproj" />
     <Project Path="gAPI.Test.Shared.Private/gAPI.Test.Shared.Private.csproj" />
     <Project Path="gAPI.Test.Shared.Public/gAPI.Test.Shared.Public.csproj" />
     <Project Path="gAPI.Test.Storage/gAPI.Test.Storage.csproj" />

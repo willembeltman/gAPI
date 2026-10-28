@@ -3,6 +3,7 @@ using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Fabric;
+using gAPI.Test.Main.Server;
 using gAPI.Test.Shared.Private;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,25 +42,26 @@ public static class AddAutoBusExtension
         services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
-        // Fabric Client
-        services.TryAddSingleton<BusFabricClient>(sp =>
-        {
-            var sessionCache = new SessionCache();
-            var streamingCache = new StreamingCache();
-            var busConnections = new BusConnectionCollection();
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return new BusFabricClient(
-                sessionCache, streamingCache, busConnections, loggerFactory, config.ConnectionString);
-        });
+        // Fabric client
+        services.AddSingleton<SessionCache>();
+        services.AddSingleton<StreamingCache>();
+        services.AddSingleton<BusConnectionCollection>();
+        services.AddSingleton<BusFabricClient>();
 
         // Connection
         services.AddSingleton<IBusConnection, BusConnection>();
+        services.AddScoped<MainBus>();
+        services.AddHostedService<BusHostedService>();
 
         // Hubs
         services.AddSingleton<IBusContext, BusContext>();
-        services.AddSingleton<IMainServiceContext, MainServiceContext>();
-        services.AddSingleton<IService1Context, Service1Context>();
-        services.AddSingleton<IService2Context, Service2Context>();
+        
+        services.AddSingleton<IBus1Context, Bus1Context>();
+        services.AddSingleton<IBus1>(sp => sp.GetRequiredService<IBus1Context>().ToAny());
+        services.AddSingleton<IBus2Context, Bus2Context>();
+        services.AddSingleton<IBus2>(sp => sp.GetRequiredService<IBus2Context>().ToAny());
+        services.AddSingleton<IMainBusContext, MainBusContext>();
+        services.AddSingleton<IMainBus>(sp => sp.GetRequiredService<IMainBusContext>().ToAny());
 
         return services;
     }
