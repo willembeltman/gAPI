@@ -27,12 +27,12 @@ public class BusClientContext_Generator : _BaseGenerator
     public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public SharedReference IBusConnection => Context.IBusConnection;
     public BusClient_Generator Client => IClientContext.ClientHandler;
-    public Interface IClient => Client.Interface;
+    public Interface Interface => Client.Interface;
 
     public override void GenerateCode()
     {
         Reg(IClientContext);
-        Reg(IClient);
+        Reg(Interface);
         Reg(Client);
         Reg(IBusConnection);
         Reg(BusChoiceType);
@@ -50,11 +50,11 @@ public class {Name}(
     {IBusConnection} busConnection)
     : {IClientContext}
 {{
-    public {IClient} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
+    public {Interface} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
         => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToAll);
-    public {IClient} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
+    public {Interface} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
         => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToAny);
-    public {IClient} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
+    public {Interface} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
         => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToBusConnectionId, busConnectionId);
 }}";
     }

@@ -81,9 +81,9 @@ public class StorageService : IStorageService
         if (int.TryParse(urlTimeoutString, out var urlTimeout) == false)
             throw new Exception("Cannot find UrlTimeout");
 
-        if (parts.TryGetValue("AuthenticateTimeout", out var AuthenticateTimeoutString))
+        if (parts.TryGetValue("AuthenticateTimeout", out var AuthenticateTimeoutString) == false)
             throw new Exception("Cannot find authenticateTimeout");
-        if (int.TryParse(AuthenticateTimeoutString, out var authenticateTimeout))
+        if (int.TryParse(AuthenticateTimeoutString, out var authenticateTimeout) == false)
             throw new Exception("Cannot find authenticateTimeout");
 
         var remoteConfig = new StorageServerConfig(urlTimeout, authenticateTimeout, Config.MaxPackageSize);

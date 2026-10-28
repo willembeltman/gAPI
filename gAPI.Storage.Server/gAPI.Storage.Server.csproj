@@ -70,8 +70,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.EntityFrameworkDisk\gAPI.EntityFrameworkDisk.csproj" />
 		<ProjectReference Include="..\gAPI.Storage.Core\gAPI.Storage.Core.csproj" />
-		<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
-		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<!--<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
+		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
 	</ItemGroup>
 
 	<ItemGroup>
@@ -79,10 +79,6 @@
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Config\" />
 	</ItemGroup>
 
 </Project>

@@ -21,13 +21,13 @@ public class IBusClientContext_Generator : _BaseGenerator
 
     public Generator Context { get; }
     public BusClient_Generator ClientHandler { get; }
-    public Interface IClientHandler => ClientHandler.Interface;
+    public Interface Interface => ClientHandler.Interface;
     public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public SharedReference BusConnectionId => Context.SharedReferences.BusConnectionId;
 
     public override void GenerateCode()
     {
-        Reg(IClientHandler);
+        Reg(Interface);
         Reg(ClientHandler);
         Reg(DeliveryMode);
         Reg(BusConnectionId);
@@ -39,9 +39,9 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {IClientHandler.Name} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
-    {IClientHandler.Name} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
-    {IClientHandler.Name} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
 }}";
     }
 }

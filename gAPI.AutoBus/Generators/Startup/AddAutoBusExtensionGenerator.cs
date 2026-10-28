@@ -120,8 +120,10 @@ public static class {Name}
         services.AddHostedService<{BusHostedService}>();
 
         // Hubs
-        services.AddSingleton<{IClientContext}, {ClientContext}>();{string.Join("", ClientContexts.Select(a => $@"
-        services.AddSingleton<{a.IClientContext.Name}, {a.Name}>();"))}
+        services.AddSingleton<{IClientContext}, {ClientContext}>();
+        {string.Join("", ClientContexts.Select(a => $@"
+        services.AddSingleton<{a.IClientContext.Name}, {a.Name}>();
+        services.AddSingleton<{a.Interface}>(sp => sp.GetRequiredService<{a.IClientContext.Name}>().ToAny());"))}
 
         return services;
     }}
