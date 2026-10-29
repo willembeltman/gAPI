@@ -15,7 +15,7 @@ public class SerializerGenerator
     public string Name { get; }
     public string TypeSymbolName { get; }
     public string ReadMethodName { get; }
-    public string WriteMethodName { get; }
+    public string FunctionName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public uint Typehash { get; }
@@ -37,7 +37,7 @@ public class SerializerGenerator
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
         ReadMethodName = $"Read{name}";
-        WriteMethodName = "Write";
+        FunctionName = "Write";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
 
@@ -76,7 +76,7 @@ public static class {Name}
     public const uint SchemaHash = 0x{SchemaHash:X8};
 
     [IsSerializerWrite]
-    public static void Write(this BinaryWriter ___writer, {TypeSymbolName} value)
+    public static void {FunctionName}(this BinaryWriter ___writer, {TypeSymbolName} value)
     {{
         ___writer.Write(Magic); // Magic string `GA` => it's a gAPI stream
         ___writer.Write(TypeId); // Type identifier

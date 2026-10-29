@@ -12,8 +12,8 @@ public class UserIpSession
         UserIp userIp,
         Session session)
     {
-        UserIp = userIp;
-        Session = session;
+        UserIpId = userIp.Id;
+        SessionId = session.Id;
     }
 
     [Key]

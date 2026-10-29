@@ -9,10 +9,10 @@ public class UserIpSessionTokenRouteRequest
 {
     public UserIpSessionTokenRouteRequest() { }
     public UserIpSessionTokenRouteRequest(
-        UserIpSessionTokenRoute? userIpSessionCompanyTokenRoute,
+        UserIpSessionTokenRoute userIpSessionCompanyTokenRoute,
         DateTimeOffset date)
     {
-        UserIpSessionTokenRoute = userIpSessionCompanyTokenRoute;
+        UserIpSessionTokenRouteId = userIpSessionCompanyTokenRoute.Id;
         Year = Convert.ToInt16(date.Year);
         Month = Convert.ToByte(date.Month);
         Day = Convert.ToByte(date.Day);

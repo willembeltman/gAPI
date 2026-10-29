@@ -603,7 +603,7 @@ public sealed class BusFabricClient
             }
             catch (Exception ex)
             {
-
+                Logger.LogError(ex, "Receive_BusStreamingRequest_FromFabricAsync({message})", message);
             }
         }
         else

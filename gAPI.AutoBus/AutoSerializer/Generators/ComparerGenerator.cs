@@ -15,7 +15,7 @@ public class ComparerGenerator
     public string Namespace { get; set; }
     public string Name { get; }
     public string TypeSymbolName { get; }
-    public string CompareMethodName { get; }
+    public string FunctionName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public string FileName { get; }
@@ -35,7 +35,7 @@ public class ComparerGenerator
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
-        CompareMethodName = "IsDifferent";
+        FunctionName = "IsDifferent";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
     }
@@ -60,7 +60,7 @@ public class ComparerGenerator
 public static class {Name}
 {{
     [IsComparer]
-    public static bool {CompareMethodName}(this {TypeSymbolName} value, {TypeSymbolName} otherValue)
+    public static bool {FunctionName}(this {TypeSymbolName} value, {TypeSymbolName} otherValue)
     {{{writeProps}
         return false;
     }}
@@ -221,10 +221,10 @@ public static class {Name}
 {indent}else
 {indent}{{
 {indent}    if ({otherPropName} is null) return true;
-{indent}    if ({propName}.IsDifferent({otherPropName})) return true;
+{indent}    if ({propName}.{FunctionName}({otherPropName})) return true;
 {indent}}}"
             : $@"
-{indent}if ({propName}.IsDifferent({otherPropName})) return true;";
+{indent}if ({propName}.{FunctionName}({otherPropName})) return true;";
     }
 
     private void Reg(ITypeSymbol underlyingType)

@@ -9,11 +9,11 @@ public class UserIpSessionTokenRoute
 {
     public UserIpSessionTokenRoute() { }
     public UserIpSessionTokenRoute(
-        UserIpSessionToken? userIpSessionCompanyToken,
-        Route? route)
+        UserIpSessionToken userIpSessionCompanyToken,
+        Route route)
     {
-        UserIpSessionToken = userIpSessionCompanyToken;
-        Route = route;
+        UserIpSessionTokenId = userIpSessionCompanyToken.Id;
+        RouteId = route.Id;
     }
 
     [Key]

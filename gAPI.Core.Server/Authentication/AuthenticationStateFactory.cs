@@ -1,7 +1,6 @@
 ﻿using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace gAPI.Core.Server.Authentication;
@@ -91,16 +90,22 @@ public class AuthenticationStateFactory<TUser>(
         return authState;
     }
 
-    public async Task<RequestIds> DoTheRest(
+    public async Task<RequestIds?> DoTheRest(
         AuthenticationHeaders headers,
         Guid? userId, long? authenticationTokenId,
         TUser? dbUser, UserToken? dbToken, Ip dbIp,
         CancellationToken ct)
     {
         //if (UseMemoryDatabase)
+        try
         {
             return await DoTheRest_EFCore(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
         }
+        catch (Exception ex)
+        {
+
+        }
+        return null;
         //return await DoTheRest_StoredProcedure(dbUser?.Id, dbToken?.Id, dbIp.Id, headers.SessionId.Value, headers.Path, ct);
     }
 

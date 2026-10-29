@@ -15,7 +15,7 @@ public class CreateCopyGenerator
     public string Namespace { get; set; }
     public string Name { get; }
     public string TypeSymbolName { get; }
-    public string CreateCopyMethodName { get; }
+    public string FunctionName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public string FileName { get; }
@@ -28,14 +28,14 @@ public class CreateCopyGenerator
         CustomCreateCopys = [.. customCreateCopys];
 
         var name = Helper.GetName(typeSymbol);
-        Name = $"{name}CreateCopy";
+        Name = $"{name}Copyer";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
         FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
-        CreateCopyMethodName = "CreateCopy";
+        FunctionName = "CreateCopy";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
     }
@@ -60,7 +60,7 @@ public class CreateCopyGenerator
 public static class {Name}
 {{
     [IsCreateCopy]
-    public static {TypeSymbolName} {CreateCopyMethodName}(this {TypeSymbolName} value)
+    public static {TypeSymbolName} {FunctionName}(this {TypeSymbolName} value)
     {{{propsCode}
     }}
 }}";
@@ -171,8 +171,8 @@ public static class {Name}
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
 
         return isNullable
-            ? $"{source} == null ? null : {source}{(isNullableT ? ".Value" : "")}.CreateCopy()"
-            : $"{source}.CreateCopy()";
+            ? $"{source} == null ? null : {source}{(isNullableT ? ".Value" : "")}.{FunctionName}()"
+            : $"{source}.{FunctionName}()";
     }
 
     private void Reg(ITypeSymbol underlyingType)

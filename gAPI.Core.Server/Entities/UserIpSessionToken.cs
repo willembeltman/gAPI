@@ -12,8 +12,8 @@ public class UserIpSessionToken
         UserIpSession userIpSessionCompany,
         UserToken? token)
     {
-        UserIpSession = userIpSessionCompany;
-        Token = token;
+        UserIpSessionId = userIpSessionCompany.Id;
+        TokenId = token?.Id;
     }
 
     [Key]

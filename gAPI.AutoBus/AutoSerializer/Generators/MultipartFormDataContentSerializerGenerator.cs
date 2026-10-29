@@ -14,7 +14,7 @@ public class MultipartFormDataContentSerializerGenerator
     public string Namespace { get; set; }
     public string Name { get; }
     public string TypeSymbolName { get; }
-    public string WriteMethodName { get; }
+    public string FunctionName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -33,7 +33,7 @@ public class MultipartFormDataContentSerializerGenerator
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
-        WriteMethodName = "Write";
+        FunctionName = "Write";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
 
@@ -65,7 +65,7 @@ public static class {Name}
 {{
 
     [IsMultipartFormDataContentSerializer]
-    public static void {WriteMethodName}(this MultipartFormDataContent ___content, string ___name, {TypeSymbolName} value)
+    public static void {FunctionName}(this MultipartFormDataContent ___content, string ___name, {TypeSymbolName} value)
     {{
         string ___prefix = string.IsNullOrEmpty(___name) ? """" : $""{{___name}}."";
         {writeProps}
