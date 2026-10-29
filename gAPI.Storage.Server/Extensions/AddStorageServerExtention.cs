@@ -1,35 +1,37 @@
-﻿using gAPI.Storage.Server.Data;
+﻿using gAPI.Storage.Server.Config;
+using gAPI.Storage.Server.Data;
 using gAPI.Storage.Server.Helpers;
 using gAPI.Storage.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace gAPI.Storage.Server.Extensions;
 
 public static class AddStorageServerExtension
 {
-    public static WebApplicationBuilder AddStorageServer(this WebApplicationBuilder builder)
+    public static IServiceCollection AddStorageServer(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
     {
-        if (builder.Environment.IsDevelopment())
-        {
-            builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
-        }
-        builder.Configuration.AddEnvironmentVariables();
+        var appConfig = configuration.CreateLocalStorageServerConfig();
+        return AddStorageServer(services, appConfig);
+    }
 
-        var appConfig = builder.Configuration.CreateLocalStorageServerConfig();
-        builder.Services.AddSingleton(appConfig);
-        builder.Services.AddScoped<StorageServiceBus>();
-        builder.Services.AddSingleton<ApplicationDbContext>();
-        builder.Services.AddAuthorization();
-        builder.Services.AddControllers();
+    private static IServiceCollection AddStorageServer(
+        this IServiceCollection services, 
+        LocalStorageServerConfig appConfig)
+    {
+        services.AddSingleton(appConfig);
+        services.AddScoped<StorageServiceBus>();
+        services.AddSingleton<ApplicationDbContext>();
+        services.AddAuthorization();
+        services.AddControllers();
 
         StartupHelper.ShowStorageStarted(appConfig.BaseUrl);
 
-        return builder;
+        return services;
     }
-
 
     public static WebApplication MapStorageServer(this WebApplication app)
     {

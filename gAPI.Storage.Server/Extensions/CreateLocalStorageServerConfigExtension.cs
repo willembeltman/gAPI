@@ -1,4 +1,4 @@
-﻿using gAPI.Storage.Server;
+﻿using gAPI.Storage.Server.Config;
 using Microsoft.Extensions.Configuration;
 
 namespace gAPI.Storage.Server.Extensions;

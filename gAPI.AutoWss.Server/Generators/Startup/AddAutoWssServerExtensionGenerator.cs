@@ -169,7 +169,6 @@ public static class {Name}
         services.AddSingleton<{SessionCache}>();
         services.AddSingleton<{StreamingCache}>();
         services.AddSingleton<{ServiceSubscriptionCollection}>();
-        services.AddSingleton<{BusConnectionCollection}>();
         services.AddSingleton<{ServerConnectionCollection}>();
         services.AddSingleton<{FabricClient}>();
 
