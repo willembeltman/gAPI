@@ -23,7 +23,7 @@ public record User(UserId Id) : IActor
 
     private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
-        var interval = 3.0;
+        var interval = 1.0;
         var now = Stopwatch.Elapsed.TotalSeconds;
 
         // Verwijder oude entries
