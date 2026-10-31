@@ -8,7 +8,7 @@ public class SharedReferences()
     public SharedReference CreateServerConfigExtension { get; } = new SharedReference("gAPI.Core.Extensions.CreateServerConfigExtension");
     public SharedReference IUseCase { get; } = new SharedReference("gAPI.Core.Server.Interfaces.IUseCase");
     public SharedReference Mapping { get; } = new SharedReference("gAPI.Core.Server.Interfaces.Mapping");
-    public SharedReference IStorageService { get; } = new SharedReference("gAPI.Core.Server.Storage.IStorageService");
+    public SharedReference IStorageService { get; } = new SharedReference("gAPI.Storage.Client.IStorageService");
     public SharedReference IsStateDto { get; } = new SharedReference("gAPI.Core.Attributes.IsStateDto");
     public SharedReference ApplyOrderByExtension { get; } = new SharedReference("gAPI.Core.Server.Extensions.ApplyOrderBy");
     public SharedReference IsStorageFileUrlProperty { get; } = new SharedReference("gAPI.Core.Attributes.IsStorageFileUrlProperty");

@@ -146,7 +146,7 @@ public class CrudServiceGenerator : BaseGenerator
         var useStorageFile = Entity.HasIStorageFileInterface && !Entity.HasIReadonlyStorageFileInterface;
         if (useStorageFile)
         {
-            Reg("gAPI.Core.Server.Storage");
+            Reg("gAPI.Storage.Client");
             Reg("Microsoft.AspNetCore.Http");
 
             fileCode += $@"
