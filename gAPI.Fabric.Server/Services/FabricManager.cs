@@ -664,8 +664,8 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (fabricHosts.Length == 0)
             {
-                await caller.Send_BusSendRequestDone_ToApiAsync(
-                    new BusSendRequestDoneDto(
+                await caller.Send_BusInvokeRequestDone_ToApiAsync(
+                    new BusInvokeRequestDoneDto(
                         request.Routing,
                         false,
                         $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}"),
