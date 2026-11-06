@@ -82,7 +82,8 @@ public class {Name}(
     TimeSpan? ___timeOut, 
     {DeliveryMode} ___deliveryMode,
     {BusChoiceType} ___to,
-    {BusConnectionId}? ___busConnectionId = null)
+    {BusConnectionId}? ___busConnectionId = null,
+    bool ___throwIfNoReceiver = true)
     : {Interface}
     , IDisposable
 {{
@@ -140,7 +141,8 @@ public class {Name}(
                 ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
-                ___busConnectionId
+                ___busConnectionId,
+                ___throwIfNoReceiver
             );
             var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
                 {arg.Name}"))});
@@ -197,7 +199,8 @@ public class {Name}(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
@@ -241,7 +244,8 @@ public class {Name}(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
@@ -271,7 +275,9 @@ public class {Name}(
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
         }}" : "")}
-        throw new KeyNotFoundException();
+        if (___throwIfNoReceiver)
+            throw new KeyNotFoundException();
+        return default!;
     }}";
     }
 
@@ -299,7 +305,8 @@ public class {Name}(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});

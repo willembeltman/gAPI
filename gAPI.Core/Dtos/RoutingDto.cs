@@ -15,5 +15,6 @@ public record RoutingDto(
     TimeSpan Timeout,
 
     UserId? UserId,
-    SessionId? SessionId
+    SessionId? SessionId,
+    bool ThrowIfNoReceiver = true
     );

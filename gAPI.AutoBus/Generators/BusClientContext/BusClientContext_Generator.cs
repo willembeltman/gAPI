@@ -50,8 +50,8 @@ public class {Name}(
     {IBusConnection} busConnection)
     : {IClientContext}
 {{
-    public {Interface} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
-        => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToAll);
+    public {Interface} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
+        => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToAll, null, throwIfNoReceiver);
     public {Interface} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
         => new {Client}(loggerFactory, busConnection, timeOut, deliveryMode, {BusChoiceType}.ToAny);
     public {Interface} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)

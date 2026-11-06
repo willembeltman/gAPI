@@ -39,7 +39,7 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {IClientHandler.Name} ToAll(TimeSpan? timeOut = null);
+    {IClientHandler.Name} ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true);
     {IClientHandler.Name} ToUser({UserId} userId, TimeSpan? timeOut = null);
     {IClientHandler.Name} ToSession({SessionId} userId, TimeSpan? timeOut = null);
 }}";

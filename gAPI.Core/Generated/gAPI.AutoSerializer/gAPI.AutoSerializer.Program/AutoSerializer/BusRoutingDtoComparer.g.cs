@@ -18,6 +18,7 @@ public static class BusRoutingDtoComparer
         if (value.deliveryMode != otherValue.deliveryMode) return true;
         if (value.To != otherValue.To) return true;
         if (value.ToBusConnectionId != otherValue.ToBusConnectionId) return true;
+        if (value.ThrowIfNoReceiver != otherValue.ThrowIfNoReceiver) return true;
         return false;
     }
 }

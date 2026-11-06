@@ -657,7 +657,7 @@ public sealed class FabricClient
             }
 
             if (!called)
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No clients subscribed", []), ct);
+                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No clients subscribed" : null, []), ct);
         }
         else
         {

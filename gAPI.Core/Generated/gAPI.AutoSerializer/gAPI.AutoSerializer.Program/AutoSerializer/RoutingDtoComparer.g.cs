@@ -18,6 +18,7 @@ public static class RoutingDtoComparer
         if (value.Timeout != otherValue.Timeout) return true;
         if (value.UserId != otherValue.UserId) return true;
         if (value.SessionId != otherValue.SessionId) return true;
+        if (value.ThrowIfNoReceiver != otherValue.ThrowIfNoReceiver) return true;
         return false;
     }
 }

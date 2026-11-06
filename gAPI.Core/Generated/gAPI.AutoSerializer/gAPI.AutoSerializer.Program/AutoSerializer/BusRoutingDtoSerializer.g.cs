@@ -12,7 +12,7 @@ public static class BusRoutingDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x870F7CA6;
-    public const uint SchemaHash = 0x1F75D400;
+    public const uint SchemaHash = 0xE901559D;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, BusRoutingDto value)
@@ -31,6 +31,7 @@ public static class BusRoutingDtoSerializer
         ___writer.Write(value.ToBusConnectionId != null); 
         if (value.ToBusConnectionId != null) 
             BusConnectionIdSerializer.Write(___writer, value.ToBusConnectionId);
+        ___writer.Write(value.ThrowIfNoReceiver);
     }
 
     [IsSerializerRead]
@@ -43,6 +44,6 @@ public static class BusRoutingDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new BusRoutingDto(BusConnectionIdSerializer.ReadBusConnectionId(___reader), RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadTimeSpan(), (gAPI.Core.Enums.DeliveryMode)___reader.ReadInt32(), (gAPI.Core.Enums.BusToChoice)___reader.ReadInt32(), ___reader.ReadBoolean() == false ? null : BusConnectionIdSerializer.ReadBusConnectionId(___reader));
+        return new BusRoutingDto(BusConnectionIdSerializer.ReadBusConnectionId(___reader), RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadTimeSpan(), (gAPI.Core.Enums.DeliveryMode)___reader.ReadInt32(), (gAPI.Core.Enums.BusToChoice)___reader.ReadInt32(), ___reader.ReadBoolean() == false ? null : BusConnectionIdSerializer.ReadBusConnectionId(___reader), ___reader.ReadBoolean());
     }
 }

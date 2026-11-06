@@ -14,7 +14,7 @@ public static class BusRoutingDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x870F7CA6;
-    public const uint SchemaHash = 0x1F75D400;
+    public const uint SchemaHash = 0xE901559D;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, BusRoutingDto value)
@@ -33,6 +33,7 @@ public static class BusRoutingDtoSpanSerializer
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ToBusConnectionId != null);
         if (value.ToBusConnectionId != null)
             BusConnectionIdSpanSerializer.Write(ref ___span, ref ___offset, value.ToBusConnectionId);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ThrowIfNoReceiver);
     }
 
     [IsSpanSerializerRead]
@@ -53,7 +54,8 @@ public static class BusRoutingDtoSpanSerializer
 			TimeSpanSerializer.ReadTimeSpan(___span, ref ___offset), 
 			(gAPI.Core.Enums.DeliveryMode)PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
 			(gAPI.Core.Enums.BusToChoice)PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
-			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset));
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
@@ -70,6 +72,7 @@ public static class BusRoutingDtoSpanSerializer
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ToBusConnectionId != null);
         if (value.ToBusConnectionId != null)
             BusConnectionIdSpanSerializer.Length(ref ___offset, value.ToBusConnectionId);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ThrowIfNoReceiver);
         return ___offset;
     }
 }

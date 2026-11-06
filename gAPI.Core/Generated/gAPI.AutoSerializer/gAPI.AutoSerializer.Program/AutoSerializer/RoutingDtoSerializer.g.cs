@@ -12,7 +12,7 @@ public static class RoutingDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xBCE3FFA2;
-    public const uint SchemaHash = 0x9AD11ED5;
+    public const uint SchemaHash = 0x9302D3D6;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, RoutingDto value)
@@ -33,6 +33,7 @@ public static class RoutingDtoSerializer
         ___writer.Write(value.SessionId != null); 
         if (value.SessionId != null) 
             SessionIdSerializer.Write(___writer, value.SessionId);
+        ___writer.Write(value.ThrowIfNoReceiver);
     }
 
     [IsSerializerRead]
@@ -45,6 +46,6 @@ public static class RoutingDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new RoutingDto(FabricManagerIdSerializer.ReadFabricManagerId(___reader), FabricConnectionIdSerializer.ReadFabricConnectionId(___reader), RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadTimeSpan(), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader));
+        return new RoutingDto(FabricManagerIdSerializer.ReadFabricManagerId(___reader), FabricConnectionIdSerializer.ReadFabricConnectionId(___reader), RequestIdSerializer.ReadRequestId(___reader), ServiceIdSerializer.ReadServiceId(___reader), ServiceMethodIdSerializer.ReadServiceMethodId(___reader), ___reader.ReadTimeSpan(), ___reader.ReadBoolean() == false ? null : UserIdSerializer.ReadUserId(___reader), ___reader.ReadBoolean() == false ? null : SessionIdSerializer.ReadSessionId(___reader), ___reader.ReadBoolean());
     }
 }

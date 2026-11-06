@@ -50,8 +50,8 @@ public class {Name}(
     ILoggerFactory loggerFactory)
     : {IClientContext}
 {{
-    public {IClient} ToAll(TimeSpan? timeOut = null)
-        => new {Client}(fabricClient, loggerFactory, null, null, timeOut);
+    public {IClient} ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true)
+        => new {Client}(fabricClient, loggerFactory, null, null, timeOut, throwIfNoReceiver);
     public {IClient} ToUser({UserId} userId, TimeSpan? timeOut = null)
         => new {Client}(fabricClient, loggerFactory, null, userId, timeOut);
     public {IClient} ToSession({SessionId} sessionId, TimeSpan? timeOut = null)

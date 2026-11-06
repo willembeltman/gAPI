@@ -54,7 +54,8 @@ public class {Name}(
     {FabricClient} ___FabricClient,
     {UserId}? ___UserId = null,
     {SessionId}? ___SessionId = null,
-    TimeSpan? ___timeOut = null)
+    TimeSpan? ___timeOut = null,
+    bool ___throwIfNoReceiver = true)
     : {Interface}
 {{
     private readonly {ServiceId} ___ServiceId = new {ServiceId}(""{Interface}"");
@@ -161,7 +162,8 @@ public class {Name}(
                     ___ServiceId, 
                     ___serviceMethodId, 
                     ___UserId, 
-                    ___SessionId), 
+                    ___SessionId,
+                    ___throwIfNoReceiver), 
                 ___bytes{(cancellationToken == null ? @", 
                 ___ct" : $@", 
                 {cancellationToken.Name}")});
@@ -200,7 +202,8 @@ public class {Name}(
                 ___ServiceId, 
                 ___serviceMethodId, 
                 ___UserId, 
-                ___SessionId), 
+                ___SessionId,
+                ___throwIfNoReceiver), 
             ___bytes{(cancellationToken == null ? @", 
             default" : $@", 
             {cancellationToken.Name}")});
@@ -231,7 +234,8 @@ public class {Name}(
                 ___ServiceId, 
                 ___serviceMethodId, 
                 ___UserId, 
-                ___SessionId), 
+                ___SessionId,
+                ___throwIfNoReceiver), 
             ___bytes{(cancellationToken == null ? @", 
             default" : $@", 
             {cancellationToken.Name}")});

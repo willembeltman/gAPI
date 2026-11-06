@@ -468,6 +468,30 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
+            if (state.Targets.Length == 0)
+            {
+                try
+                {
+                    await state.Caller.Send_BusStreamingResponse_ToApiAsync(
+                        new BusStreamingResponseDto(
+                            request.Routing,
+                            request.ArgumentIndex,
+                            request.StreamId,
+                            true,
+                            request.Cancelled,
+                            request.Cancelled ? "Task is cancelled" : null,
+                            []),
+                        state.Actor);
+                }
+                finally
+                {
+                    OpenBusRequests.TryRemove(request.Routing.RequestId, out _);
+                    state.TryComplete();
+                }
+
+                return;
+            }
+
             if (state.StreamRoutes.TryAdd(request.StreamId, caller))
             {
                 if (request.ArgumentIndex < 0)
@@ -662,7 +686,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             (var fabricHosts, var actor) = ResolveBusTargets(request.Routing, receiveSize);
 
-            if (fabricHosts.Length == 0)
+            if (fabricHosts.Length == 0 && request.Routing.ThrowIfNoReceiver)
             {
                 await caller.Send_BusInvokeRequestDone_ToApiAsync(
                     new BusInvokeRequestDoneDto(
@@ -686,9 +710,22 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
+                if (state.Targets.Length == 0)
+                {
+                    OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
+                    state.TryComplete();
+                    return;
+                }
+
                 state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, "Invoke request timed out.");
                 _ = ReadyBusInvokeAsync(logger, state);
             });
+
+            if (fabricHosts.Length == 0)
+            {
+                await ReadyBusInvokeAsync(logger, state);
+                return;
+            }
 
             foreach (var host in fabricHosts)
                 await host.Send_BusInvokeRequest_ToApiAsync(request, actor);
@@ -711,6 +748,11 @@ public class FabricManager : IDashboardSnapshotGetter
                 await host.Send_BusInvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
 
             state.Cancel();
+            if (state.Targets.Length == 0)
+            {
+                OpenBusRequests.TryRemove(cancel.Routing.RequestId, out _);
+                state.TryComplete();
+            }
         }, ct);
     }
     public async Task Receive_BusInvokeRequestAck_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusInvokeRequestAckDto done, long receiveSize, CancellationToken ct)

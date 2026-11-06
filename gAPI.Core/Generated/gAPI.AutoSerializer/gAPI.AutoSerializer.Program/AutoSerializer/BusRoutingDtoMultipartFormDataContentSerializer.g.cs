@@ -27,5 +27,6 @@ public static class BusRoutingDtoMultipartFormDataContentSerializer
         ___content.Add(new StringContent(((int)value.To).ToString()), $"{___prefix}To");
         if (value.ToBusConnectionId != null)
             BusConnectionIdMultipartFormDataContentSerializer.Write(___content, $"{___prefix}ToBusConnectionId", value.ToBusConnectionId);
+        ___content.Add(new StringContent(value.ThrowIfNoReceiver.ToString()), $"{___prefix}ThrowIfNoReceiver");
     }
 }

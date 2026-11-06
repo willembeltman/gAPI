@@ -39,7 +39,7 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {Interface.Name} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true);
     {Interface.Name} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
     {Interface.Name} ToBusConnectionId({BusConnectionId} busConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
 }}";

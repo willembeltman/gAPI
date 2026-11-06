@@ -114,7 +114,8 @@ public class {Name}(
     ILoggerFactory ___loggerFactory,
     {SessionId}? ___sessionId,
     {UserId}? ___userId,
-    TimeSpan? ___timeOut = null)
+    TimeSpan? ___timeOut = null,
+    bool ___throwIfNoReceiver = true)
     : {Interface}
     , IDisposable
 {{
@@ -164,7 +165,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             new(""{method}""),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg.Name}"))});
@@ -214,7 +216,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             new(""{method}""),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});
@@ -252,7 +255,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             new(""{method}""),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});

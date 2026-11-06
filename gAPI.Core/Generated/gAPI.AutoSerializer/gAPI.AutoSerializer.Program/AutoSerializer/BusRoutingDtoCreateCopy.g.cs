@@ -10,6 +10,6 @@ public static class BusRoutingDtoCreateCopy
     [IsCreateCopy]
     public static BusRoutingDto CreateCopy(this BusRoutingDto value)
     {
-        return new BusRoutingDto(value.FromBusConnectionId, value.RequestId, value.ServiceId, value.MethodId, value.Timeout, value.deliveryMode, value.To, value.ToBusConnectionId);
+        return new BusRoutingDto(value.FromBusConnectionId, value.RequestId, value.ServiceId, value.MethodId, value.Timeout, value.deliveryMode, value.To, value.ToBusConnectionId, value.ThrowIfNoReceiver);
     }
 }

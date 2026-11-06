@@ -38,7 +38,7 @@ namespace {Namespace};
 
 public interface {Name}
 {{
-    {Interface.Name} ToAll(TimeSpan? timeOut = null);
+    {Interface.Name} ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true);
     {Interface.Name} ToUser({UserId} userId, TimeSpan? timeOut = null);
     {Interface.Name} ToSession({SessionId} sessionId, TimeSpan? timeOut = null);
 }}

@@ -28,5 +28,6 @@ public static class RoutingDtoMultipartFormDataContentSerializer
             UserIdMultipartFormDataContentSerializer.Write(___content, $"{___prefix}UserId", value.UserId);
         if (value.SessionId != null)
             SessionIdMultipartFormDataContentSerializer.Write(___content, $"{___prefix}SessionId", value.SessionId);
+        ___content.Add(new StringContent(value.ThrowIfNoReceiver.ToString()), $"{___prefix}ThrowIfNoReceiver");
     }
 }
