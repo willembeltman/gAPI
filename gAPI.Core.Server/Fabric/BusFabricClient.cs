@@ -85,7 +85,6 @@ public sealed class BusFabricClient
 
     TcpClient? Tcp;
     NetworkStream? Stream;
-    bool FirstTime;
     bool IsConnecting;
     bool IsDisconnecting;
 
@@ -120,11 +119,10 @@ public sealed class BusFabricClient
             BinaryReader = new BinaryReader(Stream);
             BinaryWriter = new BinaryWriter(Stream);
 
-            if (!FirstTime)
-            {
-                FirstTime = true;
-                _ = Task.Run(async () => { await Sender.SendKernel(SenderCts.Token); });
-            }
+            // Fix 3: SendKernel altijd herstarten bij reconnect (FirstTime guard verwijderd)
+            SenderCts?.Cancel();
+            SenderCts = new CancellationTokenSource();
+            _ = Task.Run(async () => { await Sender.SendKernel(SenderCts.Token); });
 
             _ = Task.Run(async () => { await ReceiveKernel(SenderCts.Token); });
 

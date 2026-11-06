@@ -445,6 +445,10 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "Error processing SendAndForgetRequest for {requestId}", message.Routing.RequestId);
+            }
+            finally
+            {
                 cts.Dispose();
                 Timeouts.TryRemove(message.Routing.RequestId, out _);
             }
@@ -837,7 +841,7 @@ public abstract class WssClientConnection : IWssClientConnection
             {
                 var invokeCancelled = new InvokeRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_InvokeRequestCancelled_ToServerAsync(invokeCancelled, ct);
-                PendingSendRequests.TryRemove(routing.RequestId, out _);
+                PendingInvokeRequests.TryRemove(routing.RequestId, out _);
             });
 
             var response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(100), ct);
@@ -854,7 +858,7 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         finally
         {
-            PendingSendRequests.TryRemove(routing.RequestId, out _);
+            PendingInvokeRequests.TryRemove(routing.RequestId, out _);
         }
     }
 
