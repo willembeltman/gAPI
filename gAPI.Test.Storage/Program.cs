@@ -8,7 +8,7 @@ CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoBus(builder.Configuration);
-builder.AddStorageServer();
+builder.Services.AddStorageServer(builder.Configuration);
 
 var app = builder.Build();
 app.MapStorageServer();

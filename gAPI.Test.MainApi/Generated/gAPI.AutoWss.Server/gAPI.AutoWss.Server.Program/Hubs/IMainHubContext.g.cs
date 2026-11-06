@@ -7,7 +7,7 @@ namespace gAPI.Generated;
 
 public interface IMainHubContext
 {
-    IMainHub ToAll(TimeSpan? timeOut = null);
+    IMainHub ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true);
     IMainHub ToUser(UserId userId, TimeSpan? timeOut = null);
     IMainHub ToSession(SessionId userId, TimeSpan? timeOut = null);
 }

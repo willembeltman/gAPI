@@ -13,8 +13,8 @@ public class MainHubContext(
     ILoggerFactory loggerFactory)
     : IMainHubContext
 {
-    public IMainHub ToAll(TimeSpan? timeOut = null)
-        => new MainHub(fabricClient, loggerFactory, null, null, timeOut);
+    public IMainHub ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true)
+        => new MainHub(fabricClient, loggerFactory, null, null, timeOut, throwIfNoReceiver);
     public IMainHub ToUser(UserId userId, TimeSpan? timeOut = null)
         => new MainHub(fabricClient, loggerFactory, null, userId, timeOut);
     public IMainHub ToSession(SessionId sessionId, TimeSpan? timeOut = null)

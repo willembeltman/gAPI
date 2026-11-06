@@ -22,7 +22,8 @@ public class Bus1Client(
     TimeSpan? ___timeOut, 
     DeliveryMode ___deliveryMode,
     BusToChoice ___to,
-    BusConnectionId? ___busConnectionId = null)
+    BusConnectionId? ___busConnectionId = null,
+    bool ___throwIfNoReceiver = true)
     : IBus1
     , IDisposable
 {
@@ -45,7 +46,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___StartServiceTests_Serializer(
             sessionId);
@@ -89,7 +91,8 @@ public class Bus1Client(
                 ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
-                ___busConnectionId
+                ___busConnectionId,
+                ___throwIfNoReceiver
             );
             var ___payload = ___SendAndForget_Serializer(
                 message);
@@ -146,7 +149,8 @@ public class Bus1Client(
                 ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
-                ___busConnectionId
+                ___busConnectionId,
+                ___throwIfNoReceiver
             );
             var ___payload = ___SendAndForgetWithList_Serializer();
 
@@ -209,7 +213,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___Send_Serializer(
             message);
@@ -251,7 +256,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___SendWithList_Serializer();
         
@@ -301,7 +307,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeTask_Serializer(
             name);
@@ -325,7 +332,9 @@ public class Bus1Client(
                 return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
         }
-        throw new KeyNotFoundException();
+        if (___throwIfNoReceiver)
+            throw new KeyNotFoundException();
+        return default!;
     }
     private byte[] ___InvokeTask_Serializer(string name)
     {
@@ -356,7 +365,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeTaskWithList_Serializer();
         
@@ -385,7 +395,9 @@ public class Bus1Client(
         {
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
         }
-        throw new KeyNotFoundException();
+        if (___throwIfNoReceiver)
+            throw new KeyNotFoundException();
+        return default!;
     }
     private byte[] ___InvokeTaskWithList_Serializer()
     {
@@ -419,7 +431,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeList_Serializer(
             name);
@@ -473,7 +486,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeListWithList_Serializer();
         
@@ -535,7 +549,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___Ping_Serializer();
         
@@ -579,7 +594,8 @@ public class Bus1Client(
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId
+            ___busConnectionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___Pong_Serializer();
         

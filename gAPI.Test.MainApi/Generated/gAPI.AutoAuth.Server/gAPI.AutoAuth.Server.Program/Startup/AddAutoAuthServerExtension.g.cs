@@ -135,9 +135,6 @@ public static class AddAutoAuthServerExtension
             }
             else
             {
-                options.UseSqlServer(
-                    dbConnectionString,
-                    sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
             }
         }
     });

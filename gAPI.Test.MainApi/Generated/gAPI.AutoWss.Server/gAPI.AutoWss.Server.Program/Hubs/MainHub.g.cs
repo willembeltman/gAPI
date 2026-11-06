@@ -23,7 +23,8 @@ public class MainHub(
     ILoggerFactory ___loggerFactory,
     SessionId? ___sessionId,
     UserId? ___userId,
-    TimeSpan? ___timeOut = null)
+    TimeSpan? ___timeOut = null,
+    bool ___throwIfNoReceiver = true)
     : IMainHub
     , IDisposable
 {
@@ -46,7 +47,8 @@ public async void SendAndForget(string message, CancellationToken ct)
             new("SendAndForget"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___SendAndForget_Serializer(
             message);
@@ -101,7 +103,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             new("SendAndForgetWithList"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___SendAndForgetWithList_Serializer();
 
@@ -162,7 +165,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             new("Send"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___Send_Serializer(
             message);
@@ -203,7 +207,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             new("SendWithList"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___SendWithList_Serializer();
 
@@ -251,7 +256,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             new("InvokeList"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeList_Serializer(
             name);
@@ -301,7 +307,8 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             new("InvokeListWithList"),
             ___timeOut.Value,
             ___userId,
-            ___sessionId
+            ___sessionId,
+            ___throwIfNoReceiver
         );
         var ___payload = ___InvokeListWithList_Serializer();
         

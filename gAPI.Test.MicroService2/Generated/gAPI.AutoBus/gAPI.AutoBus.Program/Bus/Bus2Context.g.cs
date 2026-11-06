@@ -12,8 +12,8 @@ public class Bus2Context(
     IBusConnection busConnection)
     : IBus2Context
 {
-    public IBus2 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Bus2Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToAll);
+    public IBus2 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
+        => new Bus2Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToAll, null, throwIfNoReceiver);
     public IBus2 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
         => new Bus2Client(loggerFactory, busConnection, timeOut, deliveryMode, BusToChoice.ToAny);
     public IBus2 ToBusConnectionId(BusConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)

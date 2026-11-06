@@ -26,6 +26,8 @@
         <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
     </Folder>
     <Project Path="gAPI.Test.Aspire/gAPI.Test.Aspire.csproj" />
+    <Project Path="gAPI.Test.Integration.AppHost/gAPI.Test.Integration.AppHost.csproj" />
+    <Project Path="gAPI.Test.Integration/gAPI.Test.Integration.csproj" />
     <Project Path="gAPI.Test.Fabric/gAPI.Test.Fabric.csproj" />
     <Project Path="gAPI.Test.MainApi/gAPI.Test.Main.Server.csproj" />
     <Project Path="gAPI.Test.MainApp/gAPI.Test.Main.Client.csproj" />

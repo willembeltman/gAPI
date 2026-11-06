@@ -935,6 +935,99 @@ public sealed class FabricClient
     #region Call's vanuit gegenereerde code
 
     #region Wss / Sse
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
+
+        if (StreamingCache.StreamingRequestHandlers.TryAdd(
+            new(routing.RequestId, argumentIndex),
+            new AsyncEnumerableRegistration<T>(
+                async (activeStreams, streamId, cancelled, ct) =>
+                {
+                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                        streamId,
+                        _ =>
+                        {
+                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                            return new AsyncEnumerableRegistrationInstance<T>(
+                                source.GetAsyncEnumerator(linked.Token),
+                                new SemaphoreSlim(1, 1),
+                                linked);
+                        });
+
+                    async Task Cleanup()
+                    {
+                        activeStreams.TryRemove(streamId, out _);
+                        await enumerator.DisposeAsync();
+                        linkedCts.Dispose();
+                    }
+
+                    var entered = false;
+                    try
+                    {
+                        await gate.WaitAsync(ct);
+                        entered = true;
+
+                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
+                        var response = new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            !hasNext,
+                            cancelled,
+                            null,
+                            hasNext ? serializer(enumerator.Current) : []);
+
+                        if (!hasNext)
+                            await Cleanup();
+
+                        return response;
+                    }
+                    catch (OperationCanceledException ex) when (
+                        ct.IsCancellationRequested ||
+                        cancellationToken.IsCancellationRequested)
+                    {
+                        await Cleanup();
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            true,
+                            ex.Message,
+                            []);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Cleanup();
+                        return new StreamingResponseDto(
+                            routing,
+                            argumentIndex,
+                            streamId,
+                            true,
+                            false,
+                            ex.Message,
+                            []);
+                    }
+                    finally
+                    {
+                        if (entered)
+                            gate.Release();
+                    }
+                })) == false)
+            throw new NotImplementedException();
+    }
+
+    public async Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} UnRegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId);
+
+        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
+            await registration.DisposeAsync();
+    }
+
     //public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
     //{
     //    if (Logger.IsEnabled(LogLevel.Trace))

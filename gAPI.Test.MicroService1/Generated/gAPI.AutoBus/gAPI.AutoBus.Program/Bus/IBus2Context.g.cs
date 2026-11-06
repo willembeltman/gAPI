@@ -8,7 +8,7 @@ namespace gAPI.Generated;
 
 public interface IBus2Context
 {
-    IBus2 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
+    IBus2 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true);
     IBus2 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
     IBus2 ToBusConnectionId(BusConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
 }
