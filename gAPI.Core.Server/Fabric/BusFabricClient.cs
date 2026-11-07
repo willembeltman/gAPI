@@ -24,7 +24,6 @@ public sealed class BusFabricClient
     {
         Sender = new BusFabricClientSender(this, loggerFactory);
 
-        LocalSessionCache = sessionCache;
         StreamingCache = streamingCache;
         BusConnections = busConnections;
         Logger = loggerFactory.CreateLogger<FabricClient>();
@@ -81,7 +80,6 @@ public sealed class BusFabricClient
     readonly BusFabricClientSender Sender;
     readonly StreamingCache StreamingCache;
     readonly BusConnectionCollection BusConnections;
-    readonly SessionCache LocalSessionCache;
 
     TcpClient? Tcp;
     NetworkStream? Stream;
@@ -932,7 +930,6 @@ public sealed class BusFabricClient
 
         return [];
     }
-
     private async IAsyncEnumerable<byte[]> CreateBusEnumerable(BusInvokeRequestDto message, LinkedCancellationTokenSourceWithTimeout cts, IEnumerable<IBaseFabricConnection> connections)
     {
         foreach (var connection in connections)

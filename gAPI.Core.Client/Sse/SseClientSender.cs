@@ -73,34 +73,4 @@ public class SseClientSender(SseClient sseClient)
             throw;
         }
     }
-
-
-
-
-    ///// <summary>
-    ///// MOET ALTIJD NAAR DE FABRIC WANT HET IS EEN NIEUWE CALL
-    ///// </summary>
-    //public async Task Send_FabricStreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
-    //{
-    //    try
-    //    {
-
-    //        var json = JsonSerializer.Serialize(message);
-    //        var content = new MultipartFormDataContent
-    //        {
-    //            { new StringContent(json), $"messageJson" }
-    //        };
-
-    //        using var Request = await HttpClient.PostAsync("/SseServiceSubscription/StreamingRequest", content, ct);
-    //        Request.EnsureSuccessStatusCode();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        throw;
-    //    }
-    //}
-
-    /// <summary>
-    /// MOET ALTIJD NAAR DE FABRIC WANT HET IS EEN NIEUWE CALL
-    /// </summary>
 }

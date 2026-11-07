@@ -18,7 +18,7 @@ using System.Net.WebSockets;
 
 namespace gAPI.Core.Server.Wss;
 
-public abstract class WssServerConnection : IWssServerConnection
+public abstract class WssServerConnection : IServerConnection
 {
     readonly ILoggerFactory LoggerFactory;
     readonly ILogger Logger;
@@ -579,7 +579,6 @@ public abstract class WssServerConnection : IWssServerConnection
         return Sender.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(invokeRequestCancelledClient, ct);
     }
 
-
     public Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         //if (Logger.IsEnabled(LogLevel.Trace))
@@ -704,76 +703,6 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #region Calls vanuit gegenereerde code
 
-    //protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
-    //{
-    //    if (Logger.IsEnabled(LogLevel.Trace))
-    //        Logger.LogTrace(
-    //            "RegisterRemoteAsyncEnumerableArgumentByte({routing})",
-    //            routing);
-
-    //    return new RemoteAsyncEnumerable<byte[]>(
-    //        construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
-    //        {
-    //            var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-    //            StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
-    //            {
-    //                if (response.IsCancelled)
-    //                {
-    //                    enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
-    //                    return;
-    //                }
-
-    //                if (response.ExceptionMessage != null)
-    //                {
-    //                    enumerator.Complete(new RemoteException(response.ExceptionMessage));
-    //                    return;
-    //                }
-
-    //                if (response.IsCompleted)
-    //                {
-    //                    enumerator.Complete();
-    //                    return;
-    //                }
-
-    //                enumerator.Push(response.BinaryData);
-    //            });
-    //        },
-
-    //        requestNext: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
-    //        {
-    //            return Send_StreamingRequest_ToClientAsync(
-    //                new StreamingRequestDto(
-    //                    routing,
-    //                    argumentIndex,
-    //                    streamId,
-    //                    false),
-    //                ct);
-    //        },
-
-    //        cancelled: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator) =>
-    //        {
-    //            return Send_StreamingRequest_ToClientAsync(
-    //                new StreamingRequestDto(
-    //                    routing,
-    //                    argumentIndex,
-    //                    streamId,
-    //                    true),
-    //                default);
-    //            //return Send_StreamingCancelled_ToClientAsync(
-    //            //    new StreamingCancelledDto(
-    //            //        routing,
-    //            //        argumentIndex,
-    //            //        streamId),
-    //            //    default);
-    //        },
-
-    //        dispose: (StreamId streamId) =>
-    //        {
-    //            var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-    //            StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
-    //        });
-    //}
-
     public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -871,7 +800,6 @@ public abstract class WssServerConnection : IWssServerConnection
         }
     }
 
-
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -947,10 +875,13 @@ public abstract class WssServerConnection : IWssServerConnection
 
     #endregion
 
-
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
+    public void EnqueueSend(long size) => SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    public void EnqueueReceive(long size) => ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
 
+    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(SendBytesLogger);
+    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
     private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
         var interval = 1.0;
@@ -968,16 +899,6 @@ public abstract class WssServerConnection : IWssServerConnection
             count++;
         }
         return new((int)(count / interval), (int)(bytes / interval));
-    }
-    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(SendBytesLogger);
-    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
-    public void EnqueueSend(long size)
-    {
-        SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-    public void EnqueueReceive(long size)
-    {
-        ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
 
     public async ValueTask DisposeAsync()

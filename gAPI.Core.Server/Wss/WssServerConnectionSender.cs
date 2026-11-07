@@ -14,7 +14,7 @@ public class WssServerConnectionSender(
     WssServerConnection wssServerConnection,
     ILoggerFactory loggerFactory)
 {
-    private byte[] SendBuffer = new byte[33 * 1024 * 1024];
+    private byte[] SendBuffer = new byte[wssServerConnection.Config.MaxPackageSize ?? 8 * 1024 * 1024];
     readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
     public ILogger<WssServerConnection> Logger { get; } = loggerFactory.CreateLogger<WssServerConnection>();
 
@@ -22,14 +22,34 @@ public class WssServerConnectionSender(
     {
         try
         {
-            await Send_Ids_ToClientAsync(socket, ct);
+            var offset = 0;
+            var span = SendBuffer.AsSpan();
 
+            // Send Id's
+            var ids = new SynchronizeClientIdsDto(
+                wssServerConnection.FabricManagerId,
+                wssServerConnection.FabricConnectionId,
+                wssServerConnection.ClientConnectionId);
+
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_Ids_ToClientAsync({ids})", DateTime.Now.ToString("HH:mm:ss.fff"), ids);
+
+            span.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SynchronizeClientIds);
+            span.Write(ref offset, ids);
+            await socket.SendAsync(
+                new ArraySegment<byte>(SendBuffer, 0, offset),
+                WebSocketMessageType.Binary,
+                true,
+                ct);
+
+            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} WssServerConnection {wssServerConnection.ClientConnectionId} started");
+           
             await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
-                var span = SendBuffer.AsSpan();
+                span = SendBuffer.AsSpan();
 
                 // 🚀 direct serializen in pooled buffer
-                var offset = item(span);
+                offset = item(span);
 
                 // 🚀 direct versturen zonder kopie
                 await socket.SendAsync(
@@ -57,31 +77,6 @@ public class WssServerConnectionSender(
         }
     }
 
-    private async Task Send_Ids_ToClientAsync(WebSocket socket, CancellationToken ct)
-    {
-        var offset = 0;
-        var span = SendBuffer.AsSpan();
-
-        // Send Id's
-        var ids = new SynchronizeClientIdsDto(
-            wssServerConnection.FabricManagerId,
-            wssServerConnection.FabricConnectionId,
-            wssServerConnection.ClientConnectionId);
-
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_Ids_ToClientAsync({ids})", DateTime.Now.ToString("HH:mm:ss.fff"), ids);
-
-        span.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SynchronizeClientIds);
-        span.Write(ref offset, ids);
-        await socket.SendAsync(
-            new ArraySegment<byte>(SendBuffer, 0, offset),
-            WebSocketMessageType.Binary,
-            true,
-            ct);
-
-        Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} WssServerConnection {wssServerConnection.ClientConnectionId} started");
-
-    }
     public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

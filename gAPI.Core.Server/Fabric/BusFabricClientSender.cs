@@ -7,7 +7,8 @@ using System.Threading.Channels;
 namespace gAPI.Core.Server.Fabric;
 
 public class BusFabricClientSender(
-    BusFabricClient fabricClient, ILoggerFactory loggerFactory)
+    BusFabricClient fabricClient, 
+    ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
@@ -64,7 +65,7 @@ public class BusFabricClientSender(
         }, ct);
     }
 
-    internal async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
+    public async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {
@@ -106,7 +107,7 @@ public class BusFabricClientSender(
         }, ct);
     }
 
-    internal async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
+    public async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
     {
         await EnqueueAsync(writer =>
         {

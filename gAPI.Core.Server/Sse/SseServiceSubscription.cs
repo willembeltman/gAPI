@@ -12,28 +12,26 @@ using System.Threading.Channels;
 
 namespace gAPI.Core.Server.Sse;
 
-public class SseServiceSubscription : IServiceSubscription
+public class SseServiceSubscription
+    : IServiceSubscription
     , IServerConnection
 {
+    private readonly CancellationTokenSource Cts = new();
+    private readonly Channel<SseEvent> Channel = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
+    private readonly ServiceSubscriptionCollection ServiceSubscriptionCollection;
+    private readonly IServerAuthenticationService AuthenticationService;
+    private readonly FabricClient FabricClient;
     private byte closed;
 
-    public IServerAuthenticationService AuthenticationService { get; }
+    IServerConnection IServiceSubscription.Connection => this;
+    string IServerConnection.Id => ServiceSubscriptionId.Value.ToString();
 
-    private readonly ServiceSubscriptionCollection ServiceSubscriptionCollection;
-    private readonly FabricClient FabricClient;
-
-    private readonly CancellationTokenSource Cts = new();
-
-    public Channel<SseEvent> Channel { get; }
-    public StreamingCache StreamingCache { get; }
     public ClientConnectionId ClientConnectionId { get; }
-    public Stopwatch Stopwatch { get; }
-    public ServiceSubscriptionId ServiceSubscriptionId { get; private set; }
+    public ServiceSubscriptionId ServiceSubscriptionId { get; }
     public ServiceId ServiceId { get; }
     public SessionId SessionId { get; }
     public UserId UserId { get; }
-
-    public string Id => ServiceSubscriptionId.Value.ToString();
+    public Stopwatch Stopwatch { get; }
 
     public SseServiceSubscription(
         IServerAuthenticationService authenticationService,
@@ -48,17 +46,13 @@ public class SseServiceSubscription : IServiceSubscription
         AuthenticationService = authenticationService;
         ServiceSubscriptionCollection = serviceSubscriptionCollection;
         FabricClient = fabricClient;
-        StreamingCache = streamingCache;
         ServiceId = serviceId;
         SessionId = sessionId;
         UserId = userId;
-        Channel = System.Threading.Channels.Channel.CreateUnbounded<SseEvent>();
         ClientConnectionId = serverConnectionCollection.Add(this);
         ServiceSubscriptionId = serviceSubscriptionCollection.Add(this, serviceId);
         Stopwatch = Stopwatch.StartNew();
     }
-
-    //readonly ConcurrentDictionary<RequestId, int> Requests = [];
 
     public async IAsyncEnumerable<SseItem<string>> ReadAllAsync([EnumeratorCancellation] CancellationToken ct)
     {
@@ -102,34 +96,6 @@ public class SseServiceSubscription : IServiceSubscription
             }
         }
     }
-
-    // SEND AND FORGET
-    //public async Task SendAndForgetRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
-    //{
-    //    // TODO kijken waarom dit zo complex is
-    //    Requests.TryAdd(sendRequest.Routing.RequestId, 0);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
-    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-    //    var sendRequestClient = new SendRequestClientDto(
-    //        sendRequest.Routing,
-    //        sendRequest.BinaryData,
-    //        stateIsChanged,
-    //        stateData);
-    //    var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
-    //    {
-    //    }
-    //}
     public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -159,38 +125,6 @@ public class SseServiceSubscription : IServiceSubscription
         }
     }
 
-
-
-    // SEND
-    //public async Task SendRequestAsync(SendRequestDto sendRequest, CancellationToken ct)
-    //{
-    //    // TODO kijken waarom dit zo complex is
-    //    Requests.TryAdd(sendRequest.Routing.RequestId, 0);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
-    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-    //    var sendRequestClient = new SendRequestClientDto(
-    //        sendRequest.Routing,
-    //        sendRequest.BinaryData,
-    //        stateIsChanged,
-    //        stateData);
-    //    var sseEvent = new SseEvent("SendRequestClientDto", sendRequestClient);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    await Channel.Writer.WriteAsync(sseEvent, Cts.Token);
-    //    if (ct.IsCancellationRequested || Requests.TryGetValue(sendRequest.Routing.RequestId, out _) == false)
-    //        return;
-
-    //    if (Requests.TryRemove(sendRequest.Routing.RequestId, out _))
-    //    {
-    //        // TODO ja deze done moet wel verstuurt worden, want we wachten niet bij SSE
-    //        var done = new SendRequestDoneDto(sendRequest.Routing, false, null);
-    //        await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, Cts.Token);
-    //    }
-    //}
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -220,38 +154,6 @@ public class SseServiceSubscription : IServiceSubscription
             //await FabricClient.Send_FabricSendRequestDone_ToFabricAsync(done, ct);
         }
     }
-
-    //public async IAsyncEnumerable<byte[]> InvokeRequestAsync(InvokeRequestDto invokeRequest, [EnumeratorCancellation] CancellationToken ct)
-    //{
-    //    //if (Logger.IsEnabled(LogLevel.Trace))
-    //    //    Logger.LogTrace("{now} Send_InvokeRequest_ToClientAsync({invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), invokeRequest);
-
-    //    var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-    //    StreamingCache.PendingInvokeRequests[invokeRequest.Routing.RequestId] = completion;
-
-    //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
-    //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-    //    var invokeRequestClient = new InvokeRequestClientDto(
-    //        invokeRequest.Routing, 
-    //        invokeRequest.BinaryData, 
-    //        stateIsChanged, 
-    //        stateData);
-
-    //    var sseEvent = new SseEvent("InvokeRequestClientDto", invokeRequestClient);
-    //    await Channel.Writer.WriteAsync(sseEvent, ct);
-
-    //    try
-    //    {
-    //        var response = await completion.Task.WaitAsync(invokeRequest.Routing.Timeout, ct);
-    //        var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(invokeRequest.Routing, -1);
-    //        await foreach (var item in enumerable)
-    //            yield return item;
-    //    }
-    //    finally
-    //    {
-    //        StreamingCache.PendingInvokeRequests.TryRemove(invokeRequest.Routing.RequestId, out _);
-    //    }
-    //}
 
     public async Task Send_FabricInvokeRequest_ToClientAsync(InvokeRequestDto invokeRequest, CancellationToken ct)
     {
@@ -347,6 +249,8 @@ public class SseServiceSubscription : IServiceSubscription
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
 
+    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(SendBytesLogger);
+    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
     private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {
         var interval = 1.0;
@@ -365,15 +269,4 @@ public class SseServiceSubscription : IServiceSubscription
         }
         return new((int)(count / interval), (int)(bytes / interval));
     }
-    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(SendBytesLogger);
-    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
-    public void EnqueueSend(long size)
-    {
-        SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-    public void EnqueueReceive(long size)
-    {
-        ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-
 }

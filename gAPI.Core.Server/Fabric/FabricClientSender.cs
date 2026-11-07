@@ -7,7 +7,8 @@ using System.Threading.Channels;
 namespace gAPI.Core.Server.Fabric;
 
 public class FabricClientSender(
-FabricClient fabricClient, ILoggerFactory loggerFactory)
+    FabricClient fabricClient,
+    ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
@@ -266,7 +267,6 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }, ct);
     }
 
-
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
         try
@@ -278,112 +278,4 @@ FabricClient fabricClient, ILoggerFactory loggerFactory)
         }
     }
 
-    //internal async Task Send_BusSubscribe_ToFabricAsync(BusSubscribeDto subscribe, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSubscribe);
-    //        writer.Write(subscribe);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusUnsubscribe_ToFabricAsync(BusUnsubscribeDto unsubscribe, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusUnsubscribe);
-    //        writer.Write(unsubscribe);
-    //    }, ct);
-    //}
-
-    //internal async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForget);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusSendAndForgetRequestCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusFireAndForgetCancelled);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-
-    //internal async Task Send_BusSendRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequest);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusSendCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestCancelled);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusSendRequestDone_ToFabricAsync(BusSendRequestDoneDto ack, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusSendRequestDone);
-    //        writer.Write(ack);
-    //    }, ct);
-    //}
-
-    //internal async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequest);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusInvokeRequestCancelled_ToFabricAsync(BusInvokeRequestCancelledDto request, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestCancelled);
-    //        writer.Write(request);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusInvokeRequestAck_ToFabricAsync(BusInvokeRequestAckDto ack, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestAck);
-    //        writer.Write(ack);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusInvokeRequestDone_ToFabricAsync(BusInvokeRequestDoneDto done, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusInvokeRequestDone);
-    //        writer.Write(done);
-    //    }, ct);
-    //}
-
-    //internal async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto busStreamingRequestDto, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingRequest);
-    //        writer.Write(busStreamingRequestDto);
-    //    }, ct);
-    //}
-    //internal async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
-    //{
-    //    await EnqueueAsync(writer =>
-    //    {
-    //        FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.BusStreamingResponse);
-    //        writer.Write(response);
-    //    }, ct);
-    //}
 }
