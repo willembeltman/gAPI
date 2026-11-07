@@ -8,7 +8,49 @@ namespace gAPI.Core.Client.Helpers;
 public record AsyncEnumerableRegistrationInstance<T>(
     IAsyncEnumerator<T> enumerator,
     SemaphoreSlim gate,
-    CancellationTokenSource linkedCts);
+    CancellationTokenSource linkedCts)
+{
+    public bool IsDisposed { get; private set; }
+
+    public bool TryRemoveFrom(ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>> streams, StreamId streamId)
+        => ((ICollection<KeyValuePair<StreamId, AsyncEnumerableRegistrationInstance<T>>>)streams)
+            .Remove(new(streamId, this));
+
+    public async ValueTask DisposeAsync(bool gateAlreadyHeld = false)
+    {
+        try
+        {
+            linkedCts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        if (!gateAlreadyHeld)
+            await gate.WaitAsync();
+
+        try
+        {
+            if (IsDisposed)
+                return;
+
+            IsDisposed = true;
+            try
+            {
+                await enumerator.DisposeAsync();
+            }
+            finally
+            {
+                linkedCts.Dispose();
+            }
+        }
+        finally
+        {
+            if (!gateAlreadyHeld)
+                gate.Release();
+        }
+    }
+}
 
 public interface IAsyncEnumerableRegistration : IAsyncDisposable
 {
@@ -33,13 +75,13 @@ public sealed class AsyncEnumerableRegistration<T> : IAsyncEnumerableRegistratio
 
     public async ValueTask DisposeAsync()
     {
-        foreach (var stream in ActiveStreams.Values)
+        while (!ActiveStreams.IsEmpty)
         {
-            await stream.enumerator.DisposeAsync();
-            stream.gate.Dispose();
-            stream.linkedCts.Dispose();
+            foreach (var (streamId, stream) in ActiveStreams.ToArray())
+            {
+                await stream.DisposeAsync();
+                stream.TryRemoveFrom(ActiveStreams, streamId);
+            }
         }
-
-        ActiveStreams.Clear();
     }
 }

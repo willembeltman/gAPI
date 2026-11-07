@@ -393,7 +393,7 @@ public class SseClient : IDisposable
             new AsyncEnumerableRegistration<byte[]>(
                 async (activeStreams, streamId, cancelled, ct) =>
                 {
-                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                    var stream = activeStreams.GetOrAdd(
                         streamId,
                         _ =>
                         {
@@ -403,21 +403,22 @@ public class SseClient : IDisposable
                                 new SemaphoreSlim(1, 1),
                                 linked);
                         });
+                    var enumerator = stream.enumerator;
+                    var gate = stream.gate;
+                    var entered = false;
 
                     async Task Cleanup()
                     {
-                        activeStreams.TryRemove(streamId, out _);
-                        await enumerator.DisposeAsync();
-                        linkedCts.Dispose();
+                        stream.TryRemoveFrom(activeStreams, streamId);
+                        await stream.DisposeAsync(entered);
                     }
 
-                    var entered = false;
                     try
                     {
                         await gate.WaitAsync(ct);
                         entered = true;
 
-                        var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                        var hasNext = !cancelled && !stream.IsDisposed && await enumerator.MoveNextAsync();
 
                         var stateIsChanged = HttpClient.IsStateDataChanged();
                         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;

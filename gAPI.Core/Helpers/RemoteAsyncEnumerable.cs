@@ -42,6 +42,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
         private readonly Action<StreamId> _dispose;
         private readonly CancellationToken _cancellationToken;
         private readonly ResettableTimeout _timeout;
+        private readonly TaskCompletionSource _remoteCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         private int _cancelSent;
         private int _completed;
@@ -84,6 +85,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
                 return;
 
             _timeout.Dispose();
+            _remoteCompletion.TrySetResult();
             _items.Writer.TryComplete(error);
         }
 
@@ -95,6 +97,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
             try
             {
                 await _cancelled(_streamId, this);
+                await _remoteCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
             }
             catch
             {
@@ -153,6 +156,9 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 
         public async ValueTask DisposeAsync()
         {
+            if (Volatile.Read(ref _completed) == 0)
+                await CancelRemoteAsync();
+
             _dispose(_streamId);
             Complete();
 

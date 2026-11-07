@@ -155,6 +155,8 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch { }
 
+            await DisposeStreamingRequestHandlersAsync();
+
             // 🎯 NIEUW: Maak de verzendwachtrij direct leeg!
             // Oude, niet-verzonden berichten mogen NOOIT over de nieuwe socket gaan.
             Sender.ClearQueue();
@@ -390,6 +392,14 @@ public abstract class WssClientConnection : IWssClientConnection
         finally
         {
             cts.Cancel();
+            try
+            {
+                await DisposeStreamingRequestHandlersAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to dispose streaming request handlers after the WSS connection closed.");
+            }
             cts.Dispose();
 
             // 🎯 ALS de verbinding onverwacht is verbroken (bv. door netwerkwissel), start reconnect flow:
@@ -1006,7 +1016,7 @@ public abstract class WssClientConnection : IWssClientConnection
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
@@ -1016,21 +1026,22 @@ public abstract class WssClientConnection : IWssClientConnection
                         new SemaphoreSlim(1, 1),
                         linked);
                 });
+            var enumerator = stream.enumerator;
+            var gate = stream.gate;
+            var entered = false;
 
             async Task Cleanup()
             {
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
+                stream.TryRemoveFrom(activeStreams, streamId);
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
                 await gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && !stream.IsDisposed && await enumerator.MoveNextAsync();
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -1107,7 +1118,7 @@ public abstract class WssClientConnection : IWssClientConnection
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
@@ -1117,21 +1128,22 @@ public abstract class WssClientConnection : IWssClientConnection
                         new SemaphoreSlim(1, 1),
                         linked);
                 });
+            var enumerator = stream.enumerator;
+            var gate = stream.gate;
+            var entered = false;
 
             async Task Cleanup()
             {
-                activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
+                stream.TryRemoveFrom(activeStreams, streamId);
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
                 await gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && !stream.IsDisposed && await enumerator.MoveNextAsync();
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -1206,6 +1218,24 @@ public abstract class WssClientConnection : IWssClientConnection
         if (StreamingRequestHandlers.TryRemove(new(routing.RequestId, argumentIndex), out var registration))
         {
             await registration.DisposeAsync();
+        }
+    }
+
+    private async Task DisposeStreamingRequestHandlersAsync()
+    {
+        foreach (var entry in StreamingRequestHandlers.ToArray())
+        {
+            if (!StreamingRequestHandlers.TryRemove(entry.Key, out var registration))
+                continue;
+
+            try
+            {
+                await registration.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to dispose streaming request {RequestId} argument {ArgumentIndex}.", entry.Key.RequestId, entry.Key.ArgumentIndex);
+            }
         }
     }
 
