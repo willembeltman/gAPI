@@ -95,7 +95,8 @@ context.MatchedEntityProperties
         dto.{p.Name} = entity.{p.Name};"))}
         {string.Join("", context.DtoNameProperties.Select(a => $@"
         dto.{a.Name}Name = 
-            {string.Join(" + \" \" + \r\n                ",
+            entity?.{a.NameProperty!.Name} == null ? null :
+                {string.Join(" + \" \" + \r\n                ",
     a.ForeignEntityNameProperties!
         .Select(p => p.IsName?.Format($"(entity?.{a.NameProperty!.Name}?.{p.Name} ?? default)"))
 )};
@@ -122,7 +123,8 @@ context.MatchedDtoProperties
 context.DtoNameProperties
 .Select(a => $@"
                 {a.Name}Name = 
-                    {string.Join(" + \" \" + \r\n                        ",
+                    entity.{a.NameProperty!.Name} == null ? null :
+                        {string.Join(" + \" \" + \r\n                        ",
 a.ForeignEntityNameProperties
     .Select(p => p.IsName.Format($"entity.{a.NameProperty!.Name}.{p.Name}{(p.IsValueType && p.IsNullable ? ".Value" : "")}"))
 )},"))}

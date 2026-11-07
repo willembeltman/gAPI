@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace gAPI.AutoComponent.SimpleRazorCompiler;
 
@@ -264,8 +265,17 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
         // lees header tot eerste whitespace, '{', '(', '<', of einde
         string headerCode = ReadHeaderCode(markup, ref position);
 
+        if (position < markup.Length && markup[position] == '(' &&
+            headerCode != "if" && headerCode != "else" && headerCode != "foreach" &&
+            headerCode != "while" && headerCode != "for")
+        {
+            string expression = ReadImplicitMethodCall(markup, ref position, headerCode);
+            Nodes.Add(new Node(this, NodeTypeEnum.Text) { Text = "@" + expression });
+            return position;
+        }
+
         // case: <td>@...</td> expression
-        if (markup[position] == '<')
+        if (position < markup.Length && markup[position] == '<')
         {
             var textNode = new Node(this, NodeTypeEnum.Text) { Text = "@" + headerCode };
             Nodes.Add(textNode);
@@ -333,6 +343,39 @@ public class Node(Node? parent, NodeTypeEnum nodeType, string? name = null)
         position = start;
 
         return position;
+    }
+
+    private static string ReadImplicitMethodCall(string markup, ref int position, string headerCode)
+    {
+        var expression = new StringBuilder(headerCode);
+
+        while (position < markup.Length)
+        {
+            if (markup[position] == '(')
+            {
+                string arguments = ReadBlockInnerHaakje(markup, ref position);
+                expression.Append('(').Append(arguments).Append(')');
+                continue;
+            }
+
+            if (markup[position] == '.' || markup[position] == '?' || markup[position] == '!')
+            {
+                int memberStart = position;
+                while (position < markup.Length &&
+                       (char.IsLetterOrDigit(markup[position]) || markup[position] == '_' ||
+                        markup[position] == '.' || markup[position] == '?' || markup[position] == '!'))
+                {
+                    position++;
+                }
+
+                expression.Append(markup, memberStart, position - memberStart);
+                continue;
+            }
+
+            break;
+        }
+
+        return expression.ToString();
     }
 
     private static string ReadHeaderCode(string markup, ref int position)

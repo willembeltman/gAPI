@@ -98,7 +98,7 @@ else
     [Parameter] public {CrudType.KeyProperty.TypeSimpleName}? NullableValue {{ get; set; }}
     [Parameter] public EventCallback<{CrudType.KeyProperty.TypeSimpleName}?> NullableValueChanged {{ get; set; }}
     [Parameter] public string? bindtype_NullableValue {{ get; set; }}
-    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudType.KeyProperty.TypeSimpleName}>>? NullableValueExpression {{ get; set; }}
+    [Parameter] public System.Linq.Expressions.Expression<Func<{CrudType.KeyProperty.TypeSimpleName}?>>? NullableValueExpression {{ get; set; }}
 
     [Parameter] public string? ForeignName {{ get; set; }}
     [Parameter] public EventCallback<string?> ForeignNameChanged {{ get; set; }}

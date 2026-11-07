@@ -258,9 +258,9 @@ public class DtoGenerator : BaseGenerator
         if (foreignNameProperties.Any())
         {
             var values = foreignNameProperties
-                .Select(a => $"{{{a.Name}{(a.IsName.StringFormat == null ? "" : $":{a.IsName.StringFormat}")}}}")
+                .Select(a => a.IsName.Format(a.Name))
                 .ToArray();
-            var value = $"$\"{string.Join(" ", values)}\"";
+            var value = $"string.Join(\" \", new string[] {{ {string.Join(", ", values)} }})";
             propertiesCode += $"    public override string ToString() => {value};\r\n";
         }
 
