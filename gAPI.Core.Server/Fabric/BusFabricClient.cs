@@ -2,6 +2,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
@@ -198,7 +199,7 @@ public sealed class BusFabricClient
 
     #region Subscription
 
-    public async Task BusSubscribeAsync(IBaseFabricConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct)
+    public async Task BusSubscribeAsync(IBusConnection baseBusConnection, BusSubscribeDto subscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -208,7 +209,7 @@ public sealed class BusFabricClient
 
         var service = BusConnections.Services.AddOrUpdate(
             subscribe.ServiceId,
-            new ConcurrentDictionary<BusConnectionId, IBaseFabricConnection>(),
+            new ConcurrentDictionary<BusConnectionId, IBusConnection>(),
             (a, b) => b);
         service[baseBusConnection.BusConnectionId] = baseBusConnection;
 
@@ -222,7 +223,7 @@ public sealed class BusFabricClient
             subscribe.BusConnectionId);
         await Sender.Send_BusSubscribe_ToFabricAsync(request, ct);
     }
-    public async Task BusUnsubscribeAsync(IBaseFabricConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct)
+    public async Task BusUnsubscribeAsync(IBusConnection baseBusConnection, BusUnsubscribeDto unsubscribe, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -232,7 +233,7 @@ public sealed class BusFabricClient
 
         var service = BusConnections.Services.AddOrUpdate(
             unsubscribe.ServiceId,
-            new ConcurrentDictionary<BusConnectionId, IBaseFabricConnection>(),
+            new ConcurrentDictionary<BusConnectionId, IBusConnection>(),
             (a, b) => b);
         service.TryRemove(baseBusConnection.BusConnectionId, out _);
 
@@ -846,7 +847,7 @@ public sealed class BusFabricClient
             });
     }
 
-    public async Task BusSendFireAndForgetAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
+    public async Task BusSendFireAndForgetAsync(IBusConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
     {
         await Sender.Send_BusSendAndForgetRequest_ToFabricAsync(request, timeoutCts.Token);
 
@@ -855,7 +856,7 @@ public sealed class BusFabricClient
             await Sender.Send_BusSendAndForgetRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
         });
     }
-    public async Task BusSendAsync(IBaseFabricConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
+    public async Task BusSendAsync(IBusConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSource timeoutCts)
     {
         var ct = timeoutCts.Token;
 
@@ -876,7 +877,7 @@ public sealed class BusFabricClient
         if (sendRequestAck.ExceptionMessage != null)
             throw new RemoteException(sendRequestAck.ExceptionMessage);
     }
-    public async IAsyncEnumerable<byte[]> BusInvokeAsync(IBaseFabricConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource timeoutCts)
+    public async IAsyncEnumerable<byte[]> BusInvokeAsync(IBusConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSource timeoutCts)
     {
         var ct = timeoutCts.Token;
 
@@ -912,7 +913,7 @@ public sealed class BusFabricClient
 
     #region Helpers
 
-    private IEnumerable<IBaseFabricConnection> GetBusConnections(BusRoutingDto routing)
+    private IEnumerable<IBusConnection> GetBusConnections(BusRoutingDto routing)
     {
         if (BusConnections.Services.TryGetValue(routing.ServiceId, out var serviceSubscriptions) == false)
             return [];
@@ -930,7 +931,7 @@ public sealed class BusFabricClient
 
         return [];
     }
-    private async IAsyncEnumerable<byte[]> CreateBusEnumerable(BusInvokeRequestDto message, LinkedCancellationTokenSourceWithTimeout cts, IEnumerable<IBaseFabricConnection> connections)
+    private async IAsyncEnumerable<byte[]> CreateBusEnumerable(BusInvokeRequestDto message, LinkedCancellationTokenSourceWithTimeout cts, IEnumerable<IBusConnection> connections)
     {
         foreach (var connection in connections)
         {

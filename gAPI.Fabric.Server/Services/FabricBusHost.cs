@@ -354,7 +354,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
         Manager.Disconnected(this);
     }
 
-    public async Task Send_Log_ToServerAsync(WssLoggerLogDto dto, CancellationToken ct)
+    public async Task Send_Log_ToServerAsync(ClientLogDto dto, CancellationToken ct)
     {
         // Do not add logging lol
         await Enqueue(writer =>

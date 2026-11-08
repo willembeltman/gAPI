@@ -368,7 +368,7 @@ public sealed class FabricClient
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.Log:
-                        var log = BinaryReader.ReadWssLoggerLogDto();
+                        var log = BinaryReader.ReadFabricLogDto();
                         _ = Task.Run(async () =>
                         {
                             await Receive_Log_FromFabricAsync(log, ct);
@@ -496,7 +496,7 @@ public sealed class FabricClient
         if (StreamingCache.PendingGetSessionRequests.TryRemove(getSessionResponse.SessionId, out var tcs))
             tcs.TrySetResult(getSessionResponse.CookieData);
     }
-    private async Task Receive_Log_FromFabricAsync(WssLoggerLogDto log, CancellationToken ct)
+    private async Task Receive_Log_FromFabricAsync(FabricLogDto log, CancellationToken ct)
     {
         // niet loggen ;)
 #pragma warning disable CA2254 // Template should be a static expression

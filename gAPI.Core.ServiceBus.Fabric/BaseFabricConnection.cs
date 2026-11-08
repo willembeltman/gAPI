@@ -11,7 +11,7 @@ public abstract class BaseFabricConnection(
     ILoggerFactory loggerFactory,
     BusFabricClient fabricClient,
     ServiceBusConfig busConfig)
-    : IBaseFabricConnection
+    : IBusConnection
 {
     public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();

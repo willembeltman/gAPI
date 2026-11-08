@@ -458,7 +458,7 @@ public class WssClientConnectionSender
         await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task Send_Log_ToServerAsync(WssLoggerLogDto log, CancellationToken ct)
+    public async Task Send_Log_ToServerAsync(ClientLogDto log, CancellationToken ct)
     {
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 

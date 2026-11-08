@@ -93,9 +93,6 @@ public abstract class WssClientConnection : IWssClientConnection
                 Cts = new();
                 Ws = new ClientWebSocket();
 
-                // ❌ VERWIJDER OF COMMENTEER DEZE REGEL:
-                // Ws.Options.KeepAliveInterval = TimeSpan.FromSeconds(5); // <-- Dit veroorzaakte de crash op WASM
-
                 var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
                 await Ws.ConnectAsync(url, ct);
 
@@ -1249,7 +1246,7 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         // no-op
     }
-    public Task Send_Log_ToServerAsync(WssLoggerLogDto log, CancellationToken ct)
+    public Task Send_Log_ToServerAsync(ClientLogDto log, CancellationToken ct)
     {
         return Sender.Send_Log_ToServerAsync(log, ct);
     }

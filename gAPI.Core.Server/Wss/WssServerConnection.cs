@@ -2,6 +2,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
@@ -216,7 +217,7 @@ public abstract class WssServerConnection : IServerConnection
                             break;
 
                         case WssClientToServerMessageEnum.Log:
-                            var log = span.ReadWssLoggerLogDto(ref offset);
+                            var log = span.ReadClientLogDto(ref offset);
                             await Receive_Log_FromClientAsync(log, ct);
                             break;
                     }
@@ -543,7 +544,7 @@ public abstract class WssServerConnection : IServerConnection
         }, ct);
     }
 
-    private async Task Receive_Log_FromClientAsync(WssLoggerLogDto log, CancellationToken ct)
+    private async Task Receive_Log_FromClientAsync(ClientLogDto log, CancellationToken ct)
     {
         try
         {

@@ -73,6 +73,7 @@ public sealed class AutoBusFabricFixture : IAsyncLifetime
         });
         hostBuilder.Services.AddAutoBus(hostBuilder.Configuration);
         clientHost = hostBuilder.Build();
+
         await clientHost.StartAsync();
 
         var fabricClient = clientHost.Services.GetRequiredService<BusFabricClient>();
