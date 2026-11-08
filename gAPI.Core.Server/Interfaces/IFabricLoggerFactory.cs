@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Wss;
+﻿using gAPI.Core.Dtos;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IFabricLoggerFactory : ILoggerFactory, ILoggerProvider
 {

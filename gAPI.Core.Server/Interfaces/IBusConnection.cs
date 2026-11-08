@@ -1,5 +1,4 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Server.Dtos;
 
 namespace gAPI.Core.Server.Interfaces;
 

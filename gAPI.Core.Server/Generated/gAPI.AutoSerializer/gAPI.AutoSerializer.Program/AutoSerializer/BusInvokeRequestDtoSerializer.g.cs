@@ -1,16 +1,16 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Server.Dtos;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
 
 #nullable enable
-namespace gAPI.Core.Dtos;
+namespace gAPI.Core.Server.Dtos;
 
 public static class BusInvokeRequestDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xFC9E61BB;
-    public const uint SchemaHash = 0xFB6C78CF;
+    public const uint SchemaHash = 0x82804452;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, BusInvokeRequestDto value)

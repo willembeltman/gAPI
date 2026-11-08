@@ -1,13 +1,13 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Serializers;
-using gAPI.Core.Wss;
+using gAPI.Core.Server.Fabric;
 using System;
 using System.Buffers.Binary;
 using System.Text;
 
 #nullable enable
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Server.Fabric;
 
 public static class FabricLogDtoSpanSerializer
 {

@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public class ClientLogDto

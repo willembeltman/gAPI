@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Wss;

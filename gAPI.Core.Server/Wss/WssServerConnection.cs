@@ -9,7 +9,6 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
-using gAPI.Core.Wss;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;

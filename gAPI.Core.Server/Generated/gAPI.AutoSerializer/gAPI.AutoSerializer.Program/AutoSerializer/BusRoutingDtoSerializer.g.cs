@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Server.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using System.IO;
@@ -6,7 +6,7 @@ using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
 
 #nullable enable
-namespace gAPI.Core.Dtos;
+namespace gAPI.Core.Server.Dtos;
 
 public static class BusRoutingDtoSerializer
 {

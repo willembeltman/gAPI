@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Dtos;
 
-namespace gAPI.Core.Interfaces;
+namespace gAPI.Core.Server.Interfaces;
 
 public interface IBaseBusConnection
 {

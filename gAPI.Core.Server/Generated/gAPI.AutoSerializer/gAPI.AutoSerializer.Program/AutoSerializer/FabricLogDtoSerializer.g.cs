@@ -1,11 +1,11 @@
-﻿using gAPI.Core.Wss;
+﻿using gAPI.Core.Server.Fabric;
 using gAPI.Core.Serializers;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
 
 #nullable enable
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Server.Fabric;
 
 public static class FabricLogDtoSerializer
 {

@@ -3,6 +3,7 @@ using gAPI.Core.Enums;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Dashboard;
+using gAPI.Core.Server.Dtos;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.Interfaces;

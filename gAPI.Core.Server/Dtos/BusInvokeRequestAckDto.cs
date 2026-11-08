@@ -1,6 +1,6 @@
 using gAPI.Core.Attributes;
 
-namespace gAPI.Core.Dtos;
+namespace gAPI.Core.Server.Dtos;
 
 [GenerateSerializer]
 public record BusInvokeRequestAckDto(

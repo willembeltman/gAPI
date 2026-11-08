@@ -1,13 +1,13 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Dtos;
 using gAPI.Core.Serializers;
-using gAPI.Core.Wss;
 using System;
 using System.Buffers.Binary;
 using System.Text;
 
 #nullable enable
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Dtos;
 
 public static class ClientLogDtoMultipartFormDataContentSerializer
 {

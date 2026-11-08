@@ -1,5 +1,5 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Dtos;
 using System.Collections.Concurrent;
 
 namespace gAPI.Core.Server.Helpers;

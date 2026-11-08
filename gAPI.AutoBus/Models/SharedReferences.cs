@@ -14,12 +14,12 @@ public class SharedReferences
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
 
         ServiceBusConfig = SharedReferenceFinder.Find("gAPI.Core.Server.Config.ServiceBusConfig", allSymbols);
-        BusRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusRoutingDto", allSymbols);
-        BusSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusSendRequestDto", allSymbols);
-        BusInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.BusInvokeRequestDto", allSymbols);
+        BusRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.BusRoutingDto", allSymbols);
+        BusSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.BusSendRequestDto", allSymbols);
+        BusInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.BusInvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
 
-        IBaseBusConnection = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IBaseBusConnection", allSymbols);
+        IBaseBusConnection = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IBaseBusConnection", allSymbols);
 
         BusToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.BusToChoice", allSymbols);
         BusConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.BusConnectionId", allSymbols);

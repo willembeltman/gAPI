@@ -1,7 +1,8 @@
-﻿using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Server.Fabric;
 
 public sealed class FabricLogger(
     string category,

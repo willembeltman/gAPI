@@ -2,7 +2,6 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
-using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Net.WebSockets;

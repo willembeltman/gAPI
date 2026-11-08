@@ -1,13 +1,13 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
-using gAPI.Core.Dtos;
 using gAPI.Core.Serializers;
+using gAPI.Core.Server.Dtos;
 using System;
 using System.Buffers.Binary;
 using System.Text;
 
 #nullable enable
-namespace gAPI.Core.Dtos;
+namespace gAPI.Core.Server.Dtos;
 
 public static class BusInvokeRequestDoneDtoMultipartFormDataContentSerializer
 {

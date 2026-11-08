@@ -1,9 +1,9 @@
-﻿using gAPI.Core.Wss;
+﻿using gAPI.Core.Server.Fabric;
 using System.IO;
 using gAPI.Core.AttributesSerializers;
 using gAPI.Core.Attributes;
 
-namespace gAPI.Core.Wss;
+namespace gAPI.Core.Server.Fabric;
 
 public static class FabricLogDtoComparer
 {

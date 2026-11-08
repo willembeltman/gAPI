@@ -1,19 +1,19 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
-using gAPI.Core.Dtos;
 using gAPI.Core.Serializers;
+using gAPI.Core.Server.Dtos;
 using System;
 using System.Buffers.Binary;
 using System.Text;
 
 #nullable enable
-namespace gAPI.Core.Dtos;
+namespace gAPI.Core.Server.Dtos;
 
 public static class BusInvokeRequestAckDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0xBD364A5C;
-    public const uint SchemaHash = 0x2B72FA3C;
+    public const uint SchemaHash = 0x05FA2081;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, BusInvokeRequestAckDto value)
