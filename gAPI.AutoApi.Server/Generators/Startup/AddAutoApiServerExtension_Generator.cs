@@ -111,11 +111,17 @@ public static class {Name}
 {{
     public static IServiceCollection AddAutoApiServer(this IServiceCollection services, {ServerConfig} serverConfig)
     {{
-        return AddAutoApiServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        return AddAutoApiServer(services, serverConfig, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
     }}
     public static IServiceCollection AddAutoApiServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString)
     {{
+        var serverConfig = new {ServerConfig}(FrontendUrl: frontendUrl, FabricConnectionString: fabricConnectionString);
+        return AddAutoApiServer(services, serverConfig, frontendUrl, fabricConnectionString);
+    }}
+    private static IServiceCollection AddAutoApiServer(this IServiceCollection services, {ServerConfig} serverConfig, string? frontendUrl, string? fabricConnectionString)
+    {{
         services.AddSingleton(new {AuthenticationOptions.FullName}(false));
+        services.AddSingleton(serverConfig);
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         services.AddHttpContextAccessor();
@@ -150,7 +156,7 @@ public static class {Name}
             serviceSubscriptionCollection,
             //null!,
             sp.GetRequiredService<ILoggerFactory>(), 
-            fabricConnectionString));
+            serverConfig));
 
 {propertiesCode}
         services.AddAuthorization();

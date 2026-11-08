@@ -161,6 +161,7 @@ public class {Name}(
                     ___requestId, 
                     ___ServiceId, 
                     ___serviceMethodId, 
+                    ___timeOut.Value,
                     ___UserId, 
                     ___SessionId,
                     ___throwIfNoReceiver), 
@@ -186,6 +187,7 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         var ___payload = new {Interface.Title}_{method.Name}
         {{
             {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
@@ -201,6 +203,7 @@ public class {Name}(
                 ___requestId, 
                 ___ServiceId, 
                 ___serviceMethodId, 
+                ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,
                 ___throwIfNoReceiver), 
@@ -218,6 +221,7 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         var ___payload = new {Interface.Title}_{method.Name}
         {{
             {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
@@ -233,6 +237,7 @@ public class {Name}(
                 ___requestId, 
                 ___ServiceId, 
                 ___serviceMethodId, 
+                ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,
                 ___throwIfNoReceiver), 
