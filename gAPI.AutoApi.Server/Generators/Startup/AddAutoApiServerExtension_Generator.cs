@@ -52,13 +52,24 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
         Reg(SseServiceSubscription);
         Reg(SessionCache);
         Reg(ServerConnectionCollection);
-        //Reg(AuthenticationOptions);
         Reg("Microsoft.AspNetCore.Mvc");
         Reg("Microsoft.AspNetCore.HttpOverrides");
         Reg("Microsoft.AspNetCore.Builder");
         Reg("Microsoft.AspNetCore.Http");
-        Reg("Microsoft.Extensions.Logging");
         Reg("Microsoft.Extensions.DependencyInjection");
+        Reg("Microsoft.Extensions.Configuration");
+        Reg("Microsoft.Extensions.Hosting");
+        Reg("Microsoft.Extensions.Logging");
+        Reg("Microsoft.AspNetCore.Authentication");
+        Reg("Microsoft.AspNetCore.HttpOverrides");
+        Reg("Microsoft.AspNetCore.Builder");
+        Reg("Microsoft.AspNetCore.Mvc");
+        Reg("System.Reflection");
+        Reg("System.Globalization");
+        Reg("gAPI.Core.Server.Extensions");
+        Reg(ServerConfig);
+        Reg(FabricClient);
+        Reg(ServiceSubscriptionCollection);
 
         foreach (var item in Context.ClientContexts)
         {
@@ -66,18 +77,6 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
             Reg(item.IClientContext);
         }
 
-        Reg("Microsoft.AspNetCore.Authentication");
-        Reg("Microsoft.AspNetCore.HttpOverrides");
-        Reg("Microsoft.AspNetCore.Builder");
-        Reg("Microsoft.AspNetCore.Mvc");
-        Reg("System.Reflection");
-        Reg("System.Globalization");
-        Reg("Microsoft.Extensions.DependencyInjection");
-        Reg("Microsoft.Extensions.Logging");
-        Reg(ServerConfig);
-        Reg(FabricClient);
-        Reg(ServiceSubscriptionCollection);
-        Reg("Microsoft.Extensions.DependencyInjection");
         var propertiesCode = "";
         foreach (var controller in Context.Apis.Where(a => a.Interface.FullName != "gAPI.Core.Interfaces.IAccountServiceApi"))
         {
@@ -109,16 +108,12 @@ namespace {Namespace};
 
 public static class {Name}
 {{
+    public static IServiceCollection AddAutoApiServer(this IServiceCollection services, IConfigurationManager configuration)
+    {{
+        var config = configuration.CreateServerConfig();
+        return AddAutoApiServer(services, config);
+    }}
     public static IServiceCollection AddAutoApiServer(this IServiceCollection services, {ServerConfig} serverConfig)
-    {{
-        return AddAutoApiServer(services, serverConfig, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
-    }}
-    public static IServiceCollection AddAutoApiServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString)
-    {{
-        var serverConfig = new {ServerConfig}(FrontendUrl: frontendUrl, FabricConnectionString: fabricConnectionString);
-        return AddAutoApiServer(services, serverConfig, frontendUrl, fabricConnectionString);
-    }}
-    private static IServiceCollection AddAutoApiServer(this IServiceCollection services, {ServerConfig} serverConfig, string? frontendUrl, string? fabricConnectionString)
     {{
         services.AddSingleton(new {AuthenticationOptions.FullName}(false));
         services.AddSingleton(serverConfig);
@@ -130,7 +125,7 @@ public static class {Name}
             options.AddPolicy(""AllowSpecificOrigin"", policy =>
             {{
                 policy
-                    .WithOrigins(frontendUrl)
+                    .WithOrigins(serverConfig.FrontendUrl)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials()
@@ -154,28 +149,12 @@ public static class {Name}
             sessionCache, 
             streamingCache,
             serviceSubscriptionCollection,
-            //null!,
             sp.GetRequiredService<ILoggerFactory>(), 
             serverConfig));
 
 {propertiesCode}
         services.AddAuthorization();
         services.AddControllers();
-
-
-        services.AddHttpContextAccessor();
-        services.AddCors(options =>
-        {{
-            options.AddPolicy(""AllowSpecificOrigin"", policy =>
-            {{
-                policy
-                    .WithOrigins(frontendUrl)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials()
-                    .WithExposedHeaders(""X-SessionId"", ""X-StateData"");
-            }});
-        }});
 
         services.AddScoped<{IClientContext}, {ClientContext}>();
 

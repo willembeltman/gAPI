@@ -24,7 +24,7 @@ public class SharedReferences
         BusToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.BusToChoice", allSymbols);
         BusConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.BusConnectionId", allSymbols);
 
-        BaseFabricConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.Fabric.BaseFabricConnection", allSymbols);
+        BaseFabricConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.Fabric.FabricBaseBusConnection", allSymbols);
         BaseRabbitMQConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.BaseRabbitMQConnection", allSymbols);
         BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
 

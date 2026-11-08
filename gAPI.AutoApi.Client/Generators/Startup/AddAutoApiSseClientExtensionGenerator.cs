@@ -40,6 +40,8 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("Microsoft.AspNetCore.Components");
         Reg("Microsoft.AspNetCore.Components.Authorization");
+        Reg("Microsoft.Extensions.Configuration");
+        Reg("gAPI.Core.Client.Extensions");
         Reg(ClientConfig);
         Reg(ClientConnection);
         Reg(ISseClientConnection);
@@ -63,6 +65,14 @@ namespace {Namespace};
 
 public static class {Name}
 {{
+    public static IServiceCollection AddAutoApiClient(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
+    {{
+        var config = configuration.CreateClientConfig();
+        return AddAutoApiClient(services, config);
+    }}
+
     public static IServiceCollection AddAutoApiClient(this IServiceCollection services, {ClientConfig} clientConfig)
     {{{propertiesCode}
         services.AddSingleton(clientConfig);

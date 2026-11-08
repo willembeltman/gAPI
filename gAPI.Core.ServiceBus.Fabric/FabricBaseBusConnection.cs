@@ -7,11 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.ServiceBus.Fabric;
 
-public abstract class BaseFabricConnection(
+public abstract class FabricBaseBusConnection(
     ILoggerFactory loggerFactory,
     BusFabricClient fabricClient,
     ServiceBusConfig busConfig)
-    : IBusConnection
+    : IFabricBaseBusConnection
 {
     public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();

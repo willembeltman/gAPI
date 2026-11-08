@@ -39,7 +39,6 @@ namespace {Namespace};
 
 public interface {Name} : {IBaseBusConnection}
 {{
-
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
 

@@ -83,12 +83,6 @@ public static class {Name}
         this IServiceCollection services, 
         {ClientConfig} config)
     {{
-        return AddAutoAuthClient(services, config.ApiBackendUrl);
-    }}
-    public static IServiceCollection AddAutoAuthClient(
-        this IServiceCollection services, 
-        string apiAddress)
-    {{
         // Het kan helaas niet anders
         services.AddSingleton<{IUriNavigationManager}>(sp =>
         {{
@@ -108,7 +102,7 @@ public static class {Name}
 
         // Configure named client for WebAssembly with cookies
         services
-            .AddHttpClient(""WithCookies"", opt => opt.BaseAddress = new Uri(apiAddress))
+            .AddHttpClient(""WithCookies"", opt => opt.BaseAddress = new Uri(config.ApiBackendUrl))
             .AddHttpMessageHandler<{WithCookiesHandler}>();{(IClientAuthenticatedHttpClientImplementation == null ? $@"
 
         // Register global client authentication service

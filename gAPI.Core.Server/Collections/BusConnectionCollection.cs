@@ -6,16 +6,16 @@ namespace gAPI.Core.Server.Collections;
 
 public sealed class BusConnectionCollection
 {
-    readonly ConcurrentDictionary<BusConnectionId, IBusConnection> BusConnections = new();
-    public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<BusConnectionId, IBusConnection>> Services = [];
+    readonly ConcurrentDictionary<BusConnectionId, IFabricBaseBusConnection> BusConnections = new();
+    public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<BusConnectionId, IFabricBaseBusConnection>> Services = [];
 
-    public IEnumerable<IBusConnection> All => BusConnections.Values;
+    public IEnumerable<IFabricBaseBusConnection> All => BusConnections.Values;
 
-    public BusConnectionId Add(IBusConnection client, ServiceId serviceId)
+    public BusConnectionId Add(IFabricBaseBusConnection client, ServiceId serviceId)
     {
         var id = client.BusConnectionId;
         BusConnections[id] = client;
-        var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<BusConnectionId, IBusConnection>(); });
+        var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<BusConnectionId, IFabricBaseBusConnection>(); });
         connections[id] = client;
         return id;
     }

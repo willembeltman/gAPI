@@ -18,14 +18,17 @@ public class SseClientConnection : IDisposable
     public readonly IClientAuthenticatedHttpClient ClientAuthenticatedHttpClient;
     public readonly SseManagerCollection SseManagerCollection;
     public readonly ConcurrentDictionary<ServiceId, SseClient> ServiceClients = [];
-    public readonly CancellationTokenSource Cts = new();
+    public CancellationTokenSource? Cts = new();
     public SseManagerId Id { get; protected set; }
     public bool Initialized { get; set; }
 
     public void Dispose()
     {
+        if (Cts == null)
+            return;
         Cts.Cancel();
         Cts.Dispose();
+        Cts = null;
         foreach (var client in ServiceClients.Values)
         {
             client.Dispose();

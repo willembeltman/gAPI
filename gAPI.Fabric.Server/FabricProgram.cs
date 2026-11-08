@@ -2,6 +2,7 @@ using gAPI.Fabric.Server.Config;
 using gAPI.Fabric.Server.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System.Globalization;
 
 namespace gAPI.Fabric.Server;
 
@@ -14,12 +15,20 @@ public static class FabricProgram
     }
     public static async Task StartAsync(string name, FabricConfig config, CancellationToken ct = default)
     {
+        var invariantCulture = CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentCulture = invariantCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
+
         var builder = Host.CreateApplicationBuilder();
 #if DEBUG
-        using var stream = File.OpenRead("appsettings.Development.json");
-        if (stream != null)
-            builder.Configuration.AddJsonStream(stream);
+        if (File.Exists("appsettings.Development.json"))
+            using (var stream = File.OpenRead("appsettings.Development.json"))
+            {
+                if (stream != null)
+                    builder.Configuration.AddJsonStream(stream);
+            }
 #endif
+        builder.Configuration.AddEnvironmentVariables();
 
         builder.AddFabric(name);
         var app = builder.Build();
