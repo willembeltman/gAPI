@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
 using gAPI.Test.Shared.Private;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -10,30 +10,24 @@ namespace gAPI.Test.MicroService2;
 
 public class Bus2(
     ILoggerFactory loggerFactory,
-    IBusContext busContext)//,
-                           //IBusConnection busConnection)
+    IBusContext busContext)
     : IBus2
-//, IHostedService
+    , IHostedBusService
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<Bus2>();
-    //private CancellationTokenSource? Cts;
-    //async Task IHostedService.StartAsync(CancellationToken ct)
-    //{
-    //    if (Cts != null)
-    //        return;
-    //    Cts = new CancellationTokenSource();
-    //    ct = Cts.Token;
-    //    await busConnection.SubscribeAsync(this, ct);
-    //}
-    //async Task IHostedService.StopAsync(CancellationToken ct)
-    //{
-    //    if (Cts == null)
-    //        return;
-    //    await busConnection.UnsubscribeAsync(this, ct);
-    //    Cts.Cancel();
-    //    Cts.Dispose();
-    //    Cts = null;
-    //}
+
+    public async Task OnStartedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnStoppedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnSubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnUnsubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
 
     public Task Ping(CancellationToken ct)
     {
@@ -81,9 +75,6 @@ public class Bus2(
 
         Logger.LogInformation($"MainBus ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
-
-
-
 
     public async void SendAndForget(string message, CancellationToken ct)
     {
@@ -138,4 +129,5 @@ public class Bus2(
         yield return "2";
         yield return "3";
     }
+
 }

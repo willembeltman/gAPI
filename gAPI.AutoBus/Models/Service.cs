@@ -9,7 +9,11 @@ public class Service : SharedReference
     {
         IsApiProxy = namedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsApiProxyAttribute");
+
+        IsHostedBusService = namedTypeSymbol.AllInterfaces
+            .Any(i => i.ToDisplayString() == "gAPI.Core.Server.Interfaces.IHostedBusService");
     }
 
     public bool IsApiProxy { get; }
+    public bool IsHostedBusService { get; }
 }

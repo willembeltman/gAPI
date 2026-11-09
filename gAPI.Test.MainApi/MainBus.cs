@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
 using gAPI.Test.Shared.Private;
 using System.Diagnostics;
@@ -10,8 +11,25 @@ public class MainBus(
     ILoggerFactory loggerFactory,
     IClientContext clientContext)
     : IMainBus
+    , IHostedBusService
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainBus>();
+
+
+
+    public async Task OnStartedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnStoppedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnSubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnUnsubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
     {

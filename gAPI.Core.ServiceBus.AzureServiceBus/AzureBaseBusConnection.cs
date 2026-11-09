@@ -14,9 +14,9 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Core.ServiceBus.AzureServiceBus;
 
-public abstract class BaseAzureConnection(
-    ILoggerFactory loggerFactory, 
-    ServiceBusConfig config) 
+public abstract class AzureBaseBusConnection(
+    ILoggerFactory loggerFactory,
+    ServiceBusConfig config)
     : IBaseBusConnection
     , IAsyncDisposable
 {
@@ -32,7 +32,7 @@ public abstract class BaseAzureConnection(
     private const string StreamingRequestType = "streaming-request";
     private const string StreamingResponseType = "streaming-response";
 
-    private readonly ILogger<BaseAzureConnection> Logger = loggerFactory.CreateLogger<BaseAzureConnection>();
+    private readonly ILogger<AzureBaseBusConnection> Logger = loggerFactory.CreateLogger<AzureBaseBusConnection>();
     public ServiceBusConfig Config { get; } = config;
 
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
@@ -315,6 +315,9 @@ public abstract class BaseAzureConnection(
             catch (Exception ex) { Logger.LogError(ex, "Failed to send cancellation message"); }
         });
     }
+
+    // This is called AFTER the service has been registered for service routing
+    // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected async Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
     {
         if (!Initialized) throw new InvalidOperationException("Bus connection is not initialized. Call TryConnectAsync first.");
@@ -345,6 +348,8 @@ public abstract class BaseAzureConnection(
         }
         finally { SubscriptionLock.Release(); }
     }
+    // This is called AFTER the service has been unregistered for service routing
+    // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected async Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
     {
         await SubscriptionLock.WaitAsync(ct);
@@ -360,6 +365,8 @@ public abstract class BaseAzureConnection(
         }
         finally { SubscriptionLock.Release(); }
     }
+
+
     private async Task<IProcessorHandle> StartProcessorAsync(string topic, string subscription, bool isSession, string? sqlRule, CancellationToken ct)
     {
         if (sqlRule != null)
@@ -573,9 +580,11 @@ public abstract class BaseAzureConnection(
     {
         if (!await _adminClient!.TopicExistsAsync(topicName, ct)) await _adminClient.CreateTopicAsync(topicName, ct);
     }
-    private Task ProcessErrorAsync(ProcessErrorEventArgs args) { Logger.LogError(args.Exception, "Azure Service Bus error in context {Context}", args.ErrorSource); return Task.CompletedTask; }
-    //private Task ProcessErrorAsync(ProcessSessionErrorEventArgs args) { Logger.LogError(args.Exception, "Azure Service Bus Session error in entity {Entity}", args.EntityPath); return Task.CompletedTask; }
-
+    private Task ProcessErrorAsync(ProcessErrorEventArgs args)
+    {
+        Logger.LogError(args.Exception, "Azure Service Bus error in context {Context}", args.ErrorSource);
+        return Task.CompletedTask;
+    }
 
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
@@ -645,8 +654,6 @@ public abstract class BaseAzureConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-
-
     public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
     {
         StreamingRequestHandlers.TryAdd(new RequestArgumentIndexDto(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (activeStreams, streamId, cancelled, ct) =>

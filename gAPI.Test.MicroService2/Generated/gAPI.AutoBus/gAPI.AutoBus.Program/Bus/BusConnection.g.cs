@@ -5,6 +5,7 @@ using gAPI.Core.Serializers;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Fabric;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Core.ServiceBus.Fabric;
 using gAPI.Test.MicroService2;
 using gAPI.Test.Shared.Private;
@@ -37,9 +38,9 @@ public class BusConnection
         ___Logger = loggerFactory.CreateLogger<BusConnection>();
         ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }
-
     
-    public Bus2? Bus2 { get; set; }
+    public HostedBusServices? HostedBusServices { get; set; }
+
 
     
 
@@ -179,6 +180,23 @@ public class BusConnection
                 MainBussLock.Release();
             }
             await SendUnsubscribeAsync(mainBus, new ServiceId("IMainBus"), ___ct);
+        }
+    }
+    
+    public async Task OnSubscribedAsync(object implementation, CancellationToken ct)
+    {
+        if (implementation is gAPI.Test.MicroService2.Bus2 && 
+            implementation is IHostedBusService gAPI_Test_MicroService2_Bus2)
+        {
+            gAPI_Test_MicroService2_Bus2.OnSubscribedAsync(this, ct);
+        }
+    }
+    public async Task OnUnsubscribedAsync(object implementation, CancellationToken ct)
+    {
+        if (implementation is gAPI.Test.MicroService2.Bus2 && 
+            implementation is IHostedBusService gAPI_Test_MicroService2_Bus2)
+        {
+            gAPI_Test_MicroService2_Bus2.OnUnsubscribedAsync(this, ct);
         }
     }
     

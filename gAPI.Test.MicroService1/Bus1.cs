@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
 using gAPI.Test.Shared.Private;
 using Microsoft.Extensions.Hosting;
@@ -10,10 +11,9 @@ namespace gAPI.Test.MicroService2;
 
 public class Bus1(
     ILoggerFactory loggerFactory,
-    IBusContext busContext,
-    IBusConnection busConnection)
+    IBusContext busContext)
     : IBus1
-    //, IHostedService
+    , IHostedBusService
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<Bus1>();
     //private CancellationTokenSource? Cts;
@@ -37,6 +37,24 @@ public class Bus1(
 
     Stopwatch? stopwatch;
     TaskCompletionSource<double>? complete;
+
+
+
+    public async Task OnStartedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnStoppedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnSubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+    public async Task OnUnsubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    {
+    }
+
+
+
 
     public async IAsyncEnumerable<double> Ping([EnumeratorCancellation] CancellationToken ct)
     {
@@ -153,4 +171,5 @@ public class Bus1(
         yield return "2";
         yield return "3";
     }
+
 }

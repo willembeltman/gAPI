@@ -9,10 +9,11 @@ public interface IBaseBusConnection
     BusConnectionId BusConnectionId { get; }
     ServiceBusConfig Config { get; }
 
+    Task TryConnectAsync(CancellationToken ct);
+    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts);
+    Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
+
     Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
     Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
     IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
-
-    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts);
-    Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
 }

@@ -23,10 +23,11 @@ public class SharedReferences
 
         BusToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.BusToChoice", allSymbols);
         BusConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.BusConnectionId", allSymbols);
+        IHostedBusService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IHostedBusService", allSymbols);
 
         BaseFabricConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.Fabric.FabricBaseBusConnection", allSymbols);
-        BaseRabbitMQConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.BaseRabbitMQConnection", allSymbols);
-        BaseAzureConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.BaseAzureConnection", allSymbols);
+        RabbitMQBaseBusConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.RabbitMQ.RabbitMQBaseBusConnection", allSymbols);
+        AzureBaseBusConnection = SharedReferenceFinder.TryFind("gAPI.Core.ServiceBus.AzureServiceBus.AzureBaseBusConnection", allSymbols);
 
         FabricClient = SharedReferenceFinder.TryFind("gAPI.Core.Server.Fabric.BusFabricClient", allSymbols);
         SessionCache = SharedReferenceFinder.TryFind("gAPI.Core.Server.Collections.SessionCache", allSymbols);
@@ -47,9 +48,10 @@ public class SharedReferences
     public SharedReference IBaseBusConnection { get; }
     public SharedReference BusToChoice { get; }
     public SharedReference BusConnectionId { get; }
+    public SharedReference IHostedBusService { get; }
     public SharedReference? BaseFabricConnection { get; }
-    public SharedReference? BaseRabbitMQConnection { get; }
-    public SharedReference? BaseAzureConnection { get; }
+    public SharedReference? RabbitMQBaseBusConnection { get; }
+    public SharedReference? AzureBaseBusConnection { get; }
     public SharedReference? FabricClient { get; }
     public SharedReference? SessionCache { get; }
     public SharedReference? StreamingCache { get; }

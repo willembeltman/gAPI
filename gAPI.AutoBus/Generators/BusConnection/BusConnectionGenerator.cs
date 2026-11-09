@@ -2,6 +2,7 @@
 using gAPI.AutoBus.Models;
 using gAPI.AutoSerializer;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,6 +32,7 @@ public class BusConnectionGenerator : _BaseGenerator
     public bool OverloadFabricClient { get; }
     public SharedReference? OwnClientConnection { get; }
 
+    public SharedReference HostedBusServices => Context.HostedBusServices;
     public SharedReference IBusConnection => Context.IBusConnection;
     public SharedReference ServiceBusConfig => Context.SharedReferences.ServiceBusConfig;
     public SharedReference BusInvokeRequestDto => Context.SharedReferences.BusInvokeRequestDto;
@@ -38,6 +40,7 @@ public class BusConnectionGenerator : _BaseGenerator
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference? FabricClient => Context.SharedReferences.FabricClient;
+    public SharedReference IHostedBusService => Context.SharedReferences.IHostedBusService;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -65,8 +68,16 @@ public class BusConnectionGenerator : _BaseGenerator
         Reg(StreamingResponseDto);
         Reg(ServiceBusConfig);
         Reg(BaseConnection);
+        Reg(HostedBusServices);
+        Reg(IHostedBusService);
         if (OverloadFabricClient && FabricClient != null)
             Reg(FabricClient);
+
+        var hostedBusServices = Context.ServiceContext.BusInterfaces
+            .SelectMany(@interface => @interface.Services
+                .Where(a => a.IsHostedBusService))
+            .ToArray();
+
         foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
@@ -109,12 +120,13 @@ public class {Name}
         ___Logger = loggerFactory.CreateLogger<{Name}>();
         ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }}
+    
+    public {HostedBusServices}? HostedBusServices {{ get; set; }}
 
-    {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"
-    public {service}? {service} {{ get; set; }}"))))}
 
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
+    {GenerateOnSubscribed(hostedBusServices)}{GenerateOnUnsubscribed(hostedBusServices)}
     {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
     {string.Join("", Context.ServiceContext.BusInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
     {functions}
@@ -165,22 +177,6 @@ public class {Name}
             await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
         }}"))}
     }}";
-
-    //    return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-    //public async Task SubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
-    //{{
-    //    await TryConnectAsync(___ct);
-    //    await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-    //    try
-    //    {{
-    //        {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
-    //    }}
-    //    finally
-    //    {{
-    //        {hub.CleanName.ToMultiple()}Lock.Release();
-    //    }}
-    //    await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
-    //}}"));
     }
     private string GenerateUnsubscibe()
     {
@@ -220,6 +216,31 @@ public class {Name}
         //    }}
         //    await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
         //}}"));
+    }
+
+    private string GenerateOnSubscribed(Service[] hostedBusServices)
+    {
+        return $@"
+    public async Task OnSubscribedAsync(object implementation, CancellationToken ct)
+    {{{string.Join("", hostedBusServices.Select(service => $@"
+        if (implementation is {service.FullName} && 
+            implementation is {IHostedBusService} {service.FullName.Replace(".", "_")})
+        {{
+            {service.FullName.Replace(".", "_")}.OnSubscribedAsync(this, ct);
+        }}"))}
+    }}";
+    }
+    private string GenerateOnUnsubscribed(Service[] hostedBusServices)
+    {
+        return $@"
+    public async Task OnUnsubscribedAsync(object implementation, CancellationToken ct)
+    {{{string.Join("", hostedBusServices.Select(service => $@"
+        if (implementation is {service.FullName} && 
+            implementation is {IHostedBusService} {service.FullName.Replace(".", "_")})
+        {{
+            {service.FullName.Replace(".", "_")}.OnUnsubscribedAsync(this, ct);
+        }}"))}
+    }}";
     }
 
     private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)

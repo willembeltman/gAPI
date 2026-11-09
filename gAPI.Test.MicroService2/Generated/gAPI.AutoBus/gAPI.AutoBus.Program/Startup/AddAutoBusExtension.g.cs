@@ -51,7 +51,7 @@ public static class AddAutoBusExtension
         // Connection
         services.AddSingleton<IBusConnection, BusConnection>();
         services.AddScoped<Bus2>();
-        services.AddHostedService<BusHostedService>();
+        services.AddHostedService<BusConnectionHostedService>();
 
         // Hubs
         services.AddSingleton<IBusContext, BusContext>();

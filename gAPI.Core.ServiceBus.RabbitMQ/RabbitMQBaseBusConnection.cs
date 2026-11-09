@@ -14,7 +14,7 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Core.ServiceBus.RabbitMQ;
 
-public abstract class BaseRabbitMQConnection(
+public abstract class RabbitMQBaseBusConnection(
     ILoggerFactory loggerFactory,
     ServiceBusConfig config)
     : IBaseBusConnection, IAsyncDisposable
@@ -32,7 +32,7 @@ public abstract class BaseRabbitMQConnection(
     private const string StreamingResponseType = "streaming-response";
 
     public ServiceBusConfig Config { get; } = config;
-    private readonly ILogger<BaseRabbitMQConnection> Logger = loggerFactory.CreateLogger<BaseRabbitMQConnection>();
+    private readonly ILogger<RabbitMQBaseBusConnection> Logger = loggerFactory.CreateLogger<RabbitMQBaseBusConnection>();
 
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
@@ -400,6 +400,8 @@ public abstract class BaseRabbitMQConnection(
         }
     }
 
+    // This is called AFTER the service has been registered for service routing
+    // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected async Task SendSubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
     {
         if (!Initialized || _channel == null || _publishChannel == null || _connection == null)
@@ -439,6 +441,8 @@ public abstract class BaseRabbitMQConnection(
         }
         finally { SubscriptionLock.Release(); }
     }
+    // This is called AFTER the service has been unregistered for service routing
+    // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected async Task SendUnsubscribeAsync(object service, ServiceId serviceId, CancellationToken ct)
     {
         await SubscriptionLock.WaitAsync(ct);
@@ -626,95 +630,6 @@ public abstract class BaseRabbitMQConnection(
         }
 
     }
-    //private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
-    //{
-    //    using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-    //    _activeRequests[request.Routing.RequestId] = timeoutCts;
-    //    timeoutCts.CancelAfter(request.Routing.TimeOut);
-    //    var innerToken = timeoutCts.Token;
-
-    //    try
-    //    {
-    //        BusInvokeRequestAckDto ack;
-    //        IAsyncEnumerable<byte[]>? serviceStream = null;
-
-    //        try
-    //        {
-    //            var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
-
-    //            // Haal de rauwe stream op uit de gegenereerde code
-    //            serviceStream = Send_InvokeRequest_ToServiceAsync(request, innerToken);
-
-    //            // Registreer deze stream nu met onze veilige wrapper (zie hieronder)
-    //            var safeStream = WrapServiceStreamWithExceptionHandling(serviceStream, request);
-    //            RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, safeStream, static item => item, timeoutCts);
-
-    //            ack = new BusInvokeRequestAckDto(responseRouting, null);
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            ack = new BusInvokeRequestAckDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, ex.Message);
-    //        }
-
-    //        var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
-    //        byte[] ackData = CreateInvokeRequestAckData(ack);
-    //        await PublishRawAsync("", replyTo, ackData, innerToken, correlationId, properties);
-    //    }
-    //    catch (OperationCanceledException)
-    //    {
-    //        // Gecanceld via de bus!
-    //    }
-    //    finally
-    //    {
-    //        _activeRequests.TryRemove(request.Routing.RequestId, out _);
-    //    }
-    //}
-
-    //// DE NIEUWE WRAPPER METHODE IN DE BASE CLASS
-    //private async IAsyncEnumerable<byte[]> WrapServiceStreamWithExceptionHandling(
-    //    IAsyncEnumerable<byte[]> sourceStream,
-    //    BusInvokeRequestDto request)
-    //{
-    //    var enumerator = sourceStream.GetAsyncEnumerator();
-    //    try
-    //    {
-    //        while (true)
-    //        {
-    //            byte[]? item = null;
-    //            BusStreamingResponseDto? errDto = null;
-    //            try
-    //            {
-    //                if (!await enumerator.MoveNextAsync()) break;
-    //                item = enumerator.Current;
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                // BOOM! De microservice crasht halverwege het yielden.
-    //                // We maken een fout-pakket dat de client direct herkent.
-    //                errDto = new BusStreamingResponseDto(
-    //                    request.Routing,
-    //                    ArgumentIndex: -1,
-    //                    StreamId.New(),
-    //                    IsCompleted: true,
-    //                    IsCancelled: false,
-    //                    ExceptionMessage: ex.Message,
-    //                    BinaryData: []
-    //                );
-    //            }
-    //            if (errDto != null)
-    //            {
-    //                yield return CreateStreamingResponseData(errDto);
-    //                yield break;
-    //            }
-    //            if (item != null)
-    //                yield return item;
-    //        }
-    //    }
-    //    finally
-    //    {
-    //        await enumerator.DisposeAsync();
-    //    }
-    //}
     private async Task HandleInvokeRequestCancelled(BusInvokeRequestCancelledDto request, CancellationToken token)
     {
         if (_activeRequests.TryGetValue(request.Routing.RequestId, out var cts) == false)
@@ -794,70 +709,6 @@ public abstract class BaseRabbitMQConnection(
         return Task.CompletedTask;
     }
 
-    //protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
-    //{
-    //    return new RemoteAsyncEnumerable<T>(
-    //        construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
-    //        {
-    //            var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-    //            StreamingResponseHandlers.TryAdd(key, response =>
-    //            {
-    //                if (response.IsCancelled)
-    //                {
-    //                    enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
-    //                    return;
-    //                }
-
-    //                if (response.ExceptionMessage != null)
-    //                {
-    //                    enumerator.Complete(new RemoteException(response.ExceptionMessage));
-    //                    return;
-    //                }
-
-    //                if (response.IsCompleted)
-    //                {
-    //                    enumerator.Complete();
-    //                    return;
-    //                }
-
-    //                try
-    //                {
-    //                    enumerator.Push(deserializer.Invoke(response.BinaryData));
-    //                }
-    //                catch (Exception ex)
-    //                {
-    //                    enumerator.Complete(ex);
-    //                }
-    //            });
-    //        },
-
-    //        requestNext: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
-    //        {
-    //            return SendStreamingRequestAsync(
-    //                routing,
-    //                argumentIndex,
-    //                streamId,
-    //                false,
-    //                ct);
-    //        },
-
-    //        cancelled: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator) =>
-    //        {
-    //            return SendStreamingRequestAsync(
-    //                routing,
-    //                argumentIndex,
-    //                streamId,
-    //                true,
-    //                default);
-    //        },
-
-    //        dispose: (StreamId streamId) =>
-    //        {
-    //            var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-    //            StreamingResponseHandlers.TryRemove(key, out _);
-    //        });
-    //}
-
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
         return new RemoteAsyncEnumerable<T>(
@@ -926,34 +777,6 @@ public abstract class BaseRabbitMQConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-
-    //public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
-    //{
-    //    StreamingRequestHandlers.TryAdd(
-    //        new RequestArgumentIndexDto(routing.RequestId, argumentIndex),
-    //        new BusAsyncEnumerableRegistration<T>(
-    //            async (activeStreams, streamId, cancelled, ct) =>
-    //    {
-    //        var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(streamId, _ =>
-    //        {
-    //            var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, cts.Token);
-    //            return new BusAsyncEnumerableRegistrationInstance<T>(source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
-    //        });
-    //        async Task Cleanup() { if (activeStreams.TryRemove(streamId, out _)) { await enumerator.DisposeAsync(); linkedCts.Dispose(); } }
-    //        var entered = false;
-    //        try
-    //        {
-    //            await gate.WaitAsync(ct); entered = true;
-    //            var hasNext = !cancelled && await enumerator.MoveNextAsync();
-    //            var response = new BusStreamingResponseDto(routing, argumentIndex, streamId, !hasNext, cancelled, null, hasNext ? serializer(enumerator.Current) : []);
-    //            if (!hasNext || cancelled) await Cleanup();
-    //            return response;
-    //        }
-    //        catch (OperationCanceledException ex) { await Cleanup(); return new BusStreamingResponseDto(routing, argumentIndex, streamId, true, true, ex.Message, []); }
-    //        catch (Exception ex) { await Cleanup(); return new BusStreamingResponseDto(routing, argumentIndex, streamId, true, false, ex.Message, []); }
-    //        finally { if (entered) gate.Release(); }
-    //    }));
-    //}
     public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
     {
         StreamingRequestHandlers.TryAdd(
@@ -1031,7 +854,6 @@ public abstract class BaseRabbitMQConnection(
                     }
                 }));
     }
-
     public async Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex)
     {
         if (StreamingRequestHandlers.TryRemove(new RequestArgumentIndexDto(routing.RequestId, argumentIndex), out var registration)) await registration.DisposeAsync();
