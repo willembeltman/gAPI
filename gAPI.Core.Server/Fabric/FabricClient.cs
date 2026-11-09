@@ -799,6 +799,7 @@ public sealed class FabricClient
                 routing.ServiceId, routing.MethodId, routing.RequestId);
 
         return new RemoteAsyncEnumerable<byte[]>(
+            timeOut: routing.Timeout,
             construct: (streamId, enumerator, ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -962,6 +963,7 @@ public sealed class FabricClient
                 routing.ServiceId, routing.MethodId, routing.RequestId);
 
         return new RemoteAsyncEnumerable<byte[]>(
+            timeOut: routing.Timeout,
             construct: (streamId, enumerator, ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);

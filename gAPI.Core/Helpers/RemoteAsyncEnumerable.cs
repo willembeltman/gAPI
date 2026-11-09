@@ -6,17 +6,20 @@ namespace gAPI.Core.Helpers;
 
 public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
+    private readonly TimeSpan _timeOut;
     private readonly Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> _create;
     private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> _requestNext;
     private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, Task> _cancelled;
     private readonly Action<StreamId> _dispose;
 
     public RemoteAsyncEnumerable(
+        TimeSpan timeOut,
         Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> construct,
         Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> requestNext,
         Func<StreamId, IRemoteAsyncEnumerator<T>, Task> cancelled,
         Action<StreamId> dispose)
     {
+        _timeOut = timeOut;
         _create = construct;
         _requestNext = requestNext;
         _cancelled = cancelled;
@@ -26,6 +29,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
     public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         return new Enumerator(
+            _timeOut,
             _create,
             _requestNext,
             _cancelled,
@@ -37,7 +41,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
     {
         private readonly StreamId _streamId = StreamId.New();
         private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
-
+        private readonly TimeSpan _timeOut;
         private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> _requestNext;
         private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, Task> _cancelled;
         private readonly Action<StreamId> _dispose;
@@ -49,19 +53,21 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
         private int _completed;
 
         public Enumerator(
+            TimeSpan timeOut,
             Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> create,
             Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> requestNext,
             Func<StreamId, IRemoteAsyncEnumerator<T>, Task> cancelled,
             Action<StreamId> dispose,
             CancellationToken cancellationToken)
         {
+            _timeOut = timeOut;
             _requestNext = requestNext;
             _cancelled = cancelled;
             _dispose = dispose;
             _cancellationToken = cancellationToken;
 
             _timeout = new ResettableTimeout(
-                TimeSpan.FromSeconds(100),
+                _timeOut,
                 () => Complete(
                     new TimeoutException(
                         "Remote async enumerable timed out.")));

@@ -636,6 +636,7 @@ public sealed class BusFabricClient
     public IAsyncEnumerable<T> RegisterBusRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
         return new RemoteAsyncEnumerable<T>(
+            timeOut: routing.Timeout,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -794,6 +795,7 @@ public sealed class BusFabricClient
     public RemoteAsyncEnumerable<byte[]> RegisterBusRemoteAsyncEnumerableArgumentByte(BusRoutingDto routing, int argumentIndex)
     {
         return new RemoteAsyncEnumerable<byte[]>(
+            timeOut: routing.Timeout,
             construct: (streamId, enumerator, ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);

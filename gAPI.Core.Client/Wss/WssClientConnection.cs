@@ -878,6 +878,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 argumentIndex);
 
         return new RemoteAsyncEnumerable<byte[]>(
+            timeOut: routing.Timeout,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -941,6 +942,7 @@ public abstract class WssClientConnection : IWssClientConnection
             Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
         return new RemoteAsyncEnumerable<T>(
+            timeOut: routing.Timeout,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);

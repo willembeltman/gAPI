@@ -810,6 +810,7 @@ public abstract class WssServerConnection : IServerConnection
                 argumentIndex);
 
         return new RemoteAsyncEnumerable<T>(
+            timeOut: routing.Timeout,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
