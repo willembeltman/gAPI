@@ -122,7 +122,7 @@ public class {Name}(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<{Name}>();
     readonly {ServiceId} ___ServiceId = new(""{Interface.Name}"");
-    int ___maxBufferSize => ___fabricClient.Config.MaxPackageSize ?? 8 * 1024 * 1024;
+    int ___maxBufferSize => ___fabricClient.Config.MaxPackageSize ?? 512 * 1024;
 {string.Join("\r\n", Interface.Methods.Select(method => GenerateMethod(method, ref functions, functionNames)))}
 {functions}
 {GenerateDispose()}

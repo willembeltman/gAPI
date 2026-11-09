@@ -158,7 +158,7 @@ public class {Name}(
             }}
 
             if (response.Headers.TryGetValues(""X-StateData"", out var stateValues) &&
-                stateSerializer.TryParse(stateValues.FirstOrDefault(), out var newState, clientConfig.MaxPackageSize ?? 8 * 1024 * 1024))
+                stateSerializer.TryParse(stateValues.FirstOrDefault(), out var newState, clientConfig.MaxPackageSize ?? 512 * 1024))
             {{
                 await UpdateStateDataInternal(newState);
             }}
@@ -174,7 +174,7 @@ public class {Name}(
         await StateLock.WaitAsync(ct);
         try
         {{
-            if (stateSerializer.TryParse(stateData, out var state, clientConfig.MaxPackageSize ?? 8 * 1024 * 1024))
+            if (stateSerializer.TryParse(stateData, out var state, clientConfig.MaxPackageSize ?? 512 * 1024))
                 await UpdateStateDataInternal(state);
         }}
         finally

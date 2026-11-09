@@ -60,7 +60,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
             SessionId = parsedSessionId;
 
         _ClientState = null;
-        if (stateParser.TryParse(stateData, out var clientState, fabricClient.Config.MaxPackageSize ?? 8 * 1024 * 1024))
+        if (stateParser.TryParse(stateData, out var clientState, fabricClient.Config.MaxPackageSize ?? 512 * 1024))
             _ClientState = clientState;
 
         _OldState = stateParser.CreateCopy(_ClientState);
@@ -101,7 +101,7 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
             throw new Exception(
                 "Initialize the NoDbServerAuthenticationService first please");
 
-        if (stateParser.TryParse(stateData, out var state, fabricClient.Config.MaxPackageSize ?? 8 * 1024 * 1024))
+        if (stateParser.TryParse(stateData, out var state, fabricClient.Config.MaxPackageSize ?? 512 * 1024))
         {
             _State = await stateMapping.ToDtoAsync(null, null, null, state, ct);
         }

@@ -7,7 +7,7 @@ namespace gAPI.Generated;
 
 public class StateParser : IStateParser
 {
-    public bool TryParse(string? value, out AuthStateDto state)
+    public bool TryParse(string? value, out AuthStateDto state, int maxBufferSize)
     {
         state = default!;
 
@@ -20,7 +20,7 @@ public class StateParser : IStateParser
             var offset = 0;
             try
             {
-                state = data.ReadAuthStateDto(ref offset);
+                state = data.ReadAuthStateDto(ref offset, maxBufferSize);
             }
             catch
             {

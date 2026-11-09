@@ -16,6 +16,9 @@ public class MainHub(
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainHub>();
     private CancellationTokenSource? Cts;
+
+    public TaskCompletionSource<string> PontResult { get; private set; }
+
     async Task IHostedService.StartAsync(CancellationToken ct)
     {
         if (Cts != null)
@@ -54,38 +57,50 @@ public class MainHub(
             await mainApi.InvokeTask("hoi", ct);
         Logger.LogInformation("mainApi - Warmup done");
 
+
         for (var y = 0; y < 50; y++)
         {
-            var sw = Stopwatch.StartNew();
+            var sw2 = Stopwatch.StartNew();
 
-            mainApi.SendAndForget("hoi", ct);
-            Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
+            PontResult = new TaskCompletionSource<string>();
 
-            await mainApi.Send("hoi", ct);
-            Logger.LogInformation("> mainApi.Send");
+            mainApi.Ping("hoi, dit is een lange zin. of zo.");
 
-            var result = await mainApi.InvokeTask("hoi", ct);
-            Logger.LogInformation($"> mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+            var str = await PontResult.Task.WaitAsync(ct);
 
-            await foreach (var item in mainApi.InvokeList("hoi", ct))
-            {
-                result = item;
-                Logger.LogInformation($"> mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
-            }
-
-            result = await mainApi.InvokeTaskWithList(MyList(), ct);
-            Logger.LogInformation($"> mainApi.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
-
-            await foreach (var item in mainApi.InvokeListWithList(MyList(), ct))
-            {
-                result = item;
-                Logger.LogInformation($"> mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
-            }
-
-            await mainApi.StartServerTests(sw.Elapsed.TotalMilliseconds, ct);
-
-            Logger.LogInformation($"> mainApi - ALL TESTS SUCCESFULL - {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"mainApi - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
         }
+
+
+        var sw = Stopwatch.StartNew();
+
+        mainApi.SendAndForget("hoi", ct);
+        Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
+        await mainApi.Send("hoi", ct);
+        Logger.LogInformation("> mainApi.Send");
+
+        var result = await mainApi.InvokeTask("hoi", ct);
+        Logger.LogInformation($"> mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+
+        await foreach (var item in mainApi.InvokeList("hoi", ct))
+        {
+            result = item;
+            Logger.LogInformation($"> mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+        result = await mainApi.InvokeTaskWithList(MyList(), ct);
+        Logger.LogInformation($"> mainApi.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
+
+        await foreach (var item in mainApi.InvokeListWithList(MyList(), ct))
+        {
+            result = item;
+            Logger.LogInformation($"> mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+        }
+
+        await mainApi.StartServerTests(sw.Elapsed.TotalMilliseconds, ct);
+
+        Logger.LogInformation($"> mainApi - ALL TESTS SUCCESFULL - {sw.ElapsedMilliseconds}ms");
     }
 
     public async void SendAndForget(string message, CancellationToken ct)
@@ -150,4 +165,8 @@ public class MainHub(
         yield return "3";
     }
 
+    public void Pong(string v)
+    {
+        PontResult.SetResult(v);
+    }
 }

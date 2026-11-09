@@ -16,4 +16,5 @@ public interface IMainApi
     Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
+    void Ping(string v);
 }

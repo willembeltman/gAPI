@@ -23,7 +23,7 @@ public class WssClientConnectionSender
         IClientLoggerFactory LoggerFactory)
     {
         Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
-        SendBuffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
+        SendBuffer = new byte[clientConfig.MaxPackageSize ?? 512 * 1024];
     }
 
     public async Task SendKernel(WebSocket socket, CancellationToken ct)

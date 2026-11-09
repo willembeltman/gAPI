@@ -113,7 +113,7 @@ public class AuthenticationService<TUser, TStateDto>(
         AuthenticationHeaders headers,
         CancellationToken ct)
     {
-        if (stateParser.TryParse(headers.StateData, out var recievedClientState, fabricClient.LastOrDefault()?.Config.MaxPackageSize ?? 8 * 1024 * 1024))
+        if (stateParser.TryParse(headers.StateData, out var recievedClientState, fabricClient.LastOrDefault()?.Config.MaxPackageSize ?? 512 * 1024))
         {
             _ReceivedClientState = recievedClientState;
         }

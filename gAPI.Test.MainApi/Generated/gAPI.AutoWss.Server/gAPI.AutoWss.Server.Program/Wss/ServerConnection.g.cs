@@ -25,9 +25,11 @@ public class ServerConnection : WssServerConnection
     readonly ILogger ___logger;
     readonly IServerAuthenticationService ___authenticationService;
     readonly IMainApi MainApi;
-    readonly byte[] ___Buffer;
     readonly FabricClient ___fabricClient;
-    public ServerConfig ___config { get; set; }
+
+    int ___maxBufferSize;
+
+    public ServerConfig ___config { get; }
 
     public ServerConnection(
         ServerConfig serverConfig,
@@ -41,11 +43,11 @@ public class ServerConnection : WssServerConnection
         : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {
         this.___config = serverConfig;
+        this.___maxBufferSize = serverConfig.MaxPackageSize ?? 512 * 1024;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;
         this.MainApi = mainApi;
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
-        this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
     
     protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
@@ -70,6 +72,14 @@ public class ServerConnection : WssServerConnection
                             IMainApi_SendAndForgetWithList(
                                 ___sendRequest,
                                 RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainApi_SendAndForgetWithList_0_Deserializer),
+                                ___ct);
+                        }
+                        return;
+                    case "Ping":
+                        {
+                            IMainApi_Ping(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                                 ___ct);
                         }
                         return;
@@ -233,8 +243,13 @@ public class ServerConnection : WssServerConnection
     public byte[] IMainApi_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
 
@@ -255,8 +270,13 @@ public class ServerConnection : WssServerConnection
     public byte[] IMainApi_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
     public string IMainApi_InvokeTaskWithList_0_Deserializer(byte[] value)
@@ -282,8 +302,13 @@ public class ServerConnection : WssServerConnection
     public byte[] IMainApi_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
 
@@ -303,8 +328,13 @@ public class ServerConnection : WssServerConnection
     public byte[] IMainApi_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
     public string IMainApi_InvokeListWithList_0_Deserializer(byte[] value)
@@ -312,6 +342,14 @@ public class ServerConnection : WssServerConnection
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public void IMainApi_Ping(SendRequestDto ___sendRequest, string v, CancellationToken ___ct)
+    {
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IMainApi_Ping({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
+       
+        MainApi.Ping(v);
     }
 
     

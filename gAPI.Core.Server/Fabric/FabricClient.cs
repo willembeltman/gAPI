@@ -357,19 +357,19 @@ public sealed class FabricClient
                 switch (messageType)
                 {
                     case FabricHostToClientMessageEnum.SynchronizeFabricIds:
-                        var synchronizeFabricIds = BinaryReader.ReadSynchronizeFabricIdsDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var synchronizeFabricIds = BinaryReader.ReadSynchronizeFabricIdsDto(Config.MaxPackageSize ?? 512 * 1024);
                         await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
-                        var activate = BinaryReader.ReadSendGetSessionCookieDataResponseDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var activate = BinaryReader.ReadSendGetSessionCookieDataResponseDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_GetSessionResponse_FromFabricAsync(activate, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.Log:
-                        var log = BinaryReader.ReadFabricLogDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var log = BinaryReader.ReadFabricLogDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_Log_FromFabricAsync(log, ct);
@@ -378,14 +378,14 @@ public sealed class FabricClient
 
 
                     case FabricHostToClientMessageEnum.FabricSendAndForgetRequest:
-                        var fabricSendAndForgetRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricSendAndForgetRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricSendAndForgetRequest_FromFabricAsync(fabricSendAndForgetRequest, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricSendAndForgetRequestCancelled:
-                        var fabricSendAndForgetRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricSendAndForgetRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync(fabricSendAndForgetRequestCancelled, ct);
@@ -394,21 +394,21 @@ public sealed class FabricClient
 
 
                     case FabricHostToClientMessageEnum.FabricSendRequest:
-                        var fabricSendRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricSendRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricSendRequest_FromFabricAsync(fabricSendRequest, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricSendRequestCancelled:
-                        var fabricSendRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricSendRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricSendRequestCancelled_FromFabricAsync(fabricSendRequestCancelled, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.SendRequestDone:
-                        var fabricSendRequestDone = BinaryReader.ReadSendRequestDoneDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricSendRequestDone = BinaryReader.ReadSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_SendRequestDone_FromFabricAsync(fabricSendRequestDone, ct);
@@ -416,28 +416,28 @@ public sealed class FabricClient
                         break;
 
                     case FabricHostToClientMessageEnum.FabricInvokeRequest:
-                        var fabricInvokeRequest = BinaryReader.ReadInvokeRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricInvokeRequest = BinaryReader.ReadInvokeRequestDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricInvokeRequest_FromFabricAsync(fabricInvokeRequest, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricInvokeRequestCancelled:
-                        var fabricInvokeRequestCancelled = BinaryReader.ReadInvokeRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricInvokeRequestCancelled = BinaryReader.ReadInvokeRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_FabricInvokeRequestCancelled_FromFabricAsync(fabricInvokeRequestCancelled, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestAck:
-                        var fabricInvokeResponseAck = BinaryReader.ReadInvokeRequestAckDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricInvokeResponseAck = BinaryReader.ReadInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_InvokeRequestAck_FromFabricAsync(fabricInvokeResponseAck, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestDone:
-                        var fabricInvokeResponseDone = BinaryReader.ReadInvokeRequestDoneDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricInvokeResponseDone = BinaryReader.ReadInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_InvokeRequestDone_FromFabricAsync(fabricInvokeResponseDone, ct);
@@ -445,14 +445,14 @@ public sealed class FabricClient
                         break;
 
                     case FabricHostToClientMessageEnum.StreamingResponse:
-                        var fabricStreamingResponse = BinaryReader.ReadStreamingResponseDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricStreamingResponse = BinaryReader.ReadStreamingResponseDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_StreamingResponse_FromFabricAsync(fabricStreamingResponse, ct);
                         }, ct);
                         break;
                     case FabricHostToClientMessageEnum.StreamingRequest:
-                        var fabricStreamingRequest = BinaryReader.ReadStreamingRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                        var fabricStreamingRequest = BinaryReader.ReadStreamingRequestDto(Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_StreamingRequest_FromFabricAsync(fabricStreamingRequest, ct);

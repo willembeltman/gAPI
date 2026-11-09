@@ -31,6 +31,7 @@ public class MainHub(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<MainHub>();
     readonly ServiceId ___ServiceId = new("IMainHub");
+    int ___maxBufferSize => ___fabricClient.Config.MaxPackageSize ?? 512 * 1024;
 
 public async void SendAndForget(string message, CancellationToken ct)
 {
@@ -352,6 +353,62 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
         
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
+    }
+
+public async void Pong(string v)
+{
+    ___timeOut ??= TimeSpan.FromSeconds(100);
+
+    try
+    {
+        var ___requestId = RequestId.New();
+        var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
+            ___requestId,
+            ___ServiceId,
+            new("Pong"),
+            ___timeOut.Value,
+            ___userId,
+            ___sessionId,
+            ___throwIfNoReceiver
+        );
+        var ___payload = ___Pong_Serializer(
+            v);
+
+        
+        
+        
+        {
+            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
+            await ___fabricClient.SendFireAndForgetAsync(
+                ___routing,
+                ___payload, 
+                CancellationToken.None);
+        }
+        
+    }
+    catch (OperationCanceledException)
+    {
+        ___Logger.LogInformation("Server FireAndForget streaming gecanceld of time-out voor Pong.");
+    }
+    catch (Exception ex)
+    {
+        ___Logger.LogError(ex, "Fout opgevangen in gegenereerde server async void methode voor Pong");
+    }
+}
+    private byte[] ___Pong_Serializer(string v)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, v);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, v);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
     }
 
 

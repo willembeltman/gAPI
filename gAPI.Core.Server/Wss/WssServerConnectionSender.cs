@@ -13,7 +13,7 @@ public class WssServerConnectionSender(
     WssServerConnection wssServerConnection,
     ILoggerFactory loggerFactory)
 {
-    private byte[] SendBuffer = new byte[wssServerConnection.Config.MaxPackageSize ?? 8 * 1024 * 1024];
+    private byte[] SendBuffer = new byte[wssServerConnection.Config.MaxPackageSize ?? 512 * 1024];
     readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
     public ILogger<WssServerConnection> Logger { get; } = loggerFactory.CreateLogger<WssServerConnection>();
 

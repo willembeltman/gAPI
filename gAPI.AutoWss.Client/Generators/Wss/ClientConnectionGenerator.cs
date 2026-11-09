@@ -119,7 +119,7 @@ public class {Name}
         : base(clientConfig, httpClient)
     {{
         ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();
-        ___maxBufferSize = clientConfig.MaxPackageSize ?? 8 * 1024 * 1024;{string.Join("", Context.Apis.Select(api => $@"
+        ___maxBufferSize = clientConfig.MaxPackageSize ?? 512 * 1024;{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
     }}
 

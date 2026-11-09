@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Server.Interfaces;
 using gAPI.Test.MicroService2;
 using gAPI.Test.Shared.Private;
 
@@ -8,7 +8,6 @@ namespace gAPI.Generated;
 
 public interface IBusConnection : IBaseBusConnection
 {
-
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
 

@@ -267,14 +267,14 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
                 {
                     case FabricClientToHostMessageEnum.Subscribe:
                         {
-                            var subscribe = reader.ReadSubscribeDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var subscribe = reader.ReadSubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_Subscribe_FromApiAsync(this, ManagerLogger, subscribe, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.Unsubscribe:
                         {
-                            var unsubscribe = reader.ReadUnsubscribeDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var unsubscribe = reader.ReadUnsubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_Unsubscribe_FromApiAsync(this, ManagerLogger, unsubscribe, receiveSize, Cts.Token);
                         }
@@ -282,14 +282,14 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
                     case FabricClientToHostMessageEnum.SendAndForgetRequest:
                         {
-                            var sendRequest = reader.ReadSendRequestDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var sendRequest = reader.ReadSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendAndForgetRequest_FromApiAsync(this, ManagerLogger, sendRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.SendAndForgetRequestCancelled:
                         {
-                            var sendRequestCancelled = reader.ReadSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var sendRequestCancelled = reader.ReadSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendAndForgetRequestCancelled_FromApiAsync(this, ManagerLogger, sendRequestCancelled, receiveSize, Cts.Token);
                         }
@@ -297,49 +297,49 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
                     case FabricClientToHostMessageEnum.SendRequest:
                         {
-                            var sendRequest = reader.ReadSendRequestDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var sendRequest = reader.ReadSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendRequest_FromApiAsync(this, ManagerLogger, sendRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.SendRequestCancelled:
                         {
-                            var sendRequestCancelled = reader.ReadSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var sendRequestCancelled = reader.ReadSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendRequestCancelled_FromApiAsync(this, ManagerLogger, sendRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.SendRequestDone:
                         {
-                            var done = reader.ReadSendRequestDoneDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var done = reader.ReadSendRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendRequestDone_FromApiAsync(this, ManagerLogger, done, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequest:
                         {
-                            var invokeRequest = reader.ReadInvokeRequestDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var invokeRequest = reader.ReadInvokeRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_InvokeRequest_FromApiAsync(this, ManagerLogger, invokeRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequestCancelled:
                         {
-                            var invokeRequestCancelled = reader.ReadInvokeRequestCancelledDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var invokeRequestCancelled = reader.ReadInvokeRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_InvokeRequestCancelled_FromApiAsync(this, ManagerLogger, invokeRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequestAck:
                         {
-                            var invokeResponseDone = reader.ReadInvokeRequestAckDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var invokeResponseDone = reader.ReadInvokeRequestAckDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_InvokeRequestAck_FromApiAsync(this, ManagerLogger, invokeResponseDone, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.InvokeRequestDone:
                         {
-                            var invokeResponseDone = reader.ReadInvokeRequestDoneDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var invokeResponseDone = reader.ReadInvokeRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_InvokeRequestDone_FromApiAsync(this, ManagerLogger, invokeResponseDone, receiveSize, Cts.Token);
                         }
@@ -353,14 +353,14 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
                     //    break;
                     case FabricClientToHostMessageEnum.StreamingResponse:
                         {
-                            var streamingResponse = reader.ReadStreamingResponseDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var streamingResponse = reader.ReadStreamingResponseDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_StreamingResponse_FromApiAsync(this, ManagerLogger, streamingResponse, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.StreamingRequest:
                         {
-                            var streamingRequest = reader.ReadStreamingRequestDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var streamingRequest = reader.ReadStreamingRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_StreamingRequest_FromApiAsync(this, ManagerLogger, streamingRequest, receiveSize, Cts.Token);
                         }
@@ -374,21 +374,21 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
                     //    break;
                     case FabricClientToHostMessageEnum.UpdateSession:
                         {
-                            var updateSession = reader.ReadUpdateSessionDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var updateSession = reader.ReadUpdateSessionDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_UpdateSession_FromApiAsync(this, ManagerLogger, updateSession, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.ClearSession:
                         {
-                            var clearSession = reader.ReadSendClearSessionDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var clearSession = reader.ReadSendClearSessionDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_ClearSession_FromApiAsync(this, ManagerLogger, clearSession, receiveSize, Cts.Token);
                         }
                         break;
                     case FabricClientToHostMessageEnum.GetSessionCookieData:
                         {
-                            var getSessionCookieData = reader.ReadSendGetSessionCookieDataDto(Manager.Config.MaxPackageSize ?? 8 * 1024 * 1024);
+                            var getSessionCookieData = reader.ReadSendGetSessionCookieDataDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_GetSessionCookieData_FromApiAsync(this, ManagerLogger, getSessionCookieData, receiveSize, Cts.Token);
                         }

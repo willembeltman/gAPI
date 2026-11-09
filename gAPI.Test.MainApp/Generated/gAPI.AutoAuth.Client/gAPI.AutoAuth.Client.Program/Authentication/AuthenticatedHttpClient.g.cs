@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Client.Interfaces;
+﻿using gAPI.Core.Client.Config;
+using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Delegates;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
@@ -11,6 +12,7 @@ namespace gAPI.Generated;
 
 public class AuthenticatedHttpClient(
     IHttpClientFactory httpClientFactory,
+    ClientConfig clientConfig,
     IUriNavigationManager navigation)
     : AuthenticationStateProvider,
       IAuthenticatedHttpClient
@@ -119,7 +121,7 @@ public class AuthenticatedHttpClient(
             }
 
             if (response.Headers.TryGetValues("X-StateData", out var stateValues) &&
-                stateSerializer.TryParse(stateValues.FirstOrDefault(), out var newState))
+                stateSerializer.TryParse(stateValues.FirstOrDefault(), out var newState, clientConfig.MaxPackageSize ?? 512 * 1024))
             {
                 await UpdateStateDataInternal(newState);
             }
@@ -129,28 +131,13 @@ public class AuthenticatedHttpClient(
             StateLock.Release();
         }
     }
-    //public async Task TryUpdateStateAsync(ApiResult result, CancellationToken ct)
-    //{
-    //    await StateLock.WaitAsync(ct);
-    //    try
-    //    {
-    //        if (SessionId.TryParse(result.SessionData, out var sessionId))
-    //            SessionId = sessionId;
 
-    //        if (stateSerializer.TryParse(result.StateData, out var state))
-    //            await UpdateStateInternal(state);
-    //    }
-    //    finally
-    //    {
-    //        StateLock.Release();
-    //    }
-    //}
     public async Task UpdateStateDataAsync(string? stateData, CancellationToken ct)
     {
         await StateLock.WaitAsync(ct);
         try
         {
-            if (stateSerializer.TryParse(stateData, out var state))
+            if (stateSerializer.TryParse(stateData, out var state, clientConfig.MaxPackageSize ?? 512 * 1024))
                 await UpdateStateDataInternal(state);
         }
         finally

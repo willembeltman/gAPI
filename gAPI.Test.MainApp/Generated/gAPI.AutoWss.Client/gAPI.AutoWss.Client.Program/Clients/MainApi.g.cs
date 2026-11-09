@@ -30,6 +30,7 @@ public sealed class MainApi(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<MainApi>();
     readonly ServiceId ___ServiceId = new("IMainApi");
+    int ___maxBufferSize => ___clientConnection.Config.MaxPackageSize ?? 512 * 1024;
     
     public async Task StartServerTests(double time, CancellationToken ct = default)
     {
@@ -514,6 +515,66 @@ public sealed class MainApi(
         
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    // Veranderd naar async void voor echte fire-and-forget streaming ondersteuning
+    public async void Ping(string v)
+    {
+        // We maken een interne, onafhankelijke CTS aan voor deze specifieke chunk/actie
+        // Zodat we niet afhankelijk zijn van de levensduur van een externe aanroeper
+        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var ___ct = ___internalCts.Token;
+
+        try
+        {
+            var ___routing = new RoutingDto(
+                ___clientConnection.FabricManagerId,
+                ___clientConnection.FabricConnectionId,
+                RequestId.New(),
+                ___ServiceId,
+                new("Ping"),
+                TimeSpan.FromSeconds(30),
+                ___httpClient.UserId,
+                ___httpClient.SessionId
+            );
+
+            
+            
+            await ___clientConnection.TryConnectAsync(___Cts.Token);
+            
+            
+            {
+                // We roepen nu de nieuwe Send_FireAndForget variant aan die GEEN TaskCompletionSource opbouwt!
+                await ___clientConnection.Send_FireAndForget_ToServerAsync(
+                    ___routing,
+                    ___Ping_Serializer(v),
+                    ___ct);
+            }
+            
+        }
+        catch (OperationCanceledException)
+        {
+            // Netjes opvangen als de streaming opzettelijk werd afgebroken of timede-out
+            ___Logger.LogInformation("FireAndForget call Ping gecanceld of time -out (30s).");
+        }
+        catch (Exception ex)
+        {
+            // CRUCIAL: Dit voorkomt dat je complete Docker container / API crasht bij een netwerkfout!
+            ___Logger.LogError(ex, "Fout opgevangen in gegenereerde async void FireAndForget methode voor Ping");
+        }
+    }
+    private byte[] ___Ping_Serializer(string v)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, v);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, v);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
     }
     
     

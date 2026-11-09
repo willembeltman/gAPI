@@ -1,8 +1,8 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
+using gAPI.Core.Server.Dtos;
 using gAPI.Test.Shared.Private;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
@@ -30,6 +30,7 @@ public class Bus1Client(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<Bus1Client>();
     readonly ServiceId ___ServiceId = new("IBus1");
+    int ___maxBufferSize => ___busConnection.Config.MaxPackageSize ?? 512 * 1024;
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
     {

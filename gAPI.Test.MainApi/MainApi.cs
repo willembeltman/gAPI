@@ -133,5 +133,10 @@ public class MainApi(
         yield return "3";
     }
 
-
+    public void Ping(string v)
+    {
+        clientContext.MainHub
+            .ToSession(authenticationService.SessionId)
+            .Pong(v);
+    }
 }

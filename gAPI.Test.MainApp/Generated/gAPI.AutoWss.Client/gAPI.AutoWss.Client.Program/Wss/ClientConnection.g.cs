@@ -29,12 +29,12 @@ public class ClientConnection
         : base(clientConfig, httpClient)
     {
         ___Logger = ((IClientLoggerFactory)this).CreateLogger<ClientConnection>();
+        ___maxBufferSize = clientConfig.MaxPackageSize ?? 512 * 1024;
         MainApi = new MainApi(this, this, httpClient);
-        ___Buffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
     readonly ILogger ___Logger;
-    readonly byte[] ___Buffer;
+    int ___maxBufferSize;
     
     
     public MainApi MainApi { get; }
@@ -149,6 +149,18 @@ public class ClientConnection
                                 }
                                 return;
                             }
+                        case "Pong":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.Pong(
+                                        v);
+                                }
+                                return;
+                            }
                     
                         case "Send":
                             {
@@ -257,7 +269,12 @@ public class ClientConnection
     public byte[] IMainHub_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -265,7 +282,12 @@ public class ClientConnection
     public byte[] IMainHub_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -275,5 +297,6 @@ public class ClientConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
     
 }

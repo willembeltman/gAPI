@@ -107,7 +107,7 @@ public class {Name}
     {{
         
         ___Logger = loggerFactory.CreateLogger<{Name}>();
-        ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024;
+        ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }}
 
     {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"

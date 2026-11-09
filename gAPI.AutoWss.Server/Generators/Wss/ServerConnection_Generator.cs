@@ -116,7 +116,7 @@ public class {Name} : {WssServerConnection}
         : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {{
         this.___config = serverConfig;
-        this.___maxBufferSize = serverConfig.MaxPackageSize ?? 8 * 1024 * 1024;
+        this.___maxBufferSize = serverConfig.MaxPackageSize ?? 512 * 1024;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         this.{@interface.CleanName} = {@interface.CleanName.ToCamelCase()};")))}

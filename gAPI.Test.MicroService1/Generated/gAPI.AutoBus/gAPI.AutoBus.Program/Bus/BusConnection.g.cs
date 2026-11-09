@@ -3,6 +3,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Config;
+using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.ServiceBus.Fabric;
 using gAPI.Test.MicroService2;
@@ -21,9 +22,10 @@ using System.Threading.Tasks;
 namespace gAPI.Generated;
 
 public class BusConnection
-    : BaseFabricConnection, IBusConnection
+    : FabricBaseBusConnection, IBusConnection
 {
     private readonly ILogger<BusConnection> ___Logger;
+    private readonly int ___maxBufferSize;
 
     public BusConnection(
         ILoggerFactory loggerFactory,
@@ -31,11 +33,10 @@ public class BusConnection
         ServiceBusConfig serviceBusConfig)
         : base(loggerFactory, fabricClient, serviceBusConfig)
     {
+        
         ___Logger = loggerFactory.CreateLogger<BusConnection>();
-        ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
+        ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }
-
-    private readonly byte[] ___Buffer;
 
     
     public Bus1? Bus1 { get; set; }
@@ -221,7 +222,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -339,7 +340,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -413,7 +414,7 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+                                gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
                                 foreach (var client in clients)
                                 {
                                     await client.StartServiceTests(
@@ -679,7 +680,12 @@ public class BusConnection
     public byte[] IBus1_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -687,7 +693,12 @@ public class BusConnection
     public byte[] IBus1_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -701,7 +712,12 @@ public class BusConnection
     public byte[] IBus1_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -709,7 +725,12 @@ public class BusConnection
     public byte[] IBus1_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -723,7 +744,12 @@ public class BusConnection
     public byte[] IBus1_Ping_Serializer(double value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthDouble(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteDouble(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -747,7 +773,12 @@ public class BusConnection
     public byte[] IBus2_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -755,7 +786,12 @@ public class BusConnection
     public byte[] IBus2_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -769,7 +805,12 @@ public class BusConnection
     public byte[] IBus2_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -777,7 +818,12 @@ public class BusConnection
     public byte[] IBus2_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -808,7 +854,12 @@ public class BusConnection
     public byte[] IMainBus_InvokeTask_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -816,7 +867,12 @@ public class BusConnection
     public byte[] IMainBus_InvokeTaskWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -830,7 +886,12 @@ public class BusConnection
     public byte[] IMainBus_InvokeList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
@@ -838,7 +899,12 @@ public class BusConnection
     public byte[] IMainBus_InvokeListWithList_Serializer(string value)
     {
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
