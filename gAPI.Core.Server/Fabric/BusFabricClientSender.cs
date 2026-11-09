@@ -8,7 +8,7 @@ using System.Threading.Channels;
 namespace gAPI.Core.Server.Fabric;
 
 public class BusFabricClientSender(
-    BusFabricClient fabricClient, 
+    BusFabricClient fabricClient,
     ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
@@ -68,11 +68,25 @@ public class BusFabricClientSender(
 
     public async Task Send_BusSendAndForgetRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
     {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         await EnqueueAsync(writer =>
         {
-            BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusFireAndForget);
-            writer.Write(request);
+            try
+            {
+                BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusFireAndForget);
+                writer.Write(request);
+
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
         }, ct);
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_BusSendAndForgetRequestCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
     {
@@ -85,11 +99,25 @@ public class BusFabricClientSender(
 
     public async Task Send_BusSendRequest_ToFabricAsync(BusSendRequestDto request, CancellationToken ct)
     {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         await EnqueueAsync(writer =>
         {
-            BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusSendRequest);
-            writer.Write(request);
+            try
+            {
+                BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusSendRequest);
+                writer.Write(request);
+
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
         }, ct);
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_BusSendCancelled_ToFabricAsync(BusSendRequestCancelledDto request, CancellationToken ct)
     {
@@ -110,11 +138,25 @@ public class BusFabricClientSender(
 
     public async Task Send_BusInvokeRequest_ToFabricAsync(BusInvokeRequestDto request, CancellationToken ct)
     {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         await EnqueueAsync(writer =>
         {
-            BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusInvokeRequest);
-            writer.Write(request);
+            try
+            {
+                BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusInvokeRequest);
+                writer.Write(request);
+
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
         }, ct);
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_BusInvokeRequestCancelled_ToFabricAsync(BusInvokeRequestCancelledDto request, CancellationToken ct)
     {
@@ -151,10 +193,24 @@ public class BusFabricClientSender(
     }
     public async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto response, CancellationToken ct)
     {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         await EnqueueAsync(writer =>
         {
-            BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusStreamingResponse);
-            writer.Write(response);
+            try
+            {
+                BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusStreamingResponse);
+                writer.Write(response);
+
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
         }, ct);
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 }

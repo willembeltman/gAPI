@@ -103,14 +103,14 @@ public static class Helper
             .Any(a => a.AttributeClass?.Name == "IsMultipartFormDataContentSerializerAttribute");
     }
 
-    public static PropertyGeneric[] GetProperties(INamedTypeSymbol typeSymbol, bool generic = false)
+    public static PropertyGeneric[] GetProperties(ITypeSymbol typeSymbol, bool generic = false)
     {
         var props = typeSymbol.GetMembers().OfType<IPropertySymbol>()
             .Where(p =>
                 p.GetMethod != null &&
                 p.SetMethod != null &&
                 p.GetAttributes().Any(a => a.ToString().EndsWith("NotMappedAttribute")) == false)
-            .Select(p => new PropertyGeneric(p, typeSymbol.IsGenericType || generic))
+            .Select(p => new PropertyGeneric(p, (typeSymbol is INamedTypeSymbol named && named.IsGenericType) || generic))
             .ToArray();
 
         PropertyGeneric[] allProps;
@@ -124,29 +124,32 @@ public static class Helper
             allProps = props;
         }
 
-        var ctor = typeSymbol.InstanceConstructors
-            .Where(c => c.Parameters.Length > 0)
-            .OrderByDescending(c => c.Parameters.Length)
-            .FirstOrDefault();
-
-        if (ctor != null && ctor.Parameters.Length > 0)
+        if (typeSymbol is INamedTypeSymbol namedTypesymbol)
         {
-            var orderedProps = new List<PropertyGeneric>();
-            var remainingProps = allProps.ToList();
+            var ctor = namedTypesymbol.InstanceConstructors
+                .Where(c => c.Parameters.Length > 0)
+                .OrderByDescending(c => c.Parameters.Length)
+                .FirstOrDefault();
 
-            foreach (var param in ctor.Parameters)
+            if (ctor != null && ctor.Parameters.Length > 0)
             {
-                var match = remainingProps.FirstOrDefault(p =>
-                    string.Equals(p.Property.Name, param.Name, StringComparison.OrdinalIgnoreCase));
-                if (match != null)
-                {
-                    orderedProps.Add(match);
-                    remainingProps.Remove(match);
-                }
-            }
+                var orderedProps = new List<PropertyGeneric>();
+                var remainingProps = allProps.ToList();
 
-            orderedProps.AddRange(remainingProps);
-            return orderedProps.ToArray();
+                foreach (var param in ctor.Parameters)
+                {
+                    var match = remainingProps.FirstOrDefault(p =>
+                        string.Equals(p.Property.Name, param.Name, StringComparison.OrdinalIgnoreCase));
+                    if (match != null)
+                    {
+                        orderedProps.Add(match);
+                        remainingProps.Remove(match);
+                    }
+                }
+
+                orderedProps.AddRange(remainingProps);
+                return orderedProps.ToArray();
+            }
         }
 
         return allProps;

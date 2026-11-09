@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Client.Config;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 
@@ -12,6 +13,7 @@ public interface IWssClientConnection : IClientLoggerFactory
     FabricManagerId FabricManagerId { get; }
     FabricConnectionId FabricConnectionId { get; }
     ClientConnectionId ClientConnectionId { get; }
+    ClientConfig Config { get; }
 
     Task TryConnectAsync(CancellationToken ct);
 

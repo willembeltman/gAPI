@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class SerializerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly HashSet<string> Namespaces = [];
 
     public string Namespace { get; set; }
@@ -24,7 +24,7 @@ public class SerializerGenerator
     public uint SchemaHash { get; }
     public GeneratePropertyHelper PropertyHelper { get; }
 
-    public SerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObject> customSerializers)
+    public SerializerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObject> customSerializers)
     {
         TypeSymbol = typeSymbol;
 
@@ -47,7 +47,7 @@ public class SerializerGenerator
         // --- VersionHash: hash van schema (properties + nested types) ---
         SchemaHash = Helper.ComputeFNV1a32(string.Join("|", Properties.Select(a => $"{a.Property.Type.ToDisplayString()} {a.Property.Name}")));
 
-        PropertyHelper = new GeneratePropertyHelper([..customSerializers], [], [], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([.. customSerializers], [], [], Reg, NeededSerializers);
     }
 
     public string Generate()
@@ -85,7 +85,7 @@ public static class {Name}
     }}
 
     [IsSerializerRead]
-    public static {TypeSymbolName} {ReadMethodName}(this BinaryReader ___reader)
+    public static {TypeSymbolName} {ReadMethodName}(this BinaryReader ___reader, int ___maxBufferSize)
     {{
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($""magic does not match, expected: `0x{{Magic:X4}}`, got: `0x{{magicCheck:X4}}`"");
@@ -108,10 +108,10 @@ public static class {Name}
     {
         string readProps;
 
-        if (IsRecord)
+        if (IsRecord && TypeSymbol is INamedTypeSymbol namedTypeSymbol)
         {
             // Vul record constructor parameters
-            var ctor = TypeSymbol.InstanceConstructors
+            var ctor = namedTypeSymbol.InstanceConstructors
                 .Where(c => c.Parameters.Length > 0)
                 .OrderByDescending(c => c.Parameters.Length)
                 .FirstOrDefault();

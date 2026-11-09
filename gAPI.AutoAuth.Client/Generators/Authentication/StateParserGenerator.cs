@@ -42,7 +42,7 @@ namespace {Namespace};
 
 public class {Name} : {IStateParser}
 {{
-    public bool TryParse(string? value, out {State} state)
+    public bool TryParse(string? value, out {State} state, int maxPackageSize)
     {{
         state = default!;
 
@@ -55,7 +55,7 @@ public class {Name} : {IStateParser}
             var offset = 0;
             try
             {{
-                state = data.Read{State}(ref offset);
+                state = data.Read{State}(ref offset, maxPackageSize);
             }}
             catch
             {{

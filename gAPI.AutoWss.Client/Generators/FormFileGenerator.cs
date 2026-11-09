@@ -46,7 +46,7 @@ public class FormFile : IFormFile
         ContentType = browserFile.ContentType;
         Length = browserFile.Size;
         ContentDisposition = $""form-data; name=\""{{Name}}\""; filename=\""{{FileName}}\"""";
-        ___Buffer = content;
+        Buffer = content;
     }}
 
     public IHeaderDictionary Headers => new HeaderDictionary();
@@ -56,21 +56,21 @@ public class FormFile : IFormFile
     public string ContentType {{ get; }}
     public long Length {{ get; }}
     public string ContentDisposition {{ get; }}
-    public byte[] ___Buffer {{ get; }}
+    public byte[] Buffer {{ get; }}
 
     public Stream OpenReadStream()
     {{
-        return new MemoryStream(___Buffer);
+        return new MemoryStream(Buffer);
     }}
 
     public void CopyTo(Stream target)
     {{
-        target.Write(___Buffer, 0, ___Buffer.Length);
+        target.Write(Buffer, 0, Buffer.Length);
     }}
 
     public async Task CopyToAsync(Stream target, CancellationToken cancellationToken = default)
     {{
-        await target.WriteAsync(___Buffer, 0, ___Buffer.Length);
+        await target.WriteAsync(Buffer, 0, Buffer.Length);
     }}
 }}";
     }

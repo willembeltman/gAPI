@@ -28,7 +28,7 @@ public static class SynchronizeBusFabricIdsDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static SynchronizeBusFabricIdsDto ReadSynchronizeBusFabricIdsDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static SynchronizeBusFabricIdsDto ReadSynchronizeBusFabricIdsDto(this ReadOnlySpan<byte> ___span, ref int ___offset, int ___maxBufferSize)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -38,8 +38,8 @@ public static class SynchronizeBusFabricIdsDtoSpanSerializer
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
         return new SynchronizeBusFabricIdsDto(
-            FabricManagerIdSpanSerializer.ReadFabricManagerId(___span, ref ___offset), 
-			FabricBusConnectionIdSpanSerializer.ReadFabricBusConnectionId(___span, ref ___offset));
+            FabricManagerIdSpanSerializer.ReadFabricManagerId(___span, ref ___offset, ___maxBufferSize), 
+			FabricBusConnectionIdSpanSerializer.ReadFabricBusConnectionId(___span, ref ___offset, ___maxBufferSize));
     }
 
     [IsSpanSerializerLength]

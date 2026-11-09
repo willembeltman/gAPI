@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
@@ -112,7 +113,7 @@ public class AuthenticationService<TUser, TStateDto>(
         AuthenticationHeaders headers,
         CancellationToken ct)
     {
-        if (stateParser.TryParse(headers.StateData, out var recievedClientState))
+        if (stateParser.TryParse(headers.StateData, out var recievedClientState, fabricClient.LastOrDefault()?.Config.MaxPackageSize ?? 8 * 1024 * 1024))
         {
             _ReceivedClientState = recievedClientState;
         }

@@ -31,13 +31,11 @@ public static class Dictionary_String_Object_Serializer
     }
 
     [IsSpanSerializerRead]
-    public static Dictionary<string, object> ReadDictionary_String_Object(ReadOnlySpan<byte> span, ref int offset)
+    public static Dictionary<string, object> ReadDictionary_String_Object(ReadOnlySpan<byte> span, ref int offset, int maxBufferSize)
     {
         // 1. Lees de lengte van de JSON string
         int length = BitConverter.ToInt32(span.Slice(offset, 4));
         offset += 4;
-
-        if (length == -1) return null;
 
         // 2. Lees de JSON bytes uit de span en deserialiseer
         ReadOnlySpan<byte> jsonSpan = span.Slice(offset, length);
@@ -47,11 +45,9 @@ public static class Dictionary_String_Object_Serializer
     }
 
     [IsSerializerRead]
-    public static Dictionary<string, object> ReadDictionary_String_Object(this BinaryReader br)
+    public static Dictionary<string, object> ReadDictionary_String_Object(this BinaryReader br, int maxBufferSize)
     {
         int length = br.ReadInt32();
-        if (length == -1) return null;
-
         byte[] jsonBytes = br.ReadBytes(length);
         return JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes) ?? new Dictionary<string, object>();
     }

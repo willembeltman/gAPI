@@ -25,7 +25,7 @@ public static class InvokeRequestDtoSerializer
     }
 
     [IsSerializerRead]
-    public static InvokeRequestDto ReadInvokeRequestDto(this BinaryReader ___reader)
+    public static InvokeRequestDto ReadInvokeRequestDto(this BinaryReader ___reader, int ___maxBufferSize)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -34,6 +34,6 @@ public static class InvokeRequestDtoSerializer
         var schemaHashCheck = ___reader.ReadUInt32(); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new InvokeRequestDto(RoutingDtoSerializer.ReadRoutingDto(___reader), ___reader.ReadBytes(___reader.ReadInt32()));
+        return new InvokeRequestDto(RoutingDtoSerializer.ReadRoutingDto(___reader, ___maxBufferSize), ___reader.ReadBytes(___reader.ReadInt32()));
     }
 }

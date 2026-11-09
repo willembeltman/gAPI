@@ -29,6 +29,7 @@ public sealed class BusFabricClient
         StreamingCache = streamingCache;
         BusConnections = busConnections;
         Logger = loggerFactory.CreateLogger<FabricClient>();
+        Config = serviceBusConfig;
 
         if (!string.IsNullOrEmpty(serviceBusConfig.ConnectionString))
         {
@@ -75,6 +76,8 @@ public sealed class BusFabricClient
     }
 
     readonly ILogger Logger;
+
+    public ServiceBusConfig Config { get; }
 
     readonly string? Host;
     readonly int? Port;
@@ -269,40 +272,40 @@ public sealed class BusFabricClient
                 switch (messageType)
                 {
                     case BusFabricHostToClientMessageEnum.SynchronizeFabricIds:
-                        var synchronizeFabricIds = BinaryReader.ReadSynchronizeBusFabricIdsDto();
+                        var synchronizeFabricIds = BinaryReader.ReadSynchronizeBusFabricIdsDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
                         break;
 
                     case BusFabricHostToClientMessageEnum.BusFireAndForget:
-                        var busFireAndForget = BinaryReader.ReadBusSendRequestDto();
+                        var busFireAndForget = BinaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusFireAndForget_FromFabricAsync(busFireAndForget, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusFireAndForgetCancelled:
-                        var busFireAndForgetCancelled = BinaryReader.ReadBusSendRequestCancelledDto();
+                        var busFireAndForgetCancelled = BinaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusFireAndForgetCancelled_FromFabricAsync(busFireAndForgetCancelled, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusSendRequest:
-                        var busSendRequest = BinaryReader.ReadBusSendRequestDto();
+                        var busSendRequest = BinaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusSendRequest_FromFabricAsync(busSendRequest, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusSendRequestCancelled:
-                        var busSendRequestCancelled = BinaryReader.ReadBusSendRequestCancelledDto();
+                        var busSendRequestCancelled = BinaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusSendRequestCancelled_FromFabricAsync(busSendRequestCancelled, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusSendRequestDone:
-                        var busSendRequestAck = BinaryReader.ReadBusSendRequestDoneDto();
+                        var busSendRequestAck = BinaryReader.ReadBusSendRequestDoneDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
@@ -310,28 +313,28 @@ public sealed class BusFabricClient
                         break;
 
                     case BusFabricHostToClientMessageEnum.BusInvokeRequest:
-                        var busInvokeRequest = BinaryReader.ReadBusInvokeRequestDto();
+                        var busInvokeRequest = BinaryReader.ReadBusInvokeRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusInvokeRequest_FromFabricAsync(busInvokeRequest, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusInvokeRequestCancelled:
-                        var busInvokeRequestCancelled = BinaryReader.ReadBusInvokeRequestCancelledDto();
+                        var busInvokeRequestCancelled = BinaryReader.ReadBusInvokeRequestCancelledDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusInvokeRequestCancelled_FromFabricAsync(busInvokeRequestCancelled, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusInvokeRequestAck:
-                        var busInvokeResponseAck = BinaryReader.ReadBusInvokeRequestAckDto();
+                        var busInvokeResponseAck = BinaryReader.ReadBusInvokeRequestAckDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusInvokeRequestAck_FromFabricAsync(busInvokeResponseAck, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusInvokeRequestDone:
-                        var busInvokeResponseDone = BinaryReader.ReadBusInvokeRequestDoneDto();
+                        var busInvokeResponseDone = BinaryReader.ReadBusInvokeRequestDoneDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusInvokeRequestDone_FromFabricAsync(busInvokeResponseDone, ct);
@@ -339,14 +342,14 @@ public sealed class BusFabricClient
                         break;
 
                     case BusFabricHostToClientMessageEnum.BusStreamingRequest:
-                        var busStreamingRequest_ResponseEnumerable = BinaryReader.ReadBusStreamingRequestDto();
+                        var busStreamingRequest_ResponseEnumerable = BinaryReader.ReadBusStreamingRequestDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusStreamingRequest_FromFabricAsync(busStreamingRequest_ResponseEnumerable, ct);
                         }, ct);
                         break;
                     case BusFabricHostToClientMessageEnum.BusStreamingResponse:
-                        var busStreamingResponse_ResponseEnumerable = BinaryReader.ReadBusStreamingResponseDto();
+                        var busStreamingResponse_ResponseEnumerable = BinaryReader.ReadBusStreamingResponseDto(Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         _ = Task.Run(async () =>
                         {
                             await Receive_BusStreamingResponse_FromFabricAsync(busStreamingResponse_ResponseEnumerable, ct);

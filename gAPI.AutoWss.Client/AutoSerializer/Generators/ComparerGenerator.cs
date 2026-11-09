@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class ComparerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly CustomObjectMethod[] CustomComparers;
     private readonly HashSet<string> Namespaces = [];
 
@@ -22,7 +22,7 @@ public class ComparerGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededComparers { get; private set; } = new();
 
-    public ComparerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
+    public ComparerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
     {
         TypeSymbol = typeSymbol;
         CustomComparers = [.. customComparers];

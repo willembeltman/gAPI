@@ -11,7 +11,7 @@ public static class WssServerToClientMessageEnumSerializer
         PrimitivesSpanSerializer.WriteInt32(ref span, ref offset, (int)value);
     }
     [IsSpanSerializerRead]
-    public static WssServerToClientMessageEnum ReadWssServerToClientMessageEnum(this ReadOnlySpan<byte> span, ref int offset)
+    public static WssServerToClientMessageEnum ReadWssServerToClientMessageEnum(this ReadOnlySpan<byte> span, ref int offset, int maxBufferSize = 4)
     {
         return (WssServerToClientMessageEnum)PrimitivesSpanSerializer.ReadInt32(span, ref offset);
     }

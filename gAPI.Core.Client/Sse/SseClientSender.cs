@@ -58,7 +58,6 @@ public class SseClientSender(SseClient sseClient)
     {
         try
         {
-
             var json = JsonSerializer.Serialize(message);
             var content = new MultipartFormDataContent
             {

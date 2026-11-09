@@ -41,7 +41,7 @@ public static class FabricLogDtoSerializer
     }
 
     [IsSerializerRead]
-    public static FabricLogDto ReadFabricLogDto(this BinaryReader ___reader)
+    public static FabricLogDto ReadFabricLogDto(this BinaryReader ___reader, int ___maxBufferSize)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -55,7 +55,7 @@ public static class FabricLogDtoSerializer
         value.Message = ___reader.ReadString();
         value.Category = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
         value.Source = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
-        value.Timestamp = ___reader.ReadDateTimeOffset();
+        value.Timestamp = ___reader.ReadDateTimeOffset(___maxBufferSize);
         value.CorrelationId = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
         value.UserId = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
         value.StackTrace = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();

@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class MultipartFormDataContentSerializerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly HashSet<string> Namespaces = [];
 
     public string Namespace { get; set; }
@@ -21,7 +21,7 @@ public class MultipartFormDataContentSerializerGenerator
     public string FileName { get; }
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
 
-    public MultipartFormDataContentSerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customMultipartFormDataContentSerializers)
+    public MultipartFormDataContentSerializerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customMultipartFormDataContentSerializers)
     {
         TypeSymbol = typeSymbol;
 

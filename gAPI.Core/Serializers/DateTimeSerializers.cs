@@ -6,7 +6,7 @@ namespace gAPI.Core.Serializers;
 public static class DateTimeSerializers
 {
     [IsSpanSerializerRead]
-    public static DateTime ReadDateTime(this ReadOnlySpan<byte> span, ref int offset)
+    public static DateTime ReadDateTime(this ReadOnlySpan<byte> span, ref int offset, int maxBufferSize = 8)
     {
         var value = BinaryPrimitives.ReadInt64LittleEndian(span.Slice(offset, 8));
         offset += 8;
@@ -19,7 +19,7 @@ public static class DateTimeSerializers
         offset += 8;
     }
     [IsSerializerRead]
-    public static DateTime ReadDateTime(this BinaryReader br)
+    public static DateTime ReadDateTime(this BinaryReader br, int maxBufferSize = 8)
     {
         return DateTime.FromBinary(br.ReadInt64());
     }

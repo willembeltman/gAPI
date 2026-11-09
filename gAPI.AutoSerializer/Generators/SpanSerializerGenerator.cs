@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class SpanSerializerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly HashSet<string> Namespaces = [];
 
     public string Namespace { get; set; }
@@ -25,7 +25,7 @@ public class SpanSerializerGenerator
     public string FileName { get; }
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
 
-    public SpanSerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObject> customSpanSerializers)
+    public SpanSerializerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObject> customSpanSerializers)
     {
         TypeSymbol = typeSymbol;
 
@@ -91,7 +91,7 @@ public static class {Name}
     }}
 
     [IsSpanSerializerRead]
-    public static {TypeSymbolName} {ReadMethodName}(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static {TypeSymbolName} {ReadMethodName}(this ReadOnlySpan<byte> ___span, ref int ___offset, int ___maxBufferSize)
     {{
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($""magic does not match, expected: `0x{{Magic:X4}}`, got: `0x{{magicCheck:X4}}`"");
@@ -129,10 +129,10 @@ public static class {Name}
         var functions = string.Empty;
         var functionNames = new HashSet<string>();
 
-        if (IsRecord)
+        if (IsRecord && TypeSymbol is INamedTypeSymbol namedTypesymbol)
         {
             // Vul record constructor parameters
-            var ctor = TypeSymbol.InstanceConstructors
+            var ctor = namedTypesymbol.InstanceConstructors
                 .Where(c => c.Parameters.Length > 0)
                 .OrderByDescending(c => c.Parameters.Length)
                 .FirstOrDefault();

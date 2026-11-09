@@ -98,6 +98,7 @@ public sealed class {Name}(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<{Name}>();
     readonly {ServiceId} ___ServiceId = new(""{Interface}"");
+    int ___maxBufferSize => ___clientConnection.Config.MaxPackageSize ?? 8 * 1024 * 1024;
     {string.Join("\r\n", Interface.Methods.Select(method => GetMethod(method, ref generatedFunctions, generatedFunctionNames)))}
     {generatedFunctions}
     {GenerateDispose()}

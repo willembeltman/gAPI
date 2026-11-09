@@ -6,7 +6,7 @@ namespace gAPI.Core.Serializers;
 public static class TimeSpanSerializer
 {
     [IsSpanSerializerRead]
-    public static TimeSpan ReadTimeSpan(this ReadOnlySpan<byte> span, ref int offset)
+    public static TimeSpan ReadTimeSpan(this ReadOnlySpan<byte> span, ref int offset, int maxBufferSize = 8)
     {
         var value = BinaryPrimitives.ReadInt64LittleEndian(span.Slice(offset, 8));
         offset += 8;
@@ -21,7 +21,7 @@ public static class TimeSpanSerializer
     }
 
     [IsSerializerRead]
-    public static TimeSpan ReadTimeSpan(this BinaryReader br)
+    public static TimeSpan ReadTimeSpan(this BinaryReader br, int maxBufferSize)
     {
         return TimeSpan.FromTicks(br.ReadInt64());
     }

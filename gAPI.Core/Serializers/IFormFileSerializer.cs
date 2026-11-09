@@ -39,7 +39,7 @@ public static class IFormFileSerializer
     }
 
     [IsSerializerRead]
-    public static IFormFile ReadIFormFile(this BinaryReader ___reader)
+    public static IFormFile ReadIFormFile(this BinaryReader ___reader, int maxBufferSize)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -109,7 +109,7 @@ public static class IFormFileSerializer
     }
 
     [IsSpanSerializerRead]
-    public static IFormFile ReadIFormFile(this ReadOnlySpan<byte> span, ref int offset)
+    public static IFormFile ReadIFormFile(this ReadOnlySpan<byte> span, ref int offset, int maxBufferSize)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(span, ref offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -132,7 +132,7 @@ public static class IFormFileSerializer
         obj.Name = PrimitivesSpanSerializer.ReadString(span, ref offset);
         obj.FileName = PrimitivesSpanSerializer.ReadString(span, ref offset);
 
-        obj.Buffer = PrimitivesSpanSerializer.ReadByteArray(span, ref offset);
+        obj.Buffer = PrimitivesSpanSerializer.ReadByteArray(span, ref offset, maxBufferSize);
         obj.Length = obj.Buffer.Length;
         return obj;
     }

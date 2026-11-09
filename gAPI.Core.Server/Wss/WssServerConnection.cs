@@ -151,72 +151,72 @@ public abstract class WssServerConnection : IServerConnection
                     switch (messageType)
                     {
                         case WssClientToServerMessageEnum.Initialize:
-                            var initialize = span.ReadInitializeDto(ref offset);
+                            var initialize = span.ReadInitializeDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_Initialize_FromClientAsync(path, queryString, ipAddress, sessionId, cookieData, initialize, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Subscribe:
-                            var subscribe = span.ReadSubscribeDto(ref offset);
+                            var subscribe = span.ReadSubscribeDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_Subscribe_FromClientAsync(subscribe, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Unsubscribe:
-                            var unsubscribe = span.ReadUnsubscribeDto(ref offset);
+                            var unsubscribe = span.ReadUnsubscribeDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_Unsubscribe_FromClientAsync(unsubscribe, ct);
                             break;
 
                         case WssClientToServerMessageEnum.SendRequest:
-                            var sendRequest = span.ReadSendRequestClientDto(ref offset);
+                            var sendRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_SendRequest_FromClientAsync(sendRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.SendRequestCancelled:
-                            var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset);
+                            var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricSendRequestDone:
-                            var fabricSendRequestDone = span.ReadSendRequestDoneClientDto(ref offset);
+                            var fabricSendRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeRequest:
-                            var invokeRequest = span.ReadInvokeRequestClientDto(ref offset);
+                            var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_InvokeRequest_FromClientAsync(invokeRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.InvokeRequestCancelled:
-                            var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset);
+                            var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestAck:
-                            var fabricInvokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset);
+                            var fabricInvokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestDone:
-                            var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset);
+                            var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
                             break;
 
 
                         case WssClientToServerMessageEnum.StreamingRequest:
-                            var argumentRequest = span.ReadStreamingRequestClientDto(ref offset);
+                            var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.StreamingResponse:
-                            var argumentResponse = span.ReadStreamingResponseClientDto(ref offset);
+                            var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_StreamingResponse_FromClientAsync(argumentResponse, ct);
                             break;
 
 
                         case WssClientToServerMessageEnum.FabricStreamingRequest:
-                            var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset);
+                            var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricStreamingResponse:
-                            var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset);
+                            var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
-                            var log = span.ReadClientLogDto(ref offset);
+                            var log = span.ReadClientLogDto(ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await Receive_Log_FromClientAsync(log, ct);
                             break;
                     }

@@ -118,13 +118,13 @@ public class {Name}
         {IClientAuthenticatedHttpClient} httpClient)
         : base(clientConfig, httpClient)
     {{
-        ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();{string.Join("", Context.Apis.Select(api => $@"
+        ___Logger = (({IClientLoggerFactory})this).CreateLogger<{Name}>();
+        ___maxBufferSize = clientConfig.MaxPackageSize ?? 8 * 1024 * 1024;{string.Join("", Context.Apis.Select(api => $@"
         {api} = new {api}(this, this, httpClient);"))}
-        ___Buffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
 
     readonly ILogger ___Logger;
-    readonly byte[] ___Buffer;
+    int ___maxBufferSize;
     {GenerateApiProperties()}
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
@@ -390,91 +390,19 @@ public class {Name}
         var code = "";
         var functions = "";
 
-        if (method.ResponseType.IsTask)
-        {
-            //        code += $@"
-            //public async Task {@interface}_{method}(SendRequestDto ___sendRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            //.Select((arg, index) => (arg, index))
-            //.Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //.Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //: $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var ___client in ___clients)
-            //    {{
-            //        await ___client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //    }}
-            //}}";
-        }
-        if (method.ResponseType.IsTaskT)
-        {
-            var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
-            //        code += $@"
-            //public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
-            //        .Select((arg, index) => (arg, index))
-            //        .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //        .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //        ? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //        : $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var client in clients)
-            //    {{
-            //        var response = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //        {(returnTypeInner.IsHubResultT ? $@"
-            //        response.UserId = HttpClient.UserId;
-            //        response.SessionId = HttpClient.SessionId;
-            //        " : "")}
-            //        yield return {@interface}_{method}_Serializer(response);
-            //    }}
-            //}}";
-        }
 
         if (method.ResponseType.IsIAsyncEnumerable)
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
-            //        code = $@"
-            //public async IAsyncEnumerable<byte[]> {@interface}_{method}({InvokeRequestDto} ___invokeRequest, {@interface}[] ___clients, CancellationToken ___ct)
-            //{{
-            //    var ___offset = 0;
-            //    var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
-            //        .Select((arg, index) => (arg, index))
-            //        .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            //        .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-            //        ? $@"
-            //    var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-            //        : $@"
-            //    var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-            //    foreach (var ___client in ___clients)
-            //    {{
-            //        var responses = ___client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
-            //            {arg.Name.ToCamelCase()}" : $@"
-            //            ___ct"))});
-            //        await foreach (var response in responses)
-            //        {{{(returnTypeInner.IsHubResultT ? $@"
-            //            response.UserId = HttpClient.UserId;
-            //            response.SessionId = HttpClient.SessionId;
-            //            " : "")}
-            //            yield return {@interface}_{method}_Serializer(response);
-            //        }}
-            //    }}
-            //}}"; 
             code = $@"
     public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
     {{
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);{PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}
+        {PropertyHelper.GenerateLengthCode(returnTypeInner.Type, "value", "        ", false)}
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        {PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}
         return ___span.Slice(0, ___offset).ToArray();
     }}";
         }

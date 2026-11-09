@@ -26,7 +26,7 @@ public static class AuthStateUserDtoSerializer
     }
 
     [IsSerializerRead]
-    public static AuthStateUserDto ReadAuthStateUserDto(this BinaryReader ___reader)
+    public static AuthStateUserDto ReadAuthStateUserDto(this BinaryReader ___reader, int ___maxBufferSize)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -36,7 +36,7 @@ public static class AuthStateUserDtoSerializer
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
         var value = new AuthStateUserDto();
-        value.Id = ___reader.ReadGuid();
+        value.Id = ___reader.ReadGuid(___maxBufferSize);
         value.UserName = ___reader.ReadString();
         value.Email = ___reader.ReadString();
         return value;

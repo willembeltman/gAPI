@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 
 namespace gAPI.Core.Server.Interfaces;
@@ -6,6 +7,7 @@ namespace gAPI.Core.Server.Interfaces;
 public interface IBaseBusConnection
 {
     BusConnectionId BusConnectionId { get; }
+    ServiceBusConfig Config { get; }
 
     Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
     Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);

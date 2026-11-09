@@ -19,6 +19,7 @@ public class GeneratePropertyHelper(
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
+        // Custom serializer
         var customSerializer = CustomSerializers.FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
         if (customSerializer != null)
         {
@@ -32,6 +33,7 @@ public class GeneratePropertyHelper(
 {indent}___writer.Write({propName});";
         }
 
+        // Enum
         if (underlyingType.TypeKind == TypeKind.Enum)
             return isNullable
                 ? $@"
@@ -41,12 +43,12 @@ public class GeneratePropertyHelper(
                 : $@"
 {indent}___writer.Write((int){propName});";
 
+        // Predefined
         if (underlyingType.ToDisplayString() == "bool" && fromGeneric)
         {
             return $@"
 {indent}___writer.Write({propName});";
         }
-
         switch (underlyingType.ToDisplayString())
         {
             case "string":
@@ -133,6 +135,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             var itemNumber = ++ItemNumber;
@@ -153,10 +156,10 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // NESTED OBJECT
         if (underlyingType is INamedTypeSymbol named)
             NeededSerializers.Add(named);
 
-        // Niet array !!!!!
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
         NeededSerializers.Add((underlyingType as INamedTypeSymbol)!);
         return isNullable
@@ -171,15 +174,17 @@ public class GeneratePropertyHelper(
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
+        // Custom Serializer
         var customSerializer = CustomSerializers.FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
         if (customSerializer != null)
         {
             Reg(customSerializer.Reader.StaticClass.ContainingNamespace.ToDisplayString());
             return isNullable
-                ? $"___reader.ReadBoolean() ? ___reader.{customSerializer.Reader.Method.Name}() : null"
-                : $"___reader.{customSerializer.Reader.Method.Name}()";
+                ? $"___reader.ReadBoolean() ? ___reader.{customSerializer.Reader.Method.Name}(___maxBufferSize) : null"
+                : $"___reader.{customSerializer.Reader.Method.Name}(___maxBufferSize)";
         }
 
+        // Enum
         if (underlyingType.TypeKind == TypeKind.Enum)
             return isNullable
                 ? $"___reader.ReadBoolean() ? ({underlyingType.ToDisplayString()})___reader.ReadInt32() : null"
@@ -220,24 +225,26 @@ public class GeneratePropertyHelper(
             return start + $@"[.. Enumerable.Range(0, ___reader.ReadInt32()).Select(item => {GenerateBinaryReaderReadCode(array.ElementType, fromGeneric)})]";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             return start + $@"Enumerable.Range(0, ___reader.ReadInt32()).Select(item => {GenerateBinaryReaderReadCode(listElement, fromGeneric)}).ToList()";
         }
 
+        // NESTED OBJECT
         var name = Helper.GetName(underlyingType);
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
         NeededSerializers.Add((underlyingType as INamedTypeSymbol)!);
-        return start + $"{name}Serializer.Read{name}(___reader)";
+        return start + $"{name}Serializer.Read{name}(___reader, ___maxBufferSize)";
     }
 
     public string GenerateSpanWriteCode(ITypeSymbol type, string propName, string indent, bool fromGeneric)
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
+        // Custom Serializer
         var customSerializer = CustomSpanSerializers
             .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
-
         if (customSerializer != null)
         {
             Reg(customSerializer.Writer.StaticClass.ContainingNamespace.ToDisplayString());
@@ -251,6 +258,7 @@ public class GeneratePropertyHelper(
 {indent}{customSerializer.Writer.StaticClass.Name}.{customSerializer.Writer.Method.Name}(ref ___span, ref ___offset, {propName});";
         }
 
+        // Enum
         if (underlyingType.TypeKind == TypeKind.Enum)
             return isNullable
                 ? $@"
@@ -260,10 +268,10 @@ public class GeneratePropertyHelper(
                 : $@"
 {indent}PrimitivesSpanSerializer.WriteInt32(ref ___span, ref ___offset, (int){propName});";
 
+        // "Primitive" (volgens mij kan veel weg)
         if (underlyingType.ToDisplayString() == "bool" && fromGeneric)
             return $@"
 {indent}PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, {propName});";
-
         switch (underlyingType.ToDisplayString())
         {
             case "int":
@@ -297,7 +305,6 @@ public class GeneratePropertyHelper(
                     : $@"
 {indent}PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, {propName});";
         }
-
 
         // Array !!!!!
         if (underlyingType is IArrayTypeSymbol array)
@@ -333,6 +340,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             var itemNumber = ++ItemNumber;
@@ -353,6 +361,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // NESTED OBJECT
         if (underlyingType is INamedTypeSymbol named)
             NeededSerializers.Add(named);
 
@@ -383,21 +392,22 @@ public class GeneratePropertyHelper(
 
         var start = isNullable ? "PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : " : "";
 
+        // Custom serializer
         var customSerializer = CustomSpanSerializers
             .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
-
         if (customSerializer != null)
         {
             Reg(customSerializer.Reader.StaticClass.ContainingNamespace.ToDisplayString());
-            return start + $"{customSerializer.Reader.StaticClass.Name}.{customSerializer.Reader.Method.Name}(___span, ref ___offset)";
+            return start + $"{customSerializer.Reader.StaticClass.Name}.{customSerializer.Reader.Method.Name}(___span, ref ___offset, ___maxBufferSize)";
         }
 
+        // Enum
         if (underlyingType.TypeKind == TypeKind.Enum)
             return start + $"({underlyingType})PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset)";
 
+        // "Primitive" (volgens mij kan veel weg)
         if (underlyingType.ToDisplayString() == "bool" && fromGeneric)
             return $"PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset)";
-
         switch (underlyingType.ToDisplayString())
         {
             case "int": return SpanNullableRead("Int32", isNullable);
@@ -409,7 +419,7 @@ public class GeneratePropertyHelper(
             case "System.DateTimeOffset": return SpanNullableRead("DateTimeOffset", isNullable);
             case "string": return $"PrimitivesSpanSerializer.ReadString(___span, ref ___offset)";
             case "string?": return start + $"PrimitivesSpanSerializer.ReadString(___span, ref ___offset)";
-            case "System.ReadOnlyMemory<byte>": return start + "PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset)";
+            case "System.ReadOnlyMemory<byte>": return start + "PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset, ___maxBufferSize)";
         }
 
         // Array !!!!!
@@ -417,7 +427,7 @@ public class GeneratePropertyHelper(
         {
             //var newOffset = $"____offset";
             if (array.ElementType.Name == "Byte")
-                return start + $@"PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset)";
+                return start + $@"PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset, ___maxBufferSize)";
 
             Reg(array.ElementType.ContainingNamespace.ToDisplayString());
 
@@ -427,10 +437,13 @@ public class GeneratePropertyHelper(
                 functionNames.Add(functionName);
                 functions += $@"
 
-    static {array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}[] {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int count)
+    static {array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}[] {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int ___count, int ___maxBufferSize)
     {{
-        var list = new List<{array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}>(count);
-        for (int i = 0; i < count; i++)
+        if (___count >= ___maxBufferSize)
+            throw new Exception(""Too much memory to allocate"");
+
+        var list = new List<{array.ElementType.Name}{(array.ElementType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated) ? "?" : "")}>(___count);
+        for (int i = 0; i < ___count; i++)
         {{
             var item = {GenerateSpanReadCode(array.ElementType, fromGeneric, ref functions, functionNames)};
             list.Add(item);
@@ -439,9 +452,10 @@ public class GeneratePropertyHelper(
     }}";
             }
 
-            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
+            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), ___maxBufferSize)";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             Reg(listElement.ContainingNamespace.ToDisplayString());
@@ -452,10 +466,13 @@ public class GeneratePropertyHelper(
                 functionNames.Add(functionName);
                 functions += $@"
 
-    static List<{listElement.ToDisplayString()}> {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int count)
+    static List<{listElement.ToDisplayString()}> {functionName}(ReadOnlySpan<byte> ___span, ref int ___offset, int ___count, int ___maxBufferSize)
     {{
-        var list = new List<{listElement.ToDisplayString()}>(count);
-        for (int i = 0; i < count; i++)
+        if (___count >= ___maxBufferSize)
+            throw new Exception(""Too much memory to allocate"");
+
+        var list = new List<{listElement.ToDisplayString()}>(___count);
+        for (int i = 0; i < ___count; i++)
         {{
             var item = {GenerateSpanReadCode(listElement, fromGeneric, ref functions, functionNames)};
             list.Add(item);
@@ -464,13 +481,14 @@ public class GeneratePropertyHelper(
     }}";
             }
 
-            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset))";
+            return start + $@"{functionName}(___span, ref ___offset, PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), ___maxBufferSize)";
         }
 
+        // NESTED OBJECT
         var name = Helper.GetName(underlyingType);
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
         NeededSerializers.Add((underlyingType as INamedTypeSymbol)!);
-        return start + $"{name}SpanSerializer.Read{name}(___span, ref ___offset)";
+        return start + $"{name}SpanSerializer.Read{name}(___span, ref ___offset, ___maxBufferSize)";
     }
     private string SpanNullableRead(string method, bool nullable)
     {
@@ -483,9 +501,9 @@ public class GeneratePropertyHelper(
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
+        // Custom serializer
         var customSerializer = CustomSpanSerializers
             .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
-
         if (customSerializer != null)
         {
             Reg(customSerializer.Length.StaticClass.ContainingNamespace.ToDisplayString());
@@ -499,6 +517,7 @@ public class GeneratePropertyHelper(
 {indent}{customSerializer.Length.StaticClass.Name}.{customSerializer.Length.Method.Name}(ref ___offset, {propName});";
         }
 
+        // Enum
         if (underlyingType.TypeKind == TypeKind.Enum)
             return isNullable
                 ? $@"
@@ -508,10 +527,10 @@ public class GeneratePropertyHelper(
                 : $@"
 {indent}PrimitivesSpanSerializer.LengthInt32(ref ___offset, (int){propName});";
 
+        // "Primitive" (volgens mij kan veel weg)
         if (underlyingType.ToDisplayString() == "bool" && fromGeneric)
             return $@"
 {indent}PrimitivesSpanSerializer.LengthBoolean(ref ___offset, {propName});";
-
         switch (underlyingType.ToDisplayString())
         {
             case "int":
@@ -545,7 +564,6 @@ public class GeneratePropertyHelper(
                     : $@"
 {indent}PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, {propName});";
         }
-
 
         // Array !!!!!
         if (underlyingType is IArrayTypeSymbol array)
@@ -581,6 +599,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             var itemNumber = ++ItemNumber;
@@ -601,6 +620,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // NESTED OBJECT
         if (underlyingType is INamedTypeSymbol named)
             NeededSerializers.Add(named);
 
@@ -629,14 +649,13 @@ public class GeneratePropertyHelper(
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
-        var customSerializer = CustomMultipartFormDataContentSerializers
-            .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
-
         var name = fromApiClient
             ? $@"""{fieldName}"""
             : $@"$""{{___prefix}}{fieldName}""";
 
         // CUSTOM SERIALIZER
+        var customSerializer = CustomMultipartFormDataContentSerializers
+            .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
         if (customSerializer != null)
         {
             Reg(customSerializer.StaticClass.ContainingNamespace.ToDisplayString());
@@ -660,6 +679,7 @@ public class GeneratePropertyHelper(
 {indent}___content.Add(new StringContent(((int){propName}).ToString()), {name});";
         }
 
+        // "Primitive" (volgens mij kan veel weg)
         switch (underlyingType.ToDisplayString())
         {
             case "int":
@@ -732,6 +752,7 @@ public class GeneratePropertyHelper(
 {indent}}}";
         }
 
+        // List
         if (TryGetListElement(underlyingType, out var listElement))
         {
             var itemNumber = ++ItemNumber;

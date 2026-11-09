@@ -14,7 +14,11 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Core.ServiceBus.AzureServiceBus;
 
-public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
+public abstract class BaseAzureConnection(
+    ILoggerFactory loggerFactory, 
+    ServiceBusConfig config) 
+    : IBaseBusConnection
+    , IAsyncDisposable
 {
     private const string MessageTypeKey = "gapi-message-type";
     private const string SendAndForgetRequestType = "send-and-forget-request";
@@ -28,8 +32,8 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
     private const string StreamingRequestType = "streaming-request";
     private const string StreamingResponseType = "streaming-response";
 
-    private readonly ILogger<BaseAzureConnection> Logger;
-    private readonly ServiceBusConfig BusConfig;
+    private readonly ILogger<BaseAzureConnection> Logger = loggerFactory.CreateLogger<BaseAzureConnection>();
+    public ServiceBusConfig Config { get; } = config;
 
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
@@ -50,12 +54,6 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
     public bool Initialized { get; private set; }
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
 
-    public BaseAzureConnection(ILoggerFactory loggerFactory, ServiceBusConfig busConfig)
-    {
-        Logger = loggerFactory.CreateLogger<BaseAzureConnection>();
-        BusConfig = busConfig;
-    }
-
     protected abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationToken ct);
     protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationToken ct);
 
@@ -67,8 +65,8 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
         var adminOptions = new ServiceBusAdministrationClientOptions();
 
         // Basis messaging connectionstring (voor poort 5672 / AMQP)
-        var messagingConnectionString = BusConfig.ConnectionString;
-        var adminConnectionString = BusConfig.ConnectionString;
+        var messagingConnectionString = Config.ConnectionString;
+        var adminConnectionString = Config.ConnectionString;
 
         // Initialiseer de clients met hun respectievelijke poort-verbindingsreeksen
         _client = new ServiceBusClient(messagingConnectionString, clientOptions);
@@ -179,7 +177,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                 try
                 {
                     var offset = 0;
-                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(args.Message.Body.ToArray().AsSpan(), ref offset);
+                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(args.Message.Body.ToArray().AsSpan(), ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                     ackCompletion.TrySetResult(ack);
                     await args.CompleteMessageAsync(args.Message);
                 }
@@ -232,7 +230,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                 try
                 {
                     var offset = 0;
-                    var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(args.Message.Body.ToArray().AsSpan(), ref offset);
+                    var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(args.Message.Body.ToArray().AsSpan(), ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                     if (ack != null) ackCompletion.TrySetResult(ack);
                     await args.CompleteMessageAsync(args.Message);
                 }
@@ -415,29 +413,29 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
             {
                 case SendAndForgetRequestType:
                     var offset1 = 0;
-                    await HandleSendAndForgetRequest(BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset1), _lifetimeCts.Token);
+                    await HandleSendAndForgetRequest(BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset1, Config.MaxPackageSize ?? 8 * 1024 * 1024), _lifetimeCts.Token);
                     break;
                 case SendAndForgetRequestCancelledType:
                     var offset2 = 0;
-                    await HandleSendAndForgetRequestCancelled(BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset2), _lifetimeCts.Token);
+                    await HandleSendAndForgetRequestCancelled(BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset2, Config.MaxPackageSize ?? 8 * 1024 * 1024), _lifetimeCts.Token);
                     break;
                 case SendRequestType:
                     var offset3 = 0;
                     if (string.IsNullOrWhiteSpace(message.ReplyTo) || string.IsNullOrWhiteSpace(message.CorrelationId)) throw new InvalidOperationException("Send request is missing ReplyTo or CorrelationId.");
-                    await HandleSendRequestAsync(BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset3), message.ReplyTo, message.CorrelationId, message.SessionId, _lifetimeCts.Token);
+                    await HandleSendRequestAsync(BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset3, Config.MaxPackageSize ?? 8 * 1024 * 1024), message.ReplyTo, message.CorrelationId, message.SessionId, _lifetimeCts.Token);
                     break;
                 case SendRequestCancelledType:
                     var offset4 = 0;
-                    await HandleSendRequestCancelled(BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset4), _lifetimeCts.Token);
+                    await HandleSendRequestCancelled(BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset4, Config.MaxPackageSize ?? 8 * 1024 * 1024), _lifetimeCts.Token);
                     break;
                 case InvokeRequestType:
                     var offset5 = 0;
                     if (string.IsNullOrWhiteSpace(message.ReplyTo) || string.IsNullOrWhiteSpace(message.CorrelationId)) throw new InvalidOperationException("Invoke request is missing ReplyTo or CorrelationId.");
-                    await HandleInvokeRequestAsync(BusInvokeRequestDtoSpanSerializer.ReadBusInvokeRequestDto(body, ref offset5), message.ReplyTo, message.CorrelationId, message.SessionId, _lifetimeCts.Token);
+                    await HandleInvokeRequestAsync(BusInvokeRequestDtoSpanSerializer.ReadBusInvokeRequestDto(body, ref offset5, Config.MaxPackageSize ?? 8 * 1024 * 1024), message.ReplyTo, message.CorrelationId, message.SessionId, _lifetimeCts.Token);
                     break;
                 case InvokeRequestCancelledType:
                     var offset6 = 0;
-                    await HandleInvokeRequestCancelled(BusInvokeRequestCancelledDtoSpanSerializer.ReadBusInvokeRequestCancelledDto(body, ref offset6), _lifetimeCts.Token);
+                    await HandleInvokeRequestCancelled(BusInvokeRequestCancelledDtoSpanSerializer.ReadBusInvokeRequestCancelledDto(body, ref offset6, Config.MaxPackageSize ?? 8 * 1024 * 1024), _lifetimeCts.Token);
                     break;
             }
             await complete(message);
@@ -455,7 +453,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                 {
                     case StreamingRequestType:
                         var offset1 = 0;
-                        var request = BusStreamingRequestDtoSpanSerializer.ReadBusStreamingRequestDto(body, ref offset1);
+                        var request = BusStreamingRequestDtoSpanSerializer.ReadBusStreamingRequestDto(body, ref offset1, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         var key = new RequestArgumentIndexDto(request.Routing.RequestId, request.ArgumentIndex);
                         BusStreamingResponseDto response;
                         if (StreamingRequestHandlers.TryGetValue(key, out var registration))
@@ -481,7 +479,7 @@ public abstract class BaseAzureConnection : IBaseBusConnection, IAsyncDisposable
                         break;
                     case StreamingResponseType:
                         var offset2 = 0;
-                        var streamingResp = BusStreamingResponseDtoSpanSerializer.ReadBusStreamingResponseDto(body, ref offset2);
+                        var streamingResp = BusStreamingResponseDtoSpanSerializer.ReadBusStreamingResponseDto(body, ref offset2, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         var respKey = new RequestArgumentIndexStreamDto(streamingResp.Routing.RequestId, streamingResp.ArgumentIndex, streamingResp.StreamId);
                         if (StreamingResponseHandlers.TryGetValue(respKey, out var handler)) handler(streamingResp);
                         break;

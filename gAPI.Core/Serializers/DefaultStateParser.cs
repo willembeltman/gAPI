@@ -8,7 +8,7 @@ public class DefaultStateParser(ILoggerFactory loggerFactory) : IStateParser<Aut
 {
     public ILogger Logger { get; } = loggerFactory.CreateLogger<DefaultStateParser>();
 
-    public bool TryParse(string? value, out AuthStateDto state)
+    public bool TryParse(string? value, out AuthStateDto state, int maxBufferSize)
     {
         state = default!;
 
@@ -21,7 +21,7 @@ public class DefaultStateParser(ILoggerFactory loggerFactory) : IStateParser<Aut
             var offset = 0;
             try
             {
-                state = data.ReadAuthStateDto(ref offset);
+                state = data.ReadAuthStateDto(ref offset, maxBufferSize);
             }
             catch (Exception ex)
             {

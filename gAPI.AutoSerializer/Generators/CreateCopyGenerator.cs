@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class CreateCopyGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly CustomObjectMethod[] CustomCreateCopys;
     private readonly HashSet<string> Namespaces = [];
 
@@ -22,7 +22,7 @@ public class CreateCopyGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededCreateCopys { get; private set; } = new();
 
-    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
+    public CreateCopyGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
     {
         TypeSymbol = typeSymbol;
         CustomCreateCopys = [.. customCreateCopys];
@@ -67,9 +67,9 @@ public static class {Name}
     }
     public string CreatePropsCode()
     {
-        if (IsRecord)
+        if (IsRecord && TypeSymbol is INamedTypeSymbol namedTypeSymbol)
         {
-            var ctor = TypeSymbol.InstanceConstructors
+            var ctor = namedTypeSymbol.InstanceConstructors
                 .Where(c => c.Parameters.Length > 0)
                 .OrderByDescending(c => c.Parameters.Length)
                 .FirstOrDefault();

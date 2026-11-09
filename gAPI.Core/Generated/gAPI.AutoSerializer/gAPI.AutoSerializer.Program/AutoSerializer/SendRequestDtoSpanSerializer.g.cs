@@ -27,7 +27,7 @@ public static class SendRequestDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static SendRequestDto ReadSendRequestDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static SendRequestDto ReadSendRequestDto(this ReadOnlySpan<byte> ___span, ref int ___offset, int ___maxBufferSize)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -37,8 +37,8 @@ public static class SendRequestDtoSpanSerializer
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
         return new SendRequestDto(
-            RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset), 
-			PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset));
+            RoutingDtoSpanSerializer.ReadRoutingDto(___span, ref ___offset, ___maxBufferSize), 
+			PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset, ___maxBufferSize));
     }
 
     [IsSpanSerializerLength]

@@ -8,20 +8,20 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class MultipartFormDataContentSerializerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly HashSet<string> Namespaces = [];
 
     public string Namespace { get; set; }
     public string Name { get; }
     public string TypeSymbolName { get; }
-    public string FunctionName { get; }
+    public string WriteMethodName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public GeneratePropertyHelper PropertyHelper { get; }
     public string FileName { get; }
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = new();
 
-    public MultipartFormDataContentSerializerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customMultipartFormDataContentSerializers)
+    public MultipartFormDataContentSerializerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customMultipartFormDataContentSerializers)
     {
         TypeSymbol = typeSymbol;
 
@@ -33,11 +33,11 @@ public class MultipartFormDataContentSerializerGenerator
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
-        FunctionName = "Write";
+        WriteMethodName = "Write";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
 
-        PropertyHelper = new GeneratePropertyHelper([], [], [..customMultipartFormDataContentSerializers], Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [], [.. customMultipartFormDataContentSerializers], Reg, NeededSerializers);
     }
 
     public string Generate()
@@ -65,7 +65,7 @@ public static class {Name}
 {{
 
     [IsMultipartFormDataContentSerializer]
-    public static void {FunctionName}(this MultipartFormDataContent ___content, string ___name, {TypeSymbolName} value)
+    public static void {WriteMethodName}(this MultipartFormDataContent ___content, string ___name, {TypeSymbolName} value)
     {{
         string ___prefix = string.IsNullOrEmpty(___name) ? """" : $""{{___name}}."";
         {writeProps}

@@ -26,7 +26,7 @@ public static class FabricBusConnectionIdSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static FabricBusConnectionId ReadFabricBusConnectionId(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static FabricBusConnectionId ReadFabricBusConnectionId(this ReadOnlySpan<byte> ___span, ref int ___offset, int ___maxBufferSize)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");

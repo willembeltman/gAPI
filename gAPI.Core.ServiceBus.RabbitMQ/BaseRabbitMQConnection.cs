@@ -16,7 +16,7 @@ namespace gAPI.Core.ServiceBus.RabbitMQ;
 
 public abstract class BaseRabbitMQConnection(
     ILoggerFactory loggerFactory,
-    ServiceBusConfig busConfig)
+    ServiceBusConfig config)
     : IBaseBusConnection, IAsyncDisposable
 {
     private const string SendAndForgetRequestType = "send-and-forget-request";
@@ -31,6 +31,7 @@ public abstract class BaseRabbitMQConnection(
     private const string StreamingRequestType = "streaming-request";
     private const string StreamingResponseType = "streaming-response";
 
+    public ServiceBusConfig Config { get; } = config;
     private readonly ILogger<BaseRabbitMQConnection> Logger = loggerFactory.CreateLogger<BaseRabbitMQConnection>();
 
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
@@ -58,7 +59,7 @@ public abstract class BaseRabbitMQConnection(
     {
         if (Initialized) return;
 
-        var factory = new ConnectionFactory { Uri = new Uri(busConfig.ConnectionString) };
+        var factory = new ConnectionFactory { Uri = new Uri(Config.ConnectionString) };
         _connection = await factory.CreateConnectionAsync(ct);
         _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
         _publishChannel = await _connection.CreateChannelAsync(cancellationToken: ct);
@@ -154,7 +155,7 @@ public abstract class BaseRabbitMQConnection(
                 try
                 {
                     var offset = 0;
-                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(ea.Body.Span, ref offset);
+                    var ack = BusSendRequestDoneDtoSpanSerializer.ReadBusSendRequestDoneDto(ea.Body.Span, ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                     ackCompletion.TrySetResult(ack);
                 }
                 catch (Exception ex)
@@ -212,7 +213,7 @@ public abstract class BaseRabbitMQConnection(
                     try
                     {
                         var offset = 0;
-                        var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(ea.Body.Span, ref offset);
+                        var ack = BusInvokeRequestAckDtoSpanSerializer.ReadBusInvokeRequestAckDto(ea.Body.Span, ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         if (ack != null) ackCompletion.TrySetResult(ack);
                     }
                     catch (Exception ex)
@@ -225,7 +226,7 @@ public abstract class BaseRabbitMQConnection(
                     try
                     {
                         var offset = 0;
-                        var ack = BusInvokeRequestDoneDtoSpanSerializer.ReadBusInvokeRequestDoneDto(ea.Body.Span, ref offset);
+                        var ack = BusInvokeRequestDoneDtoSpanSerializer.ReadBusInvokeRequestDoneDto(ea.Body.Span, ref offset, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                         if (ack != null)
                         {
                             if (ack.Cancelled)
@@ -469,17 +470,17 @@ public abstract class BaseRabbitMQConnection(
                     {
                         case SendAndForgetRequestType:
                             var offset1 = 0;
-                            var sendRequest1 = BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset1);
+                            var sendRequest1 = BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset1, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await HandleSendAndForgetRequest(sendRequest1, _lifetimeCts.Token);
                             break;
                         case SendAndForgetRequestCancelledType:
                             var offset2 = 0;
-                            var sendRequestCancelled2 = BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset2);
+                            var sendRequestCancelled2 = BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset2, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await HandleSendAndForgetRequestCancelled(sendRequestCancelled2, _lifetimeCts.Token);
                             break;
                         case SendRequestType:
                             var offset3 = 0;
-                            var sendRequest3 = BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset3);
+                            var sendRequest3 = BusSendRequestDtoSpanSerializer.ReadBusSendRequestDto(body, ref offset3, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             var replyTo3 = ea.BasicProperties.ReplyTo;
                             var correlationId3 = ea.BasicProperties.CorrelationId;
                             if (string.IsNullOrWhiteSpace(replyTo3) || string.IsNullOrWhiteSpace(correlationId3))
@@ -488,12 +489,12 @@ public abstract class BaseRabbitMQConnection(
                             break;
                         case SendRequestCancelledType:
                             var offset4 = 0;
-                            var sendRequestCancelled4 = BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset4);
+                            var sendRequestCancelled4 = BusSendRequestCancelledDtoSpanSerializer.ReadBusSendRequestCancelledDto(body, ref offset4, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await HandleSendRequestCancelled(sendRequestCancelled4, _lifetimeCts.Token);
                             break;
                         case InvokeRequestType:
                             var offset5 = 0;
-                            var invRequest5 = BusInvokeRequestDtoSpanSerializer.ReadBusInvokeRequestDto(body, ref offset5);
+                            var invRequest5 = BusInvokeRequestDtoSpanSerializer.ReadBusInvokeRequestDto(body, ref offset5, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             var replyTo5 = ea.BasicProperties.ReplyTo;
                             var correlationId5 = ea.BasicProperties.CorrelationId;
                             if (string.IsNullOrWhiteSpace(replyTo5) || string.IsNullOrWhiteSpace(correlationId5))
@@ -502,7 +503,7 @@ public abstract class BaseRabbitMQConnection(
                             break;
                         case InvokeRequestCancelledType:
                             var offset6 = 0;
-                            var invokeRequestCancelled6 = BusInvokeRequestCancelledDtoSpanSerializer.ReadBusInvokeRequestCancelledDto(body, ref offset6);
+                            var invokeRequestCancelled6 = BusInvokeRequestCancelledDtoSpanSerializer.ReadBusInvokeRequestCancelledDto(body, ref offset6, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await HandleInvokeRequestCancelled(invokeRequestCancelled6, _lifetimeCts.Token);
                             break;
                         default:
@@ -737,7 +738,7 @@ public abstract class BaseRabbitMQConnection(
                     {
                         case StreamingRequestType:
                             var offset1 = 0;
-                            var request = BusStreamingRequestDtoSpanSerializer.ReadBusStreamingRequestDto(body, ref offset1);
+                            var request = BusStreamingRequestDtoSpanSerializer.ReadBusStreamingRequestDto(body, ref offset1, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             var key = new RequestArgumentIndexDto(request.Routing.RequestId, request.ArgumentIndex);
                             BusStreamingResponseDto response;
                             if (StreamingRequestHandlers.TryGetValue(key, out var registration))
@@ -767,7 +768,7 @@ public abstract class BaseRabbitMQConnection(
                             break;
                         case StreamingResponseType:
                             var offset2 = 0;
-                            var streamingResp = BusStreamingResponseDtoSpanSerializer.ReadBusStreamingResponseDto(body, ref offset2);
+                            var streamingResp = BusStreamingResponseDtoSpanSerializer.ReadBusStreamingResponseDto(body, ref offset2, Config.MaxPackageSize ?? 8 * 1024 * 1024);
                             await ReceiveStreamingResponseAsync(streamingResp, _lifetimeCts.Token);
                             break;
                         default:

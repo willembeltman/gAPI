@@ -71,49 +71,6 @@ public static class PrimitivesSpanSerializer
         offset += byteCount;
     }
 
-    public static void WriteByteArray(ref Span<byte> span, ref int offset, byte[] value)
-    {
-        var byteCount = value.Length;
-        WriteInt32(ref span, ref offset, byteCount);
-        value.CopyTo(span.Slice(offset, byteCount));
-        offset += byteCount;
-    }
-    public static byte[] ReadByteArray(ReadOnlySpan<byte> span, ref int offset)
-    {
-        var len = ReadInt32(span, ref offset);
-        var s = span.Slice(offset, len).ToArray();
-        offset += len;
-        return s;
-    }
-    public static void LengthByteArray(ref int offset, byte[] value)
-    {
-        var byteCount = value.Length;
-        LengthInt32(ref offset, byteCount);
-        offset += byteCount;
-    }
-
-    public static void WriteByteReadOnlyMemory(ref Span<byte> span, ref int offset, ReadOnlyMemory<byte> value)
-    {
-        var byteCount = value.Length;
-        WriteInt32(ref span, ref offset, byteCount);
-        value.Span.CopyTo(span.Slice(offset, byteCount));
-        offset += byteCount;
-    }
-    public static ReadOnlyMemory<byte> ReadByteReadOnlyMemory(ReadOnlySpan<byte> span, ref int offset)
-    {
-        var len = ReadInt32(span, ref offset);
-        var s = new ReadOnlyMemory<byte>(span.Slice(offset, len).ToArray());
-        offset += len;
-        return s;
-    }
-    public static void LengthByteReadOnlyMemory(ref int offset, ReadOnlyMemory<byte> value)
-    {
-        var byteCount = value.Length;
-        LengthInt32(ref offset, byteCount);
-        offset += byteCount;
-    }
-
-
     public static void WriteUShort(ref Span<byte> span, ref int offset, ushort value)
     {
         span[offset++] = (byte)(value & 0xFF);       // low byte
@@ -185,5 +142,76 @@ public static class PrimitivesSpanSerializer
     public static void LengthDouble(ref int offset, double value)
     {
         offset += 8;
+    }
+
+    public static byte[] ReadByteArray(ReadOnlySpan<byte> span, ref int offset, int maxBufferSize)
+    {
+        var byteCount = ReadInt32(span, ref offset);
+
+        // Harde cap op 1gb
+        if (byteCount > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        var res = span.Slice(offset, byteCount).ToArray();
+        offset += byteCount;
+        return res;
+    }
+    public static void WriteByteArray(ref Span<byte> span, ref int offset, byte[] value)
+    {
+        var byteCount = value.Length;
+
+        // Harde cap op 1gb
+        if (byteCount > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        WriteInt32(ref span, ref offset, byteCount);
+        value.CopyTo(span.Slice(offset, byteCount));
+        offset += byteCount;
+    }
+    public static void LengthByteArray(ref int offset, byte[] value)
+    {
+        var byteCount = value.Length;
+
+        // Harde cap op 1gb
+        if (byteCount > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        LengthInt32(ref offset, byteCount);
+        offset += byteCount;
+    }
+
+    public static ReadOnlyMemory<byte> ReadByteReadOnlyMemory(ReadOnlySpan<byte> span, ref int offset, int maxBufferSize)
+    {
+        var byteCount = ReadInt32(span, ref offset);
+
+        // Harde cap op 1gb
+        if (byteCount > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        var res = new ReadOnlyMemory<byte>(span.Slice(offset, byteCount).ToArray());
+        offset += byteCount;
+        return res;
+    }
+    public static void WriteByteReadOnlyMemory(ref Span<byte> span, ref int offset, ReadOnlyMemory<byte> value)
+    {
+        var byteCount = value.Length;
+
+        // Harde cap op 1gb
+        if (byteCount > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        WriteInt32(ref span, ref offset, byteCount);
+        value.Span.CopyTo(span.Slice(offset, byteCount));
+        offset += byteCount;
+    }
+    public static void LengthByteReadOnlyMemory(ref int offset, ReadOnlyMemory<byte> value)
+    {
+        // Harde cap op 1gb
+        if (value.Length > 1024 * 1024 * 1024)
+            throw new Exception("Array too big to send");
+
+        var byteCount = value.Length;
+        LengthInt32(ref offset, byteCount);
+        offset += byteCount;
     }
 }

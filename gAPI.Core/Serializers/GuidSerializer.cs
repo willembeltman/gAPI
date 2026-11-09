@@ -5,6 +5,14 @@ namespace gAPI.Core.Serializers;
 
 public static class GuidSerializer
 {
+    [IsSpanSerializerRead]
+    public static Guid ReadGuid(ReadOnlySpan<byte> span, ref int offset, int maxBufferSize = 16)
+    {
+        var value = new Guid(span.Slice(offset, 16));
+        offset += 16;
+        return value;
+    }
+
     [IsSpanSerializerWrite]
     public static void WriteGuid(ref Span<byte> span, ref int offset, Guid value)
     {
@@ -12,16 +20,8 @@ public static class GuidSerializer
         offset += 16;
     }
 
-    [IsSpanSerializerRead]
-    public static Guid ReadGuid(ReadOnlySpan<byte> span, ref int offset)
-    {
-        var value = new Guid(span.Slice(offset, 16));
-        offset += 16;
-        return value;
-    }
-
     [IsSerializerRead]
-    public static Guid ReadGuid(this BinaryReader br)
+    public static Guid ReadGuid(this BinaryReader br, int maxBufferSize = 16)
     {
         return new Guid(br.ReadBytes(16));
     }

@@ -8,7 +8,7 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class ComparerGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly CustomObjectMethod[] CustomComparers;
     private readonly HashSet<string> Namespaces = [];
 
@@ -22,7 +22,7 @@ public class ComparerGenerator
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededComparers { get; private set; } = new();
 
-    public ComparerGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
+    public ComparerGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customComparers)
     {
         TypeSymbol = typeSymbol;
         CustomComparers = [.. customComparers];
@@ -78,6 +78,32 @@ public static class {Name}
     {
         (var underlyingType, var isNullable, var isNullableT) = Helper.GetUnderlayingAndNullable(type);
 
+        switch (underlyingType.ToDisplayString())
+        {
+            case "string":
+            case "string?":
+            case "bool":
+            case "bool?":
+            case "int":
+            case "int?":
+            case "long":
+            case "long?":
+            case "double":
+            case "double?":
+            case "float":
+            case "float?":
+            case "decimal":
+            case "decimal?":
+            case "System.Guid":
+            case "System.Guid?":
+            case "System.DateTime":
+            case "System.DateTime?":
+            case "System.DateTimeOffset":
+            case "System.DateTimeOffset?":
+                return $@"
+{indent}if ({propName} != {otherPropName}) return true;";
+        }
+
         var customComparer = CustomComparers.FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.Type, underlyingType));
         if (customComparer != null)
         {
@@ -95,11 +121,6 @@ public static class {Name}
 {indent}}}"
                 : $@"
 {indent}if ({propName}.{customComparer.Method.Name}({otherPropName})) return true;";
-            //            return isNullable
-            //                    ? $@"
-            //{indent}if ({propName}?.{customComparer.Method.Name}({otherPropName}) ?? {otherPropName} != null) return true;"
-            //                    : $@"
-            //{indent}if ({propName}.{customComparer.Method.Name}({otherPropName})) return true;";
         }
 
         if (underlyingType.TypeKind == TypeKind.Enum)
@@ -111,22 +132,6 @@ public static class {Name}
 
 {indent}if ({propName} != {otherPropName}) return true;";
 
-        switch (underlyingType.ToDisplayString())
-        {
-            case "string":
-            case "string?":
-            case "bool":
-            case "int":
-            case "long":
-            case "double":
-            case "float":
-            case "decimal":
-            case "System.Guid":
-            case "System.DateTime":
-            case "System.DateTimeOffset":
-                return $@"
-{indent}if ({propName} != {otherPropName}) return true;";
-        }
 
         // Array !!!!!
         if (underlyingType is IArrayTypeSymbol array)

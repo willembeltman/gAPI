@@ -10,11 +10,12 @@ namespace gAPI.Core.ServiceBus.Fabric;
 public abstract class FabricBaseBusConnection(
     ILoggerFactory loggerFactory,
     BusFabricClient fabricClient,
-    ServiceBusConfig busConfig)
+    ServiceBusConfig config)
     : IFabricBaseBusConnection
 {
     public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
+    public ServiceBusConfig Config { get; } = config;
 
     // This is called everytime something wants to subscribe
     public async Task TryConnectAsync(CancellationToken ct)

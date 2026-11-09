@@ -61,6 +61,8 @@ builder.Build().Run();
 //    .WithEnvironment("QueueName", "Standard");
 //builder.Build().Run();
 
+
+//// OPTIE 3: Azure Service Bus
 //// 1. Voeg Azure Service Bus toe én dwing hem om lokaal als emulator te draaien.
 //// Dit regelt de juiste Microsoft-images, poorten en SQL Server volledig automatisch!
 //var azureServiceBus = builder.AddAzureServiceBus("ServiceBus")

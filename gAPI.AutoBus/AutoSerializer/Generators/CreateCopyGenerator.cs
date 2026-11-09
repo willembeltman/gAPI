@@ -8,34 +8,34 @@ namespace gAPI.AutoSerializer.Generators;
 
 public class CreateCopyGenerator
 {
-    private readonly INamedTypeSymbol TypeSymbol;
+    private readonly ITypeSymbol TypeSymbol;
     private readonly CustomObjectMethod[] CustomCreateCopys;
     private readonly HashSet<string> Namespaces = [];
 
     public string Namespace { get; set; }
     public string Name { get; }
     public string TypeSymbolName { get; }
-    public string FunctionName { get; }
+    public string CreateCopyMethodName { get; }
     public bool IsRecord { get; }
     public PropertyGeneric[] Properties { get; }
     public string FileName { get; }
     public int ItemNumber { get; private set; }
     public List<INamedTypeSymbol> NeededCreateCopys { get; private set; } = new();
 
-    public CreateCopyGenerator(INamedTypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
+    public CreateCopyGenerator(ITypeSymbol typeSymbol, IEnumerable<CustomObjectMethod> customCreateCopys)
     {
         TypeSymbol = typeSymbol;
         CustomCreateCopys = [.. customCreateCopys];
 
         var name = Helper.GetName(typeSymbol);
-        Name = $"{name}Copyer";
+        Name = $"{name}CreateCopy";
         TypeSymbolName = Helper.GetFullTypeName(typeSymbol, Reg);
         FileName = $"AutoSerializer/{Name}.g.cs";
 
         Namespace = TypeSymbol.ContainingNamespace.IsGlobalNamespace
             ? "global"
             : TypeSymbol.ContainingNamespace.ToDisplayString();
-        FunctionName = "CreateCopy";
+        CreateCopyMethodName = "CreateCopy";
         IsRecord = TypeSymbol.IsRecord || TypeSymbol.TypeKind == TypeKind.Struct;
         Properties = Helper.GetProperties(typeSymbol);
     }
@@ -60,16 +60,16 @@ public class CreateCopyGenerator
 public static class {Name}
 {{
     [IsCreateCopy]
-    public static {TypeSymbolName} {FunctionName}(this {TypeSymbolName} value)
+    public static {TypeSymbolName} {CreateCopyMethodName}(this {TypeSymbolName} value)
     {{{propsCode}
     }}
 }}";
     }
     public string CreatePropsCode()
     {
-        if (IsRecord)
+        if (IsRecord && TypeSymbol is INamedTypeSymbol namedTypeSymbol)
         {
-            var ctor = TypeSymbol.InstanceConstructors
+            var ctor = namedTypeSymbol.InstanceConstructors
                 .Where(c => c.Parameters.Length > 0)
                 .OrderByDescending(c => c.Parameters.Length)
                 .FirstOrDefault();
@@ -171,8 +171,8 @@ public static class {Name}
         Reg(underlyingType.ContainingNamespace.ToDisplayString());
 
         return isNullable
-            ? $"{source} == null ? null : {source}{(isNullableT ? ".Value" : "")}.{FunctionName}()"
-            : $"{source}.{FunctionName}()";
+            ? $"{source} == null ? null : {source}{(isNullableT ? ".Value" : "")}.CreateCopy()"
+            : $"{source}.CreateCopy()";
     }
 
     private void Reg(ITypeSymbol underlyingType)

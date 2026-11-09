@@ -40,6 +40,7 @@ public class FindAndCreateGenaratorsRecursive
             var propType = prop.Property.Type;
             if (propType.OriginalDefinition.ToDisplayString() == "System.Nullable<T>" && propType is INamedTypeSymbol nts && nts.TypeArguments.Length == 1)
             {
+                if (nts.TypeArguments[0].Name == "Byte") continue; // Byte array doet de serializer al goed, dus skip
                 propType = nts.TypeArguments[0];
             }
             // Array !!!!!

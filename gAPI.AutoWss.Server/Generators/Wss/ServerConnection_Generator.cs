@@ -98,9 +98,11 @@ public class {Name} : {WssServerConnection}
     readonly ILogger ___logger;
     readonly {IServerAuthenticationService} ___authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
     readonly {@interface} {@interface.CleanName};")))}
-    readonly byte[] ___Buffer;
     readonly {FabricClient} ___fabricClient;
-    public {ServerConfig} ___config {{ get; set; }}
+
+    int ___maxBufferSize;
+
+    public {ServerConfig} ___config {{ get; }}
 
     public {Name}(
         {ServerConfig} serverConfig,
@@ -114,11 +116,11 @@ public class {Name} : {WssServerConnection}
         : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {{
         this.___config = serverConfig;
+        this.___maxBufferSize = serverConfig.MaxPackageSize ?? 8 * 1024 * 1024;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;{(string.Join("", Context.ServiceContext.ApiInterfaces.Select(@interface => $@"
         this.{@interface.CleanName} = {@interface.CleanName.ToCamelCase()};")))}
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
-        this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }}
     {GenerateSendRequest(ref functions, functionNames)}
     {GenerateInvokeRequest(ref functions, functionNames)}
@@ -348,7 +350,11 @@ public class {Name} : {WssServerConnection}
     public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
     {{
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);{PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}   
+        {PropertyHelper.GenerateLengthCode(returnTypeInner.Type, "value", "        ", false)}
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        {PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}
         return ___span.Slice(0, ___offset).ToArray();
     }}";
     }

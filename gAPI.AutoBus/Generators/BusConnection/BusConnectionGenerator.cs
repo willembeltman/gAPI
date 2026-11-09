@@ -97,6 +97,7 @@ public class {Name}
     : {BaseConnection}, {IBusConnection}
 {{
     private readonly ILogger<{Name}> ___Logger;
+    private readonly int ___maxBufferSize;
 
     public {Name}(
         ILoggerFactory loggerFactory,{(OverloadFabricClient && FabricClient != null ? $@"
@@ -104,11 +105,10 @@ public class {Name}
         {ServiceBusConfig} serviceBusConfig)
         : base(loggerFactory, {(OverloadFabricClient && FabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
     {{
+        
         ___Logger = loggerFactory.CreateLogger<{Name}>();
-        ___Buffer = new byte[serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024];
+        ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 8 * 1024 * 1024;
     }}
-
-    private readonly byte[] ___Buffer;
 
     {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"
     public {service}? {service} {{ get; set; }}"))))}
@@ -379,7 +379,11 @@ public class {Name}
     public byte[] {@interface}_{method}_Serializer({returnTypeInner} value)
     {{
         var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);{PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}
+        {PropertyHelper.GenerateLengthCode(returnTypeInner.Type, "value", "        ", false)}
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        {PropertyHelper.GenerateSpanWriteCode(returnTypeInner.Type, "value", "        ", false)}
         return ___span.Slice(0, ___offset).ToArray();
     }}";
         }

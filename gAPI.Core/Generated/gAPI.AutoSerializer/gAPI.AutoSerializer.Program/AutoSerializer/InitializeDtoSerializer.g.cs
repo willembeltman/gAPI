@@ -25,7 +25,7 @@ public static class InitializeDtoSerializer
     }
 
     [IsSerializerRead]
-    public static InitializeDto ReadInitializeDto(this BinaryReader ___reader)
+    public static InitializeDto ReadInitializeDto(this BinaryReader ___reader, int ___maxBufferSize)
     {
         var magicCheck = ___reader.ReadUInt16();// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");

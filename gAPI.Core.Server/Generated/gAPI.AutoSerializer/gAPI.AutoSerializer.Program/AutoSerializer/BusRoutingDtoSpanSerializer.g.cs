@@ -37,7 +37,7 @@ public static class BusRoutingDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static BusRoutingDto ReadBusRoutingDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static BusRoutingDto ReadBusRoutingDto(this ReadOnlySpan<byte> ___span, ref int ___offset, int ___maxBufferSize)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -47,14 +47,14 @@ public static class BusRoutingDtoSpanSerializer
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
         return new BusRoutingDto(
-            BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset), 
-			RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset), 
-			ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset), 
-			ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset), 
-			TimeSpanSerializer.ReadTimeSpan(___span, ref ___offset), 
+            BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset, ___maxBufferSize), 
+			RequestIdSpanSerializer.ReadRequestId(___span, ref ___offset, ___maxBufferSize), 
+			ServiceIdSpanSerializer.ReadServiceId(___span, ref ___offset, ___maxBufferSize), 
+			ServiceMethodIdSpanSerializer.ReadServiceMethodId(___span, ref ___offset, ___maxBufferSize), 
+			TimeSpanSerializer.ReadTimeSpan(___span, ref ___offset, ___maxBufferSize), 
 			(gAPI.Core.Enums.DeliveryMode)PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
 			(gAPI.Core.Enums.BusToChoice)PrimitivesSpanSerializer.ReadInt32(___span, ref ___offset), 
-			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : BusConnectionIdSpanSerializer.ReadBusConnectionId(___span, ref ___offset, ___maxBufferSize), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset));
     }
 
