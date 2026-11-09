@@ -284,7 +284,7 @@ public abstract class WssServerConnection : IServerConnection
                 Logger.LogTrace("{now} Receive_SendRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             // Create cancellation token
-            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
+            var cts = new LinkedCancellationTokenSourceWithTimeout(message.Routing.Timeout, ct);
             StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 
             try
@@ -375,7 +375,7 @@ public abstract class WssServerConnection : IServerConnection
                 Logger.LogTrace("{now} Receive_InvokeRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             // Create cancellation token
-            var cts = new LinkedCancellationTokenSourceWithTimeout(TimeSpan.FromSeconds(100), ct);
+            var cts = new LinkedCancellationTokenSourceWithTimeout(message.Routing.Timeout, ct);
             ct = cts.Token;
             StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 

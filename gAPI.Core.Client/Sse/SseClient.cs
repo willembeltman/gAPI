@@ -28,7 +28,7 @@ public class SseClient : IDisposable
 
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseDto>> StreamingResponseHandlers = [];
-    private readonly Dictionary<RequestId, CancellationTokenSource> Requests = [];
+    //private readonly Dictionary<RequestId, CancellationTokenSource> Requests = [];
     private readonly ISseClientConnection SseClientConnection;
 
     public SseClient(
@@ -196,25 +196,26 @@ public class SseClient : IDisposable
     }
     private CancellationToken CreateCancellation(RequestId requestId, CancellationToken ct)
     {
-        // Quick cleanup
-        var keysToRemove = new List<RequestId>();
-        foreach (var kvp in Requests)
-        {
-            if (kvp.Value.IsCancellationRequested)
-            {
-                keysToRemove.Add(kvp.Key);
-            }
-        }
-        foreach (var key in keysToRemove)
-        {
-            Requests.Remove(key);
-        }
+        return ct;
+        //// Quick cleanup
+        //var keysToRemove = new List<RequestId>();
+        //foreach (var kvp in Requests)
+        //{
+        //    if (kvp.Value.IsCancellationRequested)
+        //    {
+        //        keysToRemove.Add(kvp.Key);
+        //    }
+        //}
+        //foreach (var key in keysToRemove)
+        //{
+        //    Requests.Remove(key);
+        //}
 
-        // Try get and create
-        if (Requests.TryGetValue(requestId, out var cts) == false)
-            cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        cts.CancelAfter(TimeSpan.FromSeconds(100));
-        return cts.Token;
+        //// Try get and create
+        //if (Requests.TryGetValue(requestId, out var cts) == false)
+        //    cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        //cts.CancelAfter(TimeSpan.FromSeconds(100));
+        //return cts.Token;
     }
     #endregion
 
@@ -237,11 +238,11 @@ public class SseClient : IDisposable
     }
     private async Task Receive_SendRequestCancelled_FromServerAsync(SendRequestCancelledClientDto message, CancellationToken token)
     {
-        if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
-            return;
+        //if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
+        //    return;
 
-        await cts.CancelAsync();
-        cts.Dispose();
+        //await cts.CancelAsync();
+        //cts.Dispose();
     }
 
     private async Task Receive_InvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken ct)
@@ -298,11 +299,11 @@ public class SseClient : IDisposable
     }
     private async Task Receive_InvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
-        if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
-            return;
+        //if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
+        //    return;
 
-        await cts.CancelAsync();
-        cts.Dispose();
+        //await cts.CancelAsync();
+        //cts.Dispose();
     }
 
     //private async Task Receive_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
