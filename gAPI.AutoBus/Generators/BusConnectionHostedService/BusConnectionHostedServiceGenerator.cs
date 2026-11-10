@@ -77,11 +77,11 @@ public class {Name}(
         await {service.FullName.Replace(".", "_")}.OnStartedAsync(new {ServiceId}(""{@interface}""), ct);
         await busConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
 
-        busConnection.HostedBusServices = new {HostedBusServices}({string.Join("", Context.ServiceContext.BusInterfaces
-        .Select(@interface => string.Join(",", @interface.Services
+        busConnection.HostedBusServices = new {HostedBusServices}({string.Join(",", Context.ServiceContext.BusInterfaces
+            .SelectMany(@interface => @interface.Services)
             .Where(a => a.IsHostedBusService)
             .Select(service => $@"
-            {service.FullName.Replace(".", "_")}"))))});
+            {service.FullName.Replace(".", "_")}"))});
     }}
     public async Task StopAsync(CancellationToken ct)
     {{

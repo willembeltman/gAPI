@@ -73,10 +73,10 @@ public class {Name}(
         await busConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
 
         busConnection.HostedHubServices = new {HostedHubServices}({string.Join("", Context.ServiceContext.HubInterfaces
-        .Select(@interface => string.Join(",", @interface.Services
+            .SelectMany(@interface => @interface.Services)
             .Where(a => a.IsHostedHubService)
             .Select(service => $@"
-            {service.FullName.Replace(".", "_")}"))))});
+            {service.FullName.Replace(".", "_")}"))});
     }}
     public async Task StopAsync(CancellationToken ct)
     {{

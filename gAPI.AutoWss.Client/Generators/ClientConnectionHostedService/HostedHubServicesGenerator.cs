@@ -30,7 +30,7 @@ public class HostedHubServicesGenerator : _BaseGenerator
 #nullable enable
 namespace {Namespace};
 
-public record {Name}({string.Join("", services.Select(service => $@"
+public record {Name}({string.Join(",", services.Select(service => $@"
     {service.FullName} {service.FullName.Replace(".", "_")}"))});";
     }
 }
