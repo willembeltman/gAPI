@@ -83,6 +83,14 @@ public class ServerConnection : WssServerConnection
                                 ___ct);
                         }
                         return;
+                    case "Pong":
+                        {
+                            IMainApi_Pong(
+                                ___sendRequest,
+                                PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                                ___ct);
+                        }
+                        return;
             
                     case "StartServerTests":
                         {
@@ -350,6 +358,14 @@ public class ServerConnection : WssServerConnection
         //    ___logger.LogTrace("{now} IMainApi_Ping({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         MainApi.Ping(v);
+    }
+
+    public void IMainApi_Pong(SendRequestDto ___sendRequest, string v, CancellationToken ___ct)
+    {
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IMainApi_Pong({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
+       
+        MainApi.Pong(v);
     }
 
     

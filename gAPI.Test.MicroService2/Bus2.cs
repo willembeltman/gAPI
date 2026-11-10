@@ -32,7 +32,7 @@ public class Bus2(
 
     public Task Ping(CancellationToken ct)
     {
-        return busContext.Bus1.ToAny().Pong(ct);
+        return busContext.Bus1.ToAny().PongTask(ct);
     }
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)

@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace gAPI.Test.Main.Server;
 
 public class MainApi(
-    ILoggerFactory loggerFactory, 
+    ILoggerFactory loggerFactory,
     IAuthenticationService authenticationService,
     IBusConnection busConnection,
     IBusContext busContext,
@@ -15,6 +15,8 @@ public class MainApi(
     : IMainApi
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainApi>();
+
+    public TaskCompletionSource<string>? PontResult { get; private set; }
 
     private async IAsyncEnumerable<string> MyList()
     {
@@ -29,6 +31,20 @@ public class MainApi(
     {
         var sw = Stopwatch.StartNew();
         var sessionId = authenticationService.SessionId;
+
+        for (var y = 0; y < 50; y++)
+        {
+            var sw2 = Stopwatch.StartNew();
+
+            PontResult = new TaskCompletionSource<string>();
+
+            clientContext.MainHub.ToSession(sessionId).Ping("hoi, dit is een lange zin. of zo.");
+
+            var str = await PontResult.Task.WaitAsync(ct);
+
+            Logger.LogInformation($"mainApi => mainHub PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
+        }
+
 
         // Terug naar client
         clientContext.MainHub.ToSession(sessionId).SendAndForget("hoi", ct);
@@ -50,6 +66,12 @@ public class MainApi(
         }
 
         // Naar de eerste service over de bus
+
+
+        if (busConnection.HostedBusServices?.gAPI_Test_Main_Server_MainBus != null)
+            await busConnection.HostedBusServices.gAPI_Test_Main_Server_MainBus.DoPing();
+
+
         busContext.Bus1.ToAny().SendAndForget("hoi", ct);
         Logger.LogInformation($"Service1.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
@@ -138,5 +160,9 @@ public class MainApi(
         clientContext.MainHub
             .ToSession(authenticationService.SessionId)
             .Pong(v);
+    }
+    public void Pong(string v)
+    {
+        PontResult?.SetResult(v);
     }
 }

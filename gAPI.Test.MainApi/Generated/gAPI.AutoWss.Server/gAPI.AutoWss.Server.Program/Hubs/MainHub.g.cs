@@ -355,6 +355,62 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
         return ___span.Slice(0, ___offset).ToArray();
     }
 
+public async void Ping(string v)
+{
+    ___timeOut ??= TimeSpan.FromSeconds(100);
+
+    try
+    {
+        var ___requestId = RequestId.New();
+        var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
+            ___requestId,
+            ___ServiceId,
+            new("Ping"),
+            ___timeOut.Value,
+            ___userId,
+            ___sessionId,
+            ___throwIfNoReceiver
+        );
+        var ___payload = ___Ping_Serializer(
+            v);
+
+        
+        
+        
+        {
+            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
+            await ___fabricClient.SendFireAndForgetAsync(
+                ___routing,
+                ___payload, 
+                CancellationToken.None);
+        }
+        
+    }
+    catch (OperationCanceledException)
+    {
+        ___Logger.LogInformation("Server FireAndForget streaming gecanceld of time-out voor Ping.");
+    }
+    catch (Exception ex)
+    {
+        ___Logger.LogError(ex, "Fout opgevangen in gegenereerde server async void methode voor Ping");
+    }
+}
+    private byte[] ___Ping_Serializer(string v)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, v);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, v);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
 public async void Pong(string v)
 {
     ___timeOut ??= TimeSpan.FromSeconds(100);

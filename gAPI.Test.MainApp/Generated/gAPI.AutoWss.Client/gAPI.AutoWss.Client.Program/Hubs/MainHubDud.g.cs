@@ -49,6 +49,12 @@ public sealed class MainHubDud : IMainHub
     }
 
 
+    public void Ping(string v)
+    {
+        throw new NotSupportedException("Hub broadcasting (Client-to-Client) is by design niet ondersteund op de client proxy.");
+    }
+
+
     public void Pong(string v)
     {
         throw new NotSupportedException("Hub broadcasting (Client-to-Client) is by design niet ondersteund op de client proxy.");

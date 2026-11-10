@@ -149,6 +149,18 @@ public class ClientConnection
                                 }
                                 return;
                             }
+                        case "Ping":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.Ping(
+                                        v);
+                                }
+                                return;
+                            }
                         case "Pong":
                             {
                                 var ___offset = 0;
@@ -297,6 +309,7 @@ public class ClientConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
 
     
 }

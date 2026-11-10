@@ -17,4 +17,5 @@ public interface IMainApi
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     void Ping(string v);
+    void Pong(string v);
 }

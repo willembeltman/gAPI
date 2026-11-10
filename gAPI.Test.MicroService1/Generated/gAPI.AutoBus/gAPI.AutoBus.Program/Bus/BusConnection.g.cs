@@ -328,6 +328,18 @@ public class BusConnection
                                 }
                                 return;
                             }
+                        case "Ping":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.Ping(
+                                        v);
+                                }
+                                return;
+                            }
                     }
                     break;
                 }
@@ -396,6 +408,18 @@ public class BusConnection
                                 }
                                 return;
                             }
+                        case "Pong":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.Pong(
+                                        v);
+                                }
+                                return;
+                            }
                     }
                     break;
                 }
@@ -450,11 +474,11 @@ public class BusConnection
                                 }
                                 return;
                             }
-                        case "Pong":
+                        case "PongTask":
                             {
                                 foreach (var client in clients)
                                 {
-                                    await client.Pong(
+                                    await client.PongTask(
                                         ___ct);
                                 }
                                 return;
@@ -639,15 +663,15 @@ public class BusConnection
                                 }
                             }
                             yield break;
-                        case "Ping":
+                        case "PingEnumerable":
                             {
                                 foreach (var client in clients)
                                 {
-                                    var responses = client.Ping(
+                                    var responses = client.PingEnumerable(
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        yield return IBus1_Ping_Serializer(response);
+                                        yield return IBus1_PingEnumerable_Serializer(response);
                                     }
                                 }
                             }
@@ -880,7 +904,7 @@ public class BusConnection
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
-    public byte[] IBus1_Ping_Serializer(double value)
+    public byte[] IBus1_PingEnumerable_Serializer(double value)
     {
         var ___offset = 0;
         
@@ -892,6 +916,7 @@ public class BusConnection
         PrimitivesSpanSerializer.WriteDouble(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
+
 
 
     public string IBus2_SendAndForgetWithList_0_Deserializer(byte[] value)
@@ -1053,6 +1078,7 @@ public class BusConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
 
     
 }

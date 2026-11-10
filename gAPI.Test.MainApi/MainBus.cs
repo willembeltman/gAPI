@@ -2,6 +2,7 @@
 using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
 using gAPI.Test.Shared.Private;
+using gAPI.Test.Shared.Public;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -9,12 +10,13 @@ namespace gAPI.Test.Main.Server;
 
 public class MainBus(
     ILoggerFactory loggerFactory,
-    IClientContext clientContext)
+    IClientContext clientContext,
+    IBusContext busContext)
     : IMainBus
     , IHostedBusService
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainBus>();
-
+    private TaskCompletionSource<string>? PontResult;
 
     public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
     {
@@ -32,6 +34,26 @@ public class MainBus(
     {
     }
 
+
+    internal async Task DoPing()
+    {
+        for (var y = 0; y < 50; y++)
+        {
+            var sw2 = Stopwatch.StartNew();
+
+            PontResult = new TaskCompletionSource<string>();
+
+            busContext.Bus1.ToAny().Ping("hoi, dit is een lange zin. of zo.");
+
+            var str = await PontResult.Task.WaitAsync(CancellationToken.None);
+
+            Logger.LogInformation($"mainBus => Bus1 - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
+        }
+    }
+    public void Pong(string v)
+    {
+        PontResult?.SetResult(v);
+    }
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
     {
@@ -122,5 +144,4 @@ public class MainBus(
         yield return "2";
         yield return "3";
     }
-
 }

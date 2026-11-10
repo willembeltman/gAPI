@@ -517,7 +517,7 @@ public class Bus1Client(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public async IAsyncEnumerable<double> Ping([EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<double> PingEnumerable([EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
@@ -528,7 +528,7 @@ public class Bus1Client(
             ___busConnection.BusConnectionId,
             RequestId.New(),
             ___ServiceId,
-            new("Ping"),
+            new("PingEnumerable"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
@@ -537,7 +537,7 @@ public class Bus1Client(
         );
         ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
        
-        var ___payload = ___Ping_Serializer();
+        var ___payload = ___PingEnumerable_Serializer();
         
        
         var ___responses = ___busConnection.InvokeAsync(
@@ -559,12 +559,12 @@ public class Bus1Client(
             }
         }
     }
-    private byte[] ___Ping_Serializer()
+    private byte[] ___PingEnumerable_Serializer()
     {
         return [];
     }
 
-    public async Task Pong(CancellationToken ct)
+    public async Task PongTask(CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
@@ -575,7 +575,7 @@ public class Bus1Client(
             ___busConnection.BusConnectionId,
             RequestId.New(),
             ___ServiceId,
-            new("Pong"),
+            new("PongTask"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
@@ -584,7 +584,7 @@ public class Bus1Client(
         );
         ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
 
-        var ___payload = ___Pong_Serializer();
+        var ___payload = ___PongTask_Serializer();
         
         
         {
@@ -594,9 +594,52 @@ public class Bus1Client(
                 ___timeoutCts);
         }
     }
-    private byte[] ___Pong_Serializer()
+    private byte[] ___PongTask_Serializer()
     {
         return [];
+    }
+
+    public async void Ping(string v)
+    {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        try
+        {
+            var ___routing = new BusRoutingDto(
+                ___busConnection.BusConnectionId,
+                RequestId.New(),
+                ___ServiceId,
+                new("Ping"),
+                ___timeOut.Value,
+                ___deliveryMode,
+                ___to,
+                ___busConnectionId,
+                ___throwIfNoReceiver
+            );
+
+            var ___payload = ___Ping_Serializer(
+                v);
+
+            await ___busConnection.SendFireAndForgetAsync(
+                ___routing,
+                ___payload);
+        }
+        catch (Exception ex)
+        {
+            ___Logger.LogError(ex, "Exception caught in generated server async void method for WriteLine");
+        }
+    }
+    private byte[] ___Ping_Serializer(string v)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, v);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, v);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
     }
 
 

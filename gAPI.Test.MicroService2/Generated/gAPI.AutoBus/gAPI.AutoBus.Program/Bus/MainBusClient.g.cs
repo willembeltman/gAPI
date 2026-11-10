@@ -517,6 +517,49 @@ public class MainBusClient(
         return ___buffer;
     }
 
+    public async void Pong(string v)
+    {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        try
+        {
+            var ___routing = new BusRoutingDto(
+                ___busConnection.BusConnectionId,
+                RequestId.New(),
+                ___ServiceId,
+                new("Pong"),
+                ___timeOut.Value,
+                ___deliveryMode,
+                ___to,
+                ___busConnectionId,
+                ___throwIfNoReceiver
+            );
+
+            var ___payload = ___Pong_Serializer(
+                v);
+
+            await ___busConnection.SendFireAndForgetAsync(
+                ___routing,
+                ___payload);
+        }
+        catch (Exception ex)
+        {
+            ___Logger.LogError(ex, "Exception caught in generated server async void method for WriteLine");
+        }
+    }
+    private byte[] ___Pong_Serializer(string v)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, v);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, v);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
 
     public void Dispose()
     {

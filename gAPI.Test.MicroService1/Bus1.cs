@@ -56,7 +56,7 @@ public class Bus1(
 
 
 
-    public async IAsyncEnumerable<double> Ping([EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<double> PingEnumerable([EnumeratorCancellation] CancellationToken ct)
     {
         for (int i = 0; i < 20; i++)
         {
@@ -68,7 +68,7 @@ public class Bus1(
         }
     }
 
-    public async Task Pong(CancellationToken ct)
+    public async Task PongTask(CancellationToken ct)
     {
         if (stopwatch == null || complete == null)
             return;
@@ -172,4 +172,8 @@ public class Bus1(
         yield return "3";
     }
 
+    public void Ping(string v)
+    {
+        busContext.MainBus.ToAny().Pong(v);
+    }
 }

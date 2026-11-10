@@ -17,7 +17,7 @@ public class MainHub(
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainHub>();
     private CancellationTokenSource? Cts;
 
-    public TaskCompletionSource<string> PontResult { get; private set; }
+    public TaskCompletionSource<string>? PontResult { get; private set; }
 
     async Task IHostedService.StartAsync(CancellationToken ct)
     {
@@ -68,7 +68,7 @@ public class MainHub(
 
             var str = await PontResult.Task.WaitAsync(ct);
 
-            Logger.LogInformation($"mainApi - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
+            Logger.LogInformation($"mainClient => mainApi - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
         }
 
 
@@ -165,8 +165,13 @@ public class MainHub(
         yield return "3";
     }
 
+
+    public void Ping(string v)
+    {
+        mainApi.Pong(v);
+    }
     public void Pong(string v)
     {
-        PontResult.SetResult(v);
+        PontResult?.SetResult(v);
     }
 }

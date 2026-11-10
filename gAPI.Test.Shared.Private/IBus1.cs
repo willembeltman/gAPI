@@ -17,6 +17,7 @@ public interface IBus1
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
 
-    IAsyncEnumerable<double> Ping(CancellationToken ct);
-    Task Pong(CancellationToken ct);
+    IAsyncEnumerable<double> PingEnumerable(CancellationToken ct);
+    Task PongTask(CancellationToken ct);
+    void Ping(string v);
 }
