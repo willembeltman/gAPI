@@ -208,14 +208,14 @@ public sealed class BusFabricClient
         await BusConnection.OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
+            Logger.LogTrace("{now} Reconnecting BusFabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
     }
 
     private async Task DisconnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Error))
             Logger.LogError(
-                "Disconnecting FabricClient {Id}",
+                "Disconnecting BusFabricClient {Id}",
                 FabricConnectionId);
 
         await ConnectingGate.WaitAsync();
@@ -392,7 +392,7 @@ public sealed class BusFabricClient
         FabricConnectionId = synchronizeFabricIds.FabricConnectionId;
         FabricManagerId = synchronizeFabricIds.FabricManagerId;
 
-        Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} FabricClient {FabricConnectionId.Value} started");
+        Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} BusFabricClient {FabricConnectionId.Value} started");
     }
 
     private async Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto message, CancellationToken ct)
@@ -877,7 +877,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Information))
         {
             Logger.LogInformation(
-                "Closing FabricClient {Id}",
+                "Closing BusFabricClient {Id}",
                 FabricConnectionId);
         }
         await DisconnectAsync();

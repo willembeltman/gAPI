@@ -319,9 +319,6 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async Task Send_Unsubscribe_ToServerAsync(object implementation, UnsubscribeDto unsubscribe, CancellationToken ct)
     {
-        if (Initialized == false)
-            await ConnectAsync();
-
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now}: Send_Unsubscribe_ToServerAsync({unsubscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe);
 
