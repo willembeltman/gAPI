@@ -186,19 +186,19 @@ public class {Name}(
             {arg}"))});
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___timeoutCts);" : ""))}
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
+        
+        try
         {{
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        }}
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
             ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
-        }}" : "")}
+        }}
     }}";
     }
     private string GenerateTaskT(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
@@ -235,13 +235,13 @@ public class {Name}(
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___timeoutCts);" : ""))}
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
+        try
         {{
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {{
                 if (___ct.IsCancellationRequested)
@@ -253,12 +253,12 @@ public class {Name}(
                 var ___span = new Span<byte>(___response);
                 return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
             }}
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        }}
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
             ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
-        }}" : "")}
+        }}
         if (___throwIfNoReceiver)
             throw new KeyNotFoundException();
         return default!;
@@ -299,13 +299,14 @@ public class {Name}(
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___busConnection.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, ___timeoutCts);" : ""))}
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {{
                 if (___ct.IsCancellationRequested)

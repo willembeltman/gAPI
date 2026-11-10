@@ -17,7 +17,7 @@ public class ServiceContext
 
         HubInterfaces = hubInterfaceSymbols
             .Select(interfaceSymbol => new Interface(this, interfaceSymbol, allSymbols))
-            .Where(a => a.Service?.IsHubProxy != true)
+            .Where(a => a.Services.Any(b => b.IsHubProxy) == false)
             .OrderBy(a => a.Name)
             .ToArray();
 

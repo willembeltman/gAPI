@@ -19,5 +19,6 @@ public static class InitializeDtoMultipartFormDataContentSerializer
         
         if (value.StateData != null)
             ___content.Add(new StringContent(value.StateData), $"{___prefix}StateData");
+        ___content.Add(new StringContent(value.SessionId), $"{___prefix}SessionId");
     }
 }

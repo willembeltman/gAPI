@@ -2,6 +2,7 @@ using gAPI.AutoBus.Generators;
 using gAPI.AutoBus.Generators.BusClient;
 using gAPI.AutoBus.Generators.BusClientContext;
 using gAPI.AutoBus.Generators.BusConnection;
+using gAPI.AutoBus.Generators.BusConnectionHostedService;
 using gAPI.AutoBus.Generators.BusContext;
 using gAPI.AutoBus.Generators.Startup;
 using gAPI.AutoBus.Models;

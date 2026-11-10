@@ -1,7 +1,7 @@
 ﻿using gAPI.AutoBus.Models;
 using System.Linq;
 
-namespace gAPI.AutoBus.Generators.BusConnection;
+namespace gAPI.AutoBus.Generators.BusConnectionHostedService;
 
 public class HostedBusServicesGenerator : _BaseGenerator
 {

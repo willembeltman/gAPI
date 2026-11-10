@@ -145,11 +145,16 @@ public class MainBusClient(
             message);
         
         
+        try
         {
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
+        }
+        finally
+        {
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___Send_Serializer(string message)
@@ -244,12 +249,13 @@ public class MainBusClient(
             name);
         
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
-        
+        try
         {
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {
                 if (___ct.IsCancellationRequested)
@@ -261,6 +267,10 @@ public class MainBusClient(
                 var ___span = new Span<byte>(___response);
                 return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
+        }
+        finally
+        {
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
         if (___throwIfNoReceiver)
             throw new KeyNotFoundException();
@@ -304,13 +314,13 @@ public class MainBusClient(
         
         ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___timeoutCts);
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
-        
         try
         {
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {
                 if (___ct.IsCancellationRequested)
@@ -373,12 +383,13 @@ public class MainBusClient(
             name);
         
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
         
         {
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {
                 if (___ct.IsCancellationRequested)
@@ -430,13 +441,14 @@ public class MainBusClient(
         
         ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___timeoutCts);
        
-        var ___responses = ___busConnection.InvokeAsync(
-            ___routing, 
-            ___payload, 
-            ___timeoutCts);
         
         try
         {
+            var ___responses = ___busConnection.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {
                 if (___ct.IsCancellationRequested)
@@ -496,11 +508,16 @@ public class MainBusClient(
             sessionId);
         
         
+        try
         {
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
+        }
+        finally
+        {
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___StartServiceTests_Serializer(SessionId sessionId)

@@ -10,7 +10,7 @@ public static class InitializeDtoSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x39367B8C;
-    public const uint SchemaHash = 0x1009A878;
+    public const uint SchemaHash = 0x5FF38F74;
 
     [IsSerializerWrite]
     public static void Write(this BinaryWriter ___writer, InitializeDto value)
@@ -22,6 +22,7 @@ public static class InitializeDtoSerializer
         ___writer.Write(value.StateData != null); 
         if (value.StateData != null)
             ___writer.Write(value.StateData);
+        ___writer.Write(value.SessionId);
     }
 
     [IsSerializerRead]
@@ -36,6 +37,7 @@ public static class InitializeDtoSerializer
         
         var value = new InitializeDto();
         value.StateData = ___reader.ReadBoolean() == false ? null : ___reader.ReadString();
+        value.SessionId = ___reader.ReadString();
         return value;
     }
 }

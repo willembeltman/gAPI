@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators.Wss;
+namespace gAPI.AutoWss.Client.Generators.ClientConnection;
 
 public class ClientConnectionGenerator : _BaseGenerator
 {
@@ -36,6 +36,7 @@ public class ClientConnectionGenerator : _BaseGenerator
 
     public SharedReference WssClientConnection => Context.SharedReferences.WssClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
+    public SharedReference HostedHubServices => Context.HostedHubServices;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference SubscribeDto => Context.SharedReferences.SubscribeDto;
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
@@ -76,6 +77,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(StreamingResponseDto);
         Reg(IClientLoggerFactory);
         Reg(ClientConfig);
+        Reg(HostedHubServices);
         foreach (var @interface in Context.ServiceContext.ApiInterfaces)
         {
             Reg(@interface);
@@ -91,6 +93,11 @@ public class ClientConnectionGenerator : _BaseGenerator
         foreach (var @interface in Context.ServiceContext.HubInterfaces)
         {
             Reg(@interface);
+            foreach (var service in @interface.Services)
+            {
+                if (service.IsHostedHubService)
+                    Reg(service);
+            }
             foreach (var method in @interface.Methods)
             {
                 RegRecursive(method.ResponseType);
@@ -125,9 +132,12 @@ public class {Name}
 
     readonly ILogger ___Logger;
     int ___maxBufferSize;
+    public {HostedHubServices}? HostedHubServices {{ get; set; }}
     {GenerateApiProperties()}
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
+    {GenerateOnDisconnected()}{GenerateOnRestoreSubscriptions()}
+
     {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
     {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => GenerateMethods(ref functions, functionNames, Interface)))}
     {functions}
@@ -167,29 +177,29 @@ public class {Name}
     {
         return $@"
     public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{
-        await TryConnectAsync(___ct);{string.Join("", Context.ServiceContext.HubInterfaces.Select(hub => $@"
-
-        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
+    {{{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
+        if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(""{{now}} SubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
+                ___Logger.LogTrace(""{{now}} SubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{@interface}"");
 
-            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
             {{
-                {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
+                {@interface.CleanName.ToMultiple()}.Add({@interface.CleanName.ToCamelCase()});
             }}
             finally
             {{
-                {hub.CleanName.ToMultiple()}Lock.Release();
+                {@interface.CleanName.ToMultiple()}Lock.Release();
             }}
 
-            await Send_Subscribe_ToServerAsync(new {SubscribeDto}(
-                new ServiceId(""{hub}""),
-                HttpClient.UserId,
-                HttpClient.SessionId
-            ), ___ct);
+            await Send_Subscribe_ToServerAsync(
+                {@interface.CleanName.ToCamelCase()},
+                new {SubscribeDto}(
+                    new ServiceId(""{@interface}""),
+                    HttpClient.UserId,
+                    HttpClient.SessionId
+                ), ___ct);
         }}"))}
     }}";
     }
@@ -199,31 +209,82 @@ public class {Name}
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {{
         if (!Initialized)
-            return;{string.Join("", Context.ServiceContext.HubInterfaces.Select(hub => $@"
+            return;{string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
 
-        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
+        if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(""{{now}} UnsubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{hub}"");
+                ___Logger.LogTrace(""{{now}} UnsubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{@interface}"");
 
-            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
             {{
-                {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
+                {@interface.CleanName.ToMultiple()}.Remove({@interface.CleanName.ToCamelCase()});
             }}
             finally
             {{
-                {hub.CleanName.ToMultiple()}Lock.Release();
+                {@interface.CleanName.ToMultiple()}Lock.Release();
             }}
 
-            await Send_Unsubscribe_ToServerAsync(new {UnsubscribeDto}(
-                new {ServiceId}(""{hub}""),
-                HttpClient.UserId,
-                HttpClient.SessionId
-            ), ___ct);
+            await Send_Unsubscribe_ToServerAsync(
+                {@interface.CleanName.ToCamelCase()},
+                new {UnsubscribeDto}(
+                    new {ServiceId}(""{@interface}""),
+                    HttpClient.UserId,
+                    HttpClient.SessionId
+                ), ___ct);
         }}"))}
     }}";
     }
+    private string GenerateOnDisconnected()
+    {
+        return $@"
+    public override async Task OnDisconnectedAsync(CancellationToken ___ct)
+    {{{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
+        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+        try
+        {{
+            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
+            {{
+                if ({@interface.CleanName.ToCamelCase()} is IHubServiceSubscription {@interface.CleanName.ToCamelCase()}HubServiceSubscription)
+                {{
+                    var ___serviceId = new {ServiceId}(""{@interface}"");
+                    await {@interface.CleanName.ToCamelCase()}HubServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }}
+            }}
+        }}
+        finally
+        {{
+            {@interface.CleanName.ToMultiple()}Lock.Release();
+        }}"))}
+    }}";
+    }
+    private string GenerateOnRestoreSubscriptions()
+    {
+        return $@"
+    public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
+    {{{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
+        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+        try
+        {{
+            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
+            {{
+                await Send_Subscribe_ToServerAsync(
+                    {@interface.CleanName.ToCamelCase()},
+                    new {SubscribeDto}(
+                        new ServiceId(""{@interface}""),
+                        HttpClient.UserId,
+                        HttpClient.SessionId
+                    ), ___ct);// This causes the reconnect event to be called
+            }}
+        }}
+        finally
+        {{
+            {@interface.CleanName.ToMultiple()}Lock.Release();
+        }}"))}
+    }}";
+    }
+
 
     private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
     {

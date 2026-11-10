@@ -31,8 +31,6 @@ public abstract class WssClientConnection : IWssClientConnection
 
     readonly WssClientConnectionSender Sender;
     readonly ILogger Logger;
-    readonly SemaphoreSlim InitLock = new(1, 1);
-    readonly ConcurrentDictionary<string, SubscribeDto> Subscriptions = [];
     readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
@@ -40,15 +38,14 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
     readonly byte[] ReceiveBuffer;
 
-    private Task? InitializeTask;
     private ClientWebSocket? Ws;
 
     public ClientConfig Config { get; }
 
     protected readonly IClientAuthenticatedHttpClient HttpClient;
-    protected CancellationTokenSource? Cts;
+    private CancellationToken? LifeCycleCt;
 
-    public bool Initialized { get; private set; }
+    public bool Initialized => ConnectedCts != null;
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricConnectionId FabricConnectionId { get; private set; } = new FabricConnectionId(-1);
     public ClientConnectionId ClientConnectionId { get; private set; } = new ClientConnectionId(-1);
@@ -58,188 +55,284 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public LogLevel MinimalLevel => Config.MinimumLogLevel;
 
+    protected CancellationTokenSource? ConnectedCts;
+    public bool RunningRequested { get; private set; }
+    SemaphoreSlim ConnectingGate = new SemaphoreSlim(1);
+
     #region Connection
 
-    public async Task TryConnectAsync(CancellationToken ct)
+    public void Start(CancellationToken ct)
     {
-        await InitLock.WaitAsync(ct);
+        LifeCycleCt = ct;
+        _ = Task.Run(ConnectAsync);
+    }
+    private async Task ConnectAsync()
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} ConnectAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
+
+        if (LifeCycleCt == null)
+            throw new Exception("Not initialized");
+
+        await ConnectingGate.WaitAsync();
         try
         {
-            if (IsConnected)
-                return;
-
-            // Als we niet verbonden zijn, moeten we de oude tafelen/resetten
-            if (InitializeTask == null || InitializeTask.IsFaulted || InitializeTask.IsCompleted)
-            {
-                InitializeTask = ConnectAsync(Config.WssBackendUrl!, ct);
-            }
+            await Gated_ConnectAsync(LifeCycleCt.Value);
         }
         finally
         {
-            InitLock.Release();
+            ConnectingGate.Release();
         }
-
-        await InitializeTask;
     }
-    private async Task ConnectAsync(string baseUri, CancellationToken ct)
+
+    private async Task Gated_ConnectAsync(CancellationToken ct)
     {
-        while (true)
+        var baseUri = Config.WssBackendUrl;
+        RunningRequested = true;
+        while (RunningRequested == true && ConnectedCts == null)
         {
             try
             {
                 var stateData = await HttpClient.GetStateDataAsync(false, ct);
                 var sessionId = HttpClient.SessionId.Value;
 
-                Cts = new();
                 Ws = new ClientWebSocket();
 
                 var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
                 await Ws.ConnectAsync(url, ct);
 
-                _ = Task.Run(async () => { await ReceiverKernel(Ws, Cts); }, Cts.Token);
-                _ = Task.Run(async () => { await Sender.SendKernel(Ws, Cts.Token); }, Cts.Token);
+                ConnectedCts = new CancellationTokenSource();
 
                 var initialize = new InitializeDto()
                 {
                     StateData = stateData,
+                    SessionId = sessionId
                 };
-                await Sender.Send_Initialize_ToServerAsync(initialize, sessionId, Cts.Token);
+                _ = Task.Run(async () => { await Sender.SendKernel(Ws, initialize, ConnectedCts.Token); }, ConnectedCts.Token);
+                _ = Task.Run(async () => { await TryStartReceiveKernelElseReconnectAsync(Ws, ConnectedCts); }, ConnectedCts.Token);
 
-                Logger.LogInformation("Verbinding hersteld, bezig met opnieuw inschrijven op {count} subscripties...", Subscriptions.Count);
-                await Resubscribe(Cts.Token);
-
-                Initialized = true;
-                return;
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                await InitLock.WaitAsync(CancellationToken.None);
-                try { InitializeTask = null; } finally { InitLock.Release(); }
-                throw;
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
             }
             catch (Exception ex)
             {
-                Initialized = false;
                 Logger.LogWarning("ConnectAsync => connection failed, retrying: {ex}", ex.Message);
-
-                await InitLock.WaitAsync(CancellationToken.None);
-                try { InitializeTask = null; } finally { InitLock.Release(); }
 
                 try
                 {
-                    Cts?.Cancel();
+                    ConnectedCts?.Cancel();
+                    ConnectedCts?.Dispose();
+                    ConnectedCts = null;
                     Ws?.Dispose();
                 }
                 catch { }
 
-                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
     }
 
-    public async Task ForceReconnectAsync(CancellationToken ct)
+    private async Task TryStartReceiveKernelElseReconnectAsync(WebSocket socket, CancellationTokenSource cts)
     {
-        if (HttpClient.BaseUri == null)
-            throw new Exception("Cannot get base url from IClientAuthenticatedHttpClient");
-
-        await InitLock.WaitAsync(ct);
         try
         {
-            // 1. Stop bestaande kernels
-            try
-            {
-                Cts?.Cancel();
-            }
-            catch { }
+            await ReceiverKernel(socket, cts);
+        }
+        catch (Exception ex)
+        {
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError(
+                    "FabricClient #{Id.Value}: Exception occured, restarting fabric client\r\n{ex}",
+                    FabricConnectionId?.Value,
+                    ex);
+        }
 
-            await DisposeStreamingRequestHandlersAsync();
+        if (RunningRequested)
+            await ReconnectAsync();
+    }
 
-            // 🎯 NIEUW: Maak de verzendwachtrij direct leeg!
-            // Oude, niet-verzonden berichten mogen NOOIT over de nieuwe socket gaan.
-            Sender.ClearQueue();
+    private async Task ReconnectAsync()
+    {
+        if (Logger.IsEnabled(LogLevel.Error))
+            Logger.LogError("{now} Reconnecting FabricClient ....",
+                DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            // Laat alle hangende verzoeken direct falen zodat de UI/aanroeper weet dat de verbinding weg is
-            foreach (var pending in PendingSendRequests.Values)
-                pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
-
-            foreach (var pending in PendingInvokeRequests.Values)
-                pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
-
-            PendingSendRequests.Clear();
-            PendingInvokeRequests.Clear();
-            Timeouts.Clear();
-
-            // 2. Sluit websocket netjes
-            if (Ws != null)
-            {
-                try
-                {
-                    if (Ws.State == WebSocketState.Open ||
-                        Ws.State == WebSocketState.CloseReceived)
-                    {
-                        await Ws.CloseAsync(
-                            WebSocketCloseStatus.NormalClosure,
-                            "Force reconnect",
-                            CancellationToken.None);
-                    }
-                }
-                catch { }
-
-                Ws.Dispose();
-                Ws = null!;
-            }
-
-            // 3. Reset state
-            Initialized = false;
-            InitializeTask = null;
-
-            // 4. Nieuwe CTS maken
-            Cts?.Dispose();
-            Cts = new CancellationTokenSource();
+        await ConnectingGate.WaitAsync();
+        try
+        {
+            await Gated_ReconnectAsync();
         }
         finally
         {
-            InitLock.Release();
+            ConnectingGate.Release();
         }
-
-        // 5. Opnieuw verbinden via bestaande flow
-        await TryConnectAsync(ct);
     }
+
+    private async Task Gated_ReconnectAsync()
+    {
+        if (LifeCycleCt == null)
+            throw new Exception("Not initialized");
+
+        await Gated_DisconnectAsync();
+        await OnDisconnectedAsync(LifeCycleCt.Value);
+        await Gated_ConnectAsync(LifeCycleCt.Value);
+        await OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
+
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
+    }
+
+    private async Task DisconnectAsync()
+    {
+        if (Logger.IsEnabled(LogLevel.Error))
+            Logger.LogError(
+                "Disconnecting FabricClient {Id}",
+                FabricConnectionId);
+
+        await ConnectingGate.WaitAsync();
+        try
+        {
+            RunningRequested = false;
+            await Gated_DisconnectAsync();
+        }
+        finally
+        {
+            ConnectingGate.Release();
+        }
+    }
+    private async Task Gated_DisconnectAsync()
+    {
+        RunningRequested = false;
+        if (ConnectedCts == null)
+            return;
+
+        await ConnectedCts.CancelAsync();
+
+        Ws?.Dispose();
+        Ws = null;
+
+        ConnectedCts.Dispose();
+        ConnectedCts = null;
+    }
+
+
+    //private async Task SendDisconnectToClients(CancellationToken ct)
+    //{
+    //    foreach (var subscribe in Subscriptions.Values)
+    //    {
+    //        await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+    //    }
+    //}
+    //public async Task Resubscribe(CancellationToken ct)
+    //{
+    //    foreach (var subscribe in Subscriptions.Values)
+    //    {
+    //        await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+    //    }
+    //}
+
+    //public async Task ForceReconnectAsync(CancellationToken ct)
+    //{
+    //    if (HttpClient.BaseUri == null)
+    //        throw new Exception("Cannot get base url from IClientAuthenticatedHttpClient");
+
+    //    await InitLock.WaitAsync(ct);
+    //    try
+    //    {
+    //        // 1. Stop bestaande kernels
+    //        try
+    //        {
+    //            ConnectedCts?.Cancel();
+    //        }
+    //        catch { }
+
+    //        await DisposeStreamingRequestHandlersAsync();
+
+    //        // 🎯 NIEUW: Maak de verzendwachtrij direct leeg!
+    //        // Oude, niet-verzonden berichten mogen NOOIT over de nieuwe socket gaan.
+    //        Sender.ClearQueue();
+
+    //        // Laat alle hangende verzoeken direct falen zodat de UI/aanroeper weet dat de verbinding weg is
+    //        foreach (var pending in PendingSendRequests.Values)
+    //            pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
+
+    //        foreach (var pending in PendingInvokeRequests.Values)
+    //            pending.TrySetException(new Exception("Verbinding verbroken vanwege netwerkwissel."));
+
+    //        PendingSendRequests.Clear();
+    //        PendingInvokeRequests.Clear();
+    //        Timeouts.Clear();
+
+    //        // 2. Sluit websocket netjes
+    //        if (Ws != null)
+    //        {
+    //            try
+    //            {
+    //                if (Ws.State == WebSocketState.Open ||
+    //                    Ws.State == WebSocketState.CloseReceived)
+    //                {
+    //                    await Ws.CloseAsync(
+    //                        WebSocketCloseStatus.NormalClosure,
+    //                        "Force reconnect",
+    //                        CancellationToken.None);
+    //                }
+    //            }
+    //            catch { }
+
+    //            Ws.Dispose();
+    //            Ws = null!;
+    //        }
+
+    //        // 3. Reset state
+    //        Initialized = false;
+    //        InitializeTask = null;
+
+    //        // 4. Nieuwe CTS maken
+    //        ConnectedCts?.Dispose();
+    //        ConnectedCts = new CancellationTokenSource();
+    //    }
+    //    finally
+    //    {
+    //        InitLock.Release();
+    //    }
+
+    //    // 5. Opnieuw verbinden via bestaande flow
+    //    await TryConnectAsync(ct);
+    //}
 
 
     #endregion
 
     #region Sender
 
-    public async Task Send_Subscribe_ToServerAsync(SubscribeDto subscribe, CancellationToken ct)
+    public async Task Send_Subscribe_ToServerAsync(object implementation, SubscribeDto subscribe, CancellationToken ct)
     {
-        if (!Initialized)
-            return;
+        if (Initialized == false)
+            await ConnectAsync();
 
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now}: Send_Subscribe_ToServerAsync({subscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe);
 
-        Subscriptions[subscribe.ToString()] = subscribe;
-
         await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+
+        if (implementation is IHubServiceSubscription implementationSubscription)
+        {
+            await implementationSubscription.OnSubscribedAsync(subscribe.ServiceId, ct);
+        }
     }
-    public async Task Send_Unsubscribe_ToServerAsync(UnsubscribeDto unsubscribe, CancellationToken ct)
+    public async Task Send_Unsubscribe_ToServerAsync(object implementation, UnsubscribeDto unsubscribe, CancellationToken ct)
     {
-        if (!Initialized)
-            return;
+        if (Initialized == false)
+            await ConnectAsync();
 
         //if (Logger.IsEnabled(LogLevel.Trace))
         //    Logger.LogTrace("{now}: Send_Unsubscribe_ToServerAsync({unsubscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe);
 
-        Subscriptions.Remove(unsubscribe.ToString(), out _);
-
         await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
-    }
-    public async Task Resubscribe(CancellationToken ct)
-    {
-        foreach (var subscribe in Subscriptions.Values)
+
+        if (implementation is IHubServiceSubscription implementationSubscription)
         {
-            await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+            await implementationSubscription.OnUnsubscribedAsync(unsubscribe.ServiceId, ct);
         }
     }
 
@@ -282,142 +375,142 @@ public abstract class WssClientConnection : IWssClientConnection
     private async Task ReceiverKernel(WebSocket socket, CancellationTokenSource cts)
     {
         var ct = cts.Token;
-        bool explicitClose = false;
+        //bool explicitClose = false;
 
-        try
+        //try
+        //{
+        while (socket.State == WebSocketState.Open && !ct.IsCancellationRequested)
         {
-            while (socket.State == WebSocketState.Open && !ct.IsCancellationRequested)
+            int totalBytes = 0;
+            WebSocketReceiveResult result;
+
+            do
             {
-                int totalBytes = 0;
-                WebSocketReceiveResult result;
+                result = await socket.ReceiveAsync(
+                    new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
+                    ct);
 
-                do
+                if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    result = await socket.ReceiveAsync(
-                        new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
-                        ct);
-
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
-                        await cts.CancelAsync();
-                        explicitClose = true; // Netjes afgesloten door server of client
-                        return;
-                    }
-
-                    totalBytes += result.Count;
-
-                } while (!result.EndOfMessage);
-
-                // 🎯 Direct span gebruiken
-                var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
-                int offset = 0;
-
-                var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
-
-                switch (messageType)
-                {
-                    case WssServerToClientMessageEnum.SynchronizeClientIds:
-                        var synchronizeClientIds = span.ReadSynchronizeClientIdsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
-                        var sendAndForgetRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricSendAndForgetRequest_FromServer(sendAndForgetRequest, ct);
-                        break;
-                    case WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled:
-                        var sendAndForgetRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricSendAndForgetRequestCancelled_FromServer(sendAndForgetRequestCancelled, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.FabricSendRequest:
-                        var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricSendRequest_FromServer(sendArgumentedRequest, ct);
-                        break;
-                    case WssServerToClientMessageEnum.FabricSendRequestCancelled:
-                        var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricSendRequestCancelled_FromServer(sendRequestCancelled, ct);
-                        break;
-                    case WssServerToClientMessageEnum.SendRequestDone:
-                        var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.FabricInvokeRequest:
-                        var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricInvokeRequest_FromServerAsync(invokeRequest, ct);
-                        break;
-                    case WssServerToClientMessageEnum.FabricInvokeRequestCancelled:
-                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
-                        break;
-                    case WssServerToClientMessageEnum.InvokeRequestAck:
-                        var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
-                        break;
-                    case WssServerToClientMessageEnum.InvokeRequestDone:
-                        var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.StreamingRequest:
-                        var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_StreamingRequest_FromServerAsync(argumentRequest, ct);
-                        break;
-                    case WssServerToClientMessageEnum.StreamingResponse:
-                        var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_StreamingResponse_FromServerAsync(argumentResponse, ct);
-                        break;
-
-                    case WssServerToClientMessageEnum.FabricStreamingRequest:
-                        var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricStreamingRequest_FromServerAsync(fabricArgumentRequest, ct);
-                        break;
-                    case WssServerToClientMessageEnum.FabricStreamingResponse:
-                        var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_FabricStreamingResponse_FromServerAsync(fabricArgumentResponse, ct);
-                        break;
+                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
+                    await cts.CancelAsync();
+                    RunningRequested = false; // Netjes afgesloten door server of client
+                    return;
                 }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
-            throw;
-        }
-        finally
-        {
-            cts.Cancel();
-            try
-            {
-                await DisposeStreamingRequestHandlersAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to dispose streaming request handlers after the WSS connection closed.");
-            }
-            cts.Dispose();
 
-            // 🎯 ALS de verbinding onverwacht is verbroken (bv. door netwerkwissel), start reconnect flow:
-            if (!explicitClose && !ct.IsCancellationRequested)
+                totalBytes += result.Count;
+
+            } while (!result.EndOfMessage);
+
+            // 🎯 Direct span gebruiken
+            var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
+            int offset = 0;
+
+            var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
+
+            switch (messageType)
             {
-                Logger.LogInformation("Verbinding onverwacht verloren. Herverbinden over 5 seconden...");
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-                    try
-                    {
-                        // ForceReconnectAsync reset de state netjes en start TryConnectAsync opnieuw
-                        await ForceReconnectAsync(CancellationToken.None);
-                    }
-                    catch (Exception reconEx)
-                    {
-                        Logger.LogError("Automatische herverbinding mislukt: {ex}", reconEx);
-                    }
-                });
+                case WssServerToClientMessageEnum.SynchronizeClientIds:
+                    var synchronizeClientIds = span.ReadSynchronizeClientIdsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
+                    break;
+
+                case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
+                    var sendAndForgetRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricSendAndForgetRequest_FromServer(sendAndForgetRequest, ct);
+                    break;
+                case WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled:
+                    var sendAndForgetRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricSendAndForgetRequestCancelled_FromServer(sendAndForgetRequestCancelled, ct);
+                    break;
+
+                case WssServerToClientMessageEnum.FabricSendRequest:
+                    var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricSendRequest_FromServer(sendArgumentedRequest, ct);
+                    break;
+                case WssServerToClientMessageEnum.FabricSendRequestCancelled:
+                    var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricSendRequestCancelled_FromServer(sendRequestCancelled, ct);
+                    break;
+                case WssServerToClientMessageEnum.SendRequestDone:
+                    var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
+                    break;
+
+                case WssServerToClientMessageEnum.FabricInvokeRequest:
+                    var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricInvokeRequest_FromServerAsync(invokeRequest, ct);
+                    break;
+                case WssServerToClientMessageEnum.FabricInvokeRequestCancelled:
+                    var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
+                    break;
+                case WssServerToClientMessageEnum.InvokeRequestAck:
+                    var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
+                    break;
+                case WssServerToClientMessageEnum.InvokeRequestDone:
+                    var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
+                    break;
+
+                case WssServerToClientMessageEnum.StreamingRequest:
+                    var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_StreamingRequest_FromServerAsync(argumentRequest, ct);
+                    break;
+                case WssServerToClientMessageEnum.StreamingResponse:
+                    var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_StreamingResponse_FromServerAsync(argumentResponse, ct);
+                    break;
+
+                case WssServerToClientMessageEnum.FabricStreamingRequest:
+                    var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricStreamingRequest_FromServerAsync(fabricArgumentRequest, ct);
+                    break;
+                case WssServerToClientMessageEnum.FabricStreamingResponse:
+                    var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                    await Received_FabricStreamingResponse_FromServerAsync(fabricArgumentResponse, ct);
+                    break;
             }
         }
+        //}
+        //catch (Exception ex)
+        //{
+        //    Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
+        //    throw;
+        //}
+        //finally
+        //{
+        //    cts.Cancel();
+        //    try
+        //    {
+        //        await DisposeStreamingRequestHandlersAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.LogError(ex, "Failed to dispose streaming request handlers after the WSS connection closed.");
+        //    }
+        //    cts.Dispose();
+
+        //    // 🎯 ALS de verbinding onverwacht is verbroken (bv. door netwerkwissel), start reconnect flow:
+        //    if (!explicitClose && !ct.IsCancellationRequested)
+        //    {
+        //        Logger.LogInformation("Verbinding onverwacht verloren. Herverbinden over 5 seconden...");
+        //        _ = Task.Run(async () =>
+        //        {
+        //            await Task.Delay(TimeSpan.FromSeconds(5));
+        //            try
+        //            {
+        //                // ForceReconnectAsync reset de state netjes en start TryConnectAsync opnieuw
+        //                await ForceReconnectAsync(CancellationToken.None);
+        //            }
+        //            catch (Exception reconEx)
+        //            {
+        //                Logger.LogError("Automatische herverbinding mislukt: {ex}", reconEx);
+        //            }
+        //        });
+        //    }
+        //}
     }
 
     private async Task Received_SynchronizeClientIds_FromServer(SynchronizeClientIdsDto synchronizeClientIds, CancellationToken ct)
@@ -759,6 +852,10 @@ public abstract class WssClientConnection : IWssClientConnection
 
     #region Calls naar de service
 
+    // Callbacks from fabric (to the actual services)
+    public abstract Task OnDisconnectedAsync(CancellationToken lifeCycleCt);
+    public abstract Task OnRestoreSubscriptionsAsync(CancellationToken lifeCycleCt);
+
     protected abstract Task Send_SendRequest_ToServiceAsync(
         SendRequestDto sendRequest,
         CancellationToken ct);
@@ -867,6 +964,13 @@ public abstract class WssClientConnection : IWssClientConnection
         {
             PendingInvokeRequests.TryRemove(routing.RequestId, out _);
         }
+    }
+
+    public void RegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+    }
+    public void UnRegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
+    {
     }
 
     protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
@@ -1211,7 +1315,6 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }));
     }
-
     public async Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -1260,9 +1363,9 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public void Dispose()
     {
-        Cts?.Cancel();
-        Cts?.Dispose();
-        Cts = null;
+        ConnectedCts?.Cancel();
+        ConnectedCts?.Dispose();
+        ConnectedCts = null;
         Ws?.Dispose();
         Ws = null;
         GC.SuppressFinalize(this);

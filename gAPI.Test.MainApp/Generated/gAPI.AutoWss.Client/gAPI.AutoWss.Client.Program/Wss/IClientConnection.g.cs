@@ -11,4 +11,6 @@ public interface IClientConnection : IWssClientConnection
 
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
+
+    HostedHubServices? HostedHubServices { get; set; }
 }

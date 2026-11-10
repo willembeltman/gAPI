@@ -1,4 +1,6 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Ids;
+using gAPI.Generated;
 using gAPI.Test.Shared.Public;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,33 +13,52 @@ public class MainHub(
     ILoggerFactory loggerFactory,
     IMainApi mainApi,
     IClientConnection clientConnection)
-    : IHostedService
-    , IMainHub
+    : IMainHub
+    //, IHostedService
+    //, IHubServiceSubscription
+    , IHostedHubService
 {
+
+    public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+        _ = StartAllTests(ct);
+    }
+
+    public async Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+
+    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+
     private readonly ILogger Logger = loggerFactory.CreateLogger<MainHub>();
     private CancellationTokenSource? Cts;
 
     public TaskCompletionSource<string>? PontResult { get; private set; }
 
-    async Task IHostedService.StartAsync(CancellationToken ct)
-    {
-        if (Cts != null)
-            return;
-        Cts = new CancellationTokenSource();
-        ct = Cts.Token;
-        await clientConnection.SubscribeAsync(this, ct);
+    //async Task IHostedService.StartAsync(CancellationToken ct)
+    //{
+    //    if (Cts != null)
+    //        return;
+    //    Cts = new CancellationTokenSource();
+    //    ct = Cts.Token;
+    //    await clientConnection.SubscribeAsync(this, ct);
 
-        _ = StartAllTests(ct);
-    }
-    async Task IHostedService.StopAsync(CancellationToken ct)
-    {
-        if (Cts == null)
-            return;
-        await clientConnection.UnsubscribeAsync(this, ct);
-        Cts.Cancel();
-        Cts.Dispose();
-        Cts = null;
-    }
+    //    _ = StartAllTests(ct);
+    //}
+    //async Task IHostedService.StopAsync(CancellationToken ct)
+    //{
+    //    if (Cts == null)
+    //        return;
+    //    await clientConnection.UnsubscribeAsync(this, ct);
+    //    Cts.Cancel();
+    //    Cts.Dispose();
+    //    Cts = null;
+    //}
 
     private async IAsyncEnumerable<string> MyList()
     {
@@ -51,7 +72,7 @@ public class MainHub(
 
     public async Task StartAllTests(CancellationToken ct)
     {
-        await Task.Delay(2000);
+        //await Task.Delay(2000);
 
         for (int i = 0; i < 10; i++)
             await mainApi.InvokeTask("hoi", ct);

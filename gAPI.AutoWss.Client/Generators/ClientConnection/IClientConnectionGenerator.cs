@@ -1,7 +1,7 @@
 ﻿using gAPI.AutoWss.Client.Models;
 using System.Linq;
 
-namespace gAPI.AutoWss.Client.Generators.Wss;
+namespace gAPI.AutoWss.Client.Generators.ClientConnection;
 
 public class IClientConnectionGenerator : _BaseGenerator
 {
@@ -19,10 +19,12 @@ public class IClientConnectionGenerator : _BaseGenerator
 
     public Generator Context { get; }
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
+    public SharedReference HostedHubServices => Context.HostedHubServices;
 
     public override void GenerateCode()
     {
         Reg(IWssClientConnection);
+        Reg(HostedHubServices);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -39,6 +41,8 @@ public interface {Name} : {IWssClientConnection}
 
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
+
+    {HostedHubServices}? HostedHubServices {{ get; set; }}
 }}";
     }
 }

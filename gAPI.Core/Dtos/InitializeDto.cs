@@ -6,4 +6,5 @@ namespace gAPI.Core.Dtos;
 public class InitializeDto
 {
     public string? StateData { get; set; }
+    public string SessionId { get; set; }
 }

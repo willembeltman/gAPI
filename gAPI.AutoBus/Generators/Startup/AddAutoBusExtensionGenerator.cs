@@ -58,7 +58,8 @@ public class AddAutoBusExtensionGenerator : _BaseGenerator
             Reg(@interface);
             foreach (var service in @interface.Services)
             {
-                Reg(service);
+                if (service.IsHostedBusService)
+                    Reg(service);
             }
             foreach (var method in @interface.Methods)
             {
@@ -120,8 +121,8 @@ public static class {Name}
 {fabricClientCode}
 
         // Connection
-        services.AddSingleton<{IBusConnection}, {BusConnection}>();{string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Select(service => $@"
-        services.AddScoped<{service}>();"))))}
+        services.AddSingleton<{IBusConnection}, {BusConnection}>();{string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => string.Join("", @interface.Services.Where(a => a.IsHostedBusService).Select(service => $@"
+        services.AddSingleton<{service}>();"))))}
         services.AddHostedService<{BusHostedService}>();
 
         // Hubs

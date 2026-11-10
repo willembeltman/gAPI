@@ -11,6 +11,7 @@ public static class InitializeDtoComparer
     public static bool IsDifferent(this InitializeDto value, InitializeDto otherValue)
     {
         if (value.StateData != otherValue.StateData) return true;
+        if (value.SessionId != otherValue.SessionId) return true;
         return false;
     }
 }

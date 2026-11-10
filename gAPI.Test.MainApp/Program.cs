@@ -13,7 +13,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddAutoWssClient(builder.Configuration);
 builder.Services.AddAutoAuthClient(builder.Configuration);
 
-builder.Services.AddHostedService<MainHub>();
+//builder.Services.AddHostedService<MainHub>();
 
 var app = builder.Build();
 app.Run();

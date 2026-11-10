@@ -8,6 +8,7 @@ using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Threading.Channels;
 
 namespace gAPI.Core.Client.Wss;
@@ -26,10 +27,23 @@ public class WssClientConnectionSender
         SendBuffer = new byte[clientConfig.MaxPackageSize ?? 512 * 1024];
     }
 
-    public async Task SendKernel(WebSocket socket, CancellationToken ct)
+    public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationToken ct)
     {
         try
         {
+            //await Send_Initialize_ToServerAsync(initialize, ct);
+
+            var span2 = SendBuffer.AsSpan();
+            var offset2 = 0;
+            span2.WriteWssClientToServerMessageEnum(ref offset2, WssClientToServerMessageEnum.Initialize);
+            span2.Write(ref offset2, initialize);
+
+            await socket.SendAsync(
+                new ArraySegment<byte>(SendBuffer, 0, offset2),
+                WebSocketMessageType.Binary,
+                true,
+                ct);
+
             await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
                 var span = SendBuffer.AsSpan();
@@ -63,22 +77,22 @@ public class WssClientConnectionSender
         Logger.LogInformation("Wachtrij succesvol leeggemaakt na verbindingsverlies.");
     }
 
-    public async Task Send_Initialize_ToServerAsync(InitializeDto message, string sessionId, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendRequest_ToServiceAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), sessionId);
+    //public async Task Send_Initialize_ToServerAsync(InitializeDto message, CancellationToken ct)
+    //{
+    //    if (Logger.IsEnabled(LogLevel.Trace))
+    //        Logger.LogTrace("{now} QUEUED Send_SendRequest_ToServiceAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.SessionId);
 
-        await EnqueueAsync(writer =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), sessionId);
+    //    await EnqueueAsync(writer =>
+    //    {
+    //        if (Logger.IsEnabled(LogLevel.Trace))
+    //            Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.SessionId);
 
-            var offset = 0;
-            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
-            writer.Write(ref offset, message);
-            return offset;
-        }, ct);
-    }
+    //        var offset = 0;
+    //        writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
+    //        writer.Write(ref offset, message);
+    //        return offset;
+    //    }, ct);
+    //}
 
     public async Task Send_Subscribe_ToServerAsync(SubscribeDto message, CancellationToken ct)
     {

@@ -12,6 +12,7 @@ public static class InitializeDtoCreateCopy
     {
         var copy = new InitializeDto();
         copy.StateData = value.StateData;
+        copy.SessionId = value.SessionId;
         return copy;
     }
 }

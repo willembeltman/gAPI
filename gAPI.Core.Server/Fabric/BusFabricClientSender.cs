@@ -14,17 +14,17 @@ public class BusFabricClientSender(
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
 
-    public async Task SendKernel(CancellationToken ct)
+    public async Task SendKernel(BinaryWriter binaryWriter, CancellationToken ct)
     {
         await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
         {
-            while (fabricClient.IsConnected == false || fabricClient.BinaryWriter == null)
+            while (fabricClient.IsConnected == false || binaryWriter == null)
             {
                 await Task.Delay(10, ct);
             }
             try
             {
-                var writer = fabricClient.BinaryWriter;
+                var writer = binaryWriter;
                 if (writer != null)
                 {
                     item(writer);

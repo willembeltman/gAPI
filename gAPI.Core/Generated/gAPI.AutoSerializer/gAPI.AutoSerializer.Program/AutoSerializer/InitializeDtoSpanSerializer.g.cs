@@ -13,7 +13,7 @@ public static class InitializeDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x39367B8C;
-    public const uint SchemaHash = 0x1009A878;
+    public const uint SchemaHash = 0x5FF38F74;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, InitializeDto value)
@@ -25,6 +25,7 @@ public static class InitializeDtoSpanSerializer
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.SessionId);
     }
 
     [IsSpanSerializerRead]
@@ -39,6 +40,7 @@ public static class InitializeDtoSpanSerializer
         
         var value = new InitializeDto();
         value.StateData = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        value.SessionId = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         return value;
     }
 
@@ -49,6 +51,7 @@ public static class InitializeDtoSpanSerializer
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.StateData != null);
         if (value.StateData != null)
             PrimitivesSpanSerializer.LengthString(ref ___offset, value.StateData);
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value.SessionId);
         return ___offset;
     }
 }

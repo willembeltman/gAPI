@@ -17,6 +17,7 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     }
 
     public Generator Context { get; }
+    public SharedReference ClientConnectionHostedService => Context.ClientConnectionHostedService;
     public SharedReference ClientConnection => Context.ClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
@@ -31,6 +32,7 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
         Reg("Microsoft.Extensions.DependencyInjection");
         Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg("Microsoft.Extensions.Configuration");
+        Reg("Microsoft.Extensions.Hosting");
         Reg("gAPI.Core.Client");
         Reg("gAPI.Core.Client.Interfaces");
         Reg("gAPI.Core.Client.Extensions");
@@ -39,6 +41,16 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
         Reg(IClientLoggerFactory);
         Reg(IWssClientConnection);
         Reg(ClientConfig);
+        Reg(ClientConnectionHostedService);
+
+        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        {
+            foreach (var service in @interface.Services)
+            {
+                if (service.IsHostedHubService)
+                    Reg(service);
+            }
+        }
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -76,11 +88,12 @@ public static class {Name}
             throw new Exception(""WssBackendUrl must be filled in config"");
 
         services.AddSingleton(config);
-        services.AddSingleton(dateTime ?? TimeProvider.System);
+        services.AddSingleton(dateTime ?? TimeProvider.System);{string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => string.Join("", @interface.Services.Where(a => a.IsHostedHubService).Select(service => $@"
+        services.AddSingleton<{service}>();"))))}
+        services.AddHostedService<{ClientConnectionHostedService}>();
 
         // Connection stuff
-        services.AddSingleton<{ClientConnection}>(sp => 
-            new {ClientConnection}(config, sp.GetRequiredService<{IClientAuthenticatedHttpClient}>()));
+        services.AddSingleton<{ClientConnection}>();
         services.AddSingleton<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddSingleton<{IWssClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddSingleton<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());

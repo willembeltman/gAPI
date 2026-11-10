@@ -1,10 +1,11 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using gAPI.AutoWss.Client.Generators;
+using gAPI.AutoWss.Client.Generators.ClientConnection;
+using gAPI.AutoWss.Client.Generators.ClientConnectionHostedService;
 using gAPI.AutoWss.Client.Generators.Clients;
 using gAPI.AutoWss.Client.Generators.Hubs;
 using gAPI.AutoWss.Client.Generators.Startup;
-using gAPI.AutoWss.Client.Generators.Wss;
 using gAPI.AutoWss.Client.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -42,6 +43,8 @@ public class Generator
             .Select(a => new HubDud_Generator(this, a))
             .ToArray();
 
+        ClientConnectionHostedService = new ClientConnectionHostedServiceGenerator(this);
+        HostedHubServices = new HostedHubServicesGenerator(this);
         IClientConnection = new IClientConnectionGenerator(this);
         ClientConnection = new ClientConnectionGenerator(this);
         AddAutoWssExtension = new AddAutoWssClientExtensionGenerator(this);
@@ -57,6 +60,8 @@ public class Generator
     public ApiClient_Generator[] Apis { get; }
     public MinimalClientGenerator[] MinimalApis { get; }
     public HubDud_Generator[] HubDuds { get; }
+    public ClientConnectionHostedServiceGenerator ClientConnectionHostedService { get; }
+    public HostedHubServicesGenerator HostedHubServices { get; }
     public IClientConnectionGenerator IClientConnection { get; }
     public ClientConnectionGenerator ClientConnection { get; }
     public AddAutoWssClientExtensionGenerator AddAutoWssExtension { get; }
@@ -71,6 +76,9 @@ public class Generator
             GenerateItem(spc, api);
         foreach (var dud in HubDuds)
             GenerateItem(spc, dud);
+
+        GenerateItem(spc, ClientConnectionHostedService);
+        GenerateItem(spc, HostedHubServices);
         GenerateItem(spc, IClientConnection);
         GenerateItem(spc, ClientConnection);
         GenerateItem(spc, AddAutoWssExtension);

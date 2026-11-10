@@ -6,6 +6,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
+using gAPI.Test.Main.Client;
 using gAPI.Test.Shared.Public;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -35,6 +36,7 @@ public class ClientConnection
 
     readonly ILogger ___Logger;
     int ___maxBufferSize;
+    public HostedHubServices? HostedHubServices { get; set; }
     
     
     public MainApi MainApi { get; }
@@ -59,8 +61,6 @@ public class ClientConnection
     
     public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
-        await TryConnectAsync(___ct);
-
         if (implementation is IMainHub mainHub)
         {
             if (___Logger.IsEnabled(LogLevel.Trace))
@@ -76,11 +76,13 @@ public class ClientConnection
                 MainHubsLock.Release();
             }
 
-            await Send_Subscribe_ToServerAsync(new SubscribeDto(
-                new ServiceId("IMainHub"),
-                HttpClient.UserId,
-                HttpClient.SessionId
-            ), ___ct);
+            await Send_Subscribe_ToServerAsync(
+                mainHub,
+                new SubscribeDto(
+                    new ServiceId("IMainHub"),
+                    HttpClient.UserId,
+                    HttpClient.SessionId
+                ), ___ct);
         }
     }
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
@@ -103,13 +105,57 @@ public class ClientConnection
                 MainHubsLock.Release();
             }
 
-            await Send_Unsubscribe_ToServerAsync(new UnsubscribeDto(
-                new ServiceId("IMainHub"),
-                HttpClient.UserId,
-                HttpClient.SessionId
-            ), ___ct);
+            await Send_Unsubscribe_ToServerAsync(
+                mainHub,
+                new UnsubscribeDto(
+                    new ServiceId("IMainHub"),
+                    HttpClient.UserId,
+                    HttpClient.SessionId
+                ), ___ct);
         }
     }
+    
+    public override async Task OnDisconnectedAsync(CancellationToken ___ct)
+    {
+        await MainHubsLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var mainHub in MainHubs)
+            {
+                if (mainHub is IHubServiceSubscription mainHubHubServiceSubscription)
+                {
+                    var ___serviceId = new ServiceId("IMainHub");
+                    await mainHubHubServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }
+            }
+        }
+        finally
+        {
+            MainHubsLock.Release();
+        }
+    }
+    public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
+    {
+        await MainHubsLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var mainHub in MainHubs)
+            {
+                await Send_Subscribe_ToServerAsync(
+                    mainHub,
+                    new SubscribeDto(
+                        new ServiceId("IMainHub"),
+                        HttpClient.UserId,
+                        HttpClient.SessionId
+                    ), ___ct);// This causes the reconnect event to be called
+            }
+        }
+        finally
+        {
+            MainHubsLock.Release();
+        }
+    }
+
     
     protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {

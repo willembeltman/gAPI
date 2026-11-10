@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace gAPI.AutoBus.Generators.BusConnection;
+namespace gAPI.AutoBus.Generators.BusConnectionHostedService;
 
 public class BusConnectionHostedServiceGenerator : _BaseGenerator
 {

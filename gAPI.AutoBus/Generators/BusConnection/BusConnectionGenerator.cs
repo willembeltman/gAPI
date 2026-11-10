@@ -72,20 +72,17 @@ public class BusConnectionGenerator : _BaseGenerator
         Reg(BaseConnection);
         Reg(HostedBusServices);
         Reg(IHostedBusService);
+
         if (OverloadFabricClient && FabricClient != null)
             Reg(FabricClient);
-
-        var hostedBusServices = Context.ServiceContext.BusInterfaces
-            .SelectMany(@interface => @interface.Services
-                .Where(a => a.IsHostedBusService))
-            .ToArray();
 
         foreach (var @interface in Context.ServiceContext.BusInterfaces)
         {
             Reg(@interface);
             foreach (var service in @interface.Services)
             {
-                Reg(service);
+                if (service.IsHostedBusService)
+                    Reg(service);
             }
             foreach (var method in @interface.Methods)
             {
@@ -129,7 +126,7 @@ public class {Name}
 
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
-    {GenerateOnDisconnected(hostedBusServices)}{GenerateOnRestoreSubscriptions(hostedBusServices)}
+    {GenerateOnDisconnected()}{GenerateOnRestoreSubscriptions()}
 
     {GenerateFireAndForgetRequest(ref functions, functionNames)}{GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
     {string.Join("", Context.ServiceContext.BusInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
@@ -207,7 +204,7 @@ public class {Name}
     }}";
     }
 
-    private string GenerateOnDisconnected(Service[] hostedBusServices)
+    private string GenerateOnDisconnected()
     {
         return $@"
     public override async Task OnDisconnectedAsync(CancellationToken ___ct)
@@ -230,7 +227,7 @@ public class {Name}
         }}"))}
     }}";
     }
-    private string GenerateOnRestoreSubscriptions(Service[] hostedBusServices)
+    private string GenerateOnRestoreSubscriptions()
     {
         return $@"
     public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)

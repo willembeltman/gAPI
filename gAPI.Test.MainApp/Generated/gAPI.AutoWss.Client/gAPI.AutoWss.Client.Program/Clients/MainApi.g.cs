@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
@@ -31,13 +32,14 @@ public sealed class MainApi(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<MainApi>();
     readonly ServiceId ___ServiceId = new("IMainApi");
     int ___maxBufferSize => ___clientConnection.Config.MaxPackageSize ?? 512 * 1024;
+    TimeSpan? ___timeOut;
     
     public async Task StartServerTests(double time, CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("StartServerTests({time})", time);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
@@ -45,18 +47,26 @@ public sealed class MainApi(
             RequestId.New(),
             ___ServiceId,
             new("StartServerTests"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
+
+        var ___payload = ___StartServerTests_Serializer(
+            time);
         
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
         
+        try
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___StartServerTests_Serializer(time),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___StartServerTests_Serializer(double time)
@@ -73,14 +83,9 @@ public sealed class MainApi(
         return ___buffer;
     }
 
-    // Veranderd naar async void voor echte fire-and-forget streaming ondersteuning
     public async void SendAndForget(string message, CancellationToken ct = default)
     {
-        // We maken een interne, onafhankelijke CTS aan voor deze specifieke chunk/actie
-        // Zodat we niet afhankelijk zijn van de levensduur van een externe aanroeper
-        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var ___ct = ___internalCts.Token;
-
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         try
         {
             var ___routing = new RoutingDto(
@@ -89,33 +94,21 @@ public sealed class MainApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("SendAndForget"),
-                TimeSpan.FromSeconds(30),
+                ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
             );
 
+            var ___payload = ___SendAndForget_Serializer(
+                message);
             
-            
-            await ___clientConnection.TryConnectAsync(___Cts.Token);
-            
-            
-            {
-                // We roepen nu de nieuwe Send_FireAndForget variant aan die GEEN TaskCompletionSource opbouwt!
-                await ___clientConnection.Send_FireAndForget_ToServerAsync(
-                    ___routing,
-                    ___SendAndForget_Serializer(message),
-                    ___ct);
-            }
-            
-        }
-        catch (OperationCanceledException)
-        {
-            // Netjes opvangen als de streaming opzettelijk werd afgebroken of timede-out
-            ___Logger.LogInformation("FireAndForget call SendAndForget gecanceld of time -out (30s).");
+            await ___clientConnection.Send_FireAndForget_ToServerAsync(
+                ___routing,
+                ___payload,
+                ct);
         }
         catch (Exception ex)
         {
-            // CRUCIAL: Dit voorkomt dat je complete Docker container / API crasht bij een netwerkfout!
             ___Logger.LogError(ex, "Fout opgevangen in gegenereerde async void FireAndForget methode voor SendAndForget");
         }
     }
@@ -133,14 +126,9 @@ public sealed class MainApi(
         return ___buffer;
     }
 
-    // Veranderd naar async void voor echte fire-and-forget streaming ondersteuning
     public async void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct = default)
     {
-        // We maken een interne, onafhankelijke CTS aan voor deze specifieke chunk/actie
-        // Zodat we niet afhankelijk zijn van de levensduur van een externe aanroeper
-        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var ___ct = ___internalCts.Token;
-
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         try
         {
             var ___routing = new RoutingDto(
@@ -149,39 +137,20 @@ public sealed class MainApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("SendAndForgetWithList"),
-                TimeSpan.FromSeconds(30),
+                ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
             );
 
+            var ___payload = ___SendAndForgetWithList_Serializer();
             
-            ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendAndForgetWithList_0_Serializer, ___ct);
-            
-            await ___clientConnection.TryConnectAsync(___Cts.Token);
-            
-            
-            try
-            {
-                // We roepen nu de nieuwe Send_FireAndForget variant aan die GEEN TaskCompletionSource opbouwt!
-                await ___clientConnection.Send_FireAndForget_ToServerAsync(
-                    ___routing,
-                    ___SendAndForgetWithList_Serializer(),
-                    ___ct);
-            }
-            
-            finally
-            {
-                await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Netjes opvangen als de streaming opzettelijk werd afgebroken of timede-out
-            ___Logger.LogInformation("FireAndForget call SendAndForgetWithList gecanceld of time -out (30s).");
+            await ___clientConnection.Send_FireAndForget_ToServerAsync(
+                ___routing,
+                ___payload,
+                ct);
         }
         catch (Exception ex)
         {
-            // CRUCIAL: Dit voorkomt dat je complete Docker container / API crasht bij een netwerkfout!
             ___Logger.LogError(ex, "Fout opgevangen in gegenereerde async void FireAndForget methode voor SendAndForgetWithList");
         }
     }
@@ -204,10 +173,10 @@ public sealed class MainApi(
 
     public async Task Send(string message, CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Send({message})", message);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
@@ -215,18 +184,26 @@ public sealed class MainApi(
             RequestId.New(),
             ___ServiceId,
             new("Send"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
+
+        var ___payload = ___Send_Serializer(
+            message);
         
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
         
+        try
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___Send_Serializer(message),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___Send_Serializer(string message)
@@ -245,10 +222,10 @@ public sealed class MainApi(
 
     public async Task SendWithList(IAsyncEnumerable<string> list, CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("SendWithList({list})", list);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
@@ -256,24 +233,27 @@ public sealed class MainApi(
             RequestId.New(),
             ___ServiceId,
             new("SendWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
+
+        var ___payload = ___SendWithList_Serializer();
         
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___SendWithList_0_Serializer, ___activityCts.Token);
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___SendWithList_0_Serializer, ___timeoutCts.Token);
         
         try
         {
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
-                ___SendWithList_Serializer(),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
         }
         finally
         {
             await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___SendWithList_Serializer()
@@ -295,10 +275,10 @@ public sealed class MainApi(
 
     public async Task<string> InvokeTask(string name,CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("InvokeTask({name})", name);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
@@ -306,28 +286,40 @@ public sealed class MainApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeTask"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
-        
-        
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
 
-        string ___result = default!;
+        var ___payload = ___InvokeTask_Serializer(
+            name);
         
+        
+        string ___result = default!;
+
+        try
         {
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
-                ___InvokeTask_Serializer(name),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
+                if (___ct.IsCancellationRequested)
+                    throw new TaskCanceledException();
+                
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
                 var ___offset = 0;
                 var ___span = new Span<byte>(item);
                 ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
 
         return ___result;
@@ -348,10 +340,10 @@ public sealed class MainApi(
 
     public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list,CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("InvokeTaskWithList({list})", list);
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
@@ -359,26 +351,32 @@ public sealed class MainApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeTaskWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
-        
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___activityCts.Token);
-        
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
 
-        string ___result = default!;
+        var ___payload = ___InvokeTaskWithList_Serializer();
         
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___timeoutCts.Token);
+        
+        string ___result = default!;
+
         try
         {
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
-                ___InvokeTaskWithList_Serializer(),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
+                if (___ct.IsCancellationRequested)
+                    throw new TaskCanceledException();
+                
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
                 var ___offset = 0;
                 var ___span = new Span<byte>(item);
                 ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
@@ -387,6 +385,7 @@ public sealed class MainApi(
         finally
         {
             await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
 
         return ___result;
@@ -410,38 +409,49 @@ public sealed class MainApi(
 
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("InvokeList({name})", name);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
-        var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
             ___clientConnection.FabricConnectionId,
-            ___requestId,
+            RequestId.New(),
             ___ServiceId,
             new("InvokeList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
 
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        var ___payload = ___InvokeList_Serializer(
+            name);
         
         
+        try
         {
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
-                ___InvokeList_Serializer(name),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
+                if (___ct.IsCancellationRequested)
+                    yield break;
+                
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
                 var ___offset = 0;
                 var ___span = new Span<byte>(item);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___InvokeList_Serializer(string name)
@@ -460,36 +470,41 @@ public sealed class MainApi(
 
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct = default)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("InvokeListWithList({list})", list);
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
-        var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
             ___clientConnection.FabricManagerId,
             ___clientConnection.FabricConnectionId,
-            ___requestId,
+            RequestId.New(),
             ___ServiceId,
             new("InvokeListWithList"),
-            TimeSpan.FromSeconds(100),
+            ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
         );
-        
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        ___clientConnection.RegisterTimeout(___routing, ___timeoutCts);
 
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        var ___payload = ___InvokeListWithList_Serializer();
         
-        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___timeoutCts.Token);
         
         try
         {
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
-                ___InvokeListWithList_Serializer(),
-                ___activityCts.Token);
+                ___payload,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
+                if (___ct.IsCancellationRequested)
+                    yield break;
+                
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
                 var ___offset = 0;
                 var ___span = new Span<byte>(item);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
@@ -498,6 +513,7 @@ public sealed class MainApi(
         finally
         {
             await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___clientConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___InvokeListWithList_Serializer()
@@ -517,14 +533,9 @@ public sealed class MainApi(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    // Veranderd naar async void voor echte fire-and-forget streaming ondersteuning
     public async void Ping(string v)
     {
-        // We maken een interne, onafhankelijke CTS aan voor deze specifieke chunk/actie
-        // Zodat we niet afhankelijk zijn van de levensduur van een externe aanroeper
-        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var ___ct = ___internalCts.Token;
-
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         try
         {
             var ___routing = new RoutingDto(
@@ -533,33 +544,21 @@ public sealed class MainApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("Ping"),
-                TimeSpan.FromSeconds(30),
+                ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
             );
 
+            var ___payload = ___Ping_Serializer(
+                v);
             
-            
-            await ___clientConnection.TryConnectAsync(___Cts.Token);
-            
-            
-            {
-                // We roepen nu de nieuwe Send_FireAndForget variant aan die GEEN TaskCompletionSource opbouwt!
-                await ___clientConnection.Send_FireAndForget_ToServerAsync(
-                    ___routing,
-                    ___Ping_Serializer(v),
-                    ___ct);
-            }
-            
-        }
-        catch (OperationCanceledException)
-        {
-            // Netjes opvangen als de streaming opzettelijk werd afgebroken of timede-out
-            ___Logger.LogInformation("FireAndForget call Ping gecanceld of time -out (30s).");
+            await ___clientConnection.Send_FireAndForget_ToServerAsync(
+                ___routing,
+                ___payload,
+                CancellationToken.None);
         }
         catch (Exception ex)
         {
-            // CRUCIAL: Dit voorkomt dat je complete Docker container / API crasht bij een netwerkfout!
             ___Logger.LogError(ex, "Fout opgevangen in gegenereerde async void FireAndForget methode voor Ping");
         }
     }
@@ -577,14 +576,9 @@ public sealed class MainApi(
         return ___buffer;
     }
 
-    // Veranderd naar async void voor echte fire-and-forget streaming ondersteuning
     public async void Pong(string v)
     {
-        // We maken een interne, onafhankelijke CTS aan voor deze specifieke chunk/actie
-        // Zodat we niet afhankelijk zijn van de levensduur van een externe aanroeper
-        using var ___internalCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var ___ct = ___internalCts.Token;
-
+        ___timeOut ??= TimeSpan.FromSeconds(100);
         try
         {
             var ___routing = new RoutingDto(
@@ -593,33 +587,21 @@ public sealed class MainApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("Pong"),
-                TimeSpan.FromSeconds(30),
+                ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
             );
 
+            var ___payload = ___Pong_Serializer(
+                v);
             
-            
-            await ___clientConnection.TryConnectAsync(___Cts.Token);
-            
-            
-            {
-                // We roepen nu de nieuwe Send_FireAndForget variant aan die GEEN TaskCompletionSource opbouwt!
-                await ___clientConnection.Send_FireAndForget_ToServerAsync(
-                    ___routing,
-                    ___Pong_Serializer(v),
-                    ___ct);
-            }
-            
-        }
-        catch (OperationCanceledException)
-        {
-            // Netjes opvangen als de streaming opzettelijk werd afgebroken of timede-out
-            ___Logger.LogInformation("FireAndForget call Pong gecanceld of time -out (30s).");
+            await ___clientConnection.Send_FireAndForget_ToServerAsync(
+                ___routing,
+                ___payload,
+                CancellationToken.None);
         }
         catch (Exception ex)
         {
-            // CRUCIAL: Dit voorkomt dat je complete Docker container / API crasht bij een netwerkfout!
             ___Logger.LogError(ex, "Fout opgevangen in gegenereerde async void FireAndForget methode voor Pong");
         }
     }

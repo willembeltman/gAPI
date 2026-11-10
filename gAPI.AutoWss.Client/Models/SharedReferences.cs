@@ -39,6 +39,8 @@ public class SharedReferences
         StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
         IStateParserT = new SharedReference("gAPI.Core.Interfaces.IStateParser");
 
+        CancellationTokenSourceDispose = SharedReferenceFinder.Find("gAPI.Core.Helpers.CancellationTokenSourceDispose", allSymbols);
+
         AuthStateDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.AuthStateDto", allSymbols);
         StateDto = SharedReferenceFinder.TryFindByBaseType(AuthStateDto, allSymbols);
         IClientAuthenticatedHttpClientImplementation = SharedReferenceFinder.TryFindByInterface(IClientAuthenticatedHttpClient, allSymbols);
@@ -78,6 +80,7 @@ public class SharedReferences
     public SharedReference StaticNavigationManager { get; }
     public SharedReference WithCookiesHandler { get; }
     public SharedReference IStateParserT { get; }
+    public SharedReference CancellationTokenSourceDispose { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference StateChangedHandler { get; }
