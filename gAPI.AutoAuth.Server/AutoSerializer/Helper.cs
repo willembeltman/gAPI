@@ -183,7 +183,7 @@ public static class Helper
         {
             return GetName(namedTypeSymbol);
         }
-        return typeSymbol.Name;
+        return $"{SerializerSettings.Prefix}{typeSymbol.Name}";
     }
     public static string GetName(INamedTypeSymbol namedTypeSymbol)
     {
@@ -192,9 +192,9 @@ public static class Helper
             var genericArgs = string.Join("__", namedTypeSymbol.TypeArguments
                 .Where(t => t is INamedTypeSymbol)
                 .Select(t => GetName((ITypeSymbol)(t as INamedTypeSymbol)!)));
-            return $"{namedTypeSymbol.Name}__{genericArgs}";
+            return $"{SerializerSettings.Prefix}{namedTypeSymbol.Name}__{genericArgs}";
         }
-        return namedTypeSymbol.Name;
+        return $"{SerializerSettings.Prefix}{namedTypeSymbol.Name}";
     }
 
     public static (ITypeSymbol underlyingType, bool isNullable, bool isNullableT) GetUnderlayingAndNullable(ITypeSymbol type)

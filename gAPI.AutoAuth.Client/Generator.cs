@@ -18,6 +18,7 @@ public class Generator
     public Generator(
         ServiceContext serviceContext,
         SharedReferences sharedReferences,
+        CustomObject[] customSerializers,
         CustomObject[] customSpanSerializers,
         CustomObjectMethod[] customComparers,
         CustomObjectMethod[] customCreateCopys,
@@ -25,6 +26,7 @@ public class Generator
     {
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
+        CustomSerializers = customSerializers;
         CustomSpanSerializers = customSpanSerializers;
         CustomComparers = customComparers;
         CustomCreateCopys = customCreateCopys;
@@ -39,6 +41,7 @@ public class Generator
     }
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
+    public CustomObject[] CustomSerializers { get; }
     public CustomObject[] CustomSpanSerializers { get; }
     public CustomObjectMethod[] CustomComparers { get; }
     public CustomObjectMethod[] CustomCreateCopys { get; }
