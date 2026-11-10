@@ -16,16 +16,17 @@ public class Bus2(
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<Bus2>();
 
-    public async Task OnStartedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+
+    public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
     {
     }
-    public async Task OnStoppedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    public async Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct)
     {
     }
-    public async Task OnSubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
     {
     }
-    public async Task OnUnsubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct)
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
     {
     }
 

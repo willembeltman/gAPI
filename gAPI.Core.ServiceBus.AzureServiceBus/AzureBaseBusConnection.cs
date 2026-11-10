@@ -9,12 +9,14 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace gAPI.Core.ServiceBus.AzureServiceBus;
 
 public abstract class AzureBaseBusConnection(
+    IHostApplicationLifetime appLifetime,
     ILoggerFactory loggerFactory,
     ServiceBusConfig config)
     : IBaseBusConnection
@@ -38,7 +40,7 @@ public abstract class AzureBaseBusConnection(
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     private readonly ConcurrentDictionary<ServiceId, ServiceConsumerProcessorRegistration> ServiceConsumers = [];
-    private readonly ConcurrentDictionary<RequestId, CancellationTokenSource> _activeRequests = [];
+    private readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> _activeRequests = [];
 
     private readonly SemaphoreSlim SubscriptionLock = new(1, 1);
     private readonly CancellationTokenSource _lifetimeCts = new();
@@ -109,9 +111,9 @@ public abstract class AzureBaseBusConnection(
         Initialized = true;
     }
 
-    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)
     {
-        var ct = timeoutCts.Token;
+        var ct = _lifetimeCts.Token;
         await TryConnectAsync(ct);
 
         var sendrequest = new BusSendRequestDto(routing, data);
@@ -143,8 +145,7 @@ public abstract class AzureBaseBusConnection(
             }
         });
     }
-
-    public async Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         if (routing.To == BusToChoice.ToAll)
         {
@@ -202,8 +203,7 @@ public abstract class AzureBaseBusConnection(
             await _adminClient.DeleteTopicAsync(replyTopic, CancellationToken.None);
         }
     }
-
-    public async IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         if (routing.To == BusToChoice.ToAll)
         {
@@ -274,6 +274,7 @@ public abstract class AzureBaseBusConnection(
             await _adminClient.DeleteTopicAsync(replyTopic, CancellationToken.None);
         }
     }
+    
     private async Task SendStreamingRequestAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
     {
         if (!Initialized) throw new InvalidOperationException("Bus connection is not initialized. Call TryConnectAsync first.");
@@ -365,7 +366,6 @@ public abstract class AzureBaseBusConnection(
         }
         finally { SubscriptionLock.Release(); }
     }
-
 
     private async Task<IProcessorHandle> StartProcessorAsync(string topic, string subscription, bool isSession, string? sqlRule, CancellationToken ct)
     {
@@ -498,7 +498,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleSendRequestAsync(BusSendRequestDto request, string replyTo, string correlationId, string sessionId, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try
@@ -524,7 +524,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, string sessionId, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try
@@ -557,7 +557,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleSendAndForgetRequest(BusSendRequestDto request, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try { await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token); }
@@ -584,6 +584,15 @@ public abstract class AzureBaseBusConnection(
     {
         Logger.LogError(args.Exception, "Azure Service Bus error in context {Context}", args.ErrorSource);
         return Task.CompletedTask;
+    }
+
+    public void RegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        _activeRequests[routing.RequestId] = cts;
+    }
+    public void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        _activeRequests.TryRemove(routing.RequestId, out _);
     }
 
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
@@ -654,7 +663,7 @@ public abstract class AzureBaseBusConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
+    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts)
     {
         StreamingRequestHandlers.TryAdd(new RequestArgumentIndexDto(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (activeStreams, streamId, cancelled, ct) =>
         {

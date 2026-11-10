@@ -37,7 +37,7 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequests = [];
-    readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
+    readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
     readonly byte[] ReceiveBuffer;
 
     private Task? InitializeTask;
@@ -440,7 +440,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            var cts = new LinkedCancellationTokenSourceWithTimeout(message.Routing.Timeout, ct);
+            var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
             Timeouts[message.Routing.RequestId] = cts;
 
             try
@@ -487,7 +487,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now}: Received_SendRequest_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            var cts = new LinkedCancellationTokenSourceWithTimeout(message.Routing.Timeout, ct);
+            var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
             Timeouts[message.Routing.RequestId] = cts;
 
             try
@@ -573,7 +573,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (Logger.IsEnabled(LogLevel.Trace))
                 Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            var cts = new LinkedCancellationTokenSourceWithTimeout(
+            var cts = new CancellationTokenSourceDispose(
                 message.Routing.Timeout,
                 ct);
             Timeouts[message.Routing.RequestId] = cts;
@@ -588,10 +588,10 @@ public abstract class WssClientConnection : IWssClientConnection
                 var enumerable = Send_InvokeRequest_ToServiceAsync(message, cts.Token);
                 RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, cts.Token);
 
-                cts.OnDispose = async () =>
+                cts.RegisterDispose(async () =>
                 {
                     await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
-                };
+                });
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -684,7 +684,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_StreamingRequest_FromServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-                timeout.Reset();
+                timeout.CancelAfter(message.Routing.Timeout);
 
             if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
             {
@@ -714,7 +714,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_StreamingResponse_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-                timeout.Reset();
+                timeout.CancelAfter(message.Routing.Timeout);
 
             if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
                 responseHandler(message);
@@ -729,7 +729,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_FabricStreamingRequest_FromServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-                timeout.Reset();
+                timeout.CancelAfter(message.Routing.Timeout);
 
             if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
             {
@@ -746,7 +746,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_FabricStreamingResponse_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-                timeout.Reset();
+                timeout.CancelAfter(message.Routing.Timeout);
 
             if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
                 responseHandler(message);

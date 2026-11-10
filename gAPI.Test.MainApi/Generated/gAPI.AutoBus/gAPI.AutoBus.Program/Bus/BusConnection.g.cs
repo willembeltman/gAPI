@@ -9,6 +9,7 @@ using gAPI.Core.Server.Interfaces;
 using gAPI.Core.ServiceBus.Fabric;
 using gAPI.Test.Main.Server;
 using gAPI.Test.Shared.Private;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers.Binary;
@@ -25,22 +26,23 @@ namespace gAPI.Generated;
 public class BusConnection
     : FabricBaseBusConnection, IBusConnection
 {
+    private readonly IHostApplicationLifetime ___AppLifetime;
     private readonly ILogger<BusConnection> ___Logger;
     private readonly int ___maxBufferSize;
 
     public BusConnection(
+        IHostApplicationLifetime appLifetime,
         ILoggerFactory loggerFactory,
         BusFabricClient fabricClient,
         ServiceBusConfig serviceBusConfig)
-        : base(loggerFactory, fabricClient, serviceBusConfig)
+        : base(appLifetime, loggerFactory, fabricClient, serviceBusConfig)
     {
-        
+        ___AppLifetime = appLifetime;
         ___Logger = loggerFactory.CreateLogger<BusConnection>();
         ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }
     
     public HostedBusServices? HostedBusServices { get; set; }
-
 
     
 
@@ -94,9 +96,6 @@ public class BusConnection
     
     public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
-        await TryConnectAsync(___ct);
-
-        
         if (implementation is IBus1 bus1)
         {
             await Bus1sLock.WaitAsync(___ct);
@@ -108,7 +107,9 @@ public class BusConnection
             {
                 Bus1sLock.Release();
             }
-            await SendSubscribeAsync(bus1, new ServiceId("IBus1"), ___ct);
+
+            var ___serviceId = new ServiceId("IBus1");
+            await SendSubscribeAsync(bus1, ___serviceId, ___ct);
         }
         if (implementation is IBus2 bus2)
         {
@@ -121,7 +122,9 @@ public class BusConnection
             {
                 Bus2sLock.Release();
             }
-            await SendSubscribeAsync(bus2, new ServiceId("IBus2"), ___ct);
+
+            var ___serviceId = new ServiceId("IBus2");
+            await SendSubscribeAsync(bus2, ___serviceId, ___ct);
         }
         if (implementation is IMainBus mainBus)
         {
@@ -134,7 +137,9 @@ public class BusConnection
             {
                 MainBussLock.Release();
             }
-            await SendSubscribeAsync(mainBus, new ServiceId("IMainBus"), ___ct);
+
+            var ___serviceId = new ServiceId("IMainBus");
+            await SendSubscribeAsync(mainBus, ___serviceId, ___ct);
         }
     }
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
@@ -153,7 +158,9 @@ public class BusConnection
             {
                 Bus1sLock.Release();
             }
-            await SendUnsubscribeAsync(bus1, new ServiceId("IBus1"), ___ct);
+
+            var ___serviceId = new ServiceId("IBus1");
+            await SendUnsubscribeAsync(bus1, ___serviceId, ___ct);
         }
         if (implementation is IBus2 bus2)
         {
@@ -166,7 +173,9 @@ public class BusConnection
             {
                 Bus2sLock.Release();
             }
-            await SendUnsubscribeAsync(bus2, new ServiceId("IBus2"), ___ct);
+
+            var ___serviceId = new ServiceId("IBus2");
+            await SendUnsubscribeAsync(bus2, ___serviceId, ___ct);
         }
         if (implementation is IMainBus mainBus)
         {
@@ -179,28 +188,112 @@ public class BusConnection
             {
                 MainBussLock.Release();
             }
-            await SendUnsubscribeAsync(mainBus, new ServiceId("IMainBus"), ___ct);
+
+            var ___serviceId = new ServiceId("IMainBus");
+            await SendUnsubscribeAsync(mainBus, ___serviceId, ___ct);
         }
     }
     
-    public async Task OnSubscribedAsync(object implementation, CancellationToken ct)
+    public override async Task OnDisconnectedAsync(CancellationToken ___ct)
     {
-        if (implementation is gAPI.Test.Main.Server.MainBus && 
-            implementation is IHostedBusService gAPI_Test_Main_Server_MainBus)
+        await Bus1sLock.WaitAsync(___ct);
+        try
         {
-            gAPI_Test_Main_Server_MainBus.OnSubscribedAsync(this, ct);
+            foreach (var bus1 in Bus1s)
+            {
+                if (bus1 is IBusServiceSubscription bus1BusServiceSubscription)
+                {
+                    var ___serviceId = new ServiceId("IBus1");
+                    await bus1BusServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }
+            }
+        }
+        finally
+        {
+            Bus1sLock.Release();
+        }
+
+        await Bus2sLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var bus2 in Bus2s)
+            {
+                if (bus2 is IBusServiceSubscription bus2BusServiceSubscription)
+                {
+                    var ___serviceId = new ServiceId("IBus2");
+                    await bus2BusServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }
+            }
+        }
+        finally
+        {
+            Bus2sLock.Release();
+        }
+
+        await MainBussLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var mainBus in MainBuss)
+            {
+                if (mainBus is IBusServiceSubscription mainBusBusServiceSubscription)
+                {
+                    var ___serviceId = new ServiceId("IMainBus");
+                    await mainBusBusServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }
+            }
+        }
+        finally
+        {
+            MainBussLock.Release();
         }
     }
-    public async Task OnUnsubscribedAsync(object implementation, CancellationToken ct)
+    public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
     {
-        if (implementation is gAPI.Test.Main.Server.MainBus && 
-            implementation is IHostedBusService gAPI_Test_Main_Server_MainBus)
+        await Bus1sLock.WaitAsync(___ct);
+        try
         {
-            gAPI_Test_Main_Server_MainBus.OnUnsubscribedAsync(this, ct);
+            foreach (var bus1 in Bus1s)
+            {
+                var ___serviceId = new ServiceId("IBus1");
+                await SendSubscribeAsync(bus1, ___serviceId, ___ct); // This causes the reconnect event to be called
+            }
+        }
+        finally
+        {
+            Bus1sLock.Release();
+        }
+
+        await Bus2sLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var bus2 in Bus2s)
+            {
+                var ___serviceId = new ServiceId("IBus2");
+                await SendSubscribeAsync(bus2, ___serviceId, ___ct); // This causes the reconnect event to be called
+            }
+        }
+        finally
+        {
+            Bus2sLock.Release();
+        }
+
+        await MainBussLock.WaitAsync(___ct);
+        try
+        {
+            foreach (var mainBus in MainBuss)
+            {
+                var ___serviceId = new ServiceId("IMainBus");
+                await SendSubscribeAsync(mainBus, ___serviceId, ___ct); // This causes the reconnect event to be called
+            }
+        }
+        finally
+        {
+            MainBussLock.Release();
         }
     }
+
     
-    protected override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
+    public override async Task Send_FireAndForgetRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         switch (___sendRequest.Routing.ServiceId.Value)
         {
@@ -235,7 +328,89 @@ public class BusConnection
                                 }
                                 return;
                             }
-                    
+                    }
+                    break;
+                }
+            case "IBus2":
+                {
+                    var clients = await GetBus2sSnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {
+                        case "SendAndForget":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForget(
+                                        message,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "SendAndForgetWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendAndForgetWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForgetWithList(
+                                        test,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                    }
+                    break;
+                }
+            case "IMainBus":
+                {
+                    var clients = await GetMainBussSnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {
+                        case "SendAndForget":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForget(
+                                        message,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                        case "SendAndForgetWithList":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainBus_SendAndForgetWithList_0_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    client.SendAndForgetWithList(
+                                        test,
+                                        ___ct);
+                                }
+                                return;
+                            }
+                    }
+                    break;
+                }
+        }
+        throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
+    }
+    public override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
+    {
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {
+            case "IBus1":
+                {
+                    var clients = await GetBus1sSnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {
                         case "StartServiceTests":
                             {
                                 var ___offset = 0;
@@ -292,33 +467,6 @@ public class BusConnection
                     var clients = await GetBus2sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
-                        case "SendAndForget":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForget(
-                                        message,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                        case "SendAndForgetWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendAndForgetWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForgetWithList(
-                                        test,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                    
                         case "Send":
                             {
                                 var ___offset = 0;
@@ -375,33 +523,6 @@ public class BusConnection
                     var clients = await GetMainBussSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
-                        case "SendAndForget":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForget(
-                                        message,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                        case "SendAndForgetWithList":
-                            {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IMainBus_SendAndForgetWithList_0_Deserializer);
-                                foreach (var client in clients)
-                                {
-                                    client.SendAndForgetWithList(
-                                        test,
-                                        ___ct);
-                                }
-                                return;
-                            }
-                    
                         case "Send":
                             {
                                 var ___offset = 0;
@@ -447,7 +568,7 @@ public class BusConnection
         }
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
         switch (___invokeRequest.Routing.ServiceId.Value)
         {

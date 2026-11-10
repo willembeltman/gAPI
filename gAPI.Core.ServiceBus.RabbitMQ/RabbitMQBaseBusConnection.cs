@@ -3,10 +3,12 @@ using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -15,6 +17,7 @@ using System.Collections.Concurrent;
 namespace gAPI.Core.ServiceBus.RabbitMQ;
 
 public abstract class RabbitMQBaseBusConnection(
+    IHostApplicationLifetime appLifetime,
     ILoggerFactory loggerFactory,
     ServiceBusConfig config)
     : IBaseBusConnection, IAsyncDisposable
@@ -37,7 +40,7 @@ public abstract class RabbitMQBaseBusConnection(
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     private readonly ConcurrentDictionary<ServiceId, ServiceConsumerRegistration> ServiceConsumers = new();
-    private readonly ConcurrentDictionary<RequestId, CancellationTokenSource> _activeRequests = new();
+    private readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> _activeRequests = new();
 
 
     private readonly SemaphoreSlim SubscriptionLock = new(1, 1);
@@ -73,9 +76,10 @@ public abstract class RabbitMQBaseBusConnection(
         Initialized = true;
     }
 
-    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)
     {
-        var ct = timeoutCts.Token;
+        //var cts = new CancellationTokenSourceDispose(routing.Timeout);
+        var ct = _lifetimeCts.Token; //cts.Token;
         await TryConnectAsync(ct);
 
         var sendrequest = new BusSendRequestDto(routing, data);
@@ -103,30 +107,29 @@ public abstract class RabbitMQBaseBusConnection(
         };
         await PublishRawAsync(exchange, routingKey, payload, ct, null, properties);
 
-        ct.Register(async () =>
-        {
-            try
-            {
-                var sendrequestcancelled = new BusSendRequestCancelledDto(routing, "Unknown");
-                var payload = CreateSendRequestCancelledData(sendrequestcancelled);
-                var properties = new BasicProperties
-                {
-                    Type = SendAndForgetRequestCancelledType,
-                    DeliveryMode =
-                        routing.deliveryMode == DeliveryMode.Transient
-                        ? DeliveryModes.Transient
-                        : DeliveryModes.Persistent
-                };
-                await PublishRawAsync(exchange, routingKey, payload, CancellationToken.None, null, properties);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to send cancellation message");
-
-            }
-        });
+        //ct.Register(async () =>
+        //{
+        //    try
+        //    {
+        //        var sendrequestcancelled = new BusSendRequestCancelledDto(routing, "Unknown");
+        //        var payload = CreateSendRequestCancelledData(sendrequestcancelled);
+        //        var properties = new BasicProperties
+        //        {
+        //            Type = SendAndForgetRequestCancelledType,
+        //            DeliveryMode =
+        //                routing.deliveryMode == DeliveryMode.Transient
+        //                ? DeliveryModes.Transient
+        //                : DeliveryModes.Persistent
+        //        };
+        //        await PublishRawAsync(exchange, routingKey, payload, ct, null, properties);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.LogError(ex, "Failed to send cancellation message");
+        //    }
+        //});
     }
-    public async Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         if (routing.To == BusToChoice.ToAll)
         {
@@ -180,7 +183,7 @@ public abstract class RabbitMQBaseBusConnection(
             await replyConsumerChannel.CloseAsync();
         }
     }
-    public async IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource timeoutCts)
+    public async IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         if (routing.To == BusToChoice.ToAll)
         {
@@ -537,7 +540,7 @@ public abstract class RabbitMQBaseBusConnection(
 
     private async Task HandleSendAndForgetRequest(BusSendRequestDto request, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
@@ -560,7 +563,7 @@ public abstract class RabbitMQBaseBusConnection(
     }
     private async Task HandleSendRequestAsync(BusSendRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
@@ -596,7 +599,7 @@ public abstract class RabbitMQBaseBusConnection(
     }
     private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     {
-        var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var timeoutCts = new CancellationTokenSourceDispose(ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         timeoutCts.Token.Register(() =>
@@ -709,6 +712,15 @@ public abstract class RabbitMQBaseBusConnection(
         return Task.CompletedTask;
     }
 
+    public void RegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        _activeRequests[routing.RequestId] = cts;
+    }
+    public void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        _activeRequests.TryRemove(routing.RequestId, out _);
+    }
+
     protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
     {
         return new RemoteAsyncEnumerable<T>(
@@ -777,7 +789,7 @@ public abstract class RabbitMQBaseBusConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts)
+    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts)
     {
         StreamingRequestHandlers.TryAdd(
             new RequestArgumentIndexDto(routing.RequestId, argumentIndex),

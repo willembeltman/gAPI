@@ -41,6 +41,7 @@ public class BusConnectionGenerator : _BaseGenerator
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference? FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference IHostedBusService => Context.SharedReferences.IHostedBusService;
+    public SharedReference IBusServiceSubscription => Context.SharedReferences.IBusServiceSubscription;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -53,6 +54,7 @@ public class BusConnectionGenerator : _BaseGenerator
             return;
         }
 
+        Reg("Microsoft.Extensions.Hosting");
         Reg("Microsoft.Extensions.Logging");
         Reg("Microsoft.Extensions.Options");
         Reg("System");
@@ -107,27 +109,29 @@ namespace {Namespace};
 public class {Name}
     : {BaseConnection}, {IBusConnection}
 {{
+    private readonly IHostApplicationLifetime ___AppLifetime;
     private readonly ILogger<{Name}> ___Logger;
     private readonly int ___maxBufferSize;
 
     public {Name}(
+        IHostApplicationLifetime appLifetime,
         ILoggerFactory loggerFactory,{(OverloadFabricClient && FabricClient != null ? $@"
         {FabricClient} fabricClient," : "")}
         {ServiceBusConfig} serviceBusConfig)
-        : base(loggerFactory, {(OverloadFabricClient && FabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
+        : base(appLifetime, loggerFactory, {(OverloadFabricClient && FabricClient != null ? $@"fabricClient, " : "")}serviceBusConfig)
     {{
-        
+        ___AppLifetime = appLifetime;
         ___Logger = loggerFactory.CreateLogger<{Name}>();
         ___maxBufferSize = serviceBusConfig.MaxPackageSize ?? 512 * 1024;
     }}
     
     public {HostedBusServices}? HostedBusServices {{ get; set; }}
 
-
     {GenerateHubProperties()}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
-    {GenerateOnSubscribed(hostedBusServices)}{GenerateOnUnsubscribed(hostedBusServices)}
-    {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
+    {GenerateOnDisconnected(hostedBusServices)}{GenerateOnRestoreSubscriptions(hostedBusServices)}
+
+    {GenerateFireAndForgetRequest(ref functions, functionNames)}{GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
     {string.Join("", Context.ServiceContext.BusInterfaces.Select(Interface => GenerateMethodSerializers(ref functions, functionNames, Interface)))}
     {functions}
 }}";
@@ -159,22 +163,21 @@ public class {Name}
     {
         return $@"
     public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{
-        await TryConnectAsync(___ct);
-
-        {string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
+    {{{string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
+        if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
-            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
             {{
-                {hub.CleanName.ToMultiple()}.Add({hub.CleanName.ToCamelCase()});
+                {@interface.CleanName.ToMultiple()}.Add({@interface.CleanName.ToCamelCase()});
             }}
             finally
             {{
-                {hub.CleanName.ToMultiple()}Lock.Release();
+                {@interface.CleanName.ToMultiple()}Lock.Release();
             }}
-            await SendSubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
+
+            var ___serviceId = new {ServiceId}(""{@interface}"");
+            await SendSubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct);
         }}"))}
     }}";
     }
@@ -185,72 +188,77 @@ public class {Name}
     {{
         if (!Initialized)
             return;
-        {string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-        if (implementation is {hub} {hub.CleanName.ToCamelCase()})
+        {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
+        if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
-            await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
             {{
-                {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
+                {@interface.CleanName.ToMultiple()}.Remove({@interface.CleanName.ToCamelCase()});
             }}
             finally
             {{
-                {hub.CleanName.ToMultiple()}Lock.Release();
+                {@interface.CleanName.ToMultiple()}Lock.Release();
             }}
-            await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
-        }}"))}
-    }}";
-        //    return string.Join("", Context.ServiceContext.BusInterfaces.Select(hub => $@"
-        //public async Task UnsubscribeAsync({hub} {hub.CleanName.ToCamelCase()}, CancellationToken ___ct = default)
-        //{{
-        //    if (!Initialized)
-        //        return;
-        //    await {hub.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-        //    try
-        //    {{
-        //        {hub.CleanName.ToMultiple()}.Remove({hub.CleanName.ToCamelCase()});
-        //    }}
-        //    finally
-        //    {{
-        //        {hub.CleanName.ToMultiple()}Lock.Release();
-        //    }}
-        //    await SendUnsubscribeAsync({hub.CleanName.ToCamelCase()}, new {ServiceId}(""{hub}""), ___ct);
-        //}}"));
-    }
 
-    private string GenerateOnSubscribed(Service[] hostedBusServices)
-    {
-        return $@"
-    public async Task OnSubscribedAsync(object implementation, CancellationToken ct)
-    {{{string.Join("", hostedBusServices.Select(service => $@"
-        if (implementation is {service.FullName} && 
-            implementation is {IHostedBusService} {service.FullName.Replace(".", "_")})
-        {{
-            {service.FullName.Replace(".", "_")}.OnSubscribedAsync(this, ct);
-        }}"))}
-    }}";
-    }
-    private string GenerateOnUnsubscribed(Service[] hostedBusServices)
-    {
-        return $@"
-    public async Task OnUnsubscribedAsync(object implementation, CancellationToken ct)
-    {{{string.Join("", hostedBusServices.Select(service => $@"
-        if (implementation is {service.FullName} && 
-            implementation is {IHostedBusService} {service.FullName.Replace(".", "_")})
-        {{
-            {service.FullName.Replace(".", "_")}.OnUnsubscribedAsync(this, ct);
+            var ___serviceId = new {ServiceId}(""{@interface}"");
+            await SendUnsubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct);
         }}"))}
     }}";
     }
 
-    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    private string GenerateOnDisconnected(Service[] hostedBusServices)
+    {
+        return $@"
+    public override async Task OnDisconnectedAsync(CancellationToken ___ct)
+    {{{string.Join("\r\n", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
+        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+        try
+        {{
+            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
+            {{
+                if ({@interface.CleanName.ToCamelCase()} is IBusServiceSubscription {@interface.CleanName.ToCamelCase()}BusServiceSubscription)
+                {{
+                    var ___serviceId = new {ServiceId}(""{@interface}"");
+                    await {@interface.CleanName.ToCamelCase()}BusServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                }}
+            }}
+        }}
+        finally
+        {{
+            {@interface.CleanName.ToMultiple()}Lock.Release();
+        }}"))}
+    }}";
+    }
+    private string GenerateOnRestoreSubscriptions(Service[] hostedBusServices)
+    {
+        return $@"
+    public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
+    {{{string.Join("\r\n", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
+        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
+        try
+        {{
+            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
+            {{
+                var ___serviceId = new {ServiceId}(""{@interface}"");
+                await SendSubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct); // This causes the reconnect event to be called
+            }}
+        }}
+        finally
+        {{
+            {@interface.CleanName.ToMultiple()}Lock.Release();
+        }}"))}
+    }}";
+    }
+
+    private string GenerateFireAndForgetRequest(ref string functions2, HashSet<string> functionNames)
     {
         var functions = "";
         var code = $@"
-    protected override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{{(Context.ServiceContext.BusInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
+    public override async Task Send_FireAndForgetRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
+    {{{(Context.ServiceContext.BusInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
@@ -275,7 +283,28 @@ public class {Name}
                                 }}
                                 return;
                             }}"))}
-                    {string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
+                    }}
+                    break;
+                }}"))}
+        }}" : "")}
+        throw new Exception($""Service \""{{___sendRequest.Routing.ServiceId.Value}}\"" / Method \""{{___sendRequest.Routing.MethodId.Value}}\"" not found"");
+    }}";
+        functions2 += functions;
+        return code;
+    }
+    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    {
+        var functions = "";
+        var code = $@"
+    public override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
+    {{{(Context.ServiceContext.BusInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
+            case ""{hub}"":
+                {{
+                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
                         case ""{method}"":
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
@@ -308,7 +337,7 @@ public class {Name}
     {
         var functions2 = "";
         var code = $@"
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {{{(Context.ServiceContext.BusInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable))

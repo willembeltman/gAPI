@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Helpers;
+using gAPI.Core.Ids;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 
@@ -9,11 +10,13 @@ public interface IBaseBusConnection
     BusConnectionId BusConnectionId { get; }
     ServiceBusConfig Config { get; }
 
-    Task TryConnectAsync(CancellationToken ct);
-    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSource cts);
+    void RegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts);
+    void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts);
+
+    void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts);
     Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
 
-    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
-    Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
-    IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSource cts);
+    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data);
+    Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
+    IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
 }

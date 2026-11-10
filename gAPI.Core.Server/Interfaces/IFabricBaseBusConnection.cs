@@ -5,7 +5,10 @@ namespace gAPI.Core.Server.Interfaces;
 
 public interface IFabricBaseBusConnection : IBaseBusConnection
 {
-    Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct);
-    Task Receive_BusSendRequest_FromFabricAsync(BusSendRequestDto requestDto, CancellationToken ct);
-    IAsyncEnumerable<byte[]> Receive_BusInvokeRequest_FromFabricAsync(BusInvokeRequestDto requestDto, CancellationToken ct);
+    Task OnDisconnectedAsync(CancellationToken lifeCycleCt);
+    Task OnRestoreSubscriptionsAsync(CancellationToken lifeCycleCt);
+
+    Task Send_FireAndForgetRequest_ToServiceAsync(BusSendRequestDto requestDto, CancellationToken ct);
+    Task Send_SendRequest_ToServiceAsync(BusSendRequestDto requestDto, CancellationToken ct);
+    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto requestDto, CancellationToken ct);
 }

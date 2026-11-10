@@ -581,7 +581,7 @@ public sealed class FabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_FabricInvokeRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var cts = new LinkedCancellationTokenSourceWithTimeout(message.Routing.Timeout, ct);
+        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
         StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 
         // Routeren naar client(s)
@@ -614,7 +614,7 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
             completion.TrySetResult(message);
@@ -625,7 +625,7 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
         {
@@ -644,7 +644,7 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_StreamingRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (message.ArgumentIndex < 0)
         {
@@ -677,7 +677,7 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_StreamingResponse_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (message.ArgumentIndex < 0)
         {
@@ -773,7 +773,7 @@ public sealed class FabricClient
     public async Task<StreamingResponseDto?> Handle_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
@@ -785,7 +785,7 @@ public sealed class FabricClient
     public async Task Handle_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.Reset();
+            timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingCache.StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
             responseHandler.Invoke(message);

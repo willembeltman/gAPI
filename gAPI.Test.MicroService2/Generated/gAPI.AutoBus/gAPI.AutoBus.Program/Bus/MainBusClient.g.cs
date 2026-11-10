@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Enums;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Dtos;
@@ -35,10 +36,6 @@ public class MainBusClient(
     public async void SendAndForget(string message, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
-
         try
         {
             var ___routing = new BusRoutingDto(
@@ -52,24 +49,13 @@ public class MainBusClient(
                 ___busConnectionId,
                 ___throwIfNoReceiver
             );
+
             var ___payload = ___SendAndForget_Serializer(
                 message);
 
-            
-        
-            
-            {
-                // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
-                await ___busConnection.SendFireAndForgetAsync(
-                    ___routing,
-                    ___payload, 
-                    ___internalCts);
-            }
-            
-        }
-        catch (OperationCanceledException)
-        {
-            ___Logger.LogInformation("Server FireAndForget streaming canceled or timed out for WriteLine.");
+            await ___busConnection.SendFireAndForgetAsync(
+                ___routing,
+                ___payload);
         }
         catch (Exception ex)
         {
@@ -93,10 +79,6 @@ public class MainBusClient(
     public async void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
-
         try
         {
             var ___routing = new BusRoutingDto(
@@ -110,29 +92,12 @@ public class MainBusClient(
                 ___busConnectionId,
                 ___throwIfNoReceiver
             );
+
             var ___payload = ___SendAndForgetWithList_Serializer();
 
-            
-            ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendAndForgetWithList_0_Serializer, ___internalCts);
-        
-            
-            try
-            {
-                // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
-                await ___busConnection.SendFireAndForgetAsync(
-                    ___routing,
-                    ___payload, 
-                    ___internalCts);
-            }
-            
-            finally
-            {
-                await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            ___Logger.LogInformation("Server FireAndForget streaming canceled or timed out for WriteLine.");
+            await ___busConnection.SendFireAndForgetAsync(
+                ___routing,
+                ___payload);
         }
         catch (Exception ex)
         {
@@ -159,9 +124,9 @@ public class MainBusClient(
     public async Task Send(string message, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -174,6 +139,8 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
         var ___payload = ___Send_Serializer(
             message);
         
@@ -182,7 +149,7 @@ public class MainBusClient(
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
-                ___internalCts);
+                ___timeoutCts);
         }
     }
     private byte[] ___Send_Serializer(string message)
@@ -202,9 +169,9 @@ public class MainBusClient(
     public async Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -217,20 +184,23 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
         var ___payload = ___SendWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendWithList_0_Serializer, ___internalCts);
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendWithList_0_Serializer, ___timeoutCts);
         
         try
         {
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
-                ___internalCts);
+                ___timeoutCts);
         }
         finally
         {
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___SendWithList_Serializer()
@@ -253,9 +223,9 @@ public class MainBusClient(
     public async Task<string> InvokeTask(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -268,6 +238,8 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
         var ___payload = ___InvokeTask_Serializer(
             name);
         
@@ -275,7 +247,7 @@ public class MainBusClient(
         var ___responses = ___busConnection.InvokeAsync(
             ___routing, 
             ___payload, 
-            ___internalCts);
+            ___timeoutCts);
         
         {
             await foreach (var ___response in ___responses)
@@ -283,7 +255,7 @@ public class MainBusClient(
                 if (___ct.IsCancellationRequested)
                     throw new TaskCanceledException();
                 
-                ___internalCts.CancelAfter(___timeOut.Value);
+                ___timeoutCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);
@@ -311,9 +283,9 @@ public class MainBusClient(
     public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -326,14 +298,16 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
         var ___payload = ___InvokeTaskWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___internalCts);
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___timeoutCts);
        
         var ___responses = ___busConnection.InvokeAsync(
             ___routing, 
             ___payload, 
-            ___internalCts);
+            ___timeoutCts);
         
         try
         {
@@ -342,7 +316,7 @@ public class MainBusClient(
                 if (___ct.IsCancellationRequested)
                     throw new TaskCanceledException();
                 
-                ___internalCts.CancelAfter(___timeOut.Value);
+                ___timeoutCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);
@@ -352,6 +326,7 @@ public class MainBusClient(
         finally
         {
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
         if (___throwIfNoReceiver)
             throw new KeyNotFoundException();
@@ -377,9 +352,9 @@ public class MainBusClient(
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -392,6 +367,8 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+       
         var ___payload = ___InvokeList_Serializer(
             name);
         
@@ -399,7 +376,7 @@ public class MainBusClient(
         var ___responses = ___busConnection.InvokeAsync(
             ___routing, 
             ___payload, 
-            ___internalCts);
+            ___timeoutCts);
         
         {
             await foreach (var ___response in ___responses)
@@ -407,7 +384,7 @@ public class MainBusClient(
                 if (___ct.IsCancellationRequested)
                     yield break;
                 
-                ___internalCts.CancelAfter(___timeOut.Value);
+                ___timeoutCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);
@@ -432,9 +409,9 @@ public class MainBusClient(
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -447,14 +424,16 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+       
         var ___payload = ___InvokeListWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___internalCts);
+        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___timeoutCts);
        
         var ___responses = ___busConnection.InvokeAsync(
             ___routing, 
             ___payload, 
-            ___internalCts);
+            ___timeoutCts);
         
         try
         {
@@ -463,7 +442,7 @@ public class MainBusClient(
                 if (___ct.IsCancellationRequested)
                     yield break;
                 
-                ___internalCts.CancelAfter(___timeOut.Value);
+                ___timeoutCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);
@@ -473,6 +452,7 @@ public class MainBusClient(
         finally
         {
             await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___InvokeListWithList_Serializer()
@@ -495,9 +475,9 @@ public class MainBusClient(
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___internalCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        ___internalCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___internalCts.Token;
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -510,6 +490,8 @@ public class MainBusClient(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
         var ___payload = ___StartServiceTests_Serializer(
             sessionId);
         
@@ -518,7 +500,7 @@ public class MainBusClient(
             await ___busConnection.SendAsync(
                 ___routing,
                 ___payload, 
-                ___internalCts);
+                ___timeoutCts);
         }
     }
     private byte[] ___StartServiceTests_Serializer(SessionId sessionId)

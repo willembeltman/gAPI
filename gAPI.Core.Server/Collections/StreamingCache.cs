@@ -9,7 +9,7 @@ namespace gAPI.Core.Server.Collections;
 
 public class StreamingCache
 {
-    public readonly ConcurrentDictionary<RequestId, LinkedCancellationTokenSourceWithTimeout> Timeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
 
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingClientSendRequests = [];
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckDto>> PendingClientInvokeRequests = [];

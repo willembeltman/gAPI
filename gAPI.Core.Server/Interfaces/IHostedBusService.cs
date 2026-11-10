@@ -1,9 +1,9 @@
-﻿namespace gAPI.Core.Server.Interfaces;
+﻿using gAPI.Core.Ids;
 
-public interface IHostedBusService
+namespace gAPI.Core.Server.Interfaces;
+
+public interface IHostedBusService : IBusServiceSubscription
 {
-    Task OnStartedAsync(IBaseBusConnection busConnection, CancellationToken ct);
-    Task OnStoppedAsync(IBaseBusConnection busConnection, CancellationToken ct);
-    Task OnSubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct);
-    Task OnUnsubscribedAsync(IBaseBusConnection busConnection, CancellationToken ct);
+    Task OnStartedAsync(ServiceId serviceId, CancellationToken ct);
+    Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct);
 }
