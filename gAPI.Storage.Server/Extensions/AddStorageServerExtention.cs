@@ -23,7 +23,6 @@ public static class AddStorageServerExtension
         LocalStorageServerConfig appConfig)
     {
         services.AddSingleton(appConfig);
-        services.AddScoped<StorageServiceBus>();
         services.AddSingleton<ApplicationDbContext>();
         services.AddAuthorization();
         services.AddControllers();

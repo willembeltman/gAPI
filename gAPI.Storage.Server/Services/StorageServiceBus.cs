@@ -1,4 +1,6 @@
-﻿using gAPI.Storage.Core;
+﻿using gAPI.Core.Ids;
+using gAPI.Core.Server.Interfaces;
+using gAPI.Storage.Core;
 using gAPI.Storage.Core.Dtos.Requests;
 using gAPI.Storage.Core.Dtos.Responses;
 using gAPI.Storage.Core.Enums;
@@ -13,9 +15,24 @@ public class StorageServiceBus(
     ApplicationDbContext db,
     LocalStorageServerConfig config) 
     : IStorageServiceBus
+    , IHostedBusService
 {
     const string BaseFolder = "Content";
     static readonly DirectoryInfo Directory = new("Files");
+
+
+    public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+    public async Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    {
+    }
 
     public async Task<GetStorageFileInfoResponse> GetStorageFileUrl(GetStorageFileInfoRequest model, CancellationToken ct)
     {
@@ -539,6 +556,7 @@ public class StorageServiceBus(
         }
         return false;
     }
+
 
     //private static (string directoryName, string fileName) GetDirectoryAndFileName(string storageKey)
     //{

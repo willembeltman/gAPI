@@ -68,6 +68,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Core.Server\gAPI.Core.Server.csproj" />
 		<ProjectReference Include="..\gAPI.EntityFrameworkDisk\gAPI.EntityFrameworkDisk.csproj" />
 		<ProjectReference Include="..\gAPI.Storage.Core\gAPI.Storage.Core.csproj" />
 	</ItemGroup>
