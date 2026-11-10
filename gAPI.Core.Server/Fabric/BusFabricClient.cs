@@ -439,7 +439,7 @@ public sealed class BusFabricClient
 
         try
         {
-            await BusConnection.Send_FireAndForgetRequest_ToServiceAsync(message, ct);
+            await BusConnection.Send_SendRequest_ToServiceAsync(message, ct);
             await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, false, null), ct);
         }
         catch (TaskCanceledException ex)

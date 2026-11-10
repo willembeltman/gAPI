@@ -71,13 +71,10 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} ConnectAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-        if (LifeCycleCt == null)
-            throw new Exception("Not initialized");
-
         await ConnectingGate.WaitAsync();
         try
         {
-            await Gated_ConnectAsync(LifeCycleCt.Value);
+            await Gated_ConnectAsync();
         }
         finally
         {
@@ -85,7 +82,7 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task Gated_ConnectAsync(CancellationToken ct)
+    private async Task Gated_ConnectAsync()
     {
         var baseUri = Config.WssBackendUrl;
         RunningRequested = true;
@@ -93,13 +90,13 @@ public abstract class WssClientConnection : IWssClientConnection
         {
             try
             {
-                var stateData = await HttpClient.GetStateDataAsync(false, ct);
+                var stateData = await HttpClient.GetStateDataAsync(false, LifeCycleCt ?? CancellationToken.None);
                 var sessionId = HttpClient.SessionId.Value;
 
                 Ws = new ClientWebSocket();
 
                 var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
-                await Ws.ConnectAsync(url, ct);
+                await Ws.ConnectAsync(url, LifeCycleCt ?? CancellationToken.None);
 
                 ConnectedCts = new CancellationTokenSource();
 
@@ -175,7 +172,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
         await Gated_DisconnectAsync();
         await OnDisconnectedAsync(LifeCycleCt.Value);
-        await Gated_ConnectAsync(LifeCycleCt.Value);
+        await Gated_ConnectAsync();
         await OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
 
         if (Logger.IsEnabled(LogLevel.Trace))
