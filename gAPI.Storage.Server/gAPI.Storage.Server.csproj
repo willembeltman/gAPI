@@ -39,12 +39,12 @@
 
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 
 	</PropertyGroup>
 
-	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -54,7 +54,7 @@
 
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<Compile Remove="Test\**" />

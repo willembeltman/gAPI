@@ -5,12 +5,12 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 
 	</PropertyGroup>
 
-	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.30.1" />

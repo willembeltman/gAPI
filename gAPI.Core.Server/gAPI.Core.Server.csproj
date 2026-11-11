@@ -34,12 +34,12 @@
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageReleaseNotes>Initial beta release of gAPI.Core.Server.</PackageReleaseNotes>
 		
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 
 	</PropertyGroup>
 
-	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+	<!--<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<FolderToClean Include="$(ProjectDir)Generated\" />
 		</ItemGroup>
@@ -49,7 +49,7 @@
 
 	<ItemGroup>
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
