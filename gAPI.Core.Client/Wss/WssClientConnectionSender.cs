@@ -30,13 +30,13 @@ public class WssClientConnectionSender
         SendBuffer = new byte[clientConfig.MaxPackageSize ?? 512 * 1024];
     }
 
-    public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationTokenSource cts)
+    public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationToken ct)
     {
         try
         {
             var span = SendBuffer.AsSpan();
             var offset = 0;
-            var ct = cts.Token;
+
             span.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
             span.Write(ref offset, initialize);
 
@@ -73,7 +73,7 @@ public class WssClientConnectionSender
         catch (OperationCanceledException ex)
         {
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
-            CompleteQueue(cts, ex);
+            CompleteQueue(ex);
         }
         catch (Exception ex)
         {
@@ -81,14 +81,11 @@ public class WssClientConnectionSender
             // Do not hide it: the connection owner must cancel the receiver and
             // dispose its subscriptions instead of accepting messages forever.
             Logger.LogError(ex, "WSS sender stopped for client {ClientConnectionId}", WssClientConnection.ClientConnectionId);
-            CompleteQueue(cts, ex);
-            //throw;
+            CompleteQueue(ex);
         }
     }
-    private void CompleteQueue(CancellationTokenSource cts, Exception error)
+    private void CompleteQueue(Exception error)
     {
-        cts.Cancel();
-
         SendQueue.Writer.TryComplete(error);
 
         while (SendQueue.Reader.TryRead(out var item))

@@ -11,42 +11,82 @@ public class FabricClientSender(
     ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
-    readonly Channel<Action<BinaryWriter>> SendQueue = Channel.CreateUnbounded<Action<BinaryWriter>>();
+    readonly Channel<SendQueueItem> SendQueue = Channel.CreateUnbounded<SendQueueItem>();
 
     public async Task SendKernel(CancellationToken ct)
     {
-        await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
+        try
         {
-            while (fabricClient.IsConnected == false || fabricClient.BinaryWriter == null)
+            await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
-                await Task.Delay(10, ct);
-            }
-            try
-            {
-                var writer = fabricClient.BinaryWriter;
-                if (writer != null)
+                var send = false;
+                while (send == false)
                 {
-                    item(writer);
-                    writer.Flush();
+                    try
+                    {
+                        if (fabricClient.IsConnected && fabricClient.Writer != null)
+                        {
+                            item.Write(fabricClient.Writer);
+                            fabricClient.Writer.Flush();
+                            send = true;
+                        }
+                        else
+                        {
+                            await Task.Delay(10);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Error writing to Fabric stream");
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error writing to Fabric stream");
+
+                item.Sent?.TrySetResult();
             }
         }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "WSS sender stopped for client {FabricConnectionId}", fabricClient.FabricConnectionId);
+            CompleteQueue(ex);
+        }
+    }
+    private void CompleteQueue(Exception error)
+    {
+        SendQueue.Writer.TryComplete(error);
+
+        while (SendQueue.Reader.TryRead(out var item))
+            item.Sent?.TrySetException(error);
+    }
+
+    private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
+    {
+        try
+        {
+            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+    private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        try
+        {
+            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, tcs), ct);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public async Task Send_UpdateSession_ToFabricAsync(UpdateSessionDto updateSessionDto, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_UpdateSession_ToFabricAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), updateSessionDto.SessionId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_UpdateSession_ToFabricAsync({sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), updateSessionDto.SessionId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.UpdateSession);
             writer.Write(updateSessionDto);
         }, ct);
@@ -67,14 +107,8 @@ public class FabricClientSender(
     }
     public async Task Send_GetSession_ToFabricAsync(SendGetSessionCookieDataDto getSessionDto, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_GetSession_ToFabricAsync({getSessionDto})", DateTime.Now.ToString("HH:mm:ss.fff"), getSessionDto);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_GetSession_ToFabricAsync({getSessionDto})", DateTime.Now.ToString("HH:mm:ss.fff"), getSessionDto);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.GetSessionCookieData);
             writer.Write(getSessionDto);
         }, ct);
@@ -82,28 +116,16 @@ public class FabricClientSender(
 
     public async Task Send_Subscribe_ToFabricAsync(SubscribeDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_Subscribe_ToFabricAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
         await EnqueueAsync(w =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_Subscribe_ToFabricAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
             FabricConverter.WriteClientToHostMessageType(w, FabricClientToHostMessageEnum.Subscribe);
             w.Write(message);
         }, ct);
     }
     public async Task Send_Unsubscribe_ToFabricAsync(UnsubscribeDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_Unsubscribe_ToFabricAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
         await EnqueueAsync(w =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_Unsubscribe_ToFabricAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
             FabricConverter.WriteClientToHostMessageType(w, FabricClientToHostMessageEnum.Unsubscribe);
             w.Write(message);
         }, ct);
@@ -111,42 +133,16 @@ public class FabricClientSender(
 
     public async Task Send_SendAndForgetRequest_ToFabricAsync(SendRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_SendAndForgetRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-                FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequest);
-                writer.Write(message);
-
-                tcs.SetResult();
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequest);
+            writer.Write(message);
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_SendAndForgetRequestCancelled_ToFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_SendAndForgetRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequestCancelled);
             writer.Write(message);
         }, ct);
@@ -154,56 +150,24 @@ public class FabricClientSender(
 
     public async Task Send_SendRequest_ToFabricAsync(SendRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_SendRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-                FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequest);
-                writer.Write(message);
-
-                tcs.SetResult();
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequest);
+            writer.Write(message);
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_SendRequestCancelled_ToFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_SendRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestCancelled);
             writer.Write(message);
         }, ct);
     }
     public async Task Send_SendRequestDone_ToFabricAsync(SendRequestDoneDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendRequestDone_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_SendRequestDone_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendRequestDone);
             writer.Write(message);
         }, ct);
@@ -211,127 +175,55 @@ public class FabricClientSender(
 
     public async Task Send_InvokeRequest_ToFabricAsync(InvokeRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_InvokeRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_InvokeRequest_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-                FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequest);
-                writer.Write(message);
-
-                tcs.SetResult();
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequest);
+            writer.Write(message);
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_InvokeRequestCancelled_ToFabricAsync(InvokeRequestCancelledDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_InvokeRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_InvokeRequestCancelled_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequestCancelled);
             writer.Write(message);
         }, ct);
     }
     public async Task Send_InvokeRequestAck_ToFabricAsync(InvokeRequestAckDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_InvokeRequestAck_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_InvokeRequestAck_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequestAck);
             writer.Write(message);
         }, ct);
     }
     public async Task Send_InvokeRequestDone_ToFabricAsync(InvokeRequestDoneDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_InvokeRequestDone_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_InvokeRequestDone_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.InvokeRequestDone);
             writer.Write(message);
         }, ct);
     }
 
-    public async Task Send_StreamingResponse_ToFabricAsync(StreamingResponseDto message, CancellationToken ct)
+    public async Task Send_StreamingRequest_ToFabricAsync(StreamingRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ResponseEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
         await EnqueueAsync(writer =>
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_StreamingResponse_ResponseEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.StreamingRequest);
+            writer.Write(message);
+        }, ct);
+    }
+    public async Task Send_StreamingResponse_ToFabricAsync(StreamingResponseDto message, CancellationToken ct)
+    {
+        await EnqueueAndWaitAsync(writer =>
+        {
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.StreamingResponse);
             writer.Write(message);
         }, ct);
     }
-    public async Task Send_StreamingRequest_ToFabricAsync(StreamingRequestDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_StreamingRequest_ArgumentEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
-        {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_StreamingRequest_ArgumentEnumerable_ToFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-                FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.StreamingRequest);
-                writer.Write(message);
-
-                tcs.SetResult();
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
-        }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
-    }
-
-    private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
-    {
-        try
-        {
-            await SendQueue.Writer.WriteAsync(write, ct);
-        }
-        catch (TaskCanceledException)
-        {
-        }
-    }
-
+    record SendQueueItem(
+        Action<BinaryWriter> Write,
+        TaskCompletionSource? Sent);
 }

@@ -27,6 +27,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public ClientContext_Generator ClientContext => Context.ClientContext;
     //public ServiceRouter_Generator ServiceRouter => Context.ServiceRouter;
 
+    public SharedReference FabricClientHostedService => Context.SharedReferences.FabricClientHostedService;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
@@ -42,6 +43,7 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(IClientContext);
         Reg(ClientContext);
         Reg(FabricClient);
+        Reg(FabricClientHostedService);
         Reg(ServerConfig);
         Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
@@ -171,6 +173,7 @@ public static class {Name}
         services.AddSingleton<{ServiceSubscriptionCollection}>();
         services.AddSingleton<{ServerConnectionCollection}>();
         services.AddSingleton<{FabricClient}>();
+        services.AddHostedService<{FabricClientHostedService}>();
 
         if (fabricConnectionString == null)
         {{

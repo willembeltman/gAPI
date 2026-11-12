@@ -182,10 +182,7 @@ public class {Name}
     {
         return $@"
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{
-        if (!Initialized)
-            return;
-        {string.Join("", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
+    {{{string.Join("\r\n", Context.ServiceContext.BusInterfaces.Select(@interface => $@"
         if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
             await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);

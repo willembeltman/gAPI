@@ -111,13 +111,12 @@ public abstract class WssClientConnection : IWssClientConnection
                     SessionId = sessionId
                 };
 
-                var senderTask = Sender.SendKernel(socket, initialize, connectedCts);
+                var senderTask = Sender.SendKernel(socket, initialize, connectedCts.Token);
                 var receiverTask = ReceiverKernel(socket, connectedCts.Token);
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-                // Niet awaiten in Gated_ConnectAsync, maar op de achtergrond laten bewaken!
                 _ = Task.Run(async () =>
                 {
                     await Task.WhenAny(senderTask, receiverTask);
@@ -127,9 +126,6 @@ public abstract class WssClientConnection : IWssClientConnection
                     if (RunningRequested)
                         await ReconnectAsync();
                 });
-
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
             }
             catch (Exception ex)
             {
@@ -200,7 +196,6 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     private async Task Gated_DisconnectAsync()
     {
-        RunningRequested = false;
         if (ConnectedCts == null)
             return;
 

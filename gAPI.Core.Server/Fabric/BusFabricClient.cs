@@ -11,6 +11,7 @@ using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql.Internal;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Numerics;
@@ -86,10 +87,10 @@ public sealed class BusFabricClient
     TcpClient? Tcp;
     NetworkStream? Stream;
 
+    public BinaryWriter Writer { get; private set; }
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricBusConnectionId FabricConnectionId { get; private set; } = new FabricBusConnectionId(-1);
     public bool IsConnected => Tcp?.Connected == true;
-    public bool Initialized => ConnectedCts != null;
 
     private CancellationToken? LifeCycleCt;
     private IFabricBaseBusConnection? BusConnection;
@@ -103,6 +104,7 @@ public sealed class BusFabricClient
         LifeCycleCt = ct;
         BusConnection = busConnection;
         _ = Task.Run(ConnectAsync);
+        _ = Task.Run(async () => { await Sender.SendKernel(ct); });
     }
 
     private async Task ConnectAsync()
@@ -110,12 +112,10 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} ConnectAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-        if (BusConnection == null || LifeCycleCt == null)
-            throw new Exception("Not initialized");
-
         await ConnectingGate.WaitAsync();
         try
         {
+            RunningRequested = true;
             await Gated_ConnectAsync();
         }
         finally
@@ -125,7 +125,6 @@ public sealed class BusFabricClient
     }
     private async Task Gated_ConnectAsync()
     {
-        RunningRequested = true;
         while (RunningRequested == true && ConnectedCts == null)
         {
             try
@@ -133,15 +132,21 @@ public sealed class BusFabricClient
                 Tcp = new TcpClient();
                 Tcp.Connect(Host, Port);
                 Stream = Tcp.GetStream();
-                var writer = new BinaryWriter(Stream);
+                Writer = new BinaryWriter(Stream);
                 var reader = new BinaryReader(Stream);
 
                 ConnectedCts = new CancellationTokenSource();
-                _ = Task.Run(async () => { await Sender.SendKernel(writer, ConnectedCts.Token); });
-                _ = Task.Run(async () => { await TryStartReceiveKernelElseReconnectAsync(reader, ConnectedCts.Token); });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
+
+                _ = Task.Run(async () =>
+                {
+                    await ReceiveKernel(reader, ConnectedCts.Token);
+
+                    if (RunningRequested)
+                        await ReconnectAsync();
+                });
             }
             catch
             {
@@ -158,25 +163,6 @@ public sealed class BusFabricClient
                 await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
-    }
-
-    private async Task TryStartReceiveKernelElseReconnectAsync(BinaryReader binaryReader, CancellationToken ct)
-    {
-        try
-        {
-            await ReceiveKernel(binaryReader, ct);
-        }
-        catch (Exception ex)
-        {
-            if (Logger.IsEnabled(LogLevel.Error))
-                Logger.LogError(
-                    "FabricClient #{Id.Value}: Exception occured, restarting fabric client\r\n{ex}",
-                    FabricConnectionId?.Value,
-                    ex);
-        }
-
-        if (RunningRequested)
-            await ReconnectAsync();
     }
 
     private async Task ReconnectAsync()
@@ -230,7 +216,6 @@ public sealed class BusFabricClient
     }
     private async Task Gated_DisconnectAsync()
     {
-        RunningRequested = false;
         if (ConnectedCts == null)
             return;
 
@@ -248,9 +233,6 @@ public sealed class BusFabricClient
 
     public async Task BusSubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, BusSubscribeDto subscribe, CancellationToken ct)
     {
-        if (Initialized == false)
-            await ConnectAsync();
-
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
                 "BusSubscribeAsync({baseBusConnection},{subscribe})",
@@ -266,9 +248,6 @@ public sealed class BusFabricClient
     }
     public async Task BusUnsubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, BusUnsubscribeDto unsubscribe, CancellationToken ct)
     {
-        if (Initialized == false)
-            await ConnectAsync();
-
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
                 "UnsubscribeAsync({baseBusConnection}, {unsubscribe})",
@@ -285,101 +264,112 @@ public sealed class BusFabricClient
 
     private async Task ReceiveKernel(BinaryReader binaryReader, CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
+        try
         {
-            var messageType = BusFabricConverter.ReadHostToClientMessageType(binaryReader);
-
-            //if (Logger.IsEnabled(LogLevel.Trace))
-            //    Logger.LogTrace("{now} ReceiveKernel(messageType = {messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
-
-            switch (messageType)
+            while (!ct.IsCancellationRequested)
             {
-                case BusFabricHostToClientMessageEnum.SynchronizeFabricIds:
-                    var synchronizeFabricIds = binaryReader.ReadSynchronizeBusFabricIdsDto(Config.MaxPackageSize ?? 512 * 1024);
-                    await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
-                    break;
+                var messageType = BusFabricConverter.ReadHostToClientMessageType(binaryReader);
 
-                case BusFabricHostToClientMessageEnum.BusFireAndForget:
-                    var busFireAndForget = binaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusFireAndForget_FromFabricAsync(busFireAndForget, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusFireAndForgetCancelled:
-                    var busFireAndForgetCancelled = binaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusFireAndForgetCancelled_FromFabricAsync(busFireAndForgetCancelled, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusSendRequest:
-                    var busSendRequest = binaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusSendRequest_FromFabricAsync(busSendRequest, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusSendRequestCancelled:
-                    var busSendRequestCancelled = binaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusSendRequestCancelled_FromFabricAsync(busSendRequestCancelled, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusSendRequestDone:
-                    var busSendRequestAck = binaryReader.ReadBusSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
-                    }, ct);
-                    break;
+                //if (Logger.IsEnabled(LogLevel.Trace))
+                //    Logger.LogTrace("{now} ReceiveKernel(messageType = {messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
 
-                case BusFabricHostToClientMessageEnum.BusInvokeRequest:
-                    var busInvokeRequest = binaryReader.ReadBusInvokeRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusInvokeRequest_FromFabricAsync(busInvokeRequest, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusInvokeRequestCancelled:
-                    var busInvokeRequestCancelled = binaryReader.ReadBusInvokeRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusInvokeRequestCancelled_FromFabricAsync(busInvokeRequestCancelled, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusInvokeRequestAck:
-                    var busInvokeResponseAck = binaryReader.ReadBusInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusInvokeRequestAck_FromFabricAsync(busInvokeResponseAck, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusInvokeRequestDone:
-                    var busInvokeResponseDone = binaryReader.ReadBusInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusInvokeRequestDone_FromFabricAsync(busInvokeResponseDone, ct);
-                    }, ct);
-                    break;
+                switch (messageType)
+                {
+                    case BusFabricHostToClientMessageEnum.SynchronizeFabricIds:
+                        var synchronizeFabricIds = binaryReader.ReadSynchronizeBusFabricIdsDto(Config.MaxPackageSize ?? 512 * 1024);
+                        await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
+                        break;
 
-                case BusFabricHostToClientMessageEnum.BusStreamingRequest:
-                    var busStreamingRequest_ResponseEnumerable = binaryReader.ReadBusStreamingRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusStreamingRequest_FromFabricAsync(busStreamingRequest_ResponseEnumerable, ct);
-                    }, ct);
-                    break;
-                case BusFabricHostToClientMessageEnum.BusStreamingResponse:
-                    var busStreamingResponse_ResponseEnumerable = binaryReader.ReadBusStreamingResponseDto(Config.MaxPackageSize ?? 512 * 1024);
-                    _ = Task.Run(async () =>
-                    {
-                        await Receive_BusStreamingResponse_FromFabricAsync(busStreamingResponse_ResponseEnumerable, ct);
-                    }, ct);
-                    break;
+                    case BusFabricHostToClientMessageEnum.BusFireAndForget:
+                        var busFireAndForget = binaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusFireAndForget_FromFabricAsync(busFireAndForget, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusFireAndForgetCancelled:
+                        var busFireAndForgetCancelled = binaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusFireAndForgetCancelled_FromFabricAsync(busFireAndForgetCancelled, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusSendRequest:
+                        var busSendRequest = binaryReader.ReadBusSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusSendRequest_FromFabricAsync(busSendRequest, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusSendRequestCancelled:
+                        var busSendRequestCancelled = binaryReader.ReadBusSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusSendRequestCancelled_FromFabricAsync(busSendRequestCancelled, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusSendRequestDone:
+                        var busSendRequestAck = binaryReader.ReadBusSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
+                        }, ct);
+                        break;
 
+                    case BusFabricHostToClientMessageEnum.BusInvokeRequest:
+                        var busInvokeRequest = binaryReader.ReadBusInvokeRequestDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusInvokeRequest_FromFabricAsync(busInvokeRequest, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusInvokeRequestCancelled:
+                        var busInvokeRequestCancelled = binaryReader.ReadBusInvokeRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusInvokeRequestCancelled_FromFabricAsync(busInvokeRequestCancelled, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusInvokeRequestAck:
+                        var busInvokeResponseAck = binaryReader.ReadBusInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusInvokeRequestAck_FromFabricAsync(busInvokeResponseAck, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusInvokeRequestDone:
+                        var busInvokeResponseDone = binaryReader.ReadBusInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusInvokeRequestDone_FromFabricAsync(busInvokeResponseDone, ct);
+                        }, ct);
+                        break;
+
+                    case BusFabricHostToClientMessageEnum.BusStreamingRequest:
+                        var busStreamingRequest_ResponseEnumerable = binaryReader.ReadBusStreamingRequestDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusStreamingRequest_FromFabricAsync(busStreamingRequest_ResponseEnumerable, ct);
+                        }, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.BusStreamingResponse:
+                        var busStreamingResponse_ResponseEnumerable = binaryReader.ReadBusStreamingResponseDto(Config.MaxPackageSize ?? 512 * 1024);
+                        _ = Task.Run(async () =>
+                        {
+                            await Receive_BusStreamingResponse_FromFabricAsync(busStreamingResponse_ResponseEnumerable, ct);
+                        }, ct);
+                        break;
+
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError(
+                    "FabricClient #{Id.Value}: Exception occured, restarting fabric client\r\n{ex}",
+                    FabricConnectionId?.Value,
+                    ex);
         }
     }
 

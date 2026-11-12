@@ -12,6 +12,7 @@ public class SharedReferences
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthenticationHeaders = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationHeaders", allSymbols);
 
+        FabricClientHostedService = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClientHostedService", allSymbols);
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         IsApiProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsApiProxyAttribute", allSymbols);
@@ -56,6 +57,7 @@ public class SharedReferences
 
     }
 
+    public SharedReference FabricClientHostedService { get; }
     public SharedReference FabricClient { get; }
     public SharedReference IsHubProxyAttribute { get; }
     public SharedReference IsApiProxyAttribute { get; }

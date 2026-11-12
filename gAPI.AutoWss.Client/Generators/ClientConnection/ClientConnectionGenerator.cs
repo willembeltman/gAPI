@@ -207,10 +207,7 @@ public class {Name}
     {
         return $@"
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{
-        if (!Initialized)
-            return;{string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
-
+    {{{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
         if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))

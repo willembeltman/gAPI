@@ -16,7 +16,6 @@ public abstract class FabricBaseBusConnection(
     ServiceBusConfig config)
     : IFabricBaseBusConnection
 {
-    public bool Initialized => fabricClient.IsConnected;
     public BusConnectionId BusConnectionId { get; private set; } = BusConnectionId.New();
     public ServiceBusConfig Config { get; } = config;
 
