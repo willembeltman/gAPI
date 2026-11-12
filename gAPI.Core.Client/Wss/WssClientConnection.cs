@@ -840,35 +840,40 @@ public abstract class WssClientConnection : IWssClientConnection
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
-            // Gebruik je eigen token voor de queueing
             await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
+
+            ct.Register(async () =>
+            {
+                var stateIsChanged = HttpClient.IsStateDataChanged();
+                var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
+                await Sender.Send_SendRequestCancelled_ToServerAsync(new(routing, "Task is cancelled", stateIsChanged, stateData), CancellationToken.None);
+            });
         }
         catch (OperationCanceledException)
         {
             Logger.LogWarning("FireAndForget chunk afgebroken vanwege time-out (30s).");
+            throw;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Fout opgevangen in FireAndForget streaming bus-call");
+            throw;
         }
     }
     public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId);
-
-        var stateIsChanged = HttpClient.IsStateDataChanged();
-        var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
-        var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
-
         var completion = PendingSendRequests.GetOrAdd(
             routing.RequestId,
             _ => new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously));
 
-        await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
-
         try
         {
+            var stateIsChanged = HttpClient.IsStateDataChanged();
+            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
+            var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
+
+            await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
+
             ct.Register(async () =>
             {
                 var requestCancelled = new SendRequestCancelledClientDto(routing, "Task is cancelled", false, null);
@@ -885,6 +890,16 @@ public abstract class WssClientConnection : IWssClientConnection
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
         }
+        catch (OperationCanceledException)
+        {
+            Logger.LogWarning("FireAndForget chunk afgebroken vanwege time-out (30s).");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fout opgevangen in FireAndForget streaming bus-call");
+            throw;
+        }
         finally
         {
             PendingSendRequests.TryRemove(routing.RequestId, out _);
@@ -892,21 +907,20 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_InvokeRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId);
-
-        var stateIsChanged = HttpClient.IsStateDataChanged();
-        var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
-        var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);
-
-        var completion = PendingInvokeRequests.GetOrAdd(
-            routing.RequestId,
-            _ => new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously));
-
-        await Sender.Send_InvokeRequest_ToServerAsync(invokeRequest, ct);
+        var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
+        {
+            throw new Exception("Cache");
+        }
 
         try
         {
+            var stateIsChanged = HttpClient.IsStateDataChanged();
+            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
+            var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);
+
+            await Sender.Send_InvokeRequest_ToServerAsync(invokeRequest, ct);
+
             ct.Register(async () =>
             {
                 var invokeCancelled = new InvokeRequestCancelledClientDto(routing, "Task is cancelled", false, null);

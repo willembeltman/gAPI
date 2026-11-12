@@ -1087,9 +1087,25 @@ public sealed class FabricClient
     }
     private async Task Handle_SendFireAndForget_ToFabric_Async(SendRequestDto request, CancellationToken ct)
     {
-        // GEEN StreamingCache.PendingFabricSendRequests meer!
-        // Schiet hem direct de netwerkqueue in (EnqueueAsync onder water)
-        await Sender.Send_SendAndForgetRequest_ToFabricAsync(request, ct);
+        try
+        {
+            await Sender.Send_SendAndForgetRequest_ToFabricAsync(request, ct);
+
+            ct.Register(async () =>
+            {
+                await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogWarning("FireAndForget chunk afgebroken vanwege time-out.");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fout opgevangen in FireAndForget streaming bus-call");
+            throw;
+        }
     }
     private async Task Handle_SendFireAndForget_ToClient_Async(SendRequestDto request, CancellationToken ct)
     {
@@ -1124,17 +1140,28 @@ public sealed class FabricClient
         var completion = StreamingCache.PendingFabricSendRequests.GetOrAdd(
             request.Routing.RequestId,
             _ => new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously));
-        await Sender.Send_SendRequest_ToFabricAsync(request, ct);
-
-        using var ctReg = ct.Register(async () =>
-        {
-            await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-        });
 
         try
         {
+            await Sender.Send_SendRequest_ToFabricAsync(request, ct);
+
+            ct.Register(async () =>
+            {
+                await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            });
+
             var done = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
             return;
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogWarning("FireAndForget chunk afgebroken vanwege time-out (30s).");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fout opgevangen in FireAndForget streaming bus-call");
+            throw;
         }
         finally
         {
@@ -1187,15 +1214,16 @@ public sealed class FabricClient
         {
             throw new Exception("Cache");
         }
-        await Sender.Send_InvokeRequest_ToFabricAsync(request, ct);
-
-        ct.Register(async () =>
-        {
-            await Sender.Send_InvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-        });
 
         try
         {
+            await Sender.Send_InvokeRequest_ToFabricAsync(request, ct);
+
+            ct.Register(async () =>
+            {
+                await Sender.Send_InvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            });
+
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1);
             await foreach (var item in enumerable)
