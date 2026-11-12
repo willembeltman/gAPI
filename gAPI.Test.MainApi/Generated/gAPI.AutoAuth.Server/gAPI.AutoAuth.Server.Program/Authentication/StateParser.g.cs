@@ -7,7 +7,7 @@ namespace gAPI.Generated;
 
 public class StateParser : IStateParser
 {
-    public bool TryParse(string? value, out AuthStateDto state, int maxBufferSize)
+    public bool TryParse(string? value, out AuthStateDto state, int ___maxBufferSize)
     {
         state = default!;
 
@@ -17,10 +17,11 @@ public class StateParser : IStateParser
         try
         {
             var data = Convert.FromBase64String(value);
-            var offset = 0;
+            var ___offset = 0;
+            var ___span = new Span<byte>(data);
             try
             {
-                state = data.ReadAuthStateDto(ref offset, maxBufferSize);
+                state = AuthStateDtoSpanSerializer.ReadAuthStateDto(___span, ref ___offset, ___maxBufferSize);
             }
             catch
             {

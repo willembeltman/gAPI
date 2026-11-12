@@ -87,9 +87,6 @@ public class ClientConnection
     }
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
-        if (!Initialized)
-            return;
-
         if (implementation is IMainHub mainHub)
         {
             if (___Logger.IsEnabled(LogLevel.Trace))

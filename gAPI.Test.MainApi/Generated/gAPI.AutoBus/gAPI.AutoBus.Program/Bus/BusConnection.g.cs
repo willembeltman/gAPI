@@ -144,9 +144,6 @@ public class BusConnection
     }
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
-        if (!Initialized)
-            return;
-        
         if (implementation is IBus1 bus1)
         {
             await Bus1sLock.WaitAsync(___ct);
@@ -162,6 +159,7 @@ public class BusConnection
             var ___serviceId = new ServiceId("IBus1");
             await SendUnsubscribeAsync(bus1, ___serviceId, ___ct);
         }
+
         if (implementation is IBus2 bus2)
         {
             await Bus2sLock.WaitAsync(___ct);
@@ -177,6 +175,7 @@ public class BusConnection
             var ___serviceId = new ServiceId("IBus2");
             await SendUnsubscribeAsync(bus2, ___serviceId, ___ct);
         }
+
         if (implementation is IMainBus mainBus)
         {
             await MainBussLock.WaitAsync(___ct);

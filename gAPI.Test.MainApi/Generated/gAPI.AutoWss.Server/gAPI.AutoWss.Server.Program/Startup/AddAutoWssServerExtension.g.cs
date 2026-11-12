@@ -73,6 +73,7 @@ public static class AddAutoWssServerExtension
         services.AddSingleton<ServiceSubscriptionCollection>();
         services.AddSingleton<ServerConnectionCollection>();
         services.AddSingleton<FabricClient>();
+        services.AddHostedService<FabricClientHostedService>();
 
         if (fabricConnectionString == null)
         {
