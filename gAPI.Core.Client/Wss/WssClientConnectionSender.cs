@@ -15,39 +15,53 @@ namespace gAPI.Core.Client.Wss;
 
 public class WssClientConnectionSender
 {
+    private readonly WssClientConnection WssClientConnection;
     private readonly ILogger<WssClientConnectionSender> Logger;
     private readonly byte[] SendBuffer;
-    private readonly Channel<Func<Span<byte>, int>> SendQueue = Channel.CreateUnbounded<Func<Span<byte>, int>>();
+    private readonly Channel<SendQueueItem> SendQueue = Channel.CreateUnbounded<SendQueueItem>();
 
     public WssClientConnectionSender(
+        WssClientConnection wssClientConnection,
         ClientConfig clientConfig,
         IClientLoggerFactory LoggerFactory)
     {
+        WssClientConnection = wssClientConnection;
         Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
         SendBuffer = new byte[clientConfig.MaxPackageSize ?? 512 * 1024];
     }
 
-    public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationToken ct)
+    public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationTokenSource cts)
     {
         try
         {
-            //await Send_Initialize_ToServerAsync(initialize, ct);
-
-            var span2 = SendBuffer.AsSpan();
-            var offset2 = 0;
-            span2.WriteWssClientToServerMessageEnum(ref offset2, WssClientToServerMessageEnum.Initialize);
-            span2.Write(ref offset2, initialize);
+            var span = SendBuffer.AsSpan();
+            var offset = 0;
+            var ct = cts.Token;
+            span.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Initialize);
+            span.Write(ref offset, initialize);
 
             await socket.SendAsync(
-                new ArraySegment<byte>(SendBuffer, 0, offset2),
+                new ArraySegment<byte>(SendBuffer, 0, offset),
                 WebSocketMessageType.Binary,
                 true,
                 ct);
 
             await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
-                var span = SendBuffer.AsSpan();
-                var offset = item(span);
+                try
+                {
+                    span = SendBuffer.AsSpan();
+                    offset = item.Write(span);
+                }
+                catch (Exception ex)
+                {
+                    item.Sent?.TrySetException(ex);
+                    throw;
+                }
+
+                // Zodra item.Write(span) klaar is, zijn de bytes gekopieerd naar SendBuffer.
+                // De caller mag zijn gehuurde ArrayPool-buffer nu direct weer veilig teruggeven!
+                item.Sent?.TrySetResult();
 
                 await socket.SendAsync(
                     new ArraySegment<byte>(SendBuffer, 0, offset),
@@ -56,15 +70,48 @@ public class WssClientConnectionSender
                     ct);
             }
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException ex)
         {
-            // Netjes geannuleerd via Cts.Cancel(), niks aan de hand
+            // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
+            CompleteQueue(cts, ex);
         }
         catch (Exception ex)
         {
-            Logger.LogError("SendKernel => Exception tijdens verzenden: {ex}", ex);
-            throw; // Dit zorgt ervoor dat de Task faalt en eventueel elders opgemerkt kan worden
+            // A failed send means this connection can no longer drain the queue.
+            // Do not hide it: the connection owner must cancel the receiver and
+            // dispose its subscriptions instead of accepting messages forever.
+            Logger.LogError(ex, "WSS sender stopped for client {ClientConnectionId}", WssClientConnection.ClientConnectionId);
+            CompleteQueue(cts, ex);
+            //throw;
         }
+    }
+    private void CompleteQueue(CancellationTokenSource cts, Exception error)
+    {
+        cts.Cancel();
+
+        SendQueue.Writer.TryComplete(error);
+
+        while (SendQueue.Reader.TryRead(out var item))
+            item.Sent?.TrySetException(error);
+    }
+
+    private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
+    {
+        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, null)))
+        {
+            return;
+        }
+    }
+    private async Task EnqueueAndWaitAsync(Func<Span<byte>, int> write, CancellationToken ct)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, tcs)))
+        {
+            return;
+        }
+
+        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public void ClearQueue()
@@ -76,6 +123,7 @@ public class WssClientConnectionSender
         }
         Logger.LogInformation("Wachtrij succesvol leeggemaakt na verbindingsverlies.");
     }
+
 
     //public async Task Send_Initialize_ToServerAsync(InitializeDto message, CancellationToken ct)
     //{
@@ -132,30 +180,17 @@ public class WssClientConnectionSender
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} QUEUED Send_SendRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_SendRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SendRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-                var offset = 0;
-                writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendRequest);
-                writer.Write(ref offset, message);
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendRequest);
+            writer.Write(ref offset, message);
 
-                tcs.SetResult();
-                return offset;
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            return offset;
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_SendRequestCancelled_ToServerAsync(SendRequestCancelledClientDto message, CancellationToken ct)
     {
@@ -195,30 +230,16 @@ public class WssClientConnectionSender
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} QUEUED Send_InvokeRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_InvokeRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_InvokeRequest_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-                var offset = 0;
-                writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequest);
-                writer.Write(ref offset, message);
-
-                tcs.SetResult();
-                return offset;
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.InvokeRequest);
+            writer.Write(ref offset, message);
+            return offset;
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
     public async Task Send_InvokeRequestCancelled_ToServerAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
@@ -274,29 +295,16 @@ public class WssClientConnectionSender
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now} Send_StreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_StreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-                var offset = 0;
-                writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.StreamingResponse);
-                writer.Write(ref offset, message);
-                tcs.SetResult();
-                return offset;
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.StreamingResponse);
+            writer.Write(ref offset, message);
+            return offset;
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public async Task Send_FabricStreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
@@ -320,30 +328,16 @@ public class WssClientConnectionSender
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: QUEUED Send_FabricStreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await EnqueueAsync(writer =>
+        await EnqueueAndWaitAsync(writer =>
         {
-            try
-            {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now}: Send_FabricStreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
                 var offset = 0;
                 writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.FabricStreamingResponse);
                 writer.Write(ref offset, message);
-
-                tcs.SetResult();
                 return offset;
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-                throw;
-            }
         }, ct);
-
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public async Task Send_Log_ToServerAsync(ClientLogDto log, CancellationToken ct)
@@ -358,14 +352,8 @@ public class WssClientConnectionSender
         }, ct);
     }
 
-    private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
-    {
-        try
-        {
-            await SendQueue.Writer.WriteAsync(write, ct);
-        }
-        catch (TaskCanceledException)
-        {
-        }
-    }
+    private sealed record SendQueueItem(
+        Func<Span<byte>, int> Write,
+        TaskCompletionSource? Sent);
+
 }

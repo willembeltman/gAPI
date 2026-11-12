@@ -8,8 +8,10 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Wss;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
@@ -24,8 +26,9 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         Config = config;
         HttpClient = httpClient;
-        Sender = new WssClientConnectionSender(config, this);
-        Logger = ((IClientLoggerFactory)this).CreateLogger<WssClientConnection>();
+        var loggerFactory = (IClientLoggerFactory)this;
+        Sender = new WssClientConnectionSender(this, config, loggerFactory);
+        Logger = loggerFactory.CreateLogger<WssClientConnection>();
         ReceiveBuffer = new byte[config.MaxPackageSize ?? 512 * 1024];
     }
 
@@ -66,6 +69,7 @@ public abstract class WssClientConnection : IWssClientConnection
         LifeCycleCt = ct;
         _ = Task.Run(ConnectAsync);
     }
+
     private async Task ConnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -74,6 +78,7 @@ public abstract class WssClientConnection : IWssClientConnection
         await ConnectingGate.WaitAsync();
         try
         {
+            RunningRequested = true;
             await Gated_ConnectAsync();
         }
         finally
@@ -81,11 +86,9 @@ public abstract class WssClientConnection : IWssClientConnection
             ConnectingGate.Release();
         }
     }
-
     private async Task Gated_ConnectAsync()
     {
         var baseUri = Config.WssBackendUrl;
-        RunningRequested = true;
         while (RunningRequested == true && ConnectedCts == null)
         {
             try
@@ -99,14 +102,31 @@ public abstract class WssClientConnection : IWssClientConnection
                 await Ws.ConnectAsync(url, LifeCycleCt ?? CancellationToken.None);
 
                 ConnectedCts = new CancellationTokenSource();
+                var socket = Ws;
+                var connectedCts = ConnectedCts;
 
                 var initialize = new InitializeDto()
                 {
                     StateData = stateData,
                     SessionId = sessionId
                 };
-                _ = Task.Run(async () => { await Sender.SendKernel(Ws, initialize, ConnectedCts.Token); }, ConnectedCts.Token);
-                _ = Task.Run(async () => { await TryStartReceiveKernelElseReconnectAsync(Ws, ConnectedCts); }, ConnectedCts.Token);
+
+                var senderTask = Sender.SendKernel(socket, initialize, connectedCts);
+                var receiverTask = ReceiverKernel(socket, connectedCts.Token);
+
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
+
+                // Niet awaiten in Gated_ConnectAsync, maar op de achtergrond laten bewaken!
+                _ = Task.Run(async () =>
+                {
+                    await Task.WhenAny(senderTask, receiverTask);
+                    connectedCts.Cancel();
+                    await Task.WhenAll(senderTask, receiverTask);
+
+                    if (RunningRequested)
+                        await ReconnectAsync();
+                });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -129,25 +149,6 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task TryStartReceiveKernelElseReconnectAsync(WebSocket socket, CancellationTokenSource cts)
-    {
-        try
-        {
-            await ReceiverKernel(socket, cts);
-        }
-        catch (Exception ex)
-        {
-            if (Logger.IsEnabled(LogLevel.Error))
-                Logger.LogError(
-                    "FabricClient #{Id.Value}: Exception occured, restarting fabric client\r\n{ex}",
-                    FabricConnectionId?.Value,
-                    ex);
-        }
-
-        if (RunningRequested)
-            await ReconnectAsync();
-    }
-
     private async Task ReconnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Error))
@@ -164,12 +165,12 @@ public abstract class WssClientConnection : IWssClientConnection
             ConnectingGate.Release();
         }
     }
-
     private async Task Gated_ReconnectAsync()
     {
         if (LifeCycleCt == null)
             throw new Exception("Not initialized");
 
+        await Task.Delay(TimeSpan.FromSeconds(5));
         await Gated_DisconnectAsync();
         await OnDisconnectedAsync(LifeCycleCt.Value);
         await Gated_ConnectAsync();
@@ -366,145 +367,121 @@ public abstract class WssClientConnection : IWssClientConnection
     #endregion
 
     #region Receiver
-    private async Task ReceiverKernel(WebSocket socket, CancellationTokenSource cts)
+    private async Task ReceiverKernel(WebSocket socket, CancellationToken ct)
     {
-        var ct = cts.Token;
         //bool explicitClose = false;
 
-        //try
-        //{
-        while (socket.State == WebSocketState.Open && !ct.IsCancellationRequested)
+        try
         {
-            int totalBytes = 0;
-            WebSocketReceiveResult result;
-
-            do
+            while (socket.State == WebSocketState.Open && !ct.IsCancellationRequested)
             {
-                result = await socket.ReceiveAsync(
-                    new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
-                    ct);
+                int totalBytes = 0;
+                WebSocketReceiveResult result;
 
-                if (result.MessageType == WebSocketMessageType.Close)
+                do
                 {
-                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
-                    await cts.CancelAsync();
-                    RunningRequested = false; // Netjes afgesloten door server of client
-                    return;
+                    result = await socket.ReceiveAsync(
+                        new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
+                        ct);
+
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
+                        RunningRequested = false; // Netjes afgesloten door server of client
+                        return;
+                    }
+
+                    totalBytes += result.Count;
+
+                } while (!result.EndOfMessage);
+
+                // 🎯 Direct span gebruiken
+                var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
+                int offset = 0;
+
+                var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
+
+                switch (messageType)
+                {
+                    case WssServerToClientMessageEnum.SynchronizeClientIds:
+                        var synchronizeClientIds = span.ReadSynchronizeClientIdsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
+                        var sendAndForgetRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricSendAndForgetRequest_FromServer(sendAndForgetRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled:
+                        var sendAndForgetRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricSendAndForgetRequestCancelled_FromServer(sendAndForgetRequestCancelled, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.FabricSendRequest:
+                        var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricSendRequest_FromServer(sendArgumentedRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.FabricSendRequestCancelled:
+                        var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricSendRequestCancelled_FromServer(sendRequestCancelled, ct);
+                        break;
+                    case WssServerToClientMessageEnum.SendRequestDone:
+                        var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.FabricInvokeRequest:
+                        var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricInvokeRequest_FromServerAsync(invokeRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.FabricInvokeRequestCancelled:
+                        var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
+                        break;
+                    case WssServerToClientMessageEnum.InvokeRequestAck:
+                        var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
+                        break;
+                    case WssServerToClientMessageEnum.InvokeRequestDone:
+                        var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.StreamingRequest:
+                        var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_StreamingRequest_FromServerAsync(argumentRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.StreamingResponse:
+                        var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_StreamingResponse_FromServerAsync(argumentResponse, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.FabricStreamingRequest:
+                        var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricStreamingRequest_FromServerAsync(fabricArgumentRequest, ct);
+                        break;
+                    case WssServerToClientMessageEnum.FabricStreamingResponse:
+                        var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_FabricStreamingResponse_FromServerAsync(fabricArgumentResponse, ct);
+                        break;
                 }
-
-                totalBytes += result.Count;
-
-            } while (!result.EndOfMessage);
-
-            // 🎯 Direct span gebruiken
-            var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
-            int offset = 0;
-
-            var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
-
-            switch (messageType)
-            {
-                case WssServerToClientMessageEnum.SynchronizeClientIds:
-                    var synchronizeClientIds = span.ReadSynchronizeClientIdsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
-                    break;
-
-                case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
-                    var sendAndForgetRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricSendAndForgetRequest_FromServer(sendAndForgetRequest, ct);
-                    break;
-                case WssServerToClientMessageEnum.FabricSendAndForgetRequestCancelled:
-                    var sendAndForgetRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricSendAndForgetRequestCancelled_FromServer(sendAndForgetRequestCancelled, ct);
-                    break;
-
-                case WssServerToClientMessageEnum.FabricSendRequest:
-                    var sendArgumentedRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricSendRequest_FromServer(sendArgumentedRequest, ct);
-                    break;
-                case WssServerToClientMessageEnum.FabricSendRequestCancelled:
-                    var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricSendRequestCancelled_FromServer(sendRequestCancelled, ct);
-                    break;
-                case WssServerToClientMessageEnum.SendRequestDone:
-                    var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
-                    break;
-
-                case WssServerToClientMessageEnum.FabricInvokeRequest:
-                    var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricInvokeRequest_FromServerAsync(invokeRequest, ct);
-                    break;
-                case WssServerToClientMessageEnum.FabricInvokeRequestCancelled:
-                    var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricInvokeRequestCancelled_FromServerAsync(invokeRequestCancelled, ct);
-                    break;
-                case WssServerToClientMessageEnum.InvokeRequestAck:
-                    var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
-                    break;
-                case WssServerToClientMessageEnum.InvokeRequestDone:
-                    var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_InvokeRequestDone_FromServerAsync(invokeRequestDone, ct);
-                    break;
-
-                case WssServerToClientMessageEnum.StreamingRequest:
-                    var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_StreamingRequest_FromServerAsync(argumentRequest, ct);
-                    break;
-                case WssServerToClientMessageEnum.StreamingResponse:
-                    var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_StreamingResponse_FromServerAsync(argumentResponse, ct);
-                    break;
-
-                case WssServerToClientMessageEnum.FabricStreamingRequest:
-                    var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricStreamingRequest_FromServerAsync(fabricArgumentRequest, ct);
-                    break;
-                case WssServerToClientMessageEnum.FabricStreamingResponse:
-                    var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                    await Received_FabricStreamingResponse_FromServerAsync(fabricArgumentResponse, ct);
-                    break;
             }
         }
-        //}
-        //catch (Exception ex)
-        //{
-        //    Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
-        //    throw;
-        //}
-        //finally
-        //{
-        //    cts.Cancel();
-        //    try
-        //    {
-        //        await DisposeStreamingRequestHandlersAsync();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Logger.LogError(ex, "Failed to dispose streaming request handlers after the WSS connection closed.");
-        //    }
-        //    cts.Dispose();
-
-        //    // 🎯 ALS de verbinding onverwacht is verbroken (bv. door netwerkwissel), start reconnect flow:
-        //    if (!explicitClose && !ct.IsCancellationRequested)
-        //    {
-        //        Logger.LogInformation("Verbinding onverwacht verloren. Herverbinden over 5 seconden...");
-        //        _ = Task.Run(async () =>
-        //        {
-        //            await Task.Delay(TimeSpan.FromSeconds(5));
-        //            try
-        //            {
-        //                // ForceReconnectAsync reset de state netjes en start TryConnectAsync opnieuw
-        //                await ForceReconnectAsync(CancellationToken.None);
-        //            }
-        //            catch (Exception reconEx)
-        //            {
-        //                Logger.LogError("Automatische herverbinding mislukt: {ex}", reconEx);
-        //            }
-        //        });
-        //    }
-        //}
+        catch (Exception ex)
+        {
+            Logger.LogError("ReceiverKernel => Exception: {ex}", ex);
+        }
+        finally
+        {
+            try
+            {
+                await DisposeStreamingRequestHandlersAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to dispose streaming request handlers after the WSS connection closed.");
+            }
+        }
     }
 
     private async Task Received_SynchronizeClientIds_FromServer(SynchronizeClientIdsDto synchronizeClientIds, CancellationToken ct)

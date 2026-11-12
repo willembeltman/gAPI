@@ -123,7 +123,6 @@ public sealed class BusFabricClient
             ConnectingGate.Release();
         }
     }
-
     private async Task Gated_ConnectAsync()
     {
         RunningRequested = true;

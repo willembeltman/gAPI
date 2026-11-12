@@ -81,11 +81,12 @@ public abstract class WssServerConnection : IServerConnection
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            // Task.WhenAll neemt params of een array van Tasks
-            await Task.WhenAll(
-                Sender.SendKernel(socket, cts.Token),
-                ReceiverKernel(socket, path, queryString, ipAddress, sessionId, cookieData, cts)
-            );
+            var senderTask = Sender.SendKernel(socket, cts);
+            var receiverTask = ReceiverKernel(socket, path, queryString, ipAddress, sessionId, cookieData, cts);
+
+            await Task.WhenAny(senderTask, receiverTask);
+            cts.Cancel();
+            await Task.WhenAll(senderTask, receiverTask);
         }
         catch (TaskCanceledException)
         {
@@ -95,6 +96,10 @@ public abstract class WssServerConnection : IServerConnection
         {
             Logger.LogError(ex, "Unexpected error in WssServerConnection");
             throw;
+        }
+        finally
+        {
+            await DisposeAsync();
         }
     }
 
@@ -293,7 +298,6 @@ public abstract class WssServerConnection : IServerConnection
                 if (message.StateIsChanged)
                     await AuthenticationService.UpdateStateDataAsync(message.StateData, cts.Token);
 
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, cts.Token);
                 await Send_SendRequest_ToServiceAsync(message, cts.Token);
 
                 var stateIsChanged = AuthenticationService.IsStateDataChanged();
