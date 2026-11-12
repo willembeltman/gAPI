@@ -1090,11 +1090,6 @@ public sealed class FabricClient
         // GEEN StreamingCache.PendingFabricSendRequests meer!
         // Schiet hem direct de netwerkqueue in (EnqueueAsync onder water)
         await Sender.Send_SendAndForgetRequest_ToFabricAsync(request, ct);
-        // Direct klaar, geen 100s timeout wachtrij!
-        ct.Register(async () =>
-        {
-            await Sender.Send_SendAndForgetRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-        });
     }
     private async Task Handle_SendFireAndForget_ToClient_Async(SendRequestDto request, CancellationToken ct)
     {
@@ -1105,22 +1100,6 @@ public sealed class FabricClient
             // GEEN StreamingCache.PendingFabricSendRequests meer!
             // Schiet hem direct de netwerkqueue in (EnqueueAsync onder water)
             await serviceSubscription.Connection.Send_FabricSendAndForgetRequest_ToClientAsync(request, ct);
-            // Direct klaar, geen 100s timeout wachtrij!
-            ct.Register(async () =>
-            {
-                await serviceSubscription.Connection.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-            });
-
-            //try
-            //{
-            //    // We awaiten dit wel, maar omdat de client-kant nu ook async void/fire-and-forget is,
-            //    // accepteert de WssServerConnection de bytes direct in de queue zonder te wachten.
-            //    await serviceSubscription.SendAndForgetRequestAsync(request, ct);
-            //}
-            //catch (Exception)
-            //{
-            //    // Zorg dat een falende sessie de streaming voor andere sessies niet permanent blokkeert
-            //}
         }
     }
 
@@ -1147,7 +1126,7 @@ public sealed class FabricClient
             _ => new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously));
         await Sender.Send_SendRequest_ToFabricAsync(request, ct);
 
-        ct.Register(async () =>
+        using var ctReg = ct.Register(async () =>
         {
             await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
         });

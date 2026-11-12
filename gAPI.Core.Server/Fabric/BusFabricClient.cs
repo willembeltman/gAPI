@@ -392,17 +392,7 @@ public sealed class BusFabricClient
         if (BusConnection == null)
             throw new Exception("Not started");
 
-        using var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
-
-        try
-        {
-            await BusConnection.Send_FireAndForgetRequest_ToServiceAsync(message, ct);
-        }
-        finally
-        {
-            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
-        }
+        await BusConnection.Send_FireAndForgetRequest_ToServiceAsync(message, ct);
     }
     private async Task Receive_BusFireAndForgetCancelled_FromFabricAsync(BusSendRequestCancelledDto message, CancellationToken ct)
     {
