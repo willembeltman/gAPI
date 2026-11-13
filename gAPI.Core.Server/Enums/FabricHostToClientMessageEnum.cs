@@ -6,6 +6,8 @@ public enum FabricHostToClientMessageEnum
     SynchronizeFabricIds,
     Log,
 
+    SubscribeAck,
+    UnsubscribeAck,
 
     FabricSendAndForgetRequest,
     FabricSendAndForgetRequestCancelled,
@@ -21,5 +23,4 @@ public enum FabricHostToClientMessageEnum
 
     StreamingRequest,
     StreamingResponse,
-
 }

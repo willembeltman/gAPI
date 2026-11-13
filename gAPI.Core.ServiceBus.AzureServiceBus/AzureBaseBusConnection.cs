@@ -535,7 +535,7 @@ public abstract class AzureBaseBusConnection(
                 var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
                 RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-                ack = new BusInvokeRequestAckDto(responseRouting);
+                ack = new BusInvokeRequestAckDto(responseRouting, false, null);
                 var ackData = CreateInvokeRequestAckData(ack);
                 var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
                 message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;

@@ -18,6 +18,7 @@ public class WssServiceSubscription
         ServiceSubscriptionCollection serviceSubscriptionCollection,
         FabricClient fabricClient,
         ClientConnectionId clientConnectionId,
+        ServiceSubscriptionId serviceSubscriptionId,
         ServiceId serviceId,
         UserId userId,
         SessionId sessionId)
@@ -26,11 +27,12 @@ public class WssServiceSubscription
         Connection = connection;
         FabricClient = fabricClient;
         ClientConnectionId = clientConnectionId;
+        ServiceSubscriptionId = serviceSubscriptionId;
         SessionId = sessionId;
         UserId = userId;
         ServiceId = serviceId;
 
-        ServiceSubscriptionId = ServiceSubscriptionCollection.Add(this, serviceId);
+        ServiceSubscriptionCollection.Add(this, serviceId);
         Logger = loggerFactory.CreateLogger<WssServiceSubscription>();
         Stopwatch = Stopwatch.StartNew();
     }

@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Client.Helpers;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 using System.Net;
@@ -74,10 +75,7 @@ public class SseClient : IDisposable
                         switch (eventName)
                         {
                             case "ServiceSubscriptionId":
-                                if (long.TryParse(eventData, out var serviceSubscriptionId))
-                                {
-                                    ServiceSubscriptionId = new ServiceSubscriptionId(serviceSubscriptionId);
-                                }
+                                ServiceSubscriptionId = new ServiceSubscriptionId(eventData);
                                 break;
                             case "ClientConnectionId":
                                 if (long.TryParse(eventData, out var clientConnectionId))
@@ -277,6 +275,8 @@ public class SseClient : IDisposable
                 await Sender.Send_InvokeRequestAck_ToServerAsync(
                     new InvokeRequestAckClientDto(
                         message.Routing,
+                        false,
+                        null,
                         stateIsChanged,
                         stateData
                     ), ct);

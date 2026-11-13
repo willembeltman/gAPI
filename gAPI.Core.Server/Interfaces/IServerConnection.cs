@@ -20,4 +20,5 @@ public interface IServerConnection : ISpeedGetter
 
     Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestDto message, CancellationToken ct);
     Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto message, CancellationToken ct);
+
 }

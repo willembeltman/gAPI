@@ -28,7 +28,8 @@ public abstract class WssServerConnection : IServerConnection
     readonly WssServerConnectionSender Sender;
     readonly ServerConnectionCollection Connections; // Doet niet veel anders dan id's
     readonly ServiceSubscriptionCollection ServiceSubscriptions; // Voor alle service subscriptions
-    readonly ConcurrentDictionary<ServiceId, WssServiceSubscription> ConnectedServiceSubscriptions; // Alleen voor dispose
+    readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>> ConnectedServiceSubscriptions; // Alleen voor dispose
+
     readonly StreamingCache StreamingCache;
     readonly byte[] ReceiveBuffer;
 
@@ -251,33 +252,66 @@ public abstract class WssServerConnection : IServerConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
-        // Voor het geval dat...
-        if (ConnectedServiceSubscriptions.TryRemove(message.ServiceId, out var subscription))
+        var tcs = new TaskCompletionSource<SubscribeAckDto>(TimeSpan.FromSeconds(10));
+        if (StreamingCache.SubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
+
+        try
         {
-            await subscription.DisposeAsync();
+            var subscription = new WssServiceSubscription(
+                this,
+                LoggerFactory,
+                ServiceSubscriptions,
+                FabricClient,
+                ClientConnectionId,
+                message.ServiceSubscriptionId,
+                message.ServiceId,
+                AuthenticationService.UserId,
+                AuthenticationService.SessionId);
+
+            await FabricClient.SubscribeAsync(subscription, ct);
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            var connections = ConnectedServiceSubscriptions.GetOrAdd(
+                message.ServiceId,
+                a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
+            if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
+                throw new Exception("Cannot add service subscription");
+
+            await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
         }
-
-        subscription = new WssServiceSubscription(
-            this,
-            LoggerFactory,
-            ServiceSubscriptions,
-            FabricClient,
-            ClientConnectionId,
-            message.ServiceId,
-            AuthenticationService.UserId,
-            AuthenticationService.SessionId);
-
-        await FabricClient.SubscribeAsync(subscription, ct);
-        ConnectedServiceSubscriptions[message.ServiceId] = subscription;
+        finally
+        {
+            StreamingCache.SubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+        }
     }
     private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
-        if (ConnectedServiceSubscriptions.TryRemove(message.ServiceId, out var subsciption))
+        var connections = ConnectedServiceSubscriptions.GetOrAdd(
+            message.ServiceId,
+            a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
+        if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription))
         {
-            await subsciption.DisposeAsync();
+            var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TimeSpan.FromSeconds(10));
+            if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+                throw new Exception("Cannot save subscribe request");
+
+            try
+            {
+                await subscription.DisposeAsync();
+
+                var ack = await tcs.Task.WaitAsync(ct);
+
+                await Sender.Send_UnsubscribeAck_ToClientAsync(ack, ct);
+            }
+            finally
+            {
+                StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+            }
         }
     }
 
@@ -410,6 +444,8 @@ public abstract class WssServerConnection : IServerConnection
                 await Sender.Send_InvokeRequestAck_ToClientAsync(
                     new InvokeRequestAckClientDto(
                         message.Routing,
+                        false,
+                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -818,7 +854,7 @@ public abstract class WssServerConnection : IServerConnection
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
+                if (StreamingCache.StreamingResponseHandlers.TryAdd(key, response =>
                 {
                     if (response.IsCancelled)
                     {
@@ -846,7 +882,8 @@ public abstract class WssServerConnection : IServerConnection
                     {
                         enumerator.Complete(ex);
                     }
-                });
+                }) == false)
+                    throw new Exception("cache");
             },
 
             requestNext: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
@@ -913,15 +950,18 @@ public abstract class WssServerConnection : IServerConnection
 
         Connections.RemoveConnection(ClientConnectionId);
 
-        foreach (var hubHost in ConnectedServiceSubscriptions.Values)
+        foreach (var connections in ConnectedServiceSubscriptions.Values)
         {
-            try
+            foreach (var hubHost in connections.Values)
             {
-                await hubHost.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Error while disposing hubhost {hubHost.Id}", hubHost.ServiceSubscriptionId);
+                try
+                {
+                    await hubHost.DisposeAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Error while disposing hubhost {hubHost.Id}", hubHost.ServiceSubscriptionId);
+                }
             }
         }
         ConnectedServiceSubscriptions.Clear();

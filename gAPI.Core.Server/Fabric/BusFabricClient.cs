@@ -87,7 +87,7 @@ public sealed class BusFabricClient
     TcpClient? Tcp;
     NetworkStream? Stream;
 
-    public BinaryWriter Writer { get; private set; }
+    public BinaryWriter? Writer { get; private set; }
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricBusConnectionId FabricConnectionId { get; private set; } = new FabricBusConnectionId(-1);
     public bool IsConnected => Tcp?.Connected == true;
@@ -152,6 +152,7 @@ public sealed class BusFabricClient
             {
                 try
                 {
+                    Writer = null;
                     ConnectedCts?.Cancel();
                     ConnectedCts?.Dispose();
                     ConnectedCts = null;
@@ -231,34 +232,74 @@ public sealed class BusFabricClient
         ConnectedCts = null;
     }
 
-    public async Task BusSubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, BusSubscribeDto subscribe, CancellationToken ct)
+    ConcurrentDictionary<object, ServiceSubscriptionId> ServiceSubscriptionList = [];
+    public async Task BusSubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, ServiceId serviceId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
-                "BusSubscribeAsync({baseBusConnection},{subscribe})",
+                "BusSubscribeAsync({baseBusConnection},{implementation},{subscribe})",
                 busConnection,
-                subscribe);
+                implementation,
+                serviceId);
 
-        await Sender.Send_BusSubscribe_ToFabricAsync(subscribe, ct);
+        var serviceSubscriptionId = ServiceSubscriptionId.New();
+        if (ServiceSubscriptionList.TryAdd(implementation, serviceSubscriptionId) == false)
+            throw new Exception("Cache");
 
-        if (implementation is IBusServiceSubscription implementationSubscription)
+        var message = new BusSubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
+
+        var tcs = new TaskCompletionSource<BusSubscribeAckDto>(TimeSpan.FromSeconds(10));
+        if (StreamingCache.BusSubscribeTcss.TryAdd(serviceSubscriptionId, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
+
+        try
         {
-            await implementationSubscription.OnSubscribedAsync(subscribe.ServiceId, ct);
+            await Sender.Send_BusSubscribe_ToFabricAsync(message, ct);
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            if (implementation is IBusServiceSubscription implementationSubscription)
+            {
+                await implementationSubscription.OnSubscribedAsync(message.ServiceId, ct);
+            }
+        }
+        finally
+        {
+            StreamingCache.BusSubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
         }
     }
-    public async Task BusUnsubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, BusUnsubscribeDto unsubscribe, CancellationToken ct)
+    public async Task BusUnsubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, ServiceId serviceId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
-                "UnsubscribeAsync({baseBusConnection}, {unsubscribe})",
+                "BusUnsubscribeAsync({baseBusConnection},{implementation},{subscribe})",
                 busConnection,
-                unsubscribe);
+                implementation,
+                serviceId);
 
-        await Sender.Send_BusUnsubscribe_ToFabricAsync(unsubscribe, ct);
+        if (ServiceSubscriptionList.TryRemove(implementation, out var serviceSubscriptionId) == false)
+            throw new Exception("Cache");
 
-        if (implementation is IBusServiceSubscription implementationSubscription)
+        var message = new BusUnsubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
+
+        var tcs = new TaskCompletionSource<BusUnsubscribeAckDto>(TimeSpan.FromSeconds(10));
+        if (StreamingCache.BusUnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
+
+        try
         {
-            await implementationSubscription.OnUnsubscribedAsync(unsubscribe.ServiceId, ct);
+            await Sender.Send_BusUnsubscribe_ToFabricAsync(message, ct);
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            if (implementation is IBusServiceSubscription implementationSubscription)
+            {
+                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, ct);
+            }
+        }
+        finally
+        {
+            StreamingCache.BusUnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
         }
     }
 
@@ -278,6 +319,15 @@ public sealed class BusFabricClient
                     case BusFabricHostToClientMessageEnum.SynchronizeFabricIds:
                         var synchronizeFabricIds = binaryReader.ReadSynchronizeBusFabricIdsDto(Config.MaxPackageSize ?? 512 * 1024);
                         await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
+                        break;
+
+                    case BusFabricHostToClientMessageEnum.SubscribeAck:
+                        var subscribeAck = binaryReader.ReadBusSubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                        break;
+                    case BusFabricHostToClientMessageEnum.UnsubscribeAck:
+                        var unsubscribeAck = binaryReader.ReadBusUnsubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
                         break;
 
                     case BusFabricHostToClientMessageEnum.BusFireAndForget:
@@ -384,6 +434,34 @@ public sealed class BusFabricClient
         Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} BusFabricClient {FabricConnectionId.Value} started");
     }
 
+    private async Task Received_SubscribeAck_FromFabric(BusSubscribeAckDto ack, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_SubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+
+            if (StreamingCache.BusSubscribeTcss.TryRemove(ack.SubscribeDto.ServiceSubscriptionId, out var tcs))
+            {
+                tcs.SetResult(ack);
+            }
+        }, ct);
+    }
+    private async Task Received_UnsubscribeAck_FromFabric(BusUnsubscribeAckDto ack, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_UnsubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+
+            if (StreamingCache.BusUnsubscribeTcss.TryRemove(ack.UnsubscribeDto.ServiceSubscriptionId, out var tcs))
+            {
+                tcs.SetResult(ack);
+            }
+        }, ct);
+    }
+
+
     private async Task Receive_BusFireAndForget_FromFabricAsync(BusSendRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -470,7 +548,7 @@ public sealed class BusFabricClient
         {
             var enumerable = BusConnection.Send_InvokeRequest_ToServiceAsync(message, ct);
             RegisterBusAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, cts);
-            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(new(message.Routing), ct);
+            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(new(message.Routing, false, null), ct);
         }
         catch (TaskCanceledException ex)
         {
@@ -491,26 +569,34 @@ public sealed class BusFabricClient
 
         cts.Cancel();
     }
-    private async Task Receive_BusInvokeRequestAck_FromFabricAsync(BusInvokeRequestAckDto request, CancellationToken ct)
+    private async Task Receive_BusInvokeRequestAck_FromFabricAsync(BusInvokeRequestAckDto message, CancellationToken ct)
     {
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(request.Routing, out var complete) == false)
-            return;
-
-        complete.SetResult(request);
-    }
-    private async Task Receive_BusInvokeRequestDone_FromFabricAsync(BusInvokeRequestDoneDto request, CancellationToken ct)
-    {
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(request.Routing, out var complete))
+        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var complete))
         {
-            if (request.Cancelled)
+            if (message.Cancelled)
                 complete.SetCanceled(ct);
-            else if (request.ExceptionMessage != null)
-                complete.SetException(new RemoteException(request.ExceptionMessage));
+            else if (message.ExceptionMessage != null)
+                complete.SetException(new RemoteException(message.ExceptionMessage));
+            else
+                complete.SetResult(message);
+        }
+    }
+    private async Task Receive_BusInvokeRequestDone_FromFabricAsync(BusInvokeRequestDoneDto message, CancellationToken ct)
+    {
+        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var complete))
+        {
+            if (message.Cancelled)
+                complete.SetCanceled(ct);
+            else if (message.ExceptionMessage != null)
+                complete.SetException(new RemoteException(message.ExceptionMessage));
             else
                 complete.SetCanceled(ct); // hij zit te wachten op beginnen met streamen, maar request is al done.
         }
 
-        // TODO Opruimen streaming spul
+        if (StreamingCache.BusStreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+        {
+            await handler.DisposeAsync();
+        }
     }
 
     private async Task Receive_BusStreamingRequest_FromFabricAsync(BusStreamingRequestDto message, CancellationToken ct)
@@ -793,9 +879,8 @@ public sealed class BusFabricClient
     {
         var ct = timeoutCts.Token;
 
-        var complete = new TaskCompletionSource<BusSendRequestDoneDto>();
-
-        if (StreamingCache.PendingBusSendRequests.TryAdd(request.Routing, complete) == false)
+        var completion = new TaskCompletionSource<BusSendRequestDoneDto>();
+        if (StreamingCache.PendingBusSendRequests.TryAdd(request.Routing, completion) == false)
             throw new Exception("Cannot store taskcompletion");
 
         timeoutCts.RegisterDispose(async () =>
@@ -811,7 +896,7 @@ public sealed class BusFabricClient
             await Sender.Send_BusSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
         });
 
-        var sendRequestAck = await complete.Task.WaitAsync(timeoutCts.Token);
+        var sendRequestAck = await completion.Task.WaitAsync(timeoutCts.Token);
         if (sendRequestAck.ExceptionMessage != null)
             throw new RemoteException(sendRequestAck.ExceptionMessage);
     }
@@ -819,25 +904,21 @@ public sealed class BusFabricClient
     {
         var ct = timeoutCts.Token;
 
-        var complete = new TaskCompletionSource<BusInvokeRequestAckDto>();
-        if (StreamingCache.PendingBusInvokeRequests.TryAdd(request.Routing, complete) == false)
+        var completion = new TaskCompletionSource<BusInvokeRequestAckDto>();
+        if (StreamingCache.PendingBusInvokeRequests.TryAdd(request.Routing, completion) == false)
             throw new Exception("Cannot store taskcompletion");
-        timeoutCts.RegisterDispose(() =>
-        {
-            StreamingCache.PendingBusInvokeRequests.TryRemove(request.Routing, out _);
-        });
-
-        await Sender.Send_BusInvokeRequest_ToFabricAsync(request, ct);
-        timeoutCts.CancelAfter(request.Routing.Timeout);
-
-        timeoutCts.Token.Register(async () =>
-        {
-            await Sender.Send_BusInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-        });
 
         try
         {
-            var response = await complete.Task.WaitAsync(request.Routing.Timeout, ct);
+            await Sender.Send_BusInvokeRequest_ToFabricAsync(request, ct);
+            timeoutCts.CancelAfter(request.Routing.Timeout);
+
+            timeoutCts.Token.Register(async () =>
+            {
+                await Sender.Send_BusInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            });
+
+            var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
             var enumerable = RegisterBusRemoteAsyncEnumerableArgumentByte(request.Routing, -1);
             await foreach (var item in enumerable)
             {

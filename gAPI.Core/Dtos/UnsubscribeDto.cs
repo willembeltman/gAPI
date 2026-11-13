@@ -5,6 +5,7 @@ namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public record UnsubscribeDto(
+    ServiceSubscriptionId ServiceSubscriptionId,
     ServiceId ServiceId,
     UserId UserId,
     SessionId SessionId)

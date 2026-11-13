@@ -619,7 +619,7 @@ public abstract class RabbitMQBaseBusConnection(
             var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
             var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
             RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-            ack = new BusInvokeRequestAckDto(responseRouting);
+            ack = new BusInvokeRequestAckDto(responseRouting, false, null);
             var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
             byte[] ackData = CreateInvokeRequestAckData(ack);
             await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);

@@ -21,10 +21,10 @@ public interface IWssClientConnection : IClientLoggerFactory
     void RegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts);
     void UnRegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts);
 
-    Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct);
-    Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct);
-
-    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct);
+    Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose ct);
+    Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose ct);
+    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose ct);
+    
     void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
     Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
 }

@@ -27,11 +27,11 @@ public abstract class FabricBaseBusConnection(
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendSubscribeAsync(object implementation, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.BusSubscribeAsync(this, implementation, new(serviceId, BusConnectionId), ct);
+        => fabricClient.BusSubscribeAsync(this, implementation, serviceId, ct);
     // This is called AFTER the service has been unregistered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
     protected Task SendUnsubscribeAsync(object implementation, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.BusUnsubscribeAsync(this, implementation, new(serviceId, BusConnectionId), ct);
+        => fabricClient.BusUnsubscribeAsync(this, implementation, serviceId, ct);
 
     // This is called when a service has to be called through the service bus
     public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)

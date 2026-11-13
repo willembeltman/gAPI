@@ -199,7 +199,7 @@ public sealed class {Name}(
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
         }}
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
@@ -248,7 +248,7 @@ public sealed class {Name}(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {{
@@ -309,7 +309,7 @@ public sealed class {Name}(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {{

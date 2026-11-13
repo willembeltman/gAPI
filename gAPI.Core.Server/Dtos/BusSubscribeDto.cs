@@ -5,6 +5,7 @@ namespace gAPI.Core.Server.Dtos;
 
 [GenerateSerializer]
 public record BusSubscribeDto(
+    ServiceSubscriptionId ServiceSubscriptionId,
     ServiceId ServiceId,
     BusConnectionId BusConnectionId)
 {

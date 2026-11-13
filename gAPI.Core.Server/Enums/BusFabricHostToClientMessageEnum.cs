@@ -4,6 +4,9 @@ public enum BusFabricHostToClientMessageEnum
 {
     SynchronizeFabricIds,
 
+    SubscribeAck,
+    UnsubscribeAck,
+
     BusFireAndForget,
     BusFireAndForgetCancelled,
 
@@ -17,5 +20,5 @@ public enum BusFabricHostToClientMessageEnum
     BusInvokeRequestDone,
 
     BusStreamingRequest,
-    BusStreamingResponse
+    BusStreamingResponse,
 }

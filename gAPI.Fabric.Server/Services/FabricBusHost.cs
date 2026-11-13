@@ -97,6 +97,23 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
         }, actor);
     }
 
+    public async Task Send_BusSubscribeAck_ToApiAsync(BusSubscribeAckDto message, IActor actor)
+    {
+        await Enqueue(writer =>
+        {
+            BusFabricConverter.WriteHostToClientMessageType(writer, BusFabricHostToClientMessageEnum.SubscribeAck);
+            writer.Write(message);
+        }, actor);
+    }
+    public async Task Send_BusUnsubscribeAck_ToApiAsync(BusUnsubscribeAckDto message, IActor actor)
+    {
+        await Enqueue(writer =>
+        {
+            BusFabricConverter.WriteHostToClientMessageType(writer, BusFabricHostToClientMessageEnum.UnsubscribeAck);
+            writer.Write(message);
+        }, actor);
+    }
+
     public async Task Send_BusFireAndForget_ToApiAsync(BusSendRequestDto message, IActor actor)
     {
         await Enqueue(writer =>
@@ -234,8 +251,8 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
             while (!Cts.IsCancellationRequested)
             {
                 var messageType = BusFabricConverter.ReadClientToHostMessageType(reader);
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+                //if (Logger.IsEnabled(LogLevel.Trace))
+                //    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
                 switch (messageType)
                 {
                     case BusFabricClientToHostMessageEnum.BusSubscribe:

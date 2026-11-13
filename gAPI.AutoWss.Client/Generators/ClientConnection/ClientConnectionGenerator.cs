@@ -38,10 +38,10 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference HostedHubServices => Context.HostedHubServices;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
-    public SharedReference SubscribeDto => Context.SharedReferences.SubscribeDto;
+    //public SharedReference SubscribeDto => Context.SharedReferences.SubscribeDto;
     public SharedReference InvokeRequestDto => Context.SharedReferences.InvokeRequestDto;
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
-    public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
+    //public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
@@ -69,10 +69,10 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(WssClientConnection);
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
-        Reg(SubscribeDto);
+        //Reg(SubscribeDto);
         Reg(InvokeRequestDto);
         Reg(SendRequestDto);
-        Reg(UnsubscribeDto);
+        //Reg(UnsubscribeDto);
         Reg(ServiceId);
         Reg(StreamingResponseDto);
         Reg(IClientLoggerFactory);
@@ -195,11 +195,10 @@ public class {Name}
 
             await Send_Subscribe_ToServerAsync(
                 {@interface.CleanName.ToCamelCase()},
-                new {SubscribeDto}(
-                    new ServiceId(""{@interface}""),
-                    HttpClient.UserId,
-                    HttpClient.SessionId
-                ), ___ct);
+                new ServiceId(""{@interface}""),
+                HttpClient.UserId,
+                HttpClient.SessionId, 
+                ___ct);
         }}"))}
     }}";
     }
@@ -225,11 +224,10 @@ public class {Name}
 
             await Send_Unsubscribe_ToServerAsync(
                 {@interface.CleanName.ToCamelCase()},
-                new {UnsubscribeDto}(
-                    new {ServiceId}(""{@interface}""),
-                    HttpClient.UserId,
-                    HttpClient.SessionId
-                ), ___ct);
+                new {ServiceId}(""{@interface}""),
+                HttpClient.UserId,
+                HttpClient.SessionId, 
+                ___ct);
         }}"))}
     }}";
     }
@@ -268,11 +266,10 @@ public class {Name}
             {{
                 await Send_Subscribe_ToServerAsync(
                     {@interface.CleanName.ToCamelCase()},
-                    new {SubscribeDto}(
-                        new ServiceId(""{@interface}""),
-                        HttpClient.UserId,
-                        HttpClient.SessionId
-                    ), ___ct);// This causes the reconnect event to be called
+                    new ServiceId(""{@interface}""),
+                    HttpClient.UserId,
+                    HttpClient.SessionId,
+                    ___ct);// This causes the reconnect event to be called
             }}
         }}
         finally

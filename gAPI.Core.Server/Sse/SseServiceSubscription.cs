@@ -39,6 +39,7 @@ public class SseServiceSubscription
         StreamingCache streamingCache,
         FabricClient fabricClient,
         ServiceId serviceId,
+        ServiceSubscriptionId serviceSubscriptionId,
         UserId userId,
         SessionId sessionId)
     {
@@ -47,9 +48,10 @@ public class SseServiceSubscription
         FabricClient = fabricClient;
         ServiceId = serviceId;
         SessionId = sessionId;
+        ServiceSubscriptionId = serviceSubscriptionId;
         UserId = userId;
         ClientConnectionId = serverConnectionCollection.Add(this);
-        ServiceSubscriptionId = serviceSubscriptionCollection.Add(this, serviceId);
+        serviceSubscriptionCollection.Add(this, serviceId);
         Stopwatch = Stopwatch.StartNew();
     }
 

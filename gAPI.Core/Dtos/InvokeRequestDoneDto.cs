@@ -7,4 +7,4 @@ public record InvokeRequestDoneDto(
     RoutingDto Routing,
     bool Cancelled,
     string? ExceptionMessage)
-    : InvokeRequestAckDto(Routing);
+    : InvokeRequestAckDto(Routing, Cancelled, ExceptionMessage);

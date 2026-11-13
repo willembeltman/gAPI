@@ -4,6 +4,9 @@ public enum WssServerToClientMessageEnum
 {
     SynchronizeClientIds,
 
+    SubscribeAck,
+    UnsubscribeAck,
+
     FabricSendAndForgetRequest,
     FabricSendAndForgetRequestCancelled,
 

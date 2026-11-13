@@ -8,13 +8,9 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Wss;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
-using System.Xml.Linq;
 
 namespace gAPI.Core.Client.Wss;
 
@@ -298,31 +294,77 @@ public abstract class WssClientConnection : IWssClientConnection
 
     #region Sender
 
-    public async Task Send_Subscribe_ToServerAsync(object implementation, SubscribeDto subscribe, CancellationToken ct)
+    readonly ConcurrentDictionary<SubscribeDto, TaskCompletionSource<SubscribeAckDto>> SubscribeTcss = [];
+    readonly ConcurrentDictionary<UnsubscribeDto, TaskCompletionSource<UnsubscribeAckDto>> UnsubscribeTcss = [];
+
+    readonly ConcurrentDictionary<object, ServiceSubscriptionId> ServiceSubscriptionIds = [];
+    public async Task Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
     {
         if (Initialized == false)
             await ConnectAsync();
 
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace("{now}: Send_Subscribe_ToServerAsync({subscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe);
+        var serviceSubscriptionId = ServiceSubscriptionId.New();
+        if (ServiceSubscriptionIds.TryAdd(implementation, serviceSubscriptionId) == false)
+            throw new Exception("Cache");
 
-        await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+        var subscribe = new SubscribeDto(
+            serviceSubscriptionId,
+            serviceId,
+            userId,
+            sessionId);
 
-        if (implementation is IHubServiceSubscription implementationSubscription)
+        var tcs = new TaskCompletionSource<SubscribeAckDto>(TimeSpan.FromSeconds(10));
+        if (SubscribeTcss.TryAdd(subscribe, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
+
+        try
         {
-            await implementationSubscription.OnSubscribedAsync(subscribe.ServiceId, ct);
+            await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            if (implementation is IHubServiceSubscription implementationSubscription)
+            {
+                await implementationSubscription.OnSubscribedAsync(subscribe.ServiceId, ct);
+            }
+        }
+        finally
+        {
+            SubscribeTcss.TryRemove(subscribe, out _);
         }
     }
-    public async Task Send_Unsubscribe_ToServerAsync(object implementation, UnsubscribeDto unsubscribe, CancellationToken ct)
+    public async Task Send_Unsubscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
     {
-        //if (Logger.IsEnabled(LogLevel.Trace))
-        //    Logger.LogTrace("{now}: Send_Unsubscribe_ToServerAsync({unsubscribe})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe);
+        if (Initialized == false)
+            await ConnectAsync();
+        
+        if (ServiceSubscriptionIds.TryRemove(implementation, out var serviceSubscriptionId) == false)
+            throw new Exception("Cache");
 
-        await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
+        var unsubscribe = new UnsubscribeDto(
+            serviceSubscriptionId,
+            serviceId,
+            userId,
+            sessionId);
 
-        if (implementation is IHubServiceSubscription implementationSubscription)
+        var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TimeSpan.FromSeconds(10));
+        if (UnsubscribeTcss.TryAdd(unsubscribe, tcs))
+            throw new Exception("Cannot save unsubscribe request");
+
+        try
         {
-            await implementationSubscription.OnUnsubscribedAsync(unsubscribe.ServiceId, ct);
+            await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            if (implementation is IHubServiceSubscription implementationSubscription)
+            {
+                await implementationSubscription.OnUnsubscribedAsync(unsubscribe.ServiceId, ct);
+            }
+        }
+        finally
+        {
+            UnsubscribeTcss.TryRemove(unsubscribe, out _);
         }
     }
 
@@ -401,6 +443,15 @@ public abstract class WssClientConnection : IWssClientConnection
                     case WssServerToClientMessageEnum.SynchronizeClientIds:
                         var synchronizeClientIds = span.ReadSynchronizeClientIdsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
                         await Received_SynchronizeClientIds_FromServer(synchronizeClientIds, ct);
+                        break;
+
+                    case WssServerToClientMessageEnum.SubscribeAck:
+                        var subscribeAck = span.ReadSubscribeAckDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_SubscribeAck_FromServer(subscribeAck, ct);
+                        break;
+                    case WssServerToClientMessageEnum.UnsubscribeAck:
+                        var unsubscribeAck = span.ReadUnsubscribeAckDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        await Received_UnsubscribeAck_FromServer(unsubscribeAck, ct);
                         break;
 
                     case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
@@ -489,6 +540,33 @@ public abstract class WssClientConnection : IWssClientConnection
             FabricManagerId = synchronizeClientIds.FabricManagerId;
             FabricConnectionId = synchronizeClientIds.FabricConnectionId;
             ClientConnectionId = synchronizeClientIds.ClientConnectionId;
+        }, ct);
+    }
+
+    private async Task Received_SubscribeAck_FromServer(SubscribeAckDto ack, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_SubscribeAck_FromServer({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+
+            if (SubscribeTcss.TryRemove(ack.SubscribeDto, out var tcs))
+            {
+                tcs.SetResult(ack);
+            }
+        }, ct);
+    }
+    private async Task Received_UnsubscribeAck_FromServer(UnsubscribeAckDto ack, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Received_UnsubscribeAck_FromServer({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+
+            if (UnsubscribeTcss.TryRemove(ack.UnsubscribeDto, out var tcs))
+            {
+                tcs.SetResult(ack);
+            }
         }, ct);
     }
 
@@ -621,7 +699,14 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (PendingSendRequests.TryRemove(message.Routing.RequestId, out var completion))
-                completion.TrySetResult(message);
+            {
+                if (message.Cancelled)
+                    completion.SetCanceled(ct);
+                else if (message.ExceptionMessage != null)
+                    completion.SetException(new RemoteException(message.ExceptionMessage));
+                else
+                    completion.TrySetResult(message);
+            }
         }, ct);
     }
 
@@ -657,6 +742,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 await Sender.Send_InvokeRequestAck_ToServerAsync(
                     new InvokeRequestAckClientDto(
                         message.Routing,
+                        false,
+                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -700,6 +787,8 @@ public abstract class WssClientConnection : IWssClientConnection
             await Sender.Send_InvokeRequestAck_ToServerAsync(
                 new InvokeRequestAckClientDto(
                     message.Routing,
+                    false,
+                    null,
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -713,7 +802,14 @@ public abstract class WssClientConnection : IWssClientConnection
                 Logger.LogTrace("{now}: Received_InvokeRequestAck_FromServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
-                channel.TrySetResult(message);
+            {
+                if (message.Cancelled)
+                    channel.SetCanceled(ct);
+                else if (message.ExceptionMessage != null)
+                    channel.SetException(new RemoteException(message.ExceptionMessage));
+                else
+                    channel.SetResult(message);
+            }
         }, ct);
     }
     private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
@@ -730,8 +826,15 @@ public abstract class WssClientConnection : IWssClientConnection
                 else if (message.ExceptionMessage != null)
                     channel.SetException(new RemoteException(message.ExceptionMessage));
                 else
-                    channel.SetResult(new(message.Routing, message.StateIsChanged, message.StateData));
+                    channel.SetResult(
+                        new(message.Routing, false, null, message.StateIsChanged, message.StateData));
             }
+
+            if (StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+            {
+                await handler.DisposeAsync();
+            }
+
         }, ct);
     }
 
@@ -749,19 +852,6 @@ public abstract class WssClientConnection : IWssClientConnection
             {
                 var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
                 await Sender.Send_StreamingResponse_ToServerAsync(response, ct);
-
-                //StreamingResponseHandlers
-                //PendingStreamingResponses.TryRemove((routing.RequestId, argumentIndex, streamId), out response!)
-
-                //if (FabricClient.TryTakeStreamingResponse(
-                //    streamingRequest.Routing,
-                //    streamingRequest.ArgumentIndex,
-                //    streamingRequest.StreamId,
-                //    out var response))
-                //{
-                //    // Terug naar CLIENT!!! (dat is er anders)
-                //    await Send_StreamingResponse_ToClientAsync(response, ct);
-                //}
             }
         }, ct);
     }
@@ -832,17 +922,18 @@ public abstract class WssClientConnection : IWssClientConnection
     #endregion
 
     #region Call's vanuit gegenereerde code
-    public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
+    public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
         try
         {
+            var ct = cts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
             await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
 
-            ct.Register(async () =>
+            cts.Register(async () =>
             {
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
@@ -860,21 +951,22 @@ public abstract class WssClientConnection : IWssClientConnection
             throw;
         }
     }
-    public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
+    public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
-        var completion = PendingSendRequests.GetOrAdd(
-            routing.RequestId,
-            _ => new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously));
+        var completion = new TaskCompletionSource<SendRequestDoneClientDto>();
+        if (PendingSendRequests.TryAdd(routing.RequestId, completion) == false)
+            throw new Exception("Cannot store taskcompletion");
 
         try
         {
+            var ct = cts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
             await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
 
-            ct.Register(async () =>
+            cts.Register(async () =>
             {
                 var requestCancelled = new SendRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_SendRequestCancelled_ToServerAsync(requestCancelled, ct);
@@ -885,7 +977,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
-                    ct);
+                    cts.Token);
 
             if (response.ExceptionMessage != null)
                 throw new Exception(response.ExceptionMessage);
@@ -905,7 +997,7 @@ public abstract class WssClientConnection : IWssClientConnection
             PendingSendRequests.TryRemove(routing.RequestId, out _);
         }
     }
-    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
@@ -915,6 +1007,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
+            var ct = cts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);
@@ -951,6 +1044,7 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public void UnRegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
     {
+        // TODO Cleanup
     }
 
     protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
@@ -1102,25 +1196,36 @@ public abstract class WssClientConnection : IWssClientConnection
                     bool cancelled,
                     CancellationToken ct) =>
         {
-            var stream = activeStreams.GetOrAdd(
-                streamId,
-                _ =>
-                {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                    return new AsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(linked.Token),
-                        new SemaphoreSlim(1, 1),
-                        linked);
-                });
-            var enumerator = stream.enumerator;
-            var gate = stream.gate;
-            var entered = false;
+            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+            var stream = new AsyncEnumerableRegistrationInstance<T>(
+                    source.GetAsyncEnumerator(linked.Token),
+                    new SemaphoreSlim(1, 1),
+                    linked);
 
+            var entered = false;
             async Task Cleanup()
             {
                 stream.TryRemoveFrom(activeStreams, streamId);
                 await stream.DisposeAsync(entered);
             }
+
+            if (activeStreams.TryAdd(streamId, stream) == false)
+            {
+                await Cleanup();
+                throw new Exception("Cache");
+            }
+            //var stream = activeStreams.GetOrAdd(
+            //    streamId,
+            //    _ =>
+            //    {
+            //        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+            //        return new AsyncEnumerableRegistrationInstance<T>(
+            //            source.GetAsyncEnumerator(linked.Token),
+            //            new SemaphoreSlim(1, 1),
+            //            linked);
+            //    });
+            var enumerator = stream.enumerator;
+            var gate = stream.gate;
 
             try
             {
@@ -1204,18 +1309,12 @@ public abstract class WssClientConnection : IWssClientConnection
             bool cancelled,
             CancellationToken ct) =>
         {
-            var stream = activeStreams.GetOrAdd(
-                streamId,
-                _ =>
-                {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-                    return new AsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(linked.Token),
-                        new SemaphoreSlim(1, 1),
-                        linked);
-                });
-            var enumerator = stream.enumerator;
-            var gate = stream.gate;
+            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+            var stream = new AsyncEnumerableRegistrationInstance<byte[]>(
+                    source.GetAsyncEnumerator(linked.Token),
+                    new SemaphoreSlim(1, 1),
+                    linked);
+
             var entered = false;
 
             async Task Cleanup()
@@ -1223,6 +1322,25 @@ public abstract class WssClientConnection : IWssClientConnection
                 stream.TryRemoveFrom(activeStreams, streamId);
                 await stream.DisposeAsync(entered);
             }
+
+            if (activeStreams.TryAdd(streamId, stream) == false)
+            {
+                await Cleanup();
+                throw new Exception("Cache");
+            }
+
+            //var stream = activeStreams.GetOrAdd(
+            //    streamId,
+            //    _ =>
+            //    {
+            //        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+            //        return new AsyncEnumerableRegistrationInstance<byte[]>(
+            //            source.GetAsyncEnumerator(linked.Token),
+            //            new SemaphoreSlim(1, 1),
+            //            linked);
+            //    });
+            var enumerator = stream.enumerator;
+            var gate = stream.gate;
 
             try
             {

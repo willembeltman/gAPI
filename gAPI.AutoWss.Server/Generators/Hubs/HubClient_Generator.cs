@@ -41,6 +41,7 @@ public class HubClient_Generator : _BaseGenerator
     public SharedReference ServiceMethodId => Context.SharedReferences.ServiceMethodId;
     public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
+    public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
 
     public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
@@ -70,6 +71,7 @@ public class HubClient_Generator : _BaseGenerator
         Reg(ServiceId);
         Reg(ServiceMethodId);
         Reg(IServerAuthenticationService);
+        Reg(CancellationTokenSourceDispose);
         Reg(RoutingDto);
         Reg("gAPI.Core.Ids");
 
@@ -174,15 +176,12 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
 
         {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
         ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, {(ct != null ? ct : "CancellationToken.None")});" : ""))}
-        
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}
         {{
-            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
-                ___payload, 
-                {(ct != null ? ct : "CancellationToken.None")});
+                ___payload);
         }}
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
@@ -206,7 +205,14 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;"
+        : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;")}
 
         var ___requestId = {RequestId}.New();
         var ___routing = new {RoutingDto}(
@@ -231,7 +237,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
-                {(ct == null ? "___Cts.Token" : ct.Name)});
+                ___timeoutCts);
         }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
@@ -246,7 +252,14 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;"
+        : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;")}
 
         var ___routing = new {RoutingDto}(
             ___fabricClient.FabricManagerId,
@@ -267,7 +280,7 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         var ___responses = ___fabricClient.InvokeAsync(
             ___routing, 
             ___payload, 
-            {(ct == null ? "___Cts.Token" : ct.Name)});
+            ___timeoutCts);
 
         {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
         try" : "")}

@@ -95,7 +95,7 @@ public static class SerializerExtensions
 
     public static ServiceSubscriptionId ReadServiceSubscriptionId(this BinaryReader br)
     {
-        return new ServiceSubscriptionId(br.ReadInt64());
+        return new ServiceSubscriptionId(br.ReadString());
     }
     public static void Write(this BinaryWriter bw, ServiceSubscriptionId value)
     {

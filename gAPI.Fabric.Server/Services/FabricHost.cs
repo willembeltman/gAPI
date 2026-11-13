@@ -85,10 +85,25 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
         _ = Task.Run(SendLoop);
     }
 
+    public async Task Send_SubscribeAck_ToApiAsync(SubscribeAckDto message, IActor actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SubscribeAck);
+            writer.Write(message);
+        }, actor);
+    }
+    public async Task Send_UnsubscribeAck_ToApiAsync(UnsubscribeAckDto message, IActor actor)
+    {
+        await Enqueue(writer =>
+        {
+            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.UnsubscribeAck);
+            writer.Write(message);
+        }, actor);
+    }
+
     public async Task Send_SendAndForgetRequest_ToApiAsync(SendRequestDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricSendAndForgetRequest);
@@ -97,8 +112,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_SendAndForgetRequestCancelled_ToApiAsync(SendRequestCancelledDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequestCancelled_ToApiAsync({cancel}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricSendAndForgetRequestCancelled);
@@ -108,8 +121,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
     public async Task Send_SendRequest_ToApiAsync(SendRequestDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricSendRequest);
@@ -118,8 +129,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_SendRequestCancelled_ToApiAsync(SendRequestCancelledDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequestCancelled_ToApiAsync({cancel}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricSendRequestCancelled);
@@ -128,8 +137,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_SendRequestDone_ToApiAsync(SendRequestDoneDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SendRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SendRequestDone);
@@ -139,8 +146,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
     public async Task Send_InvokeRequest_ToApiAsync(InvokeRequestDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_InvokeRequest_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricInvokeRequest);
@@ -149,8 +154,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_InvokeRequestCancelled_ToApiAsync(InvokeRequestCancelledDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_InvokeRequestCancelled_ToApiAsync({cancel}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricInvokeRequestCancelled);
@@ -159,8 +162,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_InvokeRequestAck_ToApiAsync(InvokeRequestAckDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_InvokeRequestAck_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequestAck);
@@ -169,8 +170,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_InvokeRequestDone_ToApiAsync(InvokeRequestDoneDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_InvokeRequestDone_ToApiAsync({done}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.InvokeRequestDone);
@@ -180,8 +179,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
     public async Task Send_StreamingResponse_ToApiAsync(StreamingResponseDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_StreamingResponseClientToServer_ToApiAsync({response}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingResponse);
@@ -190,8 +187,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     public async Task Send_StreamingRequest_ToApiAsync(StreamingRequestDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_StreamingRequestClientToServer_ToApiAsync({request}, {actor}", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.StreamingRequest);
@@ -202,8 +197,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
 
     public async Task Send_GetSessionCookieDataResponse_ToApiAsync(SendGetSessionCookieDataResponseDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_GetSessionCookieDataResponse_ToApiAsync({response}, {actor})", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.GetSessionCookieDataResponse);
@@ -212,8 +205,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
     }
     private async Task Send_SynchronizeFabricIds_ToApiAsync(SynchronizeFabricIdsDto message, IActor actor)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Send_SynchronizeFabricIds_ToApiAsync({ids}, {actor})", DateTime.Now.ToString("HH:mm:ss.fff"), message, actor);
         await Enqueue(writer =>
         {
             FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.SynchronizeFabricIds);
@@ -261,8 +252,8 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
             while (!Cts.IsCancellationRequested)
             {
                 var messageType = FabricConverter.ReadClientToHostMessageType(reader);
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+                //if (Logger.IsEnabled(LogLevel.Trace))
+                //    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
                 switch (messageType)
                 {
                     case FabricClientToHostMessageEnum.Subscribe:

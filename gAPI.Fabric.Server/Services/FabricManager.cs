@@ -100,9 +100,13 @@ public class FabricManager : IDashboardSnapshotGetter
         {
             if (logger.IsEnabled(LogLevel.Trace))
                 logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
-
-            await Services[subscribe.ServiceId]
+            
+            var actor = Services[subscribe.ServiceId];
+            await actor
                 .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
+
+            var ack = new SubscribeAckDto(subscribe, false, null);
+            await caller.Send_SubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
     public async Task Receive_Unsubscribe_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
@@ -112,8 +116,12 @@ public class FabricManager : IDashboardSnapshotGetter
             if (logger.IsEnabled(LogLevel.Trace))
                 logger.LogTrace("{now}: Receive_Unsubscribe_FromApiAsync({unsubscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe, receiveSize);
 
-            await Services[unsubscribe.ServiceId]
+            var actor = Services[unsubscribe.ServiceId];
+            await actor
                 .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
+
+            var ack = new UnsubscribeAckDto(unsubscribe, false, null);
+            await caller.Send_UnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
 
@@ -388,7 +396,9 @@ public class FabricManager : IDashboardSnapshotGetter
 
         await state.Caller.Send_InvokeRequestAck_ToApiAsync(
             new InvokeRequestAckDto(
-                state.Routing
+                state.Routing,
+                false,
+                null
             ), state.Actor);
     }
     private async Task CompleteInvokeAsync(ILogger<FabricManager> logger, RequestState state)
@@ -538,8 +548,12 @@ public class FabricManager : IDashboardSnapshotGetter
             if (logger.IsEnabled(LogLevel.Trace))
                 logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
 
-            await Services[subscribe.ServiceId]
+            var actor = Services[subscribe.ServiceId];
+            await actor
                 .BusSubscribe(caller, subscribe.BusConnectionId, receiveSize);
+
+            var ack = new BusSubscribeAckDto(subscribe, false, null);
+            await caller.Send_BusSubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
     public async Task Receive_BusUnsubscribe_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusUnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
@@ -549,8 +563,12 @@ public class FabricManager : IDashboardSnapshotGetter
             if (logger.IsEnabled(LogLevel.Trace))
                 logger.LogTrace("{now}: Receive_Unsubscribe_FromApiAsync({unsubscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe, receiveSize);
 
-            await Services[unsubscribe.ServiceId]
+            var actor = Services[unsubscribe.ServiceId];
+            await actor
                 .BusUnsubscribe(caller, unsubscribe.BusConnectionId, receiveSize);
+
+            var ack = new BusUnsubscribeAckDto(unsubscribe, false, null);
+            await caller.Send_BusUnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
 
@@ -816,7 +834,9 @@ public class FabricManager : IDashboardSnapshotGetter
 
         await state.Caller.Send_BusInvokeRequestAck_ToApiAsync(
             new BusInvokeRequestAckDto(
-                state.Routing
+                state.Routing,
+                false,
+                null
             ), state.Actor);
     }
     private async Task CompleteBusInvokeAsync(ILogger<FabricManager> logger, BusRequestState state)

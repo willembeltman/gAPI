@@ -4,4 +4,6 @@ namespace gAPI.Core.Dtos;
 
 [GenerateSerializer]
 public record InvokeRequestAckDto(
-    RoutingDto Routing);
+    RoutingDto Routing,
+    bool Cancelled,
+    string? ExceptionMessage);

@@ -143,6 +143,41 @@ public class WssServerConnectionSender(
         }, ct);
     }
 
+    public async Task Send_SubscribeAck_ToClientAsync(SubscribeAckDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_SubscribeAck_ToClientAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SubscribeAck_ToClientAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.SubscribeAck);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
+    public async Task Send_UnsubscribeAck_ToClientAsync(UnsubscribeAckDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_UnsubscribeAck_ToClientAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_UnsubscribeAck_ToClientAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.UnsubscribeAck);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
+
+
+
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

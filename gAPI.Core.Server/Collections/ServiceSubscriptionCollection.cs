@@ -12,13 +12,11 @@ public sealed class ServiceSubscriptionCollection
 
     public IEnumerable<IServiceSubscription> All => ServiceSubscriptions.Values;
 
-    public ServiceSubscriptionId Add(IServiceSubscription client, ServiceId serviceId)
+    public void Add(IServiceSubscription client, ServiceId serviceId)
     {
-        var id = new ServiceSubscriptionId(Interlocked.Increment(ref _nextId));
-        ServiceSubscriptions[id] = client;
+        ServiceSubscriptions[client.ServiceSubscriptionId] = client;
         var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>(); });
-        connections[id] = client;
-        return id;
+        connections[client.ServiceSubscriptionId] = client;
     }
 
     public bool Remove(ServiceSubscriptionId id)
