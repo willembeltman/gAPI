@@ -47,19 +47,12 @@ public abstract class FabricBaseBusConnection(
     public void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
         => fabricClient.UnRegisterTimeout(routing, cts);
 
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
-    {
-        return fabricClient.RegisterBusRemoteAsyncEnumerableArgument<T>(routing, argumentIndex, deserializer);
-    }
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer) 
+        => fabricClient.RegisterBusRemoteAsyncEnumerableArgument<T>(routing, argumentIndex, deserializer);
     public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts)
-    {
-        fabricClient.RegisterBusAsyncEnumerableArgument<T>(routing, argumentIndex, source, serializer, cts);
-    }
-    public async Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex)
-    {
-        await fabricClient.UnRegisterBusAsyncEnumerableArgument(routing, argumentIndex);
-    }
-
+        => fabricClient.RegisterBusAsyncEnumerableArgument<T>(routing, argumentIndex, source, serializer, cts);
+    public async Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex) 
+        => await fabricClient.UnRegisterBusAsyncEnumerableArgument(routing, argumentIndex);
 
     // Callbacks from fabric (to the actual services)
     public abstract Task OnDisconnectedAsync(CancellationToken lifeCycleCt);

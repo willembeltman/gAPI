@@ -270,12 +270,6 @@ public sealed class FabricClient
                 "SubscribeAsync({SseServiceSubscription})",
                 serviceSubscription);
 
-        var service = ServiceSubscriptions.Services.GetOrAdd(
-            serviceSubscription.ServiceId,
-            new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>());
-        if (service.TryAdd(serviceSubscription.ServiceSubscriptionId, serviceSubscription) == false)
-            throw new Exception("Cannot add subscription");
-
         var request = new SubscribeDto(
             serviceSubscription.ServiceSubscriptionId,
             serviceSubscription.ServiceId,
@@ -300,12 +294,6 @@ public sealed class FabricClient
             Logger.LogTrace(
                 "UnsubscribeAsync({SseServiceSubscription})",
                 serviceSubscription);
-
-        var service = ServiceSubscriptions.Services.GetOrAdd(
-            serviceSubscription.ServiceId,
-            new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>());
-        if (service.TryRemove(serviceSubscription.ServiceSubscriptionId, out _) == false)
-            throw new Exception("Error getting service subscription");
 
         var request = new UnsubscribeDto(
             serviceSubscription.ServiceSubscriptionId,
@@ -424,114 +412,75 @@ public sealed class FabricClient
                 {
                     case FabricHostToClientMessageEnum.SynchronizeFabricIds:
                         var synchronizeFabricIds = BinaryReader.ReadSynchronizeFabricIdsDto(Config.MaxPackageSize ?? 512 * 1024);
-                        await Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
+                        Receive_SynchronizeFabricIds_FromFabricAsync(synchronizeFabricIds, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.SubscribeAck:
                         var subscribeAck = BinaryReader.ReadSubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                        Received_SubscribeAck_FromFabric(subscribeAck, ct);
                         break;
                     case FabricHostToClientMessageEnum.UnsubscribeAck:
                         var unsubscribeAck = BinaryReader.ReadUnsubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
+                        Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
                         var activate = BinaryReader.ReadSendGetSessionCookieDataResponseDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_GetSessionResponse_FromFabricAsync(activate, ct);
-                        }, ct);
+                        Receive_GetSessionResponse_FromFabricAsync(activate, ct);
                         break;
                     case FabricHostToClientMessageEnum.Log:
                         var log = BinaryReader.ReadFabricLogDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_Log_FromFabricAsync(log, ct);
-                        }, ct);
+                        Receive_Log_FromFabricAsync(log, ct);
                         break;
 
 
                     case FabricHostToClientMessageEnum.FabricSendAndForgetRequest:
                         var fabricSendAndForgetRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricSendAndForgetRequest_FromFabricAsync(fabricSendAndForgetRequest, ct);
-                        }, ct);
+                        Receive_FabricSendAndForgetRequest_FromFabricAsync(fabricSendAndForgetRequest, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricSendAndForgetRequestCancelled:
                         var fabricSendAndForgetRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync(fabricSendAndForgetRequestCancelled, ct);
-                        }, ct);
+                        Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync(fabricSendAndForgetRequestCancelled, ct);
                         break;
 
 
                     case FabricHostToClientMessageEnum.FabricSendRequest:
                         var fabricSendRequest = BinaryReader.ReadSendRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricSendRequest_FromFabricAsync(fabricSendRequest, ct);
-                        }, ct);
+                        Receive_FabricSendRequest_FromFabricAsync(fabricSendRequest, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricSendRequestCancelled:
                         var fabricSendRequestCancelled = BinaryReader.ReadSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricSendRequestCancelled_FromFabricAsync(fabricSendRequestCancelled, ct);
-                        }, ct);
+                        Receive_FabricSendRequestCancelled_FromFabricAsync(fabricSendRequestCancelled, ct);
                         break;
                     case FabricHostToClientMessageEnum.SendRequestDone:
                         var fabricSendRequestDone = BinaryReader.ReadSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_SendRequestDone_FromFabricAsync(fabricSendRequestDone, ct);
-                        }, ct);
+                        Receive_SendRequestDone_FromFabricAsync(fabricSendRequestDone, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.FabricInvokeRequest:
                         var fabricInvokeRequest = BinaryReader.ReadInvokeRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricInvokeRequest_FromFabricAsync(fabricInvokeRequest, ct);
-                        }, ct);
+                        Receive_FabricInvokeRequest_FromFabricAsync(fabricInvokeRequest, ct);
                         break;
                     case FabricHostToClientMessageEnum.FabricInvokeRequestCancelled:
                         var fabricInvokeRequestCancelled = BinaryReader.ReadInvokeRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_FabricInvokeRequestCancelled_FromFabricAsync(fabricInvokeRequestCancelled, ct);
-                        }, ct);
+                        Receive_FabricInvokeRequestCancelled_FromFabricAsync(fabricInvokeRequestCancelled, ct);
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestAck:
                         var fabricInvokeResponseAck = BinaryReader.ReadInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_InvokeRequestAck_FromFabricAsync(fabricInvokeResponseAck, ct);
-                        }, ct);
+                        Receive_InvokeRequestAck_FromFabricAsync(fabricInvokeResponseAck, ct);
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestDone:
                         var fabricInvokeResponseDone = BinaryReader.ReadInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_InvokeRequestDone_FromFabricAsync(fabricInvokeResponseDone, ct);
-                        }, ct);
+                        Receive_InvokeRequestDone_FromFabricAsync(fabricInvokeResponseDone, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.StreamingResponse:
                         var fabricStreamingResponse = BinaryReader.ReadStreamingResponseDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_StreamingResponse_FromFabricAsync(fabricStreamingResponse, ct);
-                        }, ct);
+                        Receive_StreamingResponse_FromFabricAsync(fabricStreamingResponse, ct);
                         break;
                     case FabricHostToClientMessageEnum.StreamingRequest:
                         var fabricStreamingRequest = BinaryReader.ReadStreamingRequestDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
-                        {
-                            await Receive_StreamingRequest_FromFabricAsync(fabricStreamingRequest, ct);
-                        }, ct);
+                        Receive_StreamingRequest_FromFabricAsync(fabricStreamingRequest, ct);
                         break;
 
                 }
@@ -549,28 +498,26 @@ public sealed class FabricClient
         }
     }
 
-    #region Session
-
-    private async Task Receive_SynchronizeFabricIds_FromFabricAsync(SynchronizeFabricIdsDto synchronizeFabricIds, CancellationToken ct)
+    private void Receive_SynchronizeFabricIds_FromFabricAsync(SynchronizeFabricIdsDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_SynchronizeFabricIds_FromFabricAsync({synchronizeFabricIds})", DateTime.Now.ToString("HH:mm:ss.fff"), synchronizeFabricIds);
+            Logger.LogTrace("{now} Receive_SynchronizeFabricIds_FromFabricAsync({synchronizeFabricIds})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
 
-        FabricConnectionId = synchronizeFabricIds.FabricConnectionId;
-        FabricManagerId = synchronizeFabricIds.FabricManagerId;
+        FabricConnectionId = message.FabricConnectionId;
+        FabricManagerId = message.FabricManagerId;
 
         Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fff")} FabricClient {FabricConnectionId.Value} started");
     }
-    private async Task Receive_GetSessionResponse_FromFabricAsync(SendGetSessionCookieDataResponseDto getSessionResponse, CancellationToken ct)
+    private void Receive_GetSessionResponse_FromFabricAsync(SendGetSessionCookieDataResponseDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_GetSessionResponse_FromFabricAsync({getSessionResponse})", DateTime.Now.ToString("HH:mm:ss.fff"), getSessionResponse);
+            Logger.LogTrace("{now} Receive_GetSessionResponse_FromFabricAsync({getSessionResponse})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
 
         // Zoek de wachtende taak op en zet het resultaat zodra het antwoord binnen is
-        if (StreamingCache.PendingGetSessionRequests.TryRemove(getSessionResponse.SessionId, out var tcs))
-            tcs.TrySetResult(getSessionResponse.CookieData);
+        if (StreamingCache.PendingGetSessionRequests.TryRemove(message.SessionId, out var completion))
+            completion.TrySetResult(message.CookieData);
     }
-    private async Task Receive_Log_FromFabricAsync(FabricLogDto log, CancellationToken ct)
+    private void Receive_Log_FromFabricAsync(FabricLogDto log, CancellationToken ct)
     {
         // niet loggen ;)
 #pragma warning disable CA2254 // Template should be a static expression
@@ -582,93 +529,104 @@ public sealed class FabricClient
 #pragma warning restore CA1873 // Avoid potentially expensive logging
     }
 
-    #endregion
+    private void Received_SubscribeAck_FromFabric(SubscribeAckDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Received_SubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
 
-    #region Wss/Sse
+        if (StreamingCache.SubscribeTcss.TryRemove(message.SubscribeDto.ServiceSubscriptionId, out var completion))
+        {
+            if (message.Cancelled)
+                completion.SetCanceled(ct);
+            else if (message.ExceptionMessage != null)
+                completion.SetException(new RemoteException(message.ExceptionMessage));
+            else
+                completion.TrySetResult(message);
+        }
+    }
+    private void Received_UnsubscribeAck_FromFabric(UnsubscribeAckDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Received_UnsubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
 
-    private async Task Received_SubscribeAck_FromFabric(SubscribeAckDto ack, CancellationToken ct)
+        if (StreamingCache.UnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
+        {
+            if (message.Cancelled)
+                completion.SetCanceled(ct);
+            else if (message.ExceptionMessage != null)
+                completion.SetException(new RemoteException(message.ExceptionMessage));
+            else
+                completion.TrySetResult(message);
+        }
+    }
+
+    private void Receive_FabricSendAndForgetRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now}: Received_SubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+                Logger.LogTrace("{now} Receive_FabricSendAndForgetRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (StreamingCache.SubscribeTcss.TryRemove(ack.SubscribeDto.ServiceSubscriptionId, out var tcs))
+            // Routeren naar client(s)
+            var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
+            foreach (var serviceSubscription in SseServiceSubscriptions)
             {
-                tcs.SetResult(ack);
+                await serviceSubscription.Connection.Send_FabricSendAndForgetRequest_ToClientAsync(message, ct);
             }
         }, ct);
     }
-    private async Task Received_UnsubscribeAck_FromFabric(UnsubscribeAckDto ack, CancellationToken ct)
+    private void Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now}: Received_UnsubscribeAck_FromFabric({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), ack);
+                Logger.LogTrace("{now} Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (StreamingCache.UnsubscribeTcss.TryRemove(ack.UnsubscribeDto.ServiceSubscriptionId, out var tcs))
+            // Routeren naar client(s)
+            var serviceSubscriptions = GetServiceSubscriptions(message.Routing);
+            foreach (var serviceSubscription in serviceSubscriptions)
             {
-                tcs.SetResult(ack);
+                await serviceSubscription.Connection.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(message, ct);
             }
         }, ct);
     }
 
-
-    private async Task Receive_FabricSendAndForgetRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
+    private void Receive_FabricSendRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricSendAndForgetRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        // Routeren naar client(s)
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        _ = Task.Run(async () =>
         {
-            await serviceSubscription.Connection.Send_FabricSendAndForgetRequest_ToClientAsync(message, ct);
-        }
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricSendRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            // Routeren naar client(s)
+            var called = false;
+            var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
+            foreach (var serviceSubscription in SseServiceSubscriptions)
+            {
+                await serviceSubscription.Connection.Send_FabricSendRequest_ToClientAsync(message, ct);
+                called = true;
+            }
+
+            if (!called)
+                await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, null), ct);
+        }, ct);
     }
-    private async Task Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
+    private void Receive_FabricSendRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricSendAndForgetRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        // Routeren naar client(s)
-        var serviceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in serviceSubscriptions)
+        _ = Task.Run(async () =>
         {
-            await serviceSubscription.Connection.Send_FabricSendAndForgetRequestCancelled_ToClientAsync(message, ct);
-        }
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricSendRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            // Routeren naar client(s)
+            var serviceSubscriptions = GetServiceSubscriptions(message.Routing);
+            foreach (var serviceSubscription in serviceSubscriptions)
+            {
+                await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(message, ct);
+            }
+        }, ct);
     }
-
-    private async Task Receive_FabricSendRequest_FromFabricAsync(SendRequestDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricSendRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        // Routeren naar client(s)
-        var called = false;
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
-        {
-            await serviceSubscription.Connection.Send_FabricSendRequest_ToClientAsync(message, ct);
-            called = true;
-        }
-
-        if (!called)
-            await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, null), ct);
-    }
-    private async Task Receive_FabricSendRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricSendRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        // Routeren naar client(s)
-        var serviceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in serviceSubscriptions)
-        {
-            await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(message, ct);
-        }
-    }
-    private async Task Receive_SendRequestDone_FromFabricAsync(SendRequestDoneDto message, CancellationToken ct)
+    private void Receive_SendRequestDone_FromFabricAsync(SendRequestDoneDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_SendRequestDone_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
@@ -684,141 +642,157 @@ public sealed class FabricClient
         }
     }
 
-    private async Task Receive_FabricInvokeRequest_FromFabricAsync(InvokeRequestDto message, CancellationToken ct)
+    private void Receive_FabricInvokeRequest_FromFabricAsync(InvokeRequestDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricInvokeRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
-
-        // Routeren naar client(s)
-        var called = false;
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        _ = Task.Run(async () =>
         {
-            await serviceSubscription.Connection.Send_FabricInvokeRequest_ToClientAsync(message, ct);
-            called = true;
-        }
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricInvokeRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-        if (!called)
-            await Sender.Send_InvokeRequestAck_ToFabricAsync(new(message.Routing, false, null), ct);
-    }
-    private async Task Receive_FabricInvokeRequestCancelled_FromFabricAsync(InvokeRequestCancelledDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_FabricInvokeRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+            StreamingCache.Timeouts[message.Routing.RequestId] = cts;
 
-        // Routeren naar client(s)
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
-        {
-            await serviceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(message, ct);
-        }
-    }
-    private async Task Receive_InvokeRequestAck_FromFabricAsync(InvokeRequestAckDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.CancelAfter(message.Routing.Timeout);
-
-        if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
-        {
-            if (message.Cancelled)
-                completion.SetCanceled(ct);
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage));
-            else
-                completion.TrySetResult(message);
-        }
-    }
-    private async Task Receive_InvokeRequestDone_FromFabricAsync(InvokeRequestDoneDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.CancelAfter(message.Routing.Timeout);
-
-        if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
-        {
-            if (message.Cancelled)
-                completion.SetCanceled(ct);
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage));
-            else
-                completion.TrySetResult(message);
-        }
-
-        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
-        {
-            await handler.DisposeAsync();
-        }
-    }
-
-    private async Task Receive_StreamingRequest_FromFabricAsync(StreamingRequestDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_StreamingRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.CancelAfter(message.Routing.Timeout);
-
-        if (message.ArgumentIndex < 0)
-        {
             // Routeren naar client(s)
             var called = false;
             var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
             foreach (var serviceSubscription in SseServiceSubscriptions)
             {
-                await serviceSubscription.Connection.Send_FabricStreamingRequest_ToClientAsync(message, ct);
+                await serviceSubscription.Connection.Send_FabricInvokeRequest_ToClientAsync(message, ct);
                 called = true;
             }
 
             if (!called)
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No clients subscribed" : null, []), ct);
-        }
-        else
-        {
-            if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
-            {
-                var response = await handler.Invoke(message.StreamId, false, ct);
-                await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
-            }
-            else
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No StreamingRequestHandlers found", []), ct);
-        }
+                await Sender.Send_InvokeRequestAck_ToFabricAsync(new(message.Routing, false, null), ct);
+        }, ct);
     }
-    private async Task Receive_StreamingResponse_FromFabricAsync(StreamingResponseDto message, CancellationToken ct)
+    private void Receive_FabricInvokeRequestCancelled_FromFabricAsync(InvokeRequestCancelledDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_StreamingResponse_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
-            timeout.CancelAfter(message.Routing.Timeout);
-
-        if (message.ArgumentIndex < 0)
+        _ = Task.Run(async () =>
         {
-            var key = new RequestArgumentIndexStreamDto(message.Routing.RequestId, message.ArgumentIndex, message.StreamId);
-            if (StreamingCache.StreamingResponseHandlers.TryGetValue(key, out var responseHandler))
-            {
-                responseHandler.Invoke(message);
-            }
-        }
-        else
-        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_FabricInvokeRequestCancelled_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
             // Routeren naar client(s)
             var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
             foreach (var serviceSubscription in SseServiceSubscriptions)
             {
-                await serviceSubscription.Connection.Send_FabricStreamingResponse_ToClientAsync(message, ct);
+                await serviceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(message, ct);
             }
-        }
+        }, ct);
+    }
+    private void Receive_InvokeRequestAck_FromFabricAsync(InvokeRequestAckDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+                timeout.CancelAfter(message.Routing.Timeout);
+
+            if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+            {
+                if (message.Cancelled)
+                    completion.SetCanceled(ct);
+                else if (message.ExceptionMessage != null)
+                    completion.SetException(new RemoteException(message.ExceptionMessage));
+                else
+                    completion.TrySetResult(message);
+            }
+        }, ct);
+    }
+    private void Receive_InvokeRequestDone_FromFabricAsync(InvokeRequestDoneDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+                timeout.CancelAfter(message.Routing.Timeout);
+
+            if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+            {
+                if (message.Cancelled)
+                    completion.SetCanceled(ct);
+                else if (message.ExceptionMessage != null)
+                    completion.SetException(new RemoteException(message.ExceptionMessage));
+                else
+                    completion.TrySetResult(message);
+            }
+
+            if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+            {
+                await handler.DisposeAsync();
+            }
+        }, ct);
     }
 
-    #endregion
+    private void Receive_StreamingRequest_FromFabricAsync(StreamingRequestDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_StreamingRequest_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+                timeout.CancelAfter(message.Routing.Timeout);
+
+            if (message.ArgumentIndex < 0)
+            {
+                // Routeren naar client(s)
+                var called = false;
+                var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
+                foreach (var serviceSubscription in SseServiceSubscriptions)
+                {
+                    await serviceSubscription.Connection.Send_FabricStreamingRequest_ToClientAsync(message, ct);
+                    called = true;
+                }
+
+                if (!called)
+                    await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No clients subscribed" : null, []), ct);
+            }
+            else
+            {
+                if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
+                {
+                    var response = await handler.Invoke(message.StreamId, false, ct);
+                    await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
+                }
+                else
+                    await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No StreamingRequestHandlers found", []), ct);
+            }
+        }, ct);
+    }
+    private void Receive_StreamingResponse_FromFabricAsync(StreamingResponseDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_StreamingResponse_FromFabricAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+            if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+                timeout.CancelAfter(message.Routing.Timeout);
+
+            if (message.ArgumentIndex < 0)
+            {
+                var key = new RequestArgumentIndexStreamDto(message.Routing.RequestId, message.ArgumentIndex, message.StreamId);
+                if (StreamingCache.StreamingResponseHandlers.TryGetValue(key, out var responseHandler))
+                {
+                    responseHandler.Invoke(message);
+                }
+            }
+            else
+            {
+                // Routeren naar client(s)
+                var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
+                foreach (var serviceSubscription in SseServiceSubscriptions)
+                {
+                    await serviceSubscription.Connection.Send_FabricStreamingResponse_ToClientAsync(message, ct);
+                }
+            }
+        }, ct);
+    }
 
     #endregion
 
@@ -844,7 +818,7 @@ public sealed class FabricClient
             }
             else
             {
-                await Receive_SendRequestDone_FromFabricAsync(message, ct);
+                Receive_SendRequestDone_FromFabricAsync(message, ct);
             }
         }
     }
@@ -868,7 +842,7 @@ public sealed class FabricClient
             }
             else
             {
-                await Receive_InvokeRequestAck_FromFabricAsync(message, ct);
+                Receive_InvokeRequestAck_FromFabricAsync(message, ct);
             }
         }
     }
@@ -891,7 +865,7 @@ public sealed class FabricClient
             }
             else
             {
-                await Receive_InvokeRequestDone_FromFabricAsync(message, ct);
+                Receive_InvokeRequestDone_FromFabricAsync(message, ct);
             }
         }
 
@@ -901,26 +875,26 @@ public sealed class FabricClient
         }
     }
 
-    public Task Handle_FabricStreamingRequest_FromClientAsync(StreamingRequestDto message, CancellationToken ct)
+    public async Task Handle_FabricStreamingRequest_FromClientAsync(StreamingRequestDto message, CancellationToken ct)
     {
         if (UseFabric)
         {
-            return Sender.Send_StreamingRequest_ToFabricAsync(message, ct);
+            await Sender.Send_StreamingRequest_ToFabricAsync(message, ct);
         }
         else
         {
-            return Receive_StreamingRequest_FromFabricAsync(message, ct);
+            Receive_StreamingRequest_FromFabricAsync(message, ct);
         }
     }
-    public Task Handle_FabricStreamingResponse_FromClientAsync(StreamingResponseDto message, CancellationToken ct)
+    public async Task Handle_FabricStreamingResponse_FromClientAsync(StreamingResponseDto message, CancellationToken ct)
     {
         if (UseFabric)
         {
-            return Sender.Send_StreamingResponse_ToFabricAsync(message, ct);
+            await Sender.Send_StreamingResponse_ToFabricAsync(message, ct);
         }
         else
         {
-            return Receive_StreamingResponse_FromFabricAsync(message, ct);
+            Receive_StreamingResponse_FromFabricAsync(message, ct);
         }
     }
 
@@ -1173,15 +1147,15 @@ public sealed class FabricClient
             });
     }
 
-    private Task Send_StreamingRequest_ResponseEnumerable_ToFabricAsync(StreamingRequestDto message, CancellationToken ct)
+    private async Task Send_StreamingRequest_ResponseEnumerable_ToFabricAsync(StreamingRequestDto message, CancellationToken ct)
     {
         if (UseFabric)
         {
-            return Sender.Send_StreamingRequest_ToFabricAsync(message, ct);
+            await Sender.Send_StreamingRequest_ToFabricAsync(message, ct);
         }
         else
         {
-            return Receive_StreamingRequest_FromFabricAsync(message, ct);
+            Receive_StreamingRequest_FromFabricAsync(message, ct);
         }
     }
 
@@ -1254,9 +1228,7 @@ public sealed class FabricClient
         var ct = timeoutCts.Token;
         var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (StreamingCache.PendingFabricSendRequests.TryAdd(request.Routing.RequestId, completion) == false)
-        {
             throw new Exception("Cache");
-        }
 
         try
         {
@@ -1294,9 +1266,8 @@ public sealed class FabricClient
         {
             var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (StreamingCache.PendingClientSendRequests.TryAdd(request.Routing.RequestId, completion) == false)
-            {
                 throw new Exception("Cache");
-            }
+
             await serviceSubscription.Connection.Send_FabricSendRequest_ToClientAsync(request, ct);
 
             ct.Register(async () =>
@@ -1332,9 +1303,7 @@ public sealed class FabricClient
         var ct = timeoutCts.Token;
         var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (StreamingCache.PendingFabricInvokeRequests.TryAdd(request.Routing.RequestId, completion) == false)
-        {
             throw new Exception("Cache");
-        }
 
         try
         {
@@ -1365,9 +1334,8 @@ public sealed class FabricClient
         {
             var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (StreamingCache.PendingClientInvokeRequests.TryAdd(request.Routing.RequestId, completion) == false)
-            {
                 throw new Exception("Cache");
-            }
+
             await sseServiceSubscription.Connection.Send_FabricInvokeRequest_ToClientAsync(request, ct);
 
             ct.Register(async () =>

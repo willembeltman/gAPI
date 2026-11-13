@@ -85,7 +85,8 @@ public class ItemDataSource<T, TKey>(
 
     public void HandleFileRemoved()
     {
-        if (Model == null) throw new Exception("Model is null.");
+        if (Model == null) 
+            throw new Exception("Model is null.");
         if (Model is IStorageFileDto storageModel)
         {
             storageModel.StorageFileUrl = null;
@@ -97,7 +98,8 @@ public class ItemDataSource<T, TKey>(
 
     public async Task HandleValidSubmit()
     {
-        if (Model == null) throw new Exception("Model is null.");
+        if (Model == null) 
+            throw new Exception("Model is null.");
 
         // Save Model
         var response = Response;
@@ -108,39 +110,39 @@ public class ItemDataSource<T, TKey>(
         }
         else if (NewModelFlag == false && Update != null)
         {
-            var id = GetPrimaryKey(Model) ?? throw new Exception("Cannot update without a primary key.");
+            var id = GetPrimaryKey(Model) 
+                ?? throw new Exception("Cannot update without a primary key.");
 
             // Delete File
             if (DeleteFile)
             {
-                if (Model is not IStorageFileDto) throw new Exception("Cannot delete file on a model that does not implement IStorageFileDto.");
-                if (FileDelete == null) throw new Exception("Cannot delete file without a FileDelete function.");
+                if (Model is not IStorageFileDto)
+                    throw new Exception("Cannot delete file on a model that does not implement IStorageFileDto.");
+                if (FileDelete == null) 
+                    throw new Exception("Cannot delete file without a FileDelete function.");
                 StatusResponse = await FileDelete(id, Cts.Token);
                 if (StatusResponse.Success == false)
-                {
                     throw new Exception("File deletion failed.");
-                }
             }
             response = await Update(Model, Cts.Token);
             StatusResponse = response;
         }
         else
-        {
             throw new Exception("No Create or Update function provided.");
-        }
-
+    
         if (StatusResponse.Success == false)
-        {
             throw new Exception("Create or Update operation failed.");
-        }
 
         // Save File
         if (response.Response != null && File != null)
         {
             var id = GetPrimaryKey(response.Response); // In case of new model, get the new primary key
-            if (Model is not IStorageFileDto) throw new Exception("Cannot save a file on a model that does not implement IStorageFileDto.");
-            if (id == null) throw new Exception("Cannot save a file without a primary key.");
-            if (FileUpdate == null) throw new Exception("Cannot save a file without a FileUpdate function.");
+            if (Model is not IStorageFileDto)
+                throw new Exception("Cannot save a file on a model that does not implement IStorageFileDto.");
+            if (id == null)
+                throw new Exception("Cannot save a file without a primary key.");
+            if (FileUpdate == null)
+                throw new Exception("Cannot save a file without a FileUpdate function.");
             response = await FileUpdate(id.Value, File, Cts.Token);
             StatusResponse = response;
             File = null; // Clear file after upload
@@ -156,15 +158,19 @@ public class ItemDataSource<T, TKey>(
 
     public async Task HandleDelete()
     {
-        if (Model == null) throw new Exception("Model is null.");
-        if (Delete == null) throw new Exception("Delete function is not provided.");
-        var id = GetPrimaryKey(Model) ?? throw new Exception("Primary key is null.");
+        if (Model == null) 
+            throw new Exception("Model is null.");
+        if (Delete == null) 
+            throw new Exception("Delete function is not provided.");
+        var id = GetPrimaryKey(Model) 
+            ?? throw new Exception("Primary key is null.");
 
         // Delete File
         if (FileDelete != null) // FileDelete is optional
         {
             StatusResponse = await FileDelete(id, Cts.Token); // Callback for deletion is optional too, file doesn't have to exist
-            if (StatusResponse.Success == false) throw new Exception("File deletion failed.");
+            if (StatusResponse.Success == false)
+                throw new Exception("File deletion failed.");
         }
 
         // Delete Model

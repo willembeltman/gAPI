@@ -11,6 +11,10 @@ public class StreamingCache
 {
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
 
+    public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> BusServiceSubscriptionIds = [];
+
+    public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
+
     public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<SubscribeAckDto>> SubscribeTcss = [];
     public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<UnsubscribeAckDto>> UnsubscribeTcss = [];
 
@@ -33,5 +37,4 @@ public class StreamingCache
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> BusStreamingResponseHandlers = [];
 
 
-    public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
 }

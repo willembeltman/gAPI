@@ -18,7 +18,9 @@ public class WssClientConnectionSender
     private readonly WssClientConnection WssClientConnection;
     private readonly ILogger<WssClientConnectionSender> Logger;
     private readonly byte[] SendBuffer;
-    private readonly Channel<SendQueueItem> SendQueue = Channel.CreateUnbounded<SendQueueItem>();
+    private Channel<SendQueueItem>? SendQueue;
+
+    //private Channel<SendQueueItem>? SendQueue;
 
     public WssClientConnectionSender(
         WssClientConnection wssClientConnection,
@@ -32,6 +34,8 @@ public class WssClientConnectionSender
 
     public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationToken ct)
     {
+        var sendQueue = Channel.CreateUnbounded<SendQueueItem>();
+        SendQueue = sendQueue;
         try
         {
             var span = SendBuffer.AsSpan();
@@ -46,7 +50,7 @@ public class WssClientConnectionSender
                 true,
                 ct);
 
-            await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
+            await foreach (var item in sendQueue.Reader.ReadAllAsync(ct))
             {
                 try
                 {
@@ -73,7 +77,7 @@ public class WssClientConnectionSender
         catch (OperationCanceledException ex)
         {
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
-            CompleteQueue(ex);
+            CompleteQueue(sendQueue, ex);
         }
         catch (Exception ex)
         {
@@ -81,19 +85,26 @@ public class WssClientConnectionSender
             // Do not hide it: the connection owner must cancel the receiver and
             // dispose its subscriptions instead of accepting messages forever.
             Logger.LogError(ex, "WSS sender stopped for client {ClientConnectionId}", WssClientConnection.ClientConnectionId);
-            CompleteQueue(ex);
+            CompleteQueue(sendQueue, ex);
         }
     }
-    private void CompleteQueue(Exception error)
+    private void CompleteQueue(Channel<SendQueueItem> sendQueue, Exception error)
     {
-        SendQueue.Writer.TryComplete(error);
+        SendQueue = null;
 
-        while (SendQueue.Reader.TryRead(out var item))
+        sendQueue.Writer.TryComplete(error);
+
+        while (sendQueue.Reader.TryRead(out var item))
             item.Sent?.TrySetException(error);
     }
 
     private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
+        while (SendQueue == null)
+        {
+            await Task.Delay(10);
+        }
+
         if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, null)))
         {
             return;
@@ -101,6 +112,11 @@ public class WssClientConnectionSender
     }
     private async Task EnqueueAndWaitAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
+        while (SendQueue == null)
+        {
+            await Task.Delay(10);
+        }
+
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, tcs)))
@@ -327,13 +343,13 @@ public class WssClientConnectionSender
 
         await EnqueueAndWaitAsync(writer =>
         {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace("{now}: Send_FabricStreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now}: Send_FabricStreamingResponse_ToServerAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-                var offset = 0;
-                writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.FabricStreamingResponse);
-                writer.Write(ref offset, message);
-                return offset;
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.FabricStreamingResponse);
+            writer.Write(ref offset, message);
+            return offset;
         }, ct);
     }
 

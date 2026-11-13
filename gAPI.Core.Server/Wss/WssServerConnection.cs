@@ -163,67 +163,65 @@ public abstract class WssServerConnection : IServerConnection
 
                         case WssClientToServerMessageEnum.Subscribe:
                             var subscribe = span.ReadSubscribeDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_Subscribe_FromClientAsync(subscribe, ct);
+                            Receive_Subscribe_FromClientAsync(subscribe, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Unsubscribe:
                             var unsubscribe = span.ReadUnsubscribeDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_Unsubscribe_FromClientAsync(unsubscribe, ct);
+                            Receive_Unsubscribe_FromClientAsync(unsubscribe, ct);
                             break;
 
                         case WssClientToServerMessageEnum.SendRequest:
                             var sendRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_SendRequest_FromClientAsync(sendRequest, ct);
+                            Receive_SendRequest_FromClientAsync(sendRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.SendRequestCancelled:
                             var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
+                            Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricSendRequestDone:
                             var fabricSendRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
+                            Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeRequest:
                             var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_InvokeRequest_FromClientAsync(invokeRequest, ct);
+                            Receive_InvokeRequest_FromClientAsync(invokeRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.InvokeRequestCancelled:
                             var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
+                            Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestAck:
                             var fabricInvokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
+                            Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestDone:
                             var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
+                            Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
                             break;
-
 
                         case WssClientToServerMessageEnum.StreamingRequest:
                             var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
+                            Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.StreamingResponse:
                             var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_StreamingResponse_FromClientAsync(argumentResponse, ct);
+                            Receive_StreamingResponse_FromClientAsync(argumentResponse, ct);
                             break;
-
 
                         case WssClientToServerMessageEnum.FabricStreamingRequest:
                             var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
+                            Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricStreamingResponse:
                             var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
+                            Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
                             var log = span.ReadClientLogDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            await Receive_Log_FromClientAsync(log, ct);
+                            Receive_Log_FromClientAsync(log, ct);
                             break;
                     }
                 }
@@ -247,56 +245,62 @@ public abstract class WssServerConnection : IServerConnection
         await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, ct);
     }
 
-    private async Task Receive_Subscribe_FromClientAsync(SubscribeDto message, CancellationToken ct)
+    private void Receive_Subscribe_FromClientAsync(SubscribeDto message, CancellationToken ct)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
-        var tcs = new TaskCompletionSource<SubscribeAckDto>(TimeSpan.FromSeconds(10));
-        if (StreamingCache.SubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
-            throw new Exception("Cannot save subscribe request");
-
-        try
+        _ = Task.Run(async () =>
         {
-            var subscription = new WssServiceSubscription(
-                this,
-                LoggerFactory,
-                ServiceSubscriptions,
-                FabricClient,
-                ClientConnectionId,
-                message.ServiceSubscriptionId,
-                message.ServiceId,
-                AuthenticationService.UserId,
-                AuthenticationService.SessionId);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
-            await FabricClient.SubscribeAsync(subscription, ct);
+            var tcs = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (StreamingCache.SubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+                throw new Exception("Cannot save subscribe request");
 
-            var ack = await tcs.Task.WaitAsync(ct);
+            try
+            {
+                var subscription = new WssServiceSubscription(
+                    this,
+                    LoggerFactory,
+                    ServiceSubscriptions,
+                    FabricClient,
+                    ClientConnectionId,
+                    message.ServiceSubscriptionId,
+                    message.ServiceId,
+                    AuthenticationService.UserId,
+                    AuthenticationService.SessionId);
+
+                await FabricClient.SubscribeAsync(subscription, ct);
+
+                var ack = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10), ct);
+
+                var connections = ConnectedServiceSubscriptions.GetOrAdd(
+                    message.ServiceId,
+                    a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
+                if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
+                    throw new Exception("Cannot add service subscription");
+
+                await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
+            }
+            finally
+            {
+                StreamingCache.SubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+            }
+        }, ct);
+    }
+    private void Receive_Unsubscribe_FromClientAsync(UnsubscribeDto message, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
             var connections = ConnectedServiceSubscriptions.GetOrAdd(
                 message.ServiceId,
                 a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-            if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
-                throw new Exception("Cannot add service subscription");
+            if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
+                throw new Exception("Cache");
 
-            await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
-        }
-        finally
-        {
-            StreamingCache.SubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
-        }
-    }
-    private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
-
-        var connections = ConnectedServiceSubscriptions.GetOrAdd(
-            message.ServiceId,
-            a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-        if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription))
-        {
-            var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TimeSpan.FromSeconds(10));
+            var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
                 throw new Exception("Cannot save subscribe request");
 
@@ -304,7 +308,7 @@ public abstract class WssServerConnection : IServerConnection
             {
                 await subscription.DisposeAsync();
 
-                var ack = await tcs.Task.WaitAsync(ct);
+                var ack = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10), ct);
 
                 await Sender.Send_UnsubscribeAck_ToClientAsync(ack, ct);
             }
@@ -312,10 +316,10 @@ public abstract class WssServerConnection : IServerConnection
             {
                 StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
             }
-        }
+        }, ct);
     }
 
-    private async Task Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken ct)
+    private void Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -363,7 +367,7 @@ public abstract class WssServerConnection : IServerConnection
             }
         }, ct);
     }
-    private async Task Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
+    private void Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -391,7 +395,7 @@ public abstract class WssServerConnection : IServerConnection
                 ), ct);
         }, ct);
     }
-    private async Task Receive_FabricSendRequestDone_FromClientAsync(SendRequestDoneClientDto message, CancellationToken ct)
+    private void Receive_FabricSendRequestDone_FromClientAsync(SendRequestDoneClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -405,7 +409,7 @@ public abstract class WssServerConnection : IServerConnection
         }, ct);
     }
 
-    private async Task Receive_InvokeRequest_FromClientAsync(InvokeRequestClientDto message, CancellationToken ct)
+    private void Receive_InvokeRequest_FromClientAsync(InvokeRequestClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -468,7 +472,7 @@ public abstract class WssServerConnection : IServerConnection
             }
         }, ct);
     }
-    private async Task Receive_InvokeRequestCancelled_FromClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
+    private void Receive_InvokeRequestCancelled_FromClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -494,7 +498,7 @@ public abstract class WssServerConnection : IServerConnection
             //    ), ct);
         }, ct);
     }
-    private async Task Receive_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    private void Receive_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -507,7 +511,7 @@ public abstract class WssServerConnection : IServerConnection
             await FabricClient.Handle_FabricInvokeRequestAck_FromClientAsync(message, ct);
         }, ct);
     }
-    private async Task Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
+    private void Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -521,7 +525,7 @@ public abstract class WssServerConnection : IServerConnection
         }, ct);
     }
 
-    private async Task Receive_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private void Receive_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -542,7 +546,7 @@ public abstract class WssServerConnection : IServerConnection
             await Send_StreamingResponse_ToClientAsync(response, ct);
         }, ct);
     }
-    private async Task Receive_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private void Receive_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -556,7 +560,7 @@ public abstract class WssServerConnection : IServerConnection
         }, ct);
     }
 
-    private async Task Receive_FabricStreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private void Receive_FabricStreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -569,7 +573,7 @@ public abstract class WssServerConnection : IServerConnection
             await FabricClient.Handle_FabricStreamingRequest_FromClientAsync(message, ct);
         }, ct);
     }
-    private async Task Receive_FabricStreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private void Receive_FabricStreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         _ = Task.Run(async () =>
         {
@@ -583,7 +587,7 @@ public abstract class WssServerConnection : IServerConnection
         }, ct);
     }
 
-    private async Task Receive_Log_FromClientAsync(ClientLogDto log, CancellationToken ct)
+    private void Receive_Log_FromClientAsync(ClientLogDto log, CancellationToken ct)
     {
         try
         {
@@ -917,6 +921,8 @@ public abstract class WssServerConnection : IServerConnection
 
     #endregion
 
+    #region Dashboard
+
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
     public void EnqueueSend(long size) => SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
@@ -942,6 +948,8 @@ public abstract class WssServerConnection : IServerConnection
         }
         return new((int)(count / interval), (int)(bytes / interval));
     }
+
+    #endregion
 
     public async ValueTask DisposeAsync()
     {

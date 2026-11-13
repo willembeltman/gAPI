@@ -101,7 +101,8 @@ public class ListDataSource<T, TKey>(
     {
         if (SetForeignKey != null) // SetForeignKey is optional
         {
-            if (item.Model == null) throw new Exception("Model cannot be null.");
+            if (item.Model == null)
+                throw new Exception("Model cannot be null.");
             SetForeignKey(item.Model);
         }
         await item.HandleValidSubmit();
