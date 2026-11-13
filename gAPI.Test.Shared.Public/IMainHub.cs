@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 
-namespace gAPI.Test.Shared.Public;
+namespace gAPI.Example.Shared.Public;
 
 [GenerateHub]
 public interface IMainHub

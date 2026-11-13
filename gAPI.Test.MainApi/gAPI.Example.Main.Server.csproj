@@ -21,8 +21,8 @@
 	</Target>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI.Test.Shared.Private\gAPI.Test.Shared.Private.csproj" />
-		<ProjectReference Include="..\gAPI.Test.Shared.Public\gAPI.Test.Shared.Public.csproj" />
+		<ProjectReference Include="..\gAPI.Test.Shared.Private\gAPI.Example.Shared.Private.csproj" />
+		<ProjectReference Include="..\gAPI.Test.Shared.Public\gAPI.Example.Shared.Public.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

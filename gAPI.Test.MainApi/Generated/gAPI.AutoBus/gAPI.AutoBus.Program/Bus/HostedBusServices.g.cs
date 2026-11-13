@@ -4,4 +4,4 @@
 namespace gAPI.Generated;
 
 public record HostedBusServices(
-    gAPI.Test.Main.Server.MainBus gAPI_Test_Main_Server_MainBus);
+    gAPI.Example.Main.Server.MainBus gAPI_Example_Main_Server_MainBus);

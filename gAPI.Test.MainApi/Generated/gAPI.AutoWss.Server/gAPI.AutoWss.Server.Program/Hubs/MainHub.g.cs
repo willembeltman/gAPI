@@ -1,10 +1,11 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Public;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -56,13 +57,10 @@ public async void SendAndForget(string message, CancellationToken ct)
 
         
         
-        
         {
-            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
-                ___payload, 
-                ct);
+                ___payload);
         }
         
     }
@@ -112,14 +110,11 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
         
         ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendAndForgetWithList_0_Serializer, ct);
         
-        
         try
         {
-            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
-                ___payload, 
-                ct);
+                ___payload);
         }
         
         finally
@@ -156,6 +151,9 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
     public async Task Send(string message, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
@@ -178,7 +176,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
-                ct);
+                ___timeoutCts);
         }
     }
     private byte[] ___Send_Serializer(string message)
@@ -198,6 +196,9 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
     public async Task SendWithList(IAsyncEnumerable<string> list, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
@@ -221,7 +222,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
             await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
-                ct);
+                ___timeoutCts);
         }
         finally
         {
@@ -248,6 +249,9 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
@@ -267,7 +271,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
         var ___responses = ___fabricClient.InvokeAsync(
             ___routing, 
             ___payload, 
-            ct);
+            ___timeoutCts);
 
         
         {
@@ -299,6 +303,9 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new RoutingDto(
             ___fabricClient.FabricManagerId,
@@ -318,7 +325,7 @@ public async void SendAndForgetWithList(IAsyncEnumerable<string> test, Cancellat
         var ___responses = ___fabricClient.InvokeAsync(
             ___routing, 
             ___payload, 
-            ct);
+            ___timeoutCts);
 
         
         try
@@ -378,13 +385,10 @@ public async void Ping(string v)
 
         
         
-        
         {
-            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
-                ___payload, 
-                CancellationToken.None);
+                ___payload);
         }
         
     }
@@ -434,13 +438,10 @@ public async void Pong(string v)
 
         
         
-        
         {
-            // We roepen nu de gloednieuwe SendFireAndForgetAsync aan!
             await ___fabricClient.SendFireAndForgetAsync(
                 ___routing,
-                ___payload, 
-                CancellationToken.None);
+                ___payload);
         }
         
     }

@@ -5,7 +5,7 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Server.Wss;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Public;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;

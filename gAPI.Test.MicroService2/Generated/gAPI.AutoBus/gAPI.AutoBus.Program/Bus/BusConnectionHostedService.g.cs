@@ -26,12 +26,12 @@ public class BusConnectionHostedService(
 
         Scope = serviceProvider.CreateAsyncScope();
 
-        var gAPI_Test_MicroService2_Bus2 = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Test.MicroService2.Bus2>();
-        await gAPI_Test_MicroService2_Bus2.OnStartedAsync(new ServiceId("IBus2"), ct);
-        await busConnection.SubscribeAsync(gAPI_Test_MicroService2_Bus2, ct);
+        var gAPI_Example_MicroService2_Bus2 = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Example.MicroService2.Bus2>();
+        await gAPI_Example_MicroService2_Bus2.OnStartedAsync(new ServiceId("IBus2"), ct);
+        await busConnection.SubscribeAsync(gAPI_Example_MicroService2_Bus2, ct);
 
         busConnection.HostedBusServices = new HostedBusServices(
-            gAPI_Test_MicroService2_Bus2);
+            gAPI_Example_MicroService2_Bus2);
     }
     public async Task StopAsync(CancellationToken ct)
     {
@@ -52,8 +52,8 @@ public class BusConnectionHostedService(
 
         if (services != null)
         {
-            await busConnection.UnsubscribeAsync(busConnection.HostedBusServices.gAPI_Test_MicroService2_Bus2, ct);
-            await busConnection.HostedBusServices.gAPI_Test_MicroService2_Bus2.OnStoppedAsync(new ServiceId("IBus2"), ct);
+            await busConnection.UnsubscribeAsync(busConnection.HostedBusServices.gAPI_Example_MicroService2_Bus2, ct);
+            await busConnection.HostedBusServices.gAPI_Example_MicroService2_Bus2.OnStoppedAsync(new ServiceId("IBus2"), ct);
         }
 
         busConnection.HostedBusServices = null;

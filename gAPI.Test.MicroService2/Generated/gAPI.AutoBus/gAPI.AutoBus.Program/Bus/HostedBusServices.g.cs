@@ -4,4 +4,4 @@
 namespace gAPI.Generated;
 
 public record HostedBusServices(
-    gAPI.Test.MicroService2.Bus2 gAPI_Test_MicroService2_Bus2);
+    gAPI.Example.MicroService2.Bus2 gAPI_Example_MicroService2_Bus2);

@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI.Test.Shared.Private\gAPI.Test.Shared.Private.csproj" />
+		<ProjectReference Include="..\gAPI.Test.Shared.Private\gAPI.Example.Shared.Private.csproj" />
 		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 

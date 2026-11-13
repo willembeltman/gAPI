@@ -1,8 +1,8 @@
 ﻿using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
-using gAPI.Test.Main.Server;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Main.Server;
+using gAPI.Example.Shared.Public;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;

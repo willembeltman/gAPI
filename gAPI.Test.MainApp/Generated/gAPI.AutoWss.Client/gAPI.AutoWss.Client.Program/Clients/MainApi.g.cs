@@ -5,7 +5,7 @@ using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Public;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
@@ -62,7 +62,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
         }
         finally
         {
@@ -86,6 +86,10 @@ public sealed class MainApi(
     public async void SendAndForget(string message, CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
         try
         {
             var ___routing = new RoutingDto(
@@ -105,7 +109,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_FireAndForget_ToServerAsync(
                 ___routing,
                 ___payload,
-                ct);
+                ___timeoutCts);
         }
         catch (Exception ex)
         {
@@ -129,6 +133,10 @@ public sealed class MainApi(
     public async void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
         try
         {
             var ___routing = new RoutingDto(
@@ -147,7 +155,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_FireAndForget_ToServerAsync(
                 ___routing,
                 ___payload,
-                ct);
+                ___timeoutCts);
         }
         catch (Exception ex)
         {
@@ -199,7 +207,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
         }
         finally
         {
@@ -248,7 +256,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_SendRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
         }
         finally
         {
@@ -303,7 +311,7 @@ public sealed class MainApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {
@@ -368,7 +376,7 @@ public sealed class MainApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {
@@ -435,7 +443,7 @@ public sealed class MainApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {
@@ -496,7 +504,7 @@ public sealed class MainApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts.Token);
+                ___timeoutCts);
 
             await foreach (var item in ___responses)
             {
@@ -536,6 +544,9 @@ public sealed class MainApi(
     public async void Ping(string v)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
         try
         {
             var ___routing = new RoutingDto(
@@ -555,7 +566,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_FireAndForget_ToServerAsync(
                 ___routing,
                 ___payload,
-                CancellationToken.None);
+                ___timeoutCts);
         }
         catch (Exception ex)
         {
@@ -579,6 +590,9 @@ public sealed class MainApi(
     public async void Pong(string v)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
         try
         {
             var ___routing = new RoutingDto(
@@ -598,7 +612,7 @@ public sealed class MainApi(
             await ___clientConnection.Send_FireAndForget_ToServerAsync(
                 ___routing,
                 ___payload,
-                CancellationToken.None);
+                ___timeoutCts);
         }
         catch (Exception ex)
         {

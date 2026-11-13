@@ -1,10 +1,10 @@
 ﻿using gAPI.Core.Ids;
 using gAPI.Generated;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Public;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace gAPI.Test.Main.Server;
+namespace gAPI.Example.Main.Server;
 
 public class MainApi(
     ILoggerFactory loggerFactory,
@@ -68,8 +68,8 @@ public class MainApi(
         // Naar de eerste service over de bus
 
 
-        if (busConnection.HostedBusServices?.gAPI_Test_Main_Server_MainBus != null)
-            await busConnection.HostedBusServices.gAPI_Test_Main_Server_MainBus.DoPing();
+        if (busConnection.HostedBusServices?.gAPI_Example_Main_Server_MainBus != null)
+            await busConnection.HostedBusServices.gAPI_Example_Main_Server_MainBus.DoPing();
 
 
         busContext.Bus1.ToAny().SendAndForget("hoi", ct);

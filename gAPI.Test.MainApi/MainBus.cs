@@ -1,12 +1,12 @@
 ﻿using gAPI.Core.Ids;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
-using gAPI.Test.Shared.Private;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Private;
+using gAPI.Example.Shared.Public;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace gAPI.Test.Main.Server;
+namespace gAPI.Example.Main.Server;
 
 public class MainBus(
     ILoggerFactory loggerFactory,

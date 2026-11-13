@@ -1,9 +1,9 @@
-using gAPI.Test.Fabric;
+using gAPI.Example.Fabric;
 using gAPI.Fabric.Server.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddFabric(useConsoleDashboard: false, name: "gAPI.Test.Fabric");
+builder.AddFabric(useConsoleDashboard: false, name: "gAPI.Example.Fabric");
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

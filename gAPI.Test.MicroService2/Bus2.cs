@@ -1,12 +1,12 @@
 ﻿using gAPI.Core.Ids;
 using gAPI.Core.Server.Interfaces;
 using gAPI.Generated;
-using gAPI.Test.Shared.Private;
+using gAPI.Example.Shared.Private;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace gAPI.Test.MicroService2;
+namespace gAPI.Example.MicroService2;
 
 public class Bus2(
     ILoggerFactory loggerFactory,

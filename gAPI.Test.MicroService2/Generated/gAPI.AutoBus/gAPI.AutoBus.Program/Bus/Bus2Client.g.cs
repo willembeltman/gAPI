@@ -4,7 +4,7 @@ using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Dtos;
-using gAPI.Test.Shared.Private;
+using gAPI.Example.Shared.Private;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Generic;

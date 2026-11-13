@@ -4,4 +4,4 @@
 namespace gAPI.Generated;
 
 public record HostedHubServices(
-    gAPI.Test.Main.Client.MainHub gAPI_Test_Main_Client_MainHub);
+    gAPI.Example.Main.Client.MainHub gAPI_Example_Main_Client_MainHub);

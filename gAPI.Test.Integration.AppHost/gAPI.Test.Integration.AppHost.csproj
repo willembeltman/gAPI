@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\gAPI.Test.Fabric\gAPI.Test.Fabric.csproj" />
+	<ProjectReference Include="..\gAPI.Test.Fabric\gAPI.Example.Fabric.csproj" />
   </ItemGroup>
 
 </Project>

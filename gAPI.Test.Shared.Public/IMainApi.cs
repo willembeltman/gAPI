@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Ids;
 
-namespace gAPI.Test.Shared.Public;
+namespace gAPI.Example.Shared.Public;
 
 [GenerateApi]
 public interface IMainApi

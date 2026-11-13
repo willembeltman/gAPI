@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Ids;
 
-namespace gAPI.Test.Shared.Private;
+namespace gAPI.Example.Shared.Private;
 
 [GenerateBus]
 public interface IMainBus

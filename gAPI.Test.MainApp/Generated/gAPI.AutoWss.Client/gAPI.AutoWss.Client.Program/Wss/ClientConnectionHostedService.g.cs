@@ -26,12 +26,12 @@ public class ClientConnectionHostedService(
 
         Scope = serviceProvider.CreateAsyncScope();
 
-        var gAPI_Test_Main_Client_MainHub = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Test.Main.Client.MainHub>();
-        await gAPI_Test_Main_Client_MainHub.OnStartedAsync(new ServiceId("IMainHub"), ct);
-        await busConnection.SubscribeAsync(gAPI_Test_Main_Client_MainHub, ct);
+        var gAPI_Example_Main_Client_MainHub = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Example.Main.Client.MainHub>();
+        await gAPI_Example_Main_Client_MainHub.OnStartedAsync(new ServiceId("IMainHub"), ct);
+        await busConnection.SubscribeAsync(gAPI_Example_Main_Client_MainHub, ct);
 
         busConnection.HostedHubServices = new HostedHubServices(
-            gAPI_Test_Main_Client_MainHub);
+            gAPI_Example_Main_Client_MainHub);
     }
     public async Task StopAsync(CancellationToken ct)
     {
@@ -52,8 +52,8 @@ public class ClientConnectionHostedService(
 
         if (services != null)
         {
-            await busConnection.UnsubscribeAsync(busConnection.HostedHubServices.gAPI_Test_Main_Client_MainHub, ct);
-            await busConnection.HostedHubServices.gAPI_Test_Main_Client_MainHub.OnStoppedAsync(new ServiceId("IMainHub"), ct);
+            await busConnection.UnsubscribeAsync(busConnection.HostedHubServices.gAPI_Example_Main_Client_MainHub, ct);
+            await busConnection.HostedHubServices.gAPI_Example_Main_Client_MainHub.OnStoppedAsync(new ServiceId("IMainHub"), ct);
         }
 
         busConnection.HostedHubServices = null;

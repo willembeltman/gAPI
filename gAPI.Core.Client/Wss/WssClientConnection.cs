@@ -513,7 +513,7 @@ public abstract class WssClientConnection : IWssClientConnection
                             }
                             catch (Exception ex)
                             {
-                                Logger.LogError(ex, "Received_InvokeRequestDone_FromServerAsync({message})", argumentRequest);
+                                Logger.LogError(ex, "Received_StreamingRequest_FromServerAsync({message})", argumentRequest);
                             }
                         }, ct);
                         break;
@@ -1205,12 +1205,17 @@ public abstract class WssClientConnection : IWssClientConnection
                     StreamId streamId,
                     bool cancelled,
                     CancellationToken ct) =>
-        {
-            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-            var stream = new AsyncEnumerableRegistrationInstance<T>(
-                    source.GetAsyncEnumerator(linked.Token),
-                    new SemaphoreSlim(1, 1),
-                    linked);
+        {   
+            var stream = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                    return new AsyncEnumerableRegistrationInstance<T>(
+                        source.GetAsyncEnumerator(linked.Token),
+                        new SemaphoreSlim(1, 1),
+                        linked);
+                });
 
             var entered = false;
             async Task Cleanup()
@@ -1219,21 +1224,12 @@ public abstract class WssClientConnection : IWssClientConnection
                 await stream.DisposeAsync(entered);
             }
 
-            if (activeStreams.TryAdd(streamId, stream) == false)
-            {
-                await Cleanup();
-                throw new Exception("Cache");
-            }
-            //var stream = activeStreams.GetOrAdd(
-            //    streamId,
-            //    _ =>
-            //    {
-            //        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-            //        return new AsyncEnumerableRegistrationInstance<T>(
-            //            source.GetAsyncEnumerator(linked.Token),
-            //            new SemaphoreSlim(1, 1),
-            //            linked);
-            //    });
+            //if (activeStreams.TryAdd(streamId, stream) == false)
+            //{
+            //    await Cleanup();
+            //    throw new Exception("Cache");
+            //}
+
             var enumerator = stream.enumerator;
             var gate = stream.gate;
 
@@ -1323,11 +1319,16 @@ public abstract class WssClientConnection : IWssClientConnection
             bool cancelled,
             CancellationToken ct) =>
         {
-            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-            var stream = new AsyncEnumerableRegistrationInstance<byte[]>(
-                    source.GetAsyncEnumerator(linked.Token),
-                    new SemaphoreSlim(1, 1),
-                    linked);
+            var stream = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
+                    return new AsyncEnumerableRegistrationInstance<byte[]>(
+                        source.GetAsyncEnumerator(linked.Token),
+                        new SemaphoreSlim(1, 1),
+                        linked);
+                });
 
             var entered = false;
 
@@ -1337,22 +1338,12 @@ public abstract class WssClientConnection : IWssClientConnection
                 await stream.DisposeAsync(entered);
             }
 
-            if (activeStreams.TryAdd(streamId, stream) == false)
-            {
-                await Cleanup();
-                throw new Exception("Cache");
-            }
+            //if (activeStreams.TryAdd(streamId, stream) == false)
+            //{
+            //    await Cleanup();
+            //    throw new Exception("Cache");
+            //}
 
-            //var stream = activeStreams.GetOrAdd(
-            //    streamId,
-            //    _ =>
-            //    {
-            //        var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
-            //        return new AsyncEnumerableRegistrationInstance<byte[]>(
-            //            source.GetAsyncEnumerator(linked.Token),
-            //            new SemaphoreSlim(1, 1),
-            //            linked);
-            //    });
             var enumerator = stream.enumerator;
             var gate = stream.gate;
 

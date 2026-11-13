@@ -6,8 +6,8 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
-using gAPI.Test.Main.Client;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Main.Client;
+using gAPI.Example.Shared.Public;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers.Binary;
@@ -78,11 +78,10 @@ public class ClientConnection
 
             await Send_Subscribe_ToServerAsync(
                 mainHub,
-                new SubscribeDto(
-                    new ServiceId("IMainHub"),
-                    HttpClient.UserId,
-                    HttpClient.SessionId
-                ), ___ct);
+                new ServiceId("IMainHub"),
+                HttpClient.UserId,
+                HttpClient.SessionId, 
+                ___ct);
         }
     }
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
@@ -104,11 +103,10 @@ public class ClientConnection
 
             await Send_Unsubscribe_ToServerAsync(
                 mainHub,
-                new UnsubscribeDto(
-                    new ServiceId("IMainHub"),
-                    HttpClient.UserId,
-                    HttpClient.SessionId
-                ), ___ct);
+                new ServiceId("IMainHub"),
+                HttpClient.UserId,
+                HttpClient.SessionId, 
+                ___ct);
         }
     }
     
@@ -140,11 +138,10 @@ public class ClientConnection
             {
                 await Send_Subscribe_ToServerAsync(
                     mainHub,
-                    new SubscribeDto(
-                        new ServiceId("IMainHub"),
-                        HttpClient.UserId,
-                        HttpClient.SessionId
-                    ), ___ct);// This causes the reconnect event to be called
+                    new ServiceId("IMainHub"),
+                    HttpClient.UserId,
+                    HttpClient.SessionId,
+                    ___ct);// This causes the reconnect event to be called
             }
         }
         finally

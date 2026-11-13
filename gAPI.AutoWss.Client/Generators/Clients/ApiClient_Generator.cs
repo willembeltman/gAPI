@@ -133,7 +133,15 @@ public sealed class {Name}(
         return $@"
     public async void {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);
+        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;"
+        : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;")}
+
         try
         {{
             var ___routing = new {RoutingDto}(
@@ -153,7 +161,7 @@ public sealed class {Name}(
             await ___clientConnection.Send_FireAndForget_ToServerAsync(
                 ___routing,
                 ___payload,
-                {(ct == null ? "CancellationToken.None" : ct)});
+                ___timeoutCts);
         }}
         catch (Exception ex)
         {{

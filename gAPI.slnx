@@ -24,15 +24,15 @@
         <Project Path="gAPI.Storage.Core/gAPI.Storage.Core.csproj" />
         <Project Path="gAPI.Storage.Server/gAPI.Storage.Server.csproj" />
     </Folder>
-    <Project Path="gAPI.Test.Aspire/gAPI.Test.Aspire.csproj" />
-    <Project Path="gAPI.Test.Fabric/gAPI.Test.Fabric.csproj" />
+    <Project Path="gAPI.Test.Aspire/gAPI.Example.Aspire.csproj" />
+    <Project Path="gAPI.Test.Fabric/gAPI.Example.Fabric.csproj" />
     <Project Path="gAPI.Test.Integration.AppHost/gAPI.Test.Integration.AppHost.csproj" />
     <Project Path="gAPI.Test.Integration/gAPI.Test.Integration.csproj" />
-    <Project Path="gAPI.Test.MainApi/gAPI.Test.Main.Server.csproj" />
-    <Project Path="gAPI.Test.MainApp/gAPI.Test.Main.Client.csproj" />
-    <Project Path="gAPI.Test.MicroService1/gAPI.Test.MicroService1.csproj" />
-    <Project Path="gAPI.Test.Microservice2/gAPI.Test.Microservice2.csproj" DisplayName="gAPI.Test.MicroService2" />
-    <Project Path="gAPI.Test.Shared.Private/gAPI.Test.Shared.Private.csproj" />
-    <Project Path="gAPI.Test.Shared.Public/gAPI.Test.Shared.Public.csproj" />
-    <Project Path="gAPI.Test.Storage/gAPI.Test.Storage.csproj" />
+    <Project Path="gAPI.Test.MainApi/gAPI.Example.Main.Server.csproj" />
+    <Project Path="gAPI.Test.MainApp/gAPI.Example.Main.Client.csproj" />
+    <Project Path="gAPI.Test.MicroService1/gAPI.Example.MicroService1.csproj" />
+    <Project Path="gAPI.Test.Microservice2/gAPI.Example.Microservice2.csproj" />
+    <Project Path="gAPI.Test.Shared.Private/gAPI.Example.Shared.Private.csproj" />
+    <Project Path="gAPI.Test.Shared.Public/gAPI.Example.Shared.Public.csproj" />
+    <Project Path="gAPI.Test.Storage/gAPI.Example.Storage.csproj" />
 </Solution>

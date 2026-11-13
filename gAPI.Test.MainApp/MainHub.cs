@@ -1,13 +1,13 @@
 ﻿using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Ids;
 using gAPI.Generated;
-using gAPI.Test.Shared.Public;
+using gAPI.Example.Shared.Public;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace gAPI.Test.Main.Client;
+namespace gAPI.Example.Main.Client;
 
 public class MainHub(
     ILoggerFactory loggerFactory,

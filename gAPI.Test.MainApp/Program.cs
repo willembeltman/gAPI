@@ -1,5 +1,5 @@
 ﻿using gAPI.Generated;
-using gAPI.Test.Main.Client;
+using gAPI.Example.Main.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Globalization;
