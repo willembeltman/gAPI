@@ -59,6 +59,8 @@ public class WssClientConnectionSender
                 }
                 catch (Exception ex)
                 {
+                    Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+
                     item.Sent?.TrySetException(ex);
                     throw;
                 }

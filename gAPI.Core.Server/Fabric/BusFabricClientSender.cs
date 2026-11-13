@@ -65,8 +65,9 @@ public class BusFabricClientSender(
         {
             await SendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
         }
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
@@ -77,8 +78,9 @@ public class BusFabricClientSender(
         {
             await SendQueue.Writer.WriteAsync(new SendQueueItem(write, tcs), ct);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
         }
 
         await tcs.Task.WaitAsync(ct).ConfigureAwait(false);

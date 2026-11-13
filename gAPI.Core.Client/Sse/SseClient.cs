@@ -3,6 +3,7 @@ using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
@@ -15,6 +16,7 @@ public class SseClient : IDisposable
     private readonly SseClientSender Sender;
     private CancellationTokenSource Cts = new(); // Roleert elke disconnect
 
+    public ILogger<SseClient> Logger { get; }
     public IClientAuthenticatedHttpClient HttpClient { get; }
     public ServiceId ServiceId { get; }
     public ServiceSubscriptionId? ServiceSubscriptionId { get; private set; }
@@ -33,14 +35,16 @@ public class SseClient : IDisposable
     private readonly ISseClientConnection SseClientConnection;
 
     public SseClient(
+        ILoggerFactory loggerFactory,
         IClientAuthenticatedHttpClient AuthenticationService,
         ISseClientConnection sseClientConnection,
         ServiceId serviceId)
     {
+        Logger = loggerFactory.CreateLogger<SseClient>();
         HttpClient = AuthenticationService;
         this.SseClientConnection = sseClientConnection;
         ServiceId = serviceId;
-        Sender = new(this);
+        Sender = new(loggerFactory, this);
     }
 
     public async Task ConnectAsync()
@@ -143,7 +147,7 @@ public class SseClient : IDisposable
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error with SSE: {ex}");
+                Logger.LogError(ex, $"Error with SSE");
             }
         }
     }
@@ -283,6 +287,7 @@ public class SseClient : IDisposable
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "Receive_InvokeRequest_FromServerAsync");
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
                 await Sender.Send_InvokeRequestDone_ToServerAsync(
@@ -444,6 +449,8 @@ public class SseClient : IDisposable
                         ct.IsCancellationRequested ||
                         cancellationToken.IsCancellationRequested)
                     {
+                        Logger.LogError(ex, "Task is cancelled");
+
                         await Cleanup();
 
                         var stateIsChanged = HttpClient.IsStateDataChanged();
@@ -462,6 +469,8 @@ public class SseClient : IDisposable
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgumentByte");
+
                         await Cleanup();
 
                         var stateIsChanged = HttpClient.IsStateDataChanged();

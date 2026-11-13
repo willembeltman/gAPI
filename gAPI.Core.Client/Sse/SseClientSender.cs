@@ -1,11 +1,15 @@
 ﻿using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace gAPI.Core.Client.Sse;
 
-public class SseClientSender(SseClient sseClient)
+public class SseClientSender(
+    ILoggerFactory loggerFactory,
+    SseClient sseClient)
 {
+    private readonly ILogger Logger = loggerFactory.CreateLogger<SseClientSender>();   
     public SseClient SseClient { get; } = sseClient;
     public IClientAuthenticatedHttpClient HttpClient => SseClient.HttpClient;
 
@@ -21,6 +25,7 @@ public class SseClientSender(SseClient sseClient)
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Send_InvokeRequestAck_ToServerAsync({message})", message);
             throw;
         }
     }
@@ -36,6 +41,7 @@ public class SseClientSender(SseClient sseClient)
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Send_InvokeRequestDone_ToServerAsync({message})", message);
             throw;
         }
     }
@@ -51,6 +57,7 @@ public class SseClientSender(SseClient sseClient)
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Send_StreamingRequest_ToServerAsync({message})", message);
             throw;
         }
     }
@@ -69,6 +76,7 @@ public class SseClientSender(SseClient sseClient)
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Send_StreamingResponse_ToServerAsync({message})", message);
             throw;
         }
     }

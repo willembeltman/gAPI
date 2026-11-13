@@ -64,8 +64,9 @@ public class FabricClientSender(
         {
             await SendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            Logger.LogError(ex, "EnqueueAsync");
         }
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
@@ -76,8 +77,9 @@ public class FabricClientSender(
         {
             await SendQueue.Writer.WriteAsync(new SendQueueItem(write, tcs), ct);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            Logger.LogError(ex, "EnqueueAsync");
         }
 
         await tcs.Task.WaitAsync(ct).ConfigureAwait(false);

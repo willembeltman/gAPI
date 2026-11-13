@@ -15,6 +15,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Server.Wss;
 
@@ -89,8 +90,9 @@ public abstract class WssServerConnection : IServerConnection
             cts.Cancel();
             await Task.WhenAll(senderTask, receiverTask);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            Logger.LogError(ex, "Connection closed");
             // client disconnect of timeout — gewoon negeren
         }
         catch (Exception ex)
@@ -163,60 +165,191 @@ public abstract class WssServerConnection : IServerConnection
 
                         case WssClientToServerMessageEnum.Subscribe:
                             var subscribe = span.ReadSubscribeDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_Subscribe_FromClientAsync(subscribe, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_Subscribe_FromClientAsync(subscribe, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_Subscribe_FromClientAsync({message})", subscribe);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Unsubscribe:
                             var unsubscribe = span.ReadUnsubscribeDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_Unsubscribe_FromClientAsync(unsubscribe, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_Unsubscribe_FromClientAsync(unsubscribe, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_Unsubscribe_FromClientAsync({message})", unsubscribe);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.SendRequest:
                             var sendRequest = span.ReadSendRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_SendRequest_FromClientAsync(sendRequest, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_SendRequest_FromClientAsync(sendRequest, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_SendRequest_FromClientAsync({message})", sendRequest);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.SendRequestCancelled:
                             var sendRequestCancelled = span.ReadSendRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_SendRequestCancelled_FromClientAsync(sendRequestCancelled, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_SendRequestCancelled_FromClientAsync({message})", sendRequestCancelled);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricSendRequestDone:
                             var fabricSendRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_FabricSendRequestDone_FromClientAsync(fabricSendRequestDone, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_FabricSendRequestDone_FromClientAsync({message})", fabricSendRequestDone);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.InvokeRequest:
                             var invokeRequest = span.ReadInvokeRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_InvokeRequest_FromClientAsync(invokeRequest, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_InvokeRequest_FromClientAsync(invokeRequest, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_InvokeRequest_FromClientAsync({message})", invokeRequest);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.InvokeRequestCancelled:
                             var invokeRequestCancelled = span.ReadInvokeRequestCancelledClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_InvokeRequestCancelled_FromClientAsync(invokeRequestCancelled, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_InvokeRequest_FromClientAsync({message})", invokeRequestCancelled);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestAck:
                             var fabricInvokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_FabricInvokeRequestAck_FromClientAsync(fabricInvokeRequestAck, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_FabricInvokeRequestAck_FromClientAsync({message})", fabricInvokeRequestAck);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricInvokeRequestDone:
                             var fabricInvokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_FabricInvokeRequestDone_FromClientAsync(fabricInvokeRequestDone, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_FabricInvokeRequestDone_FromClientAsync({message})", fabricInvokeRequestDone);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.StreamingRequest:
                             var argumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_StreamingRequest_FromClientAsync(argumentRequest, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_StreamingRequest_FromClientAsync({message})", argumentRequest);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.StreamingResponse:
                             var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_StreamingResponse_FromClientAsync(argumentResponse, ct);
+
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_StreamingResponse_FromClientAsync(argumentResponse, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_StreamingResponse_FromClientAsync({message})", argumentResponse);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.FabricStreamingRequest:
                             var fabricArgumentRequest = span.ReadStreamingRequestClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_FabricStreamingRequest_FromClientAsync(fabricArgumentRequest, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_FabricStreamingRequest_FromClientAsync({message})", fabricArgumentRequest);
+                                }
+                            }, ct);
                             break;
                         case WssClientToServerMessageEnum.FabricStreamingResponse:
                             var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_FabricStreamingResponse_FromClientAsync(fabricArgumentResponse, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_FabricStreamingResponse_FromClientAsync({message})", fabricArgumentResponse);
+                                }
+                            }, ct);
                             break;
 
                         case WssClientToServerMessageEnum.Log:
@@ -231,9 +364,14 @@ public abstract class WssServerConnection : IServerConnection
                 }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            Logger.LogError(ex, "Disconnected");
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "ReceiverKernel");
         }
     }
 
@@ -245,346 +383,302 @@ public abstract class WssServerConnection : IServerConnection
         await AuthenticationService.InitializeAsync(path, queryString, ipAddress, cookieData, sessionId, initialize.StateData, ct);
     }
 
-    private void Receive_Subscribe_FromClientAsync(SubscribeDto message, CancellationToken ct)
+    private async Task Receive_Subscribe_FromClientAsync(SubscribeDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
+
+        var tcs = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.SubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
+
+        try
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_Subscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
+            var subscription = new WssServiceSubscription(
+                this,
+                LoggerFactory,
+                ServiceSubscriptions,
+                FabricClient,
+                ClientConnectionId,
+                message.ServiceSubscriptionId,
+                message.ServiceId,
+                AuthenticationService.UserId,
+                AuthenticationService.SessionId);
 
-            var tcs = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (StreamingCache.SubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
-                throw new Exception("Cannot save subscribe request");
+            await FabricClient.SubscribeAsync(subscription, ct);
 
-            try
-            {
-                var subscription = new WssServiceSubscription(
-                    this,
-                    LoggerFactory,
-                    ServiceSubscriptions,
-                    FabricClient,
-                    ClientConnectionId,
-                    message.ServiceSubscriptionId,
-                    message.ServiceId,
-                    AuthenticationService.UserId,
-                    AuthenticationService.SessionId);
-
-                await FabricClient.SubscribeAsync(subscription, ct);
-
-                var ack = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10), ct);
-
-                var connections = ConnectedServiceSubscriptions.GetOrAdd(
-                    message.ServiceId,
-                    a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-                if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
-                    throw new Exception("Cannot add service subscription");
-
-                await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
-            }
-            finally
-            {
-                StreamingCache.SubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
-            }
-        }, ct);
-    }
-    private void Receive_Unsubscribe_FromClientAsync(UnsubscribeDto message, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
+            var ack = await tcs.Task.WaitAsync(ct);
 
             var connections = ConnectedServiceSubscriptions.GetOrAdd(
                 message.ServiceId,
                 a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-            if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
-                throw new Exception("Cache");
+            if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
+                throw new Exception("Cannot add service subscription");
 
-            var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
-                throw new Exception("Cannot save subscribe request");
+            await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
+        }
+        finally
+        {
+            StreamingCache.SubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+        }
+    }
+    private async Task Receive_Unsubscribe_FromClientAsync(UnsubscribeDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
-            try
-            {
-                await subscription.DisposeAsync();
+        var connections = ConnectedServiceSubscriptions.GetOrAdd(
+            message.ServiceId,
+            a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
+        if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
+            throw new Exception("Cache");
 
-                var ack = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10), ct);
+        var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+            throw new Exception("Cannot save subscribe request");
 
-                await Sender.Send_UnsubscribeAck_ToClientAsync(ack, ct);
-            }
-            finally
-            {
-                StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
-            }
-        }, ct);
+        try
+        {
+            await subscription.DisposeAsync();
+
+            var ack = await tcs.Task.WaitAsync(ct);
+
+            await Sender.Send_UnsubscribeAck_ToClientAsync(ack, ct);
+        }
+        finally
+        {
+            StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+        }
     }
 
-    private void Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken ct)
+    private async Task Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_SendRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        // Create cancellation token
+        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+
+        try
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_SendRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-            // Create cancellation token
-            var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-            StreamingCache.Timeouts[message.Routing.RequestId] = cts;
-
-            try
-            {
-
-                if (message.StateIsChanged)
-                    await AuthenticationService.UpdateStateDataAsync(message.StateData, cts.Token);
-
-                await Send_SendRequest_ToServiceAsync(message, cts.Token);
-
-                var stateIsChanged = AuthenticationService.IsStateDataChanged();
-                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-                await Sender.Send_SendRequestDone_ToClientAsync(
-                    new SendRequestDoneClientDto(
-                        message.Routing,
-                        false,
-                        null,
-                        stateIsChanged,
-                        stateData
-                    ), ct);
-            }
-            catch (Exception ex)
-            {
-                var stateIsChanged = AuthenticationService.IsStateDataChanged();
-                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-                await Sender.Send_SendRequestDone_ToClientAsync(
-                    new SendRequestDoneClientDto(
-                        message.Routing,
-                        false,
-                        ex.Message,
-                        stateIsChanged,
-                        stateData
-                    ), ct);
-
-                cts.Dispose();
-                StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
-            }
-        }, ct);
-    }
-    private void Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_SendRequestCancelled_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
             if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+                await AuthenticationService.UpdateStateDataAsync(message.StateData, cts.Token);
 
-            if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
+            await Send_SendRequest_ToServiceAsync(message, cts.Token);
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
             await Sender.Send_SendRequestDone_ToClientAsync(
                 new SendRequestDoneClientDto(
                     message.Routing,
-                    true,
+                    false,
                     null,
                     stateIsChanged,
                     stateData
                 ), ct);
-        }, ct);
-    }
-    private void Receive_FabricSendRequestDone_FromClientAsync(SendRequestDoneClientDto message, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
+        }
+        catch (Exception ex)
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_SendRequestDone_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            Logger.LogError(ex, "Receive_SendRequest_FromClientAsync");
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
-
-            await FabricClient.Handle_FabricSendRequestDone_FromClientAsync(message, ct);
-        }, ct);
-    }
-
-    private void Receive_InvokeRequest_FromClientAsync(InvokeRequestClientDto message, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_InvokeRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-            // Create cancellation token
-            var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-            ct = cts.Token;
-            StreamingCache.Timeouts[message.Routing.RequestId] = cts;
-
-            try
-            {
-                if (message.StateIsChanged)
-                    await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
-
-                // Get the enumerable
-                var enumerable = Send_InvokeRequest_ToServiceAsync(message, ct);
-
-                // Register it for streaming
-                RegisterAsyncEnumerableArgumentByte(
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_SendRequestDone_ToClientAsync(
+                new SendRequestDoneClientDto(
                     message.Routing,
-                    -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
-                    enumerable,
-                    ct);
+                    false,
+                    ex.Message,
+                    stateIsChanged,
+                    stateData
+                ), ct);
 
-                // Register dispose 
-                cts.RegisterDispose(async () =>
-                {
-                    StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
-                    await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
-                });
+            cts.Dispose();
+            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+        }
+    }
+    private async Task Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_SendRequestCancelled_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-                var stateIsChanged = AuthenticationService.IsStateDataChanged();
-                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-                await Sender.Send_InvokeRequestAck_ToClientAsync(
-                    new InvokeRequestAckClientDto(
-                        message.Routing,
-                        false,
-                        null,
-                        stateIsChanged,
-                        stateData
-                    ), ct);
-            }
-            catch (Exception ex)
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        await Sender.Send_SendRequestDone_ToClientAsync(
+            new SendRequestDoneClientDto(
+                message.Routing,
+                true,
+                null,
+                stateIsChanged,
+                stateData
+            ), ct);
+    }
+    private async Task Receive_FabricSendRequestDone_FromClientAsync(SendRequestDoneClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_SendRequestDone_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await FabricClient.Handle_FabricSendRequestDone_FromClientAsync(message, ct);
+    }
+
+    private async Task Receive_InvokeRequest_FromClientAsync(InvokeRequestClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_InvokeRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        // Create cancellation token
+        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+        ct = cts.Token;
+        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+
+        try
+        {
+            if (message.StateIsChanged)
+                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+            // Get the enumerable
+            var enumerable = Send_InvokeRequest_ToServiceAsync(message, ct);
+
+            // Register it for streaming
+            RegisterAsyncEnumerableArgumentByte(
+                message.Routing,
+                -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
+                enumerable,
+                ct);
+
+            // Register dispose 
+            cts.RegisterDispose(async () =>
             {
-                var stateIsChanged = AuthenticationService.IsStateDataChanged();
-                var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-                await Sender.Send_InvokeRequestDone_ToClientAsync(
-                    new InvokeRequestDoneClientDto(
-                        message.Routing,
-                        false,
-                        ex.Message,
-                        stateIsChanged,
-                        stateData
-                    ), ct);
-
-                cts.Dispose();
                 StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
-            }
-        }, ct);
-    }
-    private void Receive_InvokeRequestCancelled_FromClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
+                await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
+            });
+
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_InvokeRequestAck_ToClientAsync(
+                new InvokeRequestAckClientDto(
+                    message.Routing,
+                    false,
+                    null,
+                    stateIsChanged,
+                    stateData
+                ), ct);
+        }
+        catch (Exception ex)
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_InvokeCancelled_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+            Logger.LogError(ex, "Receive_InvokeRequest_FromClientAsync");
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_InvokeRequestDone_ToClientAsync(
+                new InvokeRequestDoneClientDto(
+                    message.Routing,
+                    false,
+                    ex.Message,
+                    stateIsChanged,
+                    stateData
+                ), ct);
 
-            if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-
-            //var stateIsChanged = AuthenticationService.IsStateDataChanged();
-            //var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            //await Sender.Send_InvokeRequestAck_ToClientAsync(
-            //    new InvokeRequestAckClientDto(
-            //        message.Routing,
-            //        stateIsChanged,
-            //        stateData
-            //    ), ct);
-        }, ct);
+            cts.Dispose();
+            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+        }
     }
-    private void Receive_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    private async Task Receive_InvokeRequestCancelled_FromClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_InvokeCancelled_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_InvokeRequestAck_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
-
-            await FabricClient.Handle_FabricInvokeRequestAck_FromClientAsync(message, ct);
-        }, ct);
+            cts.Cancel();
+            cts.Dispose();
+        }
     }
-    private void Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
+    private async Task Receive_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_InvokeRequestDone_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_InvokeRequestAck_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-            await FabricClient.Handle_FabricInvokeRequestDone_FromClientAsync(message, ct);
-        }, ct);
+        await FabricClient.Handle_FabricInvokeRequestAck_FromClientAsync(message, ct);
+    }
+    private async Task Receive_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_InvokeRequestDone_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await FabricClient.Handle_FabricInvokeRequestDone_FromClientAsync(message, ct);
     }
 
-    private void Receive_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private async Task Receive_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_StreamingRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        var response = await FabricClient.Handle_StreamingRequest_FromClientAsync(message, ct);
+        if (response == null)
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_StreamingRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
-
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
-
-            var response = await FabricClient.Handle_StreamingRequest_FromClientAsync(message, ct);
-            if (response == null)
-            {
-                response = new StreamingResponseDto(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "Could not get response, enumerator might be freed", []);
-                await Send_StreamingResponse_ToClientAsync(response, ct);
-                return;
-            }
-
+            response = new StreamingResponseDto(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "Could not get response, enumerator might be freed", []);
             await Send_StreamingResponse_ToClientAsync(response, ct);
-        }, ct);
+            return;
+        }
+
+        await Send_StreamingResponse_ToClientAsync(response, ct);
     }
-    private void Receive_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private async Task Receive_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_StreamingResponse_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_StreamingResponse_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-            await FabricClient.Handle_StreamingResponse_FromClientAsync(message, ct);
-        }, ct);
+        await FabricClient.Handle_StreamingResponse_FromClientAsync(message, ct);
     }
 
-    private void Receive_FabricStreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private async Task Receive_FabricStreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_FabricStreamingRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_FabricStreamingRequest_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-            await FabricClient.Handle_FabricStreamingRequest_FromClientAsync(message, ct);
-        }, ct);
+        await FabricClient.Handle_FabricStreamingRequest_FromClientAsync(message, ct);
     }
-    private void Receive_FabricStreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private async Task Receive_FabricStreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
-        _ = Task.Run(async () =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Receive_FabricStreamingResponse_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_FabricStreamingResponse_FromClientAsync({serviceId}, {methodId}, {requestId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.ServiceId, message.Routing.MethodId, message.Routing.RequestId);
 
-            if (message.StateIsChanged)
-                await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
+        if (message.StateIsChanged)
+            await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-            await FabricClient.Handle_FabricStreamingResponse_FromClientAsync(message, ct);
-        }, ct);
+        await FabricClient.Handle_FabricStreamingResponse_FromClientAsync(message, ct);
     }
 
     private void Receive_Log_FromClientAsync(ClientLogDto log, CancellationToken ct)
@@ -597,9 +691,9 @@ public abstract class WssServerConnection : IServerConnection
                 log.Level,
                 log.Message);
         }
-        catch
+        catch//(Exception ex)
         {
-
+            //Logger.LogError(ex, "Receive_Log_FromClientAsync");
         }
     }
 
@@ -801,6 +895,8 @@ public abstract class WssServerConnection : IServerConnection
                         ct.IsCancellationRequested ||
                         cancellationToken.IsCancellationRequested)
                     {
+                        Logger.LogError(ex, "Cancelled");
+
                         await Cleanup();
 
                         return new StreamingResponseDto(
@@ -814,6 +910,8 @@ public abstract class WssServerConnection : IServerConnection
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgumentByte");
+
                         await Cleanup();
 
                         return new StreamingResponseDto(
@@ -884,6 +982,8 @@ public abstract class WssServerConnection : IServerConnection
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogError(ex, "RegisterRemoteAsyncEnumerableArgument push");
+
                         enumerator.Complete(ex);
                     }
                 }) == false)
