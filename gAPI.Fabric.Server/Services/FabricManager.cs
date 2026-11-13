@@ -55,11 +55,52 @@ public class FabricManager : IDashboardSnapshotGetter
         var fabricHost = new FabricHost(this, tcpClient);
         fabricHost.Start();
     }
+    public void Disconnected(FabricHost host)
+    {
+        var connectionId = host.FabricConnectionId;
+
+        AllConnections.RemoveConnection(connectionId);
+        Services.RemoveConnection(host);
+
+        // Verwijder efficiënt zonder handmatige tussenlijsten
+        foreach (var item in OpenRequests)
+        {
+            if (item.Value.Caller.FabricConnectionId == connectionId)
+            {
+                OpenRequests.TryRemove(item);
+            }
+            item.Value.RemoveHost(host);
+        }
+    }
+
     public void StartNewBusFabricHost(TcpClient tcpClient)
     {
         // FabricHost abonneert zichzelf op connections
         var fabricBusHost = new FabricBusHost(this, tcpClient);
         fabricBusHost.Start();
+    }
+    public void Disconnected(FabricBusHost host)
+    {
+        var connectionId = host.FabricBusConnectionId;
+
+        AllBusConnections.RemoveConnection(connectionId);
+        Services.RemoveBusConnection(host);
+
+        foreach (var item in OpenBusRequests)
+        {
+            if (item.Value.Caller.FabricBusConnectionId == connectionId)
+            {
+                OpenBusRequests.TryRemove(item);
+            }
+            item.Value.RemoveBusHost(host);
+        }
+    }
+    public async Task DisconnectAllAsync()
+    {
+        foreach (var conn in AllConnections)
+            conn.Dispose();
+
+        //NotifyChanged();
     }
 
     public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
@@ -170,10 +211,11 @@ public class FabricManager : IDashboardSnapshotGetter
 
             (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
                 .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
-            var fabricHosts = fabricHostsEnumerable.ToArray();
+            var fabricHosts = new ConcurrentDictionary<FabricConnectionId, FabricHost>(
+                fabricHostsEnumerable.ToDictionary(a => a.FabricConnectionId));
             actor.EnqueueReceive(receiveSize);
 
-            if (fabricHosts.Length == 0)
+            if (fabricHosts.Count == 0)
             {
                 await caller.Send_SendRequestDone_ToApiAsync(
                     new SendRequestDoneDto(
@@ -201,7 +243,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 _ = CompleteRequestAsync(logger, state);
             });
 
-            foreach (var fabricHost in fabricHosts)
+            foreach (var fabricHost in fabricHosts.Values)
                 await fabricHost.Send_SendRequest_ToApiAsync(request, actor);
         }, ct);
     }
@@ -218,7 +260,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var host in state.Targets)
+            foreach (var host in state.Targets.Values)
                 await host.Send_SendRequestCancelled_ToApiAsync(cancel, state.Actor);
 
             state.Cancel();
@@ -247,7 +289,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Count)
             {
                 await CompleteRequestAsync(logger, state);
             }
@@ -281,10 +323,11 @@ public class FabricManager : IDashboardSnapshotGetter
 
             (var fabricHostsEnumerable, var actor) = Services[request.Routing.ServiceId]
                 .GetFabricHosts(request.Routing.UserId, request.Routing.SessionId);
-            var fabricHosts = fabricHostsEnumerable.ToArray();
+            var fabricHosts = new ConcurrentDictionary<FabricConnectionId, FabricHost>(
+                fabricHostsEnumerable.ToDictionary(a => a.FabricConnectionId));
             actor.EnqueueReceive(receiveSize);
 
-            if (fabricHosts.Length == 0)
+            if (fabricHosts.Count == 0)
             {
                 await caller.Send_SendRequestDone_ToApiAsync(
                     new SendRequestDoneDto(
@@ -313,7 +356,7 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var host in fabricHosts)
-                await host.Send_InvokeRequest_ToApiAsync(request, actor);
+                await host.Value.Send_InvokeRequest_ToApiAsync(request, actor);
         }, ct);
     }
     public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, InvokeRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
@@ -329,7 +372,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var host in state.Targets)
+            foreach (var host in state.Targets.Values)
                 await host.Send_InvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
 
             state.Cancel();
@@ -351,7 +394,7 @@ public class FabricManager : IDashboardSnapshotGetter
             // TODO
             state.ReadyTargets[caller.FabricConnectionId] = 0;
 
-            if (state.ReadyTargets.Count == state.Targets.Length)
+            if (state.ReadyTargets.Count == state.Targets.Count)
             {
                 await ReadyInvokeAsync(logger, state);
             }
@@ -380,7 +423,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Count)
             {
                 await CompleteInvokeAsync(logger, state);
             }
@@ -434,7 +477,7 @@ public class FabricManager : IDashboardSnapshotGetter
             {
                 if (request.ArgumentIndex < 0)
                 {
-                    foreach (var target in state.Targets)
+                    foreach (var target in state.Targets.Values)
                     {
                         await target.Send_StreamingRequest_ToApiAsync(request, state.Actor);
                     }
@@ -479,7 +522,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            if (state.Targets.Length == 0)
+            if (state.Targets.Count == 0)
             {
                 try
                 {
@@ -507,7 +550,7 @@ public class FabricManager : IDashboardSnapshotGetter
             {
                 if (request.ArgumentIndex < 0)
                 {
-                    foreach (var target in state.Targets)
+                    foreach (var target in state.Targets.Values)
                     {
                         await target.Send_BusStreamingRequest_ToApiAsync(request, state.Actor);
                     }
@@ -613,7 +656,8 @@ public class FabricManager : IDashboardSnapshotGetter
                 Routing = request.Routing,
                 Actor = actor,
                 Caller = caller,
-                Targets = fabricHosts
+                Targets = new ConcurrentDictionary<FabricBusConnectionId, FabricBusHost>(
+                    fabricHosts.ToDictionary(a => a.FabricBusConnectionId))
             };
 
             if (!OpenBusRequests.TryAdd(request.Routing.RequestId, state))
@@ -642,7 +686,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var host in state.Targets)
+            foreach (var host in state.Targets.Values)
                 await host.Send_BusSendRequestCancelled_ToApiAsync(cancel, state.Actor);
 
             state.Cancel();
@@ -671,7 +715,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Count)
             {
                 await CompleteBusRequestAsync(logger, state);
             }
@@ -721,7 +765,8 @@ public class FabricManager : IDashboardSnapshotGetter
                 Routing = request.Routing,
                 Actor = actor,
                 Caller = caller,
-                Targets = fabricHosts
+                Targets = new ConcurrentDictionary<FabricBusConnectionId, FabricBusHost>(
+                    fabricHosts.ToDictionary(a => a.FabricBusConnectionId))
             };
 
             if (!OpenBusRequests.TryAdd(request.Routing.RequestId, state))
@@ -729,7 +774,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                if (state.Targets.Length == 0)
+                if (state.Targets.Count == 0)
                 {
                     OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
                     state.TryComplete();
@@ -763,11 +808,11 @@ public class FabricManager : IDashboardSnapshotGetter
             state.ResetTimeout();
             state.Actor.EnqueueReceive(receiveSize);
 
-            foreach (var host in state.Targets)
+            foreach (var host in state.Targets.Values)
                 await host.Send_BusInvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
 
             state.Cancel();
-            if (state.Targets.Length == 0)
+            if (state.Targets.Count == 0)
             {
                 OpenBusRequests.TryRemove(cancel.Routing.RequestId, out _);
                 state.TryComplete();
@@ -789,7 +834,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.ReadyTargets[caller.FabricBusConnectionId] = 0;
 
-            if (state.ReadyTargets.Count == state.Targets.Length)
+            if (state.ReadyTargets.Count == state.Targets.Count)
             {
                 await ReadyBusInvokeAsync(logger, state);
             }
@@ -818,7 +863,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 state.Cancel();
             }
 
-            if (state.CompletedTargets.Count == state.Targets.Length)
+            if (state.CompletedTargets.Count == state.Targets.Count)
             {
                 await CompleteBusInvokeAsync(logger, state);
             }
@@ -864,12 +909,11 @@ public class FabricManager : IDashboardSnapshotGetter
 
         if (routing.To == BusToChoice.ToBusConnectionId && routing.ToBusConnectionId != null)
         {
-            var target = service.BusConnections.TryGet(routing.ToBusConnectionId);
-            if (target == null)
+            if (service.BusConnections.TryGetValue(routing.ToBusConnectionId, out var target) == false)
                 return ([], service);
             return ([target.Connection], target);
         }
-        var subscribers = service.BusConnections.Select(a => a.Connection);
+        var subscribers = service.BusConnections.Values.Select(a => a.Connection);
         var hosts = subscribers.Distinct().ToArray();
         if (hosts.Length == 0)
             return ([], service);
@@ -882,45 +926,6 @@ public class FabricManager : IDashboardSnapshotGetter
         // ToAny => Round-robin
         var idx = (uint)Interlocked.Increment(ref _roundRobinIndex) % (uint)hosts.Length;
         return ([hosts[idx]], service);
-    }
-
-    public void Disconnected(FabricHost host)
-    {
-        var connectionId = host.FabricConnectionId;
-
-        AllConnections.RemoveConnection(connectionId);
-        Services.RemoveConnection(host);
-
-        // Verwijder efficiënt zonder handmatige tussenlijsten
-        foreach (var item in OpenRequests)
-        {
-            if (item.Value.Caller.FabricConnectionId == connectionId)
-            {
-                OpenRequests.TryRemove(item);
-            }
-        }
-    }
-    public void Disconnected(FabricBusHost host)
-    {
-        var connectionId = host.FabricBusConnectionId;
-
-        AllBusConnections.RemoveConnection(connectionId);
-        Services.RemoveBusConnection(host);
-
-        foreach (var item in OpenBusRequests)
-        {
-            if (item.Value.Caller.FabricBusConnectionId == connectionId)
-            {
-                OpenBusRequests.TryRemove(item);
-            }
-        }
-    }
-    public async Task DisconnectAllAsync()
-    {
-        foreach (var conn in AllConnections)
-            conn.Dispose();
-
-        //NotifyChanged();
     }
 
     public FabricDashboardSnapshot GetDashboardSnapshot()
@@ -965,19 +970,19 @@ public class FabricManager : IDashboardSnapshotGetter
                 var send = service.GetSendSpeed();
                 sendSpeed += send.bytes;
                 sendCount += send.count;
-                foreach (var session in service.Sessions)
+                foreach (var session in service.Sessions.Values)
                 {
                     var sendSession = session.GetSendSpeed();
                     sendSpeed += sendSession.bytes;
                     sendCount += sendSession.count;
                 }
-                foreach (var user in service.Users)
+                foreach (var user in service.Users.Values)
                 {
                     var sendUser = user.GetSendSpeed();
                     sendSpeed += sendUser.bytes;
                     sendCount += sendUser.count;
                 }
-                foreach (var busconnection in service.BusConnections)
+                foreach (var busconnection in service.BusConnections.Values)
                 {
                     var sendUser = busconnection.GetSendSpeed();
                     sendSpeed += sendUser.bytes;
@@ -990,13 +995,13 @@ public class FabricManager : IDashboardSnapshotGetter
                 var received = service.GetReceiveSpeed();
                 receivedSpeed += received.bytes;
                 receivedCount += received.count;
-                foreach (var session in service.Sessions)
+                foreach (var session in service.Sessions.Values)
                 {
                     var receivedSession = session.GetReceiveSpeed();
                     receivedSpeed += receivedSession.bytes;
                     receivedCount += receivedSession.count;
                 }
-                foreach (var user in service.Users)
+                foreach (var user in service.Users.Values)
                 {
                     var receivedUser = user.GetReceiveSpeed();
                     receivedSpeed += receivedUser.bytes;

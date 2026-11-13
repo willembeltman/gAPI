@@ -1,44 +1,53 @@
-﻿using gAPI.Core.Ids;
-using gAPI.Fabric.Server.Models;
-using gAPI.Fabric.Server.Services;
-using System.Collections;
-using System.Collections.Concurrent;
+﻿//using gAPI.Core.Ids;
+//using gAPI.Fabric.Server.Models;
+//using gAPI.Fabric.Server.Services;
+//using System.Collections;
+//using System.Collections.Concurrent;
+//using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace gAPI.Fabric.Server.Collections;
+//namespace gAPI.Fabric.Server.Collections;
 
-public class UserCollection : IEnumerable<User>
-{
-    private readonly ConcurrentDictionary<UserId, User> Users = new();
+//public class UserCollection : IEnumerable<User>
+//{
+//    private readonly ConcurrentDictionary<UserId, User> Users = new();
 
-    public User? TryGet(UserId userId)
-    {
-        if (!Users.TryGetValue(userId, out var user))
-            return null;
-        return user;
-    }
+//    public User? TryGet(UserId userId)
+//    {
+//        if (!Users.TryGetValue(userId, out var user))
+//            return null;
+//        return user;
+//    }
 
-    public void TryAdd(UserId userId, FabricHost connection)
-    {
-        var user = Users.GetOrAdd(userId, userId => new User(userId));
-        user.Subscribe(connection);
-    }
-    public void TryRemove(UserId userId, FabricHost connection)
-    {
-        if (!Users.TryGetValue(userId, out var user)) return;
-        user.Unsubscribe(connection);
-        if (user?.Connections.Count == 0)
-            Users.TryRemove(userId, out _);
-    }
+//    public void TryAdd(UserId userId, FabricHost connection)
+//    {
+//        var user = Users.GetOrAdd(userId, userId => new User(userId));
+//        user.Subscribe(connection);
+//    }
+//    public void TryRemove(UserId userId, FabricHost connection)
+//    {
+//        if (!Users.TryGetValue(userId, out var user)) return;
+//        user.Unsubscribe(connection);
+//        if (user?.Connections.Count == 0)
+//            Users.TryRemove(userId, out _);
+//    }
 
-    public int Count => Users.Count;
+//    public int Count => Users.Count;
 
-    public IEnumerator<User> GetEnumerator()
-    {
-        return Users.Values.GetEnumerator();
-    }
+//    public IEnumerator<User> GetEnumerator()
+//    {
+//        return Users.Values.GetEnumerator();
+//    }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-}
+//    IEnumerator IEnumerable.GetEnumerator()
+//    {
+//        return GetEnumerator();
+//    }
+
+//    internal void RemoveConnection(FabricHost host)
+//    {
+//        foreach (var user in Users.Values)
+//        {
+//            user.RemoveHost(host);
+//        }
+//    }
+//}

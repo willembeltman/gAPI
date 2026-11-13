@@ -29,11 +29,17 @@ public class ServiceCollection : IEnumerable<Service>
 
     public void RemoveConnection(FabricHost host)
     {
-        // TODO
+        foreach (var service in Services.Values)
+        {
+            service.RemoveConnection(host);
+        }
     }
     public void RemoveBusConnection(FabricBusHost host)
     {
-        // TODO
+        foreach (var service in Services.Values)
+        {
+            service.RemoveBusConnection(host);
+        }
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

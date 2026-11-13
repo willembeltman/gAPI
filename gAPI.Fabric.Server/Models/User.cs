@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Ids;
 using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Services;
+using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
@@ -49,5 +50,10 @@ public record User(UserId Id) : IActor
     public void EnqueueReceive(long size)
     {
         ReceiveLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
+    }
+
+    internal void RemoveHost(FabricHost host)
+    {
+        Connections.TryRemove(host.FabricConnectionId, out _);
     }
 }

@@ -393,23 +393,15 @@ public sealed class FabricClient
         }
 
         // Maak een TaskCompletionSource aan voor deze specifieke sessie
-        var tcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        StreamingCache.PendingGetSessionRequests[sessionId] = tcs;
+        var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        StreamingCache.PendingGetSessionRequests[sessionId] = completion;
 
         try
         {
             var getSessionDto = new SendGetSessionCookieDataDto(sessionId);
             await Sender.Send_GetSession_ToFabricAsync(getSessionDto, ct);
 
-            // Koppel de time-out aan de meegegeven CancellationToken van de gebruiker
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            linkedCts.CancelAfter(TimeSpan.FromSeconds(100));
-
-            // Wacht tot óf de TaskCompletionSource klaar is, óf de time-out/cancel afgaat
-            using (linkedCts.Token.Register(() => tcs.TrySetCanceled(linkedCts.Token)))
-            {
-                return await tcs.Task;
-            }
+            return await completion.Task.WaitAsync(ct);
         }
         catch (OperationCanceledException ex)
         {

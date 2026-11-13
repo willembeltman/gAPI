@@ -12,7 +12,7 @@ public sealed class RequestState : IDisposable
     public required RoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
     public required FabricHost Caller { get; init; }
-    public required FabricHost[] Targets { get; init; }
+    public required ConcurrentDictionary<FabricConnectionId, FabricHost> Targets { get; init; }
 
     public ConcurrentDictionary<FabricConnectionId, byte> ReadyTargets { get; } = [];
     public ConcurrentDictionary<FabricConnectionId, byte> CompletedTargets { get; } = [];
@@ -26,6 +26,20 @@ public sealed class RequestState : IDisposable
     private int _completed;
 
     private ResettableTimeout? Timeout { get; set; }
+
+
+    internal void RemoveHost(FabricHost host)
+    {
+        Targets.TryRemove(host.FabricConnectionId, out _);
+        CompletedTargets.TryRemove(host.FabricConnectionId, out _);
+        Exceptions.TryRemove(host.FabricConnectionId, out _);
+
+        foreach (var target in StreamRoutes)
+        {
+            if (target.Value.FabricConnectionId == host.FabricConnectionId)
+                StreamRoutes.TryRemove(target);
+        }
+    }
 
     public void Cancel()
     {

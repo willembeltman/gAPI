@@ -12,7 +12,7 @@ public sealed class BusRequestState : IDisposable
     public required BusRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
     public required FabricBusHost Caller { get; init; }
-    public required FabricBusHost[] Targets { get; init; }
+    public required ConcurrentDictionary<FabricBusConnectionId, FabricBusHost> Targets { get; init; }
 
     public ConcurrentDictionary<FabricBusConnectionId, byte> ReadyTargets { get; } = [];
     public ConcurrentDictionary<FabricBusConnectionId, byte> CompletedTargets { get; } = [];
@@ -27,6 +27,18 @@ public sealed class BusRequestState : IDisposable
 
     private ResettableTimeout? Timeout { get; set; }
 
+    internal void RemoveBusHost(FabricBusHost host)
+    {
+        Targets.TryRemove(host.FabricBusConnectionId, out _);
+        CompletedTargets.TryRemove(host.FabricBusConnectionId, out _);
+        Exceptions.TryRemove(host.FabricBusConnectionId, out _);
+
+        foreach (var target in StreamRoutes)
+        {
+            if (target.Value.FabricBusConnectionId == host.FabricBusConnectionId)
+                StreamRoutes.TryRemove(target);
+        }
+    }
     public void Cancel()
     {
         Volatile.Write(ref _cancelled, 1);
@@ -67,4 +79,5 @@ public sealed class BusRequestState : IDisposable
     {
         Timeout?.Dispose();
     }
+
 }

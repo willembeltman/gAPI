@@ -50,4 +50,9 @@ public record Session(SessionId Id) : IActor
     {
         ReceiveLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
+
+    internal void RemoveHost(FabricHost host)
+    {
+        Connections.TryRemove(host.FabricConnectionId, out _);
+    }
 }

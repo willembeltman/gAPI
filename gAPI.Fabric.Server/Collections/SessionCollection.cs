@@ -1,43 +1,52 @@
-﻿using gAPI.Core.Ids;
-using gAPI.Fabric.Server.Models;
-using gAPI.Fabric.Server.Services;
-using System.Collections;
-using System.Collections.Concurrent;
+﻿//using gAPI.Core.Ids;
+//using gAPI.Fabric.Server.Models;
+//using gAPI.Fabric.Server.Services;
+//using System.Collections;
+//using System.Collections.Concurrent;
+//using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace gAPI.Fabric.Server.Collections;
+//namespace gAPI.Fabric.Server.Collections;
 
-public class SessionCollection : IEnumerable<Session>
-{
-    private readonly ConcurrentDictionary<SessionId, Session> Sessions = new();
+//public class SessionCollection : IEnumerable<Session>
+//{
+//    private readonly ConcurrentDictionary<SessionId, Session> Sessions = new();
 
-    public Session? TryGet(SessionId sessionId)
-    {
-        if (!Sessions.TryGetValue(sessionId, out var scope))
-            return null;
-        return scope;
-    }
-    public void TryAdd(SessionId sessionId, FabricHost connection)
-    {
-        var session = Sessions.GetOrAdd(sessionId, sessionId => new Session(sessionId));
-        session.Subscribe(connection);
-    }
-    public void TryRemove(SessionId sessionId, FabricHost connection)
-    {
-        if (!Sessions.TryGetValue(sessionId, out var session)) return;
-        session.Unsubscribe(connection);
-        if (session.Connections.Count == 0)
-            Sessions.TryRemove(sessionId, out _);
-    }
+//    public Session? TryGet(SessionId sessionId)
+//    {
+//        if (!Sessions.TryGetValue(sessionId, out var scope))
+//            return null;
+//        return scope;
+//    }
+//    public void TryAdd(SessionId sessionId, FabricHost connection)
+//    {
+//        var session = Sessions.GetOrAdd(sessionId, sessionId => new Session(sessionId));
+//        session.Subscribe(connection);
+//    }
+//    public void TryRemove(SessionId sessionId, FabricHost connection)
+//    {
+//        if (!Sessions.TryGetValue(sessionId, out var session)) return;
+//        session.Unsubscribe(connection);
+//        if (session.Connections.Count == 0)
+//            Sessions.TryRemove(sessionId, out _);
+//    }
 
-    public int Count => Sessions.Count;
+//    public int Count => Sessions.Count;
 
-    public IEnumerator<Session> GetEnumerator()
-    {
-        return Sessions.Values.GetEnumerator();
-    }
+//    public IEnumerator<Session> GetEnumerator()
+//    {
+//        return Sessions.Values.GetEnumerator();
+//    }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-}
+//    IEnumerator IEnumerable.GetEnumerator()
+//    {
+//        return GetEnumerator();
+//    }
+
+//    internal void RemoveConnection(FabricHost host)
+//    {
+//        foreach (var session in Sessions.Values)
+//        {
+//            session.RemoveHost(host);
+//        }
+//    }
+//}
