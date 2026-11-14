@@ -672,10 +672,10 @@ public sealed class BusFabricClient
                 complete.SetCanceled(ct); // hij zit te wachten op beginnen met streamen, maar request is al done.
         }
 
-        if (StreamingCache.BusStreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
-        {
-            await handler.DisposeAsync();
-        }
+        //if (StreamingCache.BusStreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+        //{
+        //    await handler.DisposeAsync();
+        //}
     }
 
     private async Task Receive_BusStreamingRequest_FromFabricAsync(BusStreamingRequestDto message, CancellationToken ct)

@@ -819,10 +819,10 @@ public sealed class FabricClient
                 completion.TrySetResult(message);
         }
 
-        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
-        {
-            await handler.DisposeAsync();
-        }
+        //if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+        //{
+        //    await handler.DisposeAsync();
+        //}
     }
 
     private async Task Receive_StreamingRequest_FromFabricAsync(StreamingRequestDto message, CancellationToken ct)
@@ -1100,14 +1100,13 @@ public sealed class FabricClient
                                 linked);
                         });
 
+                    var entered = false;
                     async Task Cleanup()
                     {
                         activeStreams.TryRemove(streamId, out _);
-                        await stream.DisposeAsync();
-                        stream.linkedCts.Dispose();
+                        await stream.DisposeAsync(entered);
                     }
 
-                    var entered = false;
                     try
                     {
                         await stream.gate.WaitAsync(ct);

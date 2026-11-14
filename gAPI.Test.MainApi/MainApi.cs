@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Ids;
-using gAPI.Generated;
+using gAPI.Example.Shared.Private;
 using gAPI.Example.Shared.Public;
+using gAPI.Generated;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -8,6 +9,7 @@ namespace gAPI.Example.Main.Server;
 
 public class MainApi(
     ILoggerFactory loggerFactory,
+    IMainBus mainBus,
     IAuthenticationService authenticationService,
     IBusConnection busConnection,
     IBusContext busContext,
@@ -53,6 +55,9 @@ public class MainApi(
         await clientContext.MainHub.ToSession(sessionId).Send("hoi", ct);
         Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
 
+        await clientContext.MainHub.ToSession(sessionId).SendWithList(MyList(), ct);
+        Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
+
         var result = string.Empty;
         await foreach (var item in clientContext.MainHub.ToSession(sessionId).InvokeList("hoi", ct))
         {
@@ -65,12 +70,12 @@ public class MainApi(
             Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        // Naar de eerste service over de bus
-
-
+        // Naar de interne singleton service over de bus - optie 1
         if (busConnection.HostedBusServices?.gAPI_Example_Main_Server_MainBus != null)
             await busConnection.HostedBusServices.gAPI_Example_Main_Server_MainBus.DoPing();
 
+        // Naar de interne singleton service over de bus - optie 1
+        await mainBus.DoPing();
 
         busContext.Bus1.ToAny().SendAndForget("hoi", ct);
         Logger.LogInformation($"Service1.SendAndForget - {sw.ElapsedMilliseconds}ms");

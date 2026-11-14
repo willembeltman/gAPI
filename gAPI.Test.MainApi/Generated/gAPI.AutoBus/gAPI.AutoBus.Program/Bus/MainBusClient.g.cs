@@ -577,6 +577,45 @@ public class MainBusClient(
         return ___buffer;
     }
 
+    public async Task DoPing()
+    {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
+        var ___routing = new BusRoutingDto(
+            ___busConnection.BusConnectionId,
+            RequestId.New(),
+            ___ServiceId,
+            new("DoPing"),
+            ___timeOut.Value,
+            ___deliveryMode,
+            ___to,
+            ___busConnectionId,
+            ___throwIfNoReceiver
+        );
+        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+
+        var ___payload = ___DoPing_Serializer();
+        
+        
+        try
+        {
+            await ___busConnection.SendAsync(
+                ___routing,
+                ___payload, 
+                ___timeoutCts);
+        }
+        finally
+        {
+            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+        }
+    }
+    private byte[] ___DoPing_Serializer()
+    {
+        return [];
+    }
+
 
     public void Dispose()
     {

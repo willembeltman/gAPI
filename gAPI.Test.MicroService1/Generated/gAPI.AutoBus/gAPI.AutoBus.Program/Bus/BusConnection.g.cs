@@ -585,6 +585,14 @@ public class BusConnection
                                 }
                                 return;
                             }
+                        case "DoPing":
+                            {
+                                foreach (var client in clients)
+                                {
+                                    await client.DoPing();
+                                }
+                                return;
+                            }
                     }
                     break;
                 }
@@ -1077,6 +1085,7 @@ public class BusConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
 
 
     

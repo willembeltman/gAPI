@@ -274,7 +274,7 @@ public abstract class AzureBaseBusConnection(
             await _adminClient.DeleteTopicAsync(replyTopic, CancellationToken.None);
         }
     }
-    
+
     private async Task SendStreamingRequestAsync(BusRoutingDto routing, int argumentIndex, StreamId streamId, bool cancelled, CancellationToken ct)
     {
         if (!Initialized) throw new InvalidOperationException("Bus connection is not initialized. Call TryConnectAsync first.");
@@ -672,7 +672,13 @@ public abstract class AzureBaseBusConnection(
                 var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, cts.Token);
                 return new BusAsyncEnumerableRegistrationInstance<T>(source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
             });
-            async Task Cleanup() { if (activeStreams.TryRemove(streamId, out _)) { await enumerator.DisposeAsync(); linkedCts.Dispose(); } }
+            async Task Cleanup()
+            {
+                if (activeStreams.TryRemove(streamId, out _))
+                {
+                    await enumerator.DisposeAsync(); linkedCts.Dispose();
+                }
+            }
             var entered = false;
             try
             {

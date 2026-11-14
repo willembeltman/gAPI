@@ -16,4 +16,5 @@ public interface IMainBus
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     Task StartServiceTests(SessionId sessionId, CancellationToken ct);
     void Pong(string v);
+    Task DoPing();
 }

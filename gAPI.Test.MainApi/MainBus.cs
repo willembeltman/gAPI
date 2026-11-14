@@ -35,7 +35,7 @@ public class MainBus(
     }
 
 
-    internal async Task DoPing()
+    public async Task DoPing()
     {
         for (var y = 0; y < 50; y++)
         {
