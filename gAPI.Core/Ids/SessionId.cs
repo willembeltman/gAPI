@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Primitives;
+﻿using Microsoft.Extensions.Primitives;
+using System.Buffers.Text;
 using System.Security.Cryptography;
 
 namespace gAPI.Core.Ids;
@@ -10,7 +10,7 @@ public record SessionId(string Value)
     {
         var bytes = new byte[32];
         RandomNumberGenerator.Fill(bytes);
-        var token = WebEncoders.Base64UrlEncode(bytes);
+        var token = Base64Url.EncodeToString(bytes);
         return new SessionId(token);
     }
 

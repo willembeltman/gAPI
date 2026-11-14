@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
+﻿using System.Buffers.Text;
 using System.Security.Cryptography;
 
 namespace gAPI.Core.Ids;
@@ -9,7 +9,7 @@ public record ServiceSubscriptionId(string Value)
     {
         var bytes = new byte[32];
         RandomNumberGenerator.Fill(bytes);
-        var token = WebEncoders.Base64UrlEncode(bytes);
+        var token = Base64Url.EncodeToString(bytes);
         return new ServiceSubscriptionId(token);
     }
 
