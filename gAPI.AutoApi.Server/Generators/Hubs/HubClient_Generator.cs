@@ -138,7 +138,7 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(cancellationToken == null ? $@"
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(cancellationToken == null ? $@"
         var ___cts = new CancellationTokenSource();" : $@"
         var ___cts = CancellationTokenSource.CreateLinkedTokenSource({cancellationToken.Name});")}
         ___cts.CancelAfter(___timeOut.Value);
@@ -187,7 +187,7 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});
         var ___payload = new {Interface.Title}_{method.Name}
         {{
             {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
@@ -221,7 +221,7 @@ public class {Name}(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});
         var ___payload = new {Interface.Title}_{method.Name}
         {{
             {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
@@ -257,38 +257,6 @@ public class {Name}(
                 $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
                 $"No {method.ResponseType} supported 1");
             }
-
-            //        else
-            //        {
-            //            if (method.ResponseType.Name != "Void")
-            //                throw new Exception(
-            //                $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-            //                "2 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
-
-            //            code += $@"
-            //public void {method.Name}({string.Join($",\r\n", method.Arguments.Select(a => @$"
-            //        {a.ParameterType.Name} {a.Name}"))})
-            //{{
-            //    var ___payload = new {Interface.Title}_{method.Name}
-            //    {{{string.Join($",\r\n", args.Select(a => @$"
-            //        {a.Name} = {a.Name}"))}
-            //    }};
-            //    var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-            //    var ___json = JsonSerializer.Serialize(___payload);
-            //    var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
-            //    ___FabricClient.SendAsync(
-            //        new (
-            //            ___FabricClient.FabricManagerId, 
-            //            ___FabricClient.FabricConnectionId, 
-            //            ___ServiceId, 
-            //            ___serviceMethodId, 
-            //            ___UserId, 
-            //            ___SessionId), 
-            //        ___bytes{(cancellationToken == null ? @", 
-            //        default" : $@", 
-            //        {cancellationToken.Name}")}).GetAwaiter().GetResult();
-            //}}";
-            //        }
         }
 
 

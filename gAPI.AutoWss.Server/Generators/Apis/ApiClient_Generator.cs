@@ -144,7 +144,7 @@ public class {Name}(
         return $@"
     public void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
         ___timeoutCts.CancelAfter(___timeOut.Value);
@@ -196,7 +196,7 @@ public class {Name}(
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
         ___timeoutCts.CancelAfter(___timeOut.Value);
@@ -242,7 +242,7 @@ public class {Name}(
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
         ___timeoutCts.CancelAfter(___timeOut.Value);

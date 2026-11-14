@@ -139,6 +139,10 @@ public class InterfaceMethod
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
 
         IsAsync = ResponseType.NameInner == "Task";
+
+        var overrideTimeoutAttr = methodSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "OverrideTimeoutInSecondsAttribute");
+        Timeout = overrideTimeoutAttr?.ConstructorArguments[0].Value?.ToString() ?? "100";
     }
 
     public Interface Interface { get; }
@@ -172,6 +176,7 @@ public class InterfaceMethod
     public bool IsAsync { get; }
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
+    public string Timeout { get; }
 
     public override string ToString()
     {
