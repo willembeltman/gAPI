@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using gAPI.Core.Ids;
-using global::gAPI.Core.Server.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-
 namespace gAPI.Core.Server.Fabric;
-
 
 public class FabricClientHostedService(
     FabricClient fabricClient)

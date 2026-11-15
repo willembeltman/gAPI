@@ -173,10 +173,10 @@ public abstract class RabbitMQBaseBusConnection(
             await PublishAsync(routing, data, isInvoke: false, ct, replyTo: replyQueue.QueueName, correlationId: correlationId);
 
             timeoutCts.CancelAfter(routing.Timeout);
-            var ackResult = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
+            var message = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
-            if (ackResult.ExceptionMessage != null)
-                throw new RemoteException(ackResult.ExceptionMessage);
+            if (message.ExceptionMessage != null)
+                throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
         }
         finally
         {
@@ -229,13 +229,13 @@ public abstract class RabbitMQBaseBusConnection(
                     try
                     {
                         var offset = 0;
-                        var ack = BusInvokeRequestDoneDtoSpanSerializer.ReadBusInvokeRequestDoneDto(ea.Body.Span, ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        if (ack != null)
+                        var message = BusInvokeRequestDoneDtoSpanSerializer.ReadBusInvokeRequestDoneDto(ea.Body.Span, ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        if (message != null)
                         {
-                            if (ack.Cancelled)
+                            if (message.Cancelled)
                                 ackCompletion.SetCanceled(ct);
-                            else if (ack.ExceptionMessage != null)
-                                ackCompletion.SetException(new RemoteException(ack.ExceptionMessage));
+                            else if (message.ExceptionMessage != null)
+                                ackCompletion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
                             else
                                 ackCompletion.SetCanceled(ct);
                         }
@@ -273,18 +273,18 @@ public abstract class RabbitMQBaseBusConnection(
 
                     // STAP 4 & 6: <= Wacht op de StreamingResponse van de service
                     timeoutCts.CancelAfter(routing.Timeout);
-                    var responseResult = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
+                    var message = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
 
-                    if (responseResult.ExceptionMessage != null)
-                        throw new RemoteException(responseResult.ExceptionMessage);
+                    if (message.ExceptionMessage != null)
+                        throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
 
                     // STAP 6b: De service stuurt Done terug, we sluiten de lus
-                    if (responseResult.IsCompleted)
+                    if (message.IsCompleted)
                     {
                         break;
                     }
 
-                    yield return responseResult.BinaryData;
+                    yield return message.BinaryData;
                 }
             }
             finally
@@ -575,11 +575,20 @@ public abstract class RabbitMQBaseBusConnection(
             {
                 var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token);
-                ack = new BusSendRequestDoneDto(responseRouting, false, null);
+                ack = new BusSendRequestDoneDto(responseRouting, false, null, null);
             }
             catch (Exception ex)
             {
-                ack = new BusSendRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+                ack = new BusSendRequestDoneDto(
+                    request.Routing with
+                    {
+                        FromBusConnectionId = BusConnectionId,
+                        To = BusToChoice.ToBusConnectionId,
+                        ToBusConnectionId = request.Routing.FromBusConnectionId
+                    },
+                    false,
+                    ex.Message,
+                    ex.InnerException?.Message);
             }
             var properties = new BasicProperties { Type = SendRequestAckType, CorrelationId = correlationId };
             var ackData = CreateSendRequestAckData(ack);
@@ -619,14 +628,23 @@ public abstract class RabbitMQBaseBusConnection(
             var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
             var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
             RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-            ack = new BusInvokeRequestAckDto(responseRouting, false, null);
+            ack = new BusInvokeRequestAckDto(responseRouting, false, null, null);
             var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
             byte[] ackData = CreateInvokeRequestAckData(ack);
             await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
         }
         catch (Exception ex)
         {
-            var done = new BusInvokeRequestDoneDto(request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId }, false, ex.Message);
+            var done = new BusInvokeRequestDoneDto(
+                request.Routing with
+                {
+                    FromBusConnectionId = BusConnectionId,
+                    To = BusToChoice.ToBusConnectionId,
+                    ToBusConnectionId = request.Routing.FromBusConnectionId
+                },
+                false,
+                ex.Message,
+                ex.InnerException?.Message);
             var properties = new BasicProperties { Type = InvokeRequestDoneType, CorrelationId = correlationId };
             byte[] ackData = CreateInvokeRequestDoneData(done);
             await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
@@ -665,7 +683,15 @@ public abstract class RabbitMQBaseBusConnection(
                             }
                             else
                             {
-                                response = new BusStreamingResponseDto(request.Routing, request.ArgumentIndex, request.StreamId, IsCompleted: true, IsCancelled: request.Cancelled, ExceptionMessage: request.Cancelled ? null : "De streamingregistratie bestaat niet meer.", BinaryData: []);
+                                response = new BusStreamingResponseDto(
+                                    request.Routing, 
+                                    request.ArgumentIndex,
+                                    request.StreamId,
+                                    IsCompleted: true, 
+                                    IsCancelled: request.Cancelled, 
+                                    ExceptionMessage: request.Cancelled ? null : "De streamingregistratie bestaat niet meer.",
+                                    InnerExceptionMessage: null,
+                                    BinaryData: []);
                             }
                             if (!string.IsNullOrWhiteSpace(ea.BasicProperties.ReplyTo))
                             {
@@ -728,25 +754,25 @@ public abstract class RabbitMQBaseBusConnection(
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
-                StreamingResponseHandlers.TryAdd(key, response =>
+                StreamingResponseHandlers.TryAdd(key, message =>
                 {
                     // FIX 1: Als de zender actief heeft gecanceld, geef de TaskCanceledException direct door
-                    if (response.IsCancelled)
+                    if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage ?? "De stream is gecanceld door de zender."));
+                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage ?? "De stream is gecanceld door de zender."));
                         return;
                     }
 
                     // FIX 2: Als de zender halverwege is gecrasht (ExceptionMessage ingevuld),
                     // breek dan de lokale foreach af met een keiharde RemoteException!
-                    if (response.ExceptionMessage != null)
+                    if (message.ExceptionMessage != null)
                     {
-                        enumerator.Complete(new RemoteException(response.ExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
                         return;
                     }
 
                     // Als de zender netjes klaar is
-                    if (response.IsCompleted)
+                    if (message.IsCompleted)
                     {
                         enumerator.Complete();
                         return;
@@ -754,7 +780,7 @@ public abstract class RabbitMQBaseBusConnection(
 
                     try
                     {
-                        enumerator.Push(deserializer.Invoke(response.BinaryData));
+                        enumerator.Push(deserializer.Invoke(message.BinaryData));
                     }
                     catch (Exception ex)
                     {
@@ -812,6 +838,7 @@ public abstract class RabbitMQBaseBusConnection(
                         bool hasNext;
                         T currentItem = default!;
                         string? localExceptionMessage = null;
+                        string? localInnerExceptionMessage = null;
 
                         try
                         {
@@ -827,6 +854,7 @@ public abstract class RabbitMQBaseBusConnection(
                             // De lokale bron-iterator klapt halverwege het yielden uit elkaar
                             hasNext = false;
                             localExceptionMessage = ex.Message;
+                            localInnerExceptionMessage = ex.InnerException?.Message;
                         }
 
                         // Als er een exception was, markeren we de dto direct als Completed met de ExceptionMessage
@@ -839,6 +867,7 @@ public abstract class RabbitMQBaseBusConnection(
                             IsCompleted: isCompleted,
                             IsCancelled: cancelled,
                             ExceptionMessage: localExceptionMessage,
+                            InnerExceptionMessage: localInnerExceptionMessage,
                             BinaryData: hasNext ? serializer(currentItem) : []
                         );
 
@@ -851,13 +880,13 @@ public abstract class RabbitMQBaseBusConnection(
                     {
                         await Cleanup();
                         return new BusStreamingResponseDto(
-                            routing, argumentIndex, streamId, true, true, ex.Message, []);
+                            routing, argumentIndex, streamId, true, true, ex.Message, ex.InnerException?.Message, []);
                     }
                     catch (Exception ex)
                     {
                         await Cleanup();
                         return new BusStreamingResponseDto(
-                            routing, argumentIndex, streamId, true, false, ex.Message, []);
+                            routing, argumentIndex, streamId, true, false, ex.Message, ex.InnerException?.Message, []);
                     }
                     finally
                     {

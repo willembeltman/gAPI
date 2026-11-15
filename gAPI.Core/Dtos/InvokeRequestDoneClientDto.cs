@@ -7,6 +7,7 @@ public record InvokeRequestDoneClientDto(
     RoutingDto Routing,
     bool Cancelled,
     string? ExceptionMessage,
+    string? InnerExceptionMessage,
     bool StateIsChanged,
     string? StateData)
-    : InvokeRequestDoneDto(Routing, Cancelled, ExceptionMessage);
+    : InvokeRequestDoneDto(Routing, Cancelled, ExceptionMessage, InnerExceptionMessage);

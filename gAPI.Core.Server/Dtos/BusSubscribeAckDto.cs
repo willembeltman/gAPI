@@ -6,7 +6,8 @@ namespace gAPI.Core.Server.Dtos;
 public record BusSubscribeAckDto(
     BusSubscribeDto SubscribeDto,
     bool Cancelled,
-    string? ExceptionMessage)
+    string? ExceptionMessage,
+    string? InnerExceptionMessage)
 {
     public override string ToString()
     {

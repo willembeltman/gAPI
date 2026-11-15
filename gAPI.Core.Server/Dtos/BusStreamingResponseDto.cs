@@ -11,4 +11,5 @@ public record BusStreamingResponseDto(
     bool IsCompleted,
     bool IsCancelled,
     string? ExceptionMessage,
+    string? InnerExceptionMessage,
     byte[] BinaryData);

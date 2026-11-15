@@ -6,4 +6,5 @@ namespace gAPI.Core.Server.Dtos;
 public record BusInvokeRequestDoneDto(
     BusRoutingDto Routing,
     bool Cancelled,
-    string? ExceptionMessage);
+    string? ExceptionMessage,
+    string? InnerExceptionMessage);

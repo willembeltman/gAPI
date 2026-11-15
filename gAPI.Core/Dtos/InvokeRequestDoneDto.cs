@@ -6,5 +6,6 @@ namespace gAPI.Core.Dtos;
 public record InvokeRequestDoneDto(
     RoutingDto Routing,
     bool Cancelled,
-    string? ExceptionMessage)
-    : InvokeRequestAckDto(Routing, Cancelled, ExceptionMessage);
+    string? ExceptionMessage,
+    string? InnerExceptionMessage)
+    : InvokeRequestAckDto(Routing, Cancelled, ExceptionMessage, InnerExceptionMessage);

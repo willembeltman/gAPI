@@ -6,6 +6,7 @@ using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.ServerSentEvents;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
@@ -97,6 +98,7 @@ public class SseServiceSubscription
             }
         }
     }
+
     public async Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)
     {
         var stateIsChanged = AuthenticationService.IsStateDataChanged();
@@ -206,6 +208,7 @@ public class SseServiceSubscription
             message.IsCompleted,
             message.IsCancelled,
             message.ExceptionMessage,
+            message.InnerExceptionMessage,
             message.BinaryData,
             stateIsChanged,
             stateData);
@@ -239,6 +242,7 @@ public class SseServiceSubscription
             message.IsCompleted,
             message.IsCancelled,
             message.ExceptionMessage,
+            message.InnerExceptionMessage,
             message.BinaryData,
             stateIsChanged,
             stateData);
@@ -246,6 +250,18 @@ public class SseServiceSubscription
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
 
+    public async Task OnDisconnectedAsync(CancellationToken ct)
+    {
+        var fabricDisconnectedDto = new FabricDisconnectedDto(false);
+        var sseEvent = new SseEvent("FabricDisconnectedDto", fabricDisconnectedDto);
+        await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
+    public async Task OnRestoreSubscriptionsAsync(CancellationToken ct)
+    {
+        var fabricRestoreSubscriptionsDto = new FabricRestoreSubscriptionsDto(false);
+        var sseEvent = new SseEvent("FabricRestoreSubscriptionsDto", fabricRestoreSubscriptionsDto);
+        await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();

@@ -1,12 +1,15 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace gAPI.Core.Server.Collections;
 
 public class SessionCacheCleaner(
+    ILoggerFactory loggerFactory,
     SessionCache sessionCache)
     : IHostedService
 {
     CancellationTokenSource? Cts;
+    ILogger<SessionCacheCleaner> Logger = loggerFactory.CreateLogger<SessionCacheCleaner>();
 
     public async Task StartAsync(CancellationToken ct)
     {
@@ -16,11 +19,21 @@ public class SessionCacheCleaner(
             Cts.Dispose();
         }
         Cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        while (ct.IsCancellationRequested == false)
+        _ = Task.Run(async () =>
         {
-            sessionCache.Cleanup();
-            await Task.Delay(TimeSpan.FromMinutes(5), ct);
-        }
+            try
+            {
+                while (ct.IsCancellationRequested == false)
+                {
+                    sessionCache.Cleanup();
+                    await Task.Delay(TimeSpan.FromMinutes(5), ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error while running SessinoCacheCleaner");
+            }
+        });
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

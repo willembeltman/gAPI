@@ -9,12 +9,14 @@ public class SseClientSender(
     ILoggerFactory loggerFactory,
     SseClient sseClient)
 {
-    private readonly ILogger Logger = loggerFactory.CreateLogger<SseClientSender>();   
+    private readonly ILogger Logger = loggerFactory.CreateLogger<SseClientSender>();
     public SseClient SseClient { get; } = sseClient;
     public IClientAuthenticatedHttpClient HttpClient => SseClient.HttpClient;
 
     public async Task Send_InvokeRequestAck_ToServerAsync(InvokeRequestAckClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_InvokeRequestAck_ToServerAsync({message})", message);
         try
         {
             var content = new MultipartFormDataContent();
@@ -31,6 +33,8 @@ public class SseClientSender(
     }
     public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_InvokeRequestDone_ToServerAsync({message})", message);
         try
         {
             var content = new MultipartFormDataContent();
@@ -47,6 +51,8 @@ public class SseClientSender(
     }
     public async Task Send_StreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_StreamingRequest_ToServerAsync({message})", message);
         try
         {
             var content = new MultipartFormDataContent();
@@ -63,6 +69,8 @@ public class SseClientSender(
     }
     public async Task Send_StreamingResponse_ToServerAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("Send_StreamingResponse_ToServerAsync({message})", message);
         try
         {
             var json = JsonSerializer.Serialize(message);

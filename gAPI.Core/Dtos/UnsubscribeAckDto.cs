@@ -7,7 +7,8 @@ namespace gAPI.Core.Dtos;
 public record UnsubscribeAckDto(
     UnsubscribeDto UnsubscribeDto,
     bool Cancelled,
-    string? ExceptionMessage)
+    string? ExceptionMessage,
+    string? InnerExceptionMessage)
 {
     public override string ToString()
     {

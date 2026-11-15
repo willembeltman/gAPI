@@ -141,6 +141,17 @@ public class SseClient : IDisposable
                                 if (fabricStreamingResponse != null)
                                     await Receive_FabricStreamingResponse_FromServerAsync(fabricStreamingResponse, Cts.Token);
                                 break;
+
+                            case "FabricDisconnectedDto":
+                                var fabricDisconnectedDto = JsonSerializer.Deserialize<FabricDisconnectedDto>(eventData);
+                                if (fabricDisconnectedDto != null)
+                                    await Receive_FabricDisconnected_FromServerAsync(fabricDisconnectedDto, Cts.Token);
+                                break;
+                            case "FabricRestoreSubscriptionsDto":
+                                var fabricRestoreSubscriptionsDto = JsonSerializer.Deserialize<FabricRestoreSubscriptionsDto>(eventData);
+                                if (fabricRestoreSubscriptionsDto != null)
+                                    await Receive_FabricRestoreSubscriptions_FromServerAsync(fabricRestoreSubscriptionsDto, Cts.Token);
+                                break;
                         }
                     }
                 }
@@ -223,6 +234,9 @@ public class SseClient : IDisposable
 
     private async Task Receive_SendRequest_FromServerAsync(SendRequestClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_SendRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         ct = CreateCancellation(message.Routing.RequestId, ct);
 
         _ = Task.Run(async () =>
@@ -240,6 +254,9 @@ public class SseClient : IDisposable
     }
     private async Task Receive_SendRequestCancelled_FromServerAsync(SendRequestCancelledClientDto message, CancellationToken token)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_SendRequestCancelled_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         //if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
         //    return;
 
@@ -249,6 +266,9 @@ public class SseClient : IDisposable
 
     private async Task Receive_InvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_InvokeRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         ct = CreateCancellation(message.Routing.RequestId, ct);
         _ = Task.Run(async () =>
         {
@@ -281,6 +301,7 @@ public class SseClient : IDisposable
                         message.Routing,
                         false,
                         null,
+                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -295,6 +316,7 @@ public class SseClient : IDisposable
                         message.Routing,
                         false,
                         ex.Message,
+                        ex.InnerException?.Message,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -304,6 +326,7 @@ public class SseClient : IDisposable
     }
     private async Task Receive_InvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
     {
+        // TODO
         //if (Requests.TryGetValue(message.Routing.RequestId, out var cts) == false)
         //    return;
 
@@ -311,48 +334,11 @@ public class SseClient : IDisposable
         //cts.Dispose();
     }
 
-    //private async Task Receive_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
-    //{
-    //    ct = CreateCancellation(message.Routing.RequestId, ct);
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (message.StateIsChanged)
-    //            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
-
-    //        if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
-    //        {
-    //            var response = await handler.Invoke(message.StreamId, false, ct);
-    //            var stateIsChanged = HttpClient.IsStateDataChanged();
-    //            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-    //            var streamingResponseClient = new StreamingResponseClientDto(
-    //                response.Routing,
-    //                response.ArgumentIndex,
-    //                response.StreamId,
-    //                response.IsCompleted,
-    //                response.IsCancelled,
-    //                response.ExceptionMessage,
-    //                response.BinaryData,
-    //                stateIsChanged,
-    //                stateData);
-    //            await Sender.Send_StreamingResponse_ToServerAsync(streamingResponseClient, ct);
-    //        }
-    //    }, ct);
-    //}
-    //private async Task Receive_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
-    //{
-    //    ct = CreateCancellation(message.Routing.RequestId, ct);
-    //    _ = Task.Run(async () =>
-    //    {
-    //        if (message.StateIsChanged)
-    //            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
-
-    //        if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
-    //            responseHandler.Invoke(message);
-    //    }, ct);
-    //}
-
     private async Task Receive_FabricStreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_FabricStreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         ct = CreateCancellation(message.Routing.RequestId, ct);
 
         _ = Task.Run(async () =>
@@ -372,6 +358,7 @@ public class SseClient : IDisposable
                     response.IsCompleted,
                     response.IsCancelled,
                     response.ExceptionMessage,
+                    response.InnerExceptionMessage,
                     response.BinaryData,
                     stateIsChanged,
                     stateData);
@@ -381,6 +368,9 @@ public class SseClient : IDisposable
     }
     private async Task Receive_FabricStreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_FabricStreamingResponse_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         ct = CreateCancellation(message.Routing.RequestId, ct);
         _ = Task.Run(async () =>
         {
@@ -390,6 +380,17 @@ public class SseClient : IDisposable
             if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
                 responseHandler.Invoke(message);
         }, ct);
+    }
+
+    private async Task Receive_FabricDisconnected_FromServerAsync(FabricDisconnectedDto fabricDisconnectedDto, CancellationToken token)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_FabricStreamingResponse_FromServerAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
+    }
+    private async Task Receive_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto fabricRestoreSubscriptionsDto, CancellationToken token)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_FabricRestoreSubscriptions_FromServerAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
     }
 
     private void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
@@ -436,6 +437,7 @@ public class SseClient : IDisposable
                             !hasNext,
                             cancelled,
                             null,
+                            null,
                             hasNext ? enumerator.Current : [],
                             stateIsChanged,
                             stateData);
@@ -463,6 +465,7 @@ public class SseClient : IDisposable
                             true,
                             true,
                             ex.Message,
+                            ex.InnerException?.Message,
                             [],
                             stateIsChanged,
                             stateData);
@@ -483,6 +486,7 @@ public class SseClient : IDisposable
                             true,
                             false,
                             ex.Message,
+                            ex.InnerException?.Message,
                             [],
                             stateIsChanged,
                             stateData);

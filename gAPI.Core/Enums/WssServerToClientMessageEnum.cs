@@ -23,5 +23,7 @@ public enum WssServerToClientMessageEnum
     StreamingResponse,
 
     FabricStreamingRequest,
-    FabricStreamingResponse
+    FabricStreamingResponse,
+    FabricDisconnected,
+    FabricRestoreSubscriptions
 }

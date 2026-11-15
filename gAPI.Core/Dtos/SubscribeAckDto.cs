@@ -6,7 +6,8 @@ namespace gAPI.Core.Dtos;
 public record SubscribeAckDto(
     SubscribeDto SubscribeDto,
     bool Cancelled,
-    string? ExceptionMessage)
+    string? ExceptionMessage,
+    string? InnerExceptionMessage)
 {
     public override string ToString()
     {

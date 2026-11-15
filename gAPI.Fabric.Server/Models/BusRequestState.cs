@@ -17,7 +17,7 @@ public sealed class BusRequestState : IDisposable
     public ConcurrentDictionary<FabricBusConnectionId, byte> ReadyTargets { get; } = [];
     public ConcurrentDictionary<FabricBusConnectionId, byte> CompletedTargets { get; } = [];
     public ConcurrentDictionary<StreamId, FabricBusHost> StreamRoutes { get; } = [];
-    public ConcurrentDictionary<FabricBusConnectionId, string> Exceptions { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, RemoteException> Exceptions { get; } = [];
 
     private int _cancelled;
     public bool Cancelled => Volatile.Read(ref _cancelled) != 0;

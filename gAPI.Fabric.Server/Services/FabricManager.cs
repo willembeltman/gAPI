@@ -1,5 +1,6 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Dashboard;
@@ -10,6 +11,7 @@ using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Data;
 using System.Net.Sockets;
 
 namespace gAPI.Fabric.Server.Services;
@@ -141,12 +143,12 @@ public class FabricManager : IDashboardSnapshotGetter
         {
             if (logger.IsEnabled(LogLevel.Trace))
                 logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
-            
+
             var actor = Services[subscribe.ServiceId];
             await actor
                 .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
-            var ack = new SubscribeAckDto(subscribe, false, null);
+            var ack = new SubscribeAckDto(subscribe, false, null, null);
             await caller.Send_SubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -161,7 +163,7 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
 
-            var ack = new UnsubscribeAckDto(unsubscribe, false, null);
+            var ack = new UnsubscribeAckDto(unsubscribe, false, null, null);
             await caller.Send_UnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -221,7 +223,8 @@ public class FabricManager : IDashboardSnapshotGetter
                     new SendRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}"),
+                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}",
+                        null),
                     actor);
                 return;
             }
@@ -239,7 +242,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Request timed out.", null));
                 _ = CompleteRequestAsync(logger, state);
             });
 
@@ -282,7 +285,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.CompletedTargets[caller.FabricConnectionId] = 1;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
             }
             if (done.Cancelled)
             {
@@ -305,12 +308,20 @@ public class FabricManager : IDashboardSnapshotGetter
 
         OpenRequests.TryRemove(state.Routing.RequestId, out _);
 
-        var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
+        var exceptionMessage =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+        var innerExceptionMessage =
+            state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
         await state.Caller.Send_SendRequestDone_ToApiAsync(
             new SendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptionMessage
+                exceptionMessage,
+                innerExceptionMessage
             ), state.Actor);
     }
 
@@ -333,7 +344,8 @@ public class FabricManager : IDashboardSnapshotGetter
                     new SendRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}"),
+                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}",
+                        null),
                     actor);
                 return;
             }
@@ -351,7 +363,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, "Invoke request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Invoke request timed out.", null));
                 _ = ReadyInvokeAsync(logger, state);
             });
 
@@ -416,7 +428,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.CompletedTargets[caller.FabricConnectionId] = 0;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
             }
             if (done.Cancelled)
             {
@@ -441,6 +453,7 @@ public class FabricManager : IDashboardSnapshotGetter
             new InvokeRequestAckDto(
                 state.Routing,
                 false,
+                null,
                 null
             ), state.Actor);
     }
@@ -452,11 +465,21 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryReady())
             return;
 
+        var exceptions = state.Exceptions.Count == 0
+                ? null
+                : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+
+        var innerExceptions =
+                state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+                ? null
+                : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+
         await state.Caller.Send_InvokeRequestDone_ToApiAsync(
             new InvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
+                exceptions,
+                innerExceptions
             ), state.Actor);
     }
 
@@ -534,6 +557,7 @@ public class FabricManager : IDashboardSnapshotGetter
                             true,
                             request.Cancelled,
                             request.Cancelled ? "Task is cancelled" : null,
+                            null,
                             []),
                         state.Actor);
                 }
@@ -595,7 +619,7 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .BusSubscribe(caller, subscribe.BusConnectionId, receiveSize);
 
-            var ack = new BusSubscribeAckDto(subscribe, false, null);
+            var ack = new BusSubscribeAckDto(subscribe, false, null, null);
             await caller.Send_BusSubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -610,7 +634,7 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .BusUnsubscribe(caller, unsubscribe.BusConnectionId, receiveSize);
 
-            var ack = new BusUnsubscribeAckDto(unsubscribe, false, null);
+            var ack = new BusUnsubscribeAckDto(unsubscribe, false, null, null);
             await caller.Send_BusUnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -646,7 +670,11 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (fabricHosts.Length == 0)
             {
-                var ack = new BusSendRequestDoneDto(request.Routing, false, $"No active service bus subscribers found for service '{request.Routing.ServiceId}'");
+                var ack = new BusSendRequestDoneDto(
+                    request.Routing,
+                    false,
+                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}'",
+                    null);
                 await caller.Send_BusSendRequestDone_ToApiAsync(ack, actor);
                 return;
             }
@@ -665,7 +693,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, "Invoke request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null));
                 _ = CompleteBusRequestAsync(logger, state);
             });
 
@@ -708,7 +736,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.CompletedTargets[caller.FabricBusConnectionId] = 1;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricBusConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
             }
             if (done.Cancelled)
             {
@@ -731,12 +759,20 @@ public class FabricManager : IDashboardSnapshotGetter
 
         OpenBusRequests.TryRemove(state.Routing.RequestId, out _);
 
-        var exceptionMessage = state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values);
+        var exceptionMessage =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+        var innerExceptionMessage =
+            state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
         await state.Caller.Send_BusSendRequestDone_ToApiAsync(
             new BusSendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptionMessage
+                exceptionMessage,
+                innerExceptionMessage
             ), state.Actor);
     }
 
@@ -755,7 +791,8 @@ public class FabricManager : IDashboardSnapshotGetter
                     new BusInvokeRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}"),
+                        $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}",
+                        null),
                     actor);
                 return;
             }
@@ -781,7 +818,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     return;
                 }
 
-                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, "Invoke request timed out.");
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null));
                 _ = ReadyBusInvokeAsync(logger, state);
             });
 
@@ -856,7 +893,7 @@ public class FabricManager : IDashboardSnapshotGetter
             state.CompletedTargets[caller.FabricBusConnectionId] = 0;
             if (done.ExceptionMessage != null)
             {
-                state.Exceptions.TryAdd(caller.FabricBusConnectionId, done.ExceptionMessage);
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
             }
             if (done.Cancelled)
             {
@@ -881,6 +918,7 @@ public class FabricManager : IDashboardSnapshotGetter
             new BusInvokeRequestAckDto(
                 state.Routing,
                 false,
+                null,
                 null
             ), state.Actor);
     }
@@ -892,11 +930,21 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryReady())
             return;
 
+        var exceptions = 
+            state.Exceptions.Count == 0 
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+        var innerExceptions =
+            state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+
         await state.Caller.Send_BusInvokeRequestDone_ToApiAsync(
             new BusInvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                state.Exceptions.Count == 0 ? null : string.Join(", ", state.Exceptions.Values)
+                exceptions,
+                innerExceptions
             ), state.Actor);
     }
 
