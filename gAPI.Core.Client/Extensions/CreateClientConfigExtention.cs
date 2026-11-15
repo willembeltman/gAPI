@@ -6,7 +6,7 @@ namespace gAPI.Core.Client.Extensions;
 
 public static class CreateServerConfigExtension
 {
-    public static ClientConfig CreateClientConfig(this IConfigurationManager m)
+    public static ClientConfig CreateClientConfig(this IConfiguration m)
     {
         var logLevel = m.GetValue<LogLevel>("Logging:LogLevel:gAPI", LogLevel.Error);
         var config = new ClientConfig(
