@@ -935,6 +935,8 @@ public abstract class WssClientConnection : IWssClientConnection
     #region Call's vanuit gegenereerde code
     public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
+        await ConnectAsync();
+
         try
         {
             var ct = cts.Token;
@@ -964,6 +966,8 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
+        await ConnectAsync();
+
         var completion = new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingSendRequests.TryAdd(routing.RequestId, completion) == false)
             throw new Exception("Cannot store taskcompletion");
@@ -1010,6 +1014,8 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
+        await ConnectAsync();
+
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
             throw new Exception("Cache");
@@ -1205,7 +1211,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     StreamId streamId,
                     bool cancelled,
                     CancellationToken ct) =>
-        {   
+        {
             var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
