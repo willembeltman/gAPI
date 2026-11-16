@@ -14,7 +14,7 @@ public class StateGenerator : BaseGenerator
         Context = context;
         User = user;
 
-        Name = "State";
+        Name = context.Config.Shared_StateDtoName;
         FileName = $"{Name}.cs";
     }
 

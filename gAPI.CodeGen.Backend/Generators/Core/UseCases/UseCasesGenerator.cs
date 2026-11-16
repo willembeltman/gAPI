@@ -18,7 +18,7 @@ public class UseCasesGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"{Entity.Name.ToMultiple()}UseCase";
+        Name = $"{Entity.Name.ToMultiple()}{context.Config.Core_CrudUseCasesEnd}";
         FileName = $"{Name}{(Context.Config.OverwriteUseCases ? ".g" : "")}.cs";
     }
 

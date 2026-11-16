@@ -13,7 +13,7 @@ public class StateMappingGenerator : BaseGenerator
 
         Context = context;
 
-        Name = "StateMapping";
+        Name = context.Config.Core_StateMappingName;
         FileName = $"{Name}{(Context.Config.OverwriteStateMapping ? ".g" : "")}.cs";
     }
 

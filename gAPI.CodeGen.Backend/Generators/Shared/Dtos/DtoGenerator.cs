@@ -40,7 +40,7 @@ public class DtoGenerator : BaseGenerator
             context,
             this);
 
-        Name = Entity.Name;
+        Name = $"{Entity.Name}{context.Config.Shared_DtosEnd}";
         FileName = $"{Name}.cs";
     }
 

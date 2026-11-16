@@ -18,7 +18,7 @@ public class MappingGenerator : BaseGenerator
         Context = context;
         Dto = dto;
 
-        Name = $"{Entity.Name.ToMultiple()}Mapping";
+        Name = $"{Entity.Name.ToMultiple()}{context.Config.Core_CrudMappingsEnd}";
         FileName = $"{Name}{(Context.Config.OverwriteMappers ? ".g" : "")}.cs";
     }
     public BackendGenerator Context { get; }

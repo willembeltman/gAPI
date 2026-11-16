@@ -24,7 +24,7 @@ public class StateDtoGenerator : BaseGenerator
             .ToArray();
         IsStorageFileUrlProperty = stateObject.Entity.HasIStorageFileInterface;
 
-        Name = "State" + stateObject.Entity.Name;
+        Name = $"{context.Config.Core_StateMappingBegin}{stateObject.Entity.Name}{context.Config.Core_StateMappingEnd}";
         FileName = $"{Name}.cs";
     }
 
