@@ -183,6 +183,8 @@ public class {Name}
             if (___Logger.IsEnabled(LogLevel.Trace))
                 ___Logger.LogTrace(""{{now}} SubscribeAsync({{serviceId}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ""{@interface}"");
 
+            await WaitForConnectionAsync(___ct);
+
             await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
             try
             {{

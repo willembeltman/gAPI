@@ -250,16 +250,27 @@ public class SseServiceSubscription
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
 
-    public async Task OnDisconnectedAsync(CancellationToken ct)
+    public async Task Send_OnDisconnected_ToClientAsync(CancellationToken ct)
     {
         var fabricDisconnectedDto = new FabricDisconnectedDto(false);
         var sseEvent = new SseEvent("FabricDisconnectedDto", fabricDisconnectedDto);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
-    public async Task OnRestoreSubscriptionsAsync(CancellationToken ct)
+    public async Task Send_OnRestoreSubscriptions_ToClientAsync(CancellationToken ct)
     {
         var fabricRestoreSubscriptionsDto = new FabricRestoreSubscriptionsDto(false);
         var sseEvent = new SseEvent("FabricRestoreSubscriptionsDto", fabricRestoreSubscriptionsDto);
+        await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
+
+    public async Task Send_SubscribeAck_ToClientAsync(SubscribeAckDto message, CancellationToken ct)
+    {
+        var sseEvent = new SseEvent("SubscribeAckDto", message);
+        await Channel.Writer.WriteAsync(sseEvent, ct);
+    }
+    public async Task Send_UnsubscribeAck_ToClientAsync(UnsubscribeAckDto message, CancellationToken ct)
+    {
+        var sseEvent = new SseEvent("UnsubscribeAckDto", message);
         await Channel.Writer.WriteAsync(sseEvent, ct);
     }
 

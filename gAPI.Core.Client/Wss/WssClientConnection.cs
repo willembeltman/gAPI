@@ -76,6 +76,13 @@ public abstract class WssClientConnection : IWssClientConnection
         });
     }
 
+    public async Task WaitForConnectionAsync(CancellationToken ct)
+    {
+        while (IsConnected == false)
+        {
+            await ConnectAsync();
+        }
+    }
     private async Task ConnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -214,10 +221,10 @@ public abstract class WssClientConnection : IWssClientConnection
         if (ConnectedCts == null)
             return;
 
-        foreach (var list in ServiceSubscriptionIds.Values)
-        {
-            list.Clear();
-        }
+        //foreach (var list in ServiceSubscriptionIds.Values)
+        //{
+        //    list.Clear();
+        //}
 
         await ConnectedCts.CancelAsync();
 
@@ -238,13 +245,11 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public async Task Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
     {
-        if (Initialized == false)
-            await ConnectAsync();
-
-        var serviceSubscriptionId = ServiceSubscriptionId.New();
+        //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
-        if (service.TryAdd(implementation, serviceSubscriptionId) == false)
-            throw new Exception("Cache");
+        var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
+        //if (service.TryAdd(implementation, serviceSubscriptionId) == false)
+        //    throw new Exception("Cache");
 
         var subscribe = new SubscribeDto(
             serviceSubscriptionId,
@@ -274,9 +279,6 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async Task Send_Unsubscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
     {
-        //if (Initialized == false)
-        //    await ConnectAsync();
-
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
             throw new Exception("Cache");
@@ -575,7 +577,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         }, ct);
                         break;
                     case WssServerToClientMessageEnum.FabricRestoreSubscriptions:
-                        var fabricRestoreSubscriptionsResponse = span.ReadFabricDisconnectedDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                        var fabricRestoreSubscriptionsResponse = span.ReadFabricRestoreSubscriptionsDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
                         _ = Task.Run(async () =>
                         {
                             try
@@ -776,6 +778,11 @@ public abstract class WssClientConnection : IWssClientConnection
             else
                 completion.TrySetResult(message);
         }
+
+        if (Timeouts.TryRemove(message.Routing.RequestId, out var timeOut))
+        {
+            timeOut.Dispose();
+        }
     }
 
     private async Task Received_FabricInvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken ct)
@@ -900,6 +907,11 @@ public abstract class WssClientConnection : IWssClientConnection
         {
             await handler.DisposeAsync();
         }
+
+        if (Timeouts.TryRemove(message.Routing.RequestId, out var timeOut))
+        {
+            timeOut.Dispose();
+        }
     }
 
     private async Task Received_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
@@ -956,10 +968,23 @@ public abstract class WssClientConnection : IWssClientConnection
 
     private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken ct)
     {
+        foreach (var key in Timeouts.Keys)
+        {
+            if (Timeouts.TryRemove(key, out var timeout))
+            {
+                timeout.Cancel();
+                timeout.Dispose();
+            }
+        }
+
+        //foreach (var list in ServiceSubscriptionIds.Values)
+        //{
+        //    list.Clear();
+        //}
+
         await OnDisconnectedAsync(ct);
     }
-
-    private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricDisconnectedDto message, CancellationToken ct)
+    private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken ct)
     {
         await OnRestoreSubscriptionsAsync(ct);
     }
@@ -984,8 +1009,6 @@ public abstract class WssClientConnection : IWssClientConnection
     #region Call's vanuit gegenereerde code
     public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
-        await ConnectAsync();
-
         try
         {
             var ct = cts.Token;
@@ -1015,8 +1038,6 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
-        await ConnectAsync();
-
         var completion = new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingSendRequests.TryAdd(routing.RequestId, completion) == false)
             throw new Exception("Cannot store taskcompletion");
@@ -1060,8 +1081,6 @@ public abstract class WssClientConnection : IWssClientConnection
     }
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
     {
-        await ConnectAsync();
-
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
             throw new Exception("Cache");

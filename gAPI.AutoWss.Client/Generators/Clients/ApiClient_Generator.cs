@@ -133,6 +133,8 @@ public sealed class {Name}(
         return $@"
     public async void {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
+        await ___clientConnection.WaitForConnectionAsync(ct);
+
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
@@ -176,6 +178,8 @@ public sealed class {Name}(
         return $@"
     public async Task {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
+        await ___clientConnection.WaitForConnectionAsync(ct);
+
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
@@ -223,6 +227,8 @@ public sealed class {Name}(
         return $@"
     public async Task<{responseInnerType}{(responseInnerType.IsNullable ? "?" : "")}> {method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
+        await ___clientConnection.WaitForConnectionAsync(ct);
+
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
@@ -286,6 +292,8 @@ public sealed class {Name}(
         return $@"
     public async IAsyncEnumerable<{responseInnerType}{(responseInnerType.IsNullable ? "?" : "")}> {method}({string.Join(", ", method.Arguments.Select(arg => !arg.ParameterType.IsCancellationToken ? $@"{arg.ParameterType} {arg}" : $@"[EnumeratorCancellation] {arg.ParameterType} {arg} = default"))})
     {{
+        await ___clientConnection.WaitForConnectionAsync(ct);
+
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});

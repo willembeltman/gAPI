@@ -155,6 +155,8 @@ public class {Name}(
         return $@"
 public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
 {{
+    await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
+
     ___timeOut ??= TimeSpan.FromSeconds(100);
 
     try
@@ -205,6 +207,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
+        await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
+
         ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
@@ -252,6 +256,8 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
+        await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
+
         ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
         ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});

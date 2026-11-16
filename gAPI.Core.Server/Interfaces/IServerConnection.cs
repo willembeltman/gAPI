@@ -21,6 +21,8 @@ public interface IServerConnection : ISpeedGetter
     Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestDto message, CancellationToken ct);
     Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseDto message, CancellationToken ct);
 
-    Task OnDisconnectedAsync(CancellationToken ct);
-    Task OnRestoreSubscriptionsAsync(CancellationToken ct);
+    Task Send_OnDisconnected_ToClientAsync(CancellationToken ct);
+    Task Send_OnRestoreSubscriptions_ToClientAsync(CancellationToken ct);
+    Task Send_SubscribeAck_ToClientAsync(SubscribeAckDto message, CancellationToken ct);
+    Task Send_UnsubscribeAck_ToClientAsync(UnsubscribeAckDto message, CancellationToken ct);
 }

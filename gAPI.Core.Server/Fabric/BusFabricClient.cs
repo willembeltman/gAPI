@@ -250,10 +250,10 @@ public sealed class BusFabricClient
         if (ConnectedCts == null)
             return;
 
-        foreach (var list in StreamingCache.BusServiceSubscriptionIds.Values)
-        {
-            list.Clear();
-        }
+        //foreach (var list in StreamingCache.BusServiceSubscriptionIds.Values)
+        //{
+        //    list.Clear();
+        //}
 
         await ConnectedCts.CancelAsync();
 
@@ -276,10 +276,12 @@ public sealed class BusFabricClient
                 implementation,
                 serviceId);
 
-        var serviceSubscriptionId = ServiceSubscriptionId.New();
+        //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = StreamingCache.BusServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
-        if (service.TryAdd(implementation, serviceSubscriptionId) == false)
-            throw new Exception("Cache");
+        var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
+
+        //if (service.TryAdd(implementation, serviceSubscriptionId) == false)
+        //    throw new Exception("Cache");
 
         var message = new BusSubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
 
@@ -546,7 +548,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusFireAndForgetCancelled_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
+        if (StreamingCache.BusTimeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
             return;
 
         cts.Cancel();
@@ -561,7 +563,7 @@ public sealed class BusFabricClient
             throw new Exception("Not started");
 
         using var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+        StreamingCache.BusTimeouts[message.Routing.RequestId] = cts;
 
         try
         {
@@ -580,7 +582,7 @@ public sealed class BusFabricClient
         }
         finally
         {
-            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+            StreamingCache.BusTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private void Receive_BusSendRequestCancelled_FromFabricAsync(BusSendRequestCancelledDto message, CancellationToken ct)
@@ -588,7 +590,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusSendRequestCancelled_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
+        if (StreamingCache.BusTimeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
             return;
 
         cts.Cancel();
@@ -615,7 +617,7 @@ public sealed class BusFabricClient
             throw new Exception("Not started");
 
         var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+        StreamingCache.BusTimeouts[message.Routing.RequestId] = cts;
 
         try
         {
@@ -639,7 +641,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_FabricInvokeRequestCancelled_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
+        if (StreamingCache.BusTimeouts.TryGetValue(message.Routing.RequestId, out var cts) == false)
             return;
 
         cts.Cancel();
@@ -679,7 +681,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusStreamingRequest_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (StreamingCache.BusTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingCache.BusStreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
@@ -704,7 +706,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusStreamingResponse_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (StreamingCache.BusTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         var key = new RequestArgumentIndexStreamDto(message.Routing.RequestId, message.ArgumentIndex, message.StreamId);
@@ -720,11 +722,14 @@ public sealed class BusFabricClient
 
     public void RegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
     {
-        StreamingCache.Timeouts[routing.RequestId] = cts;
+        if ( StreamingCache.BusTimeouts.TryAdd(routing.RequestId, cts) == false)
+        {
+            Logger.LogError("RegisterTimeout cannot all timeout");
+        }
     }
     public void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
     {
-        StreamingCache.Timeouts.TryRemove(routing.RequestId, out _);
+        StreamingCache.BusTimeouts.TryRemove(routing.RequestId, out _);
     }
 
     public IAsyncEnumerable<T> RegisterBusRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)

@@ -414,8 +414,6 @@ public abstract class WssServerConnection : IServerConnection
                 a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
             if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
                 throw new Exception("Cannot add service subscription");
-
-            await Sender.Send_SubscribeAck_ToClientAsync(ack, ct);
         }
         finally
         {
@@ -433,22 +431,21 @@ public abstract class WssServerConnection : IServerConnection
         if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
             throw new Exception("Cache");
 
-        var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
-            throw new Exception("Cannot save subscribe request");
+        //var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        //if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
+        //    throw new Exception("Cannot save subscribe request");
 
-        try
-        {
-            await subscription.DisposeAsync();
+        //try
+        //{
 
-            var ack = await tcs.Task.WaitAsync(ct);
+        await subscription.DisposeAsync(); // Dit stuurt de unregister
 
-            await Sender.Send_UnsubscribeAck_ToClientAsync(ack, ct);
-        }
-        finally
-        {
-            StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
-        }
+        //    var ack = await tcs.Task.WaitAsync(ct);
+        //}
+        //finally
+        //{
+        //    StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+        //}
     }
 
     private async Task Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken ct)
@@ -458,7 +455,7 @@ public abstract class WssServerConnection : IServerConnection
 
         // Create cancellation token
         var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+        StreamingCache.WssTimeouts[message.Routing.RequestId] = cts;
 
         try
         {
@@ -497,7 +494,7 @@ public abstract class WssServerConnection : IServerConnection
                 ), ct);
 
             cts.Dispose();
-            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+            StreamingCache.WssTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private async Task Receive_SendRequestCancelled_FromClientAsync(SendRequestCancelledClientDto message, CancellationToken ct)
@@ -508,7 +505,7 @@ public abstract class WssServerConnection : IServerConnection
         if (message.StateIsChanged)
             await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        if (StreamingCache.WssTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
@@ -545,7 +542,7 @@ public abstract class WssServerConnection : IServerConnection
         // Create cancellation token
         var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
         ct = cts.Token;
-        StreamingCache.Timeouts[message.Routing.RequestId] = cts;
+        StreamingCache.WssTimeouts[message.Routing.RequestId] = cts;
 
         try
         {
@@ -565,7 +562,7 @@ public abstract class WssServerConnection : IServerConnection
             // Register dispose 
             cts.RegisterDispose(async () =>
             {
-                StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+                StreamingCache.WssTimeouts.TryRemove(message.Routing.RequestId, out _);
                 await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
             });
 
@@ -598,7 +595,7 @@ public abstract class WssServerConnection : IServerConnection
                 ), ct);
 
             cts.Dispose();
-            StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out _);
+            StreamingCache.WssTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private async Task Receive_InvokeRequestCancelled_FromClientAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
@@ -609,7 +606,7 @@ public abstract class WssServerConnection : IServerConnection
         if (message.StateIsChanged)
             await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        if (StreamingCache.Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        if (StreamingCache.WssTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
@@ -648,12 +645,12 @@ public abstract class WssServerConnection : IServerConnection
         if (response == null)
         {
             response = new StreamingResponseDto(
-                message.Routing, 
-                message.ArgumentIndex, 
-                message.StreamId, 
-                true, 
-                false, 
-                "Could not get response, enumerator might be freed", 
+                message.Routing,
+                message.ArgumentIndex,
+                message.StreamId,
+                true,
+                false,
+                "Could not get response, enumerator might be freed",
                 null,
                 []);
             await Send_StreamingResponse_ToClientAsync(response, ct);
@@ -845,14 +842,51 @@ public abstract class WssServerConnection : IServerConnection
         await Sender.Send_FabricStreamingResponse_ToClientAsync(streamingResponseClient, ct);
     }
 
-
-    public async Task OnDisconnectedAsync(CancellationToken ct)
+    public async Task Send_OnDisconnected_ToClientAsync(CancellationToken ct)
     {
+        foreach (var key in StreamingCache.WssTimeouts.Keys)
+        {
+            if (StreamingCache.WssTimeouts.TryRemove(key, out var timeout))
+            {
+                timeout.Cancel();
+                timeout.Dispose();
+            }
+        }
+
         await Sender.Send_FabricDisconnected_ToClientAsync(new FabricDisconnectedDto(false), ct);
     }
-    public async Task OnRestoreSubscriptionsAsync(CancellationToken ct)
+    public async Task Send_OnRestoreSubscriptions_ToClientAsync(CancellationToken ct)
     {
         await Sender.Send_FabricRestoreSubscriptions_ToClientAsync(new FabricRestoreSubscriptionsDto(false), ct);
+    }
+
+    public async Task Send_SubscribeAck_ToClientAsync(SubscribeAckDto message, CancellationToken ct)
+    {
+        if (StreamingCache.SubscribeTcss.TryRemove(message.SubscribeDto.ServiceSubscriptionId, out var completion))
+        {
+            if (message.Cancelled)
+                completion.SetCanceled(ct);
+            else if (message.ExceptionMessage != null)
+                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else
+                completion.TrySetResult(message);
+        }
+
+        await Sender.Send_SubscribeAck_ToClientAsync(message, ct);
+    }
+    public async Task Send_UnsubscribeAck_ToClientAsync(UnsubscribeAckDto message, CancellationToken ct)
+    {
+        //if (StreamingCache.UnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
+        //{
+        //    if (message.Cancelled)
+        //        completion.SetCanceled(ct);
+        //    else if (message.ExceptionMessage != null)
+        //        completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+        //    else
+        //        completion.TrySetResult(message);
+        //}
+
+        await Sender.Send_UnsubscribeAck_ToClientAsync(message, ct);
     }
 
     #endregion

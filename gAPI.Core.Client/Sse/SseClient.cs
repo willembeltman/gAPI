@@ -152,6 +152,16 @@ public class SseClient : IDisposable
                                 if (fabricRestoreSubscriptionsDto != null)
                                     await Receive_FabricRestoreSubscriptions_FromServerAsync(fabricRestoreSubscriptionsDto, Cts.Token);
                                 break;
+                            case "SubscribeAckDto":
+                                var subscribeAckDto = JsonSerializer.Deserialize<SubscribeAckDto>(eventData);
+                                if (subscribeAckDto != null)
+                                    await Receive_SubscribeAck_FromServerAsync(subscribeAckDto, Cts.Token);
+                                break;
+                            case "UnsubscribeAckDto":
+                                var unsubscribeAckDto = JsonSerializer.Deserialize<UnsubscribeAckDto>(eventData);
+                                if (unsubscribeAckDto != null)
+                                    await Receive_UnsubscribeAck_FromServerAsync(unsubscribeAckDto, Cts.Token);
+                                break;
                         }
                     }
                 }
@@ -382,15 +392,27 @@ public class SseClient : IDisposable
         }, ct);
     }
 
-    private async Task Receive_FabricDisconnected_FromServerAsync(FabricDisconnectedDto fabricDisconnectedDto, CancellationToken token)
+    private async Task Receive_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken token)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Receive_FabricStreamingResponse_FromServerAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
+            Logger.LogTrace("{now}: Receive_FabricStreamingResponse_FromServerAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
     }
-    private async Task Receive_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto fabricRestoreSubscriptionsDto, CancellationToken token)
+    private async Task Receive_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken token)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Receive_FabricRestoreSubscriptions_FromServerAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
+            Logger.LogTrace("{now}: Receive_FabricRestoreSubscriptions_FromServerAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+    }
+
+    private async Task Receive_UnsubscribeAck_FromServerAsync(UnsubscribeAckDto message, CancellationToken token)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_UnsubscribeAck_FromServerAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
+    }
+
+    private async Task Receive_SubscribeAck_FromServerAsync(SubscribeAckDto message, CancellationToken token)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Receive_SubscribeAck_FromServerAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
     }
 
     private void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
