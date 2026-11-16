@@ -19,6 +19,9 @@ public record BackendConfig(
     DirectoryInfo Core_CrudMappingsDirectory,
     string Core_CrudMappingsNamespace,
 
+    DirectoryInfo Core_StateMappingDirectory,
+    string Core_StateMappingNamespace,
+
     DirectoryInfo Core_CrudServicesDirectory,
     string Core_CrudServicesNamespace,
     string Core_CrudServicesEnd,
@@ -27,6 +30,7 @@ public record BackendConfig(
     string Extensions_Namespace,
 
     bool OverwriteMappers = true,
+    bool OverwriteStateMapping = false,
     bool OverwriteServices = true,
     bool OverwriteServiceInterfaces = true,
     bool OverwriteUseCases = false);

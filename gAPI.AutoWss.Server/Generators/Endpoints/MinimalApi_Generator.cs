@@ -13,10 +13,10 @@ public class MinimalApi_Generator : _BaseGenerator
         Context = context;
         Interface = @interface;
 
-        Directory = "";
-        Namespace = Interface.Namespace;
-
         Name = $"{Interface.CleanName}EndpointsExtensions";
+        Namespace = "gAPI.Generated";
+
+        Directory = "";
         FileName = $"Endpoints/{Name}.g.cs";
     }
 
