@@ -29,18 +29,31 @@ public class DashboardSnapshotGetter(
             .ToArray();
 
         var services = Services.All
+            .GroupBy(a => a.ServiceId)
             .Select(service =>
             {
-                var send = service.GetReceiveBytesPerSecond();
-                var received = service.GetSendBytesPerSecond();
+                var send = service
+                    .Select(a => a.GetReceiveBytesPerSecond());
+                var sendBytes = send.Sum(a => a.bytes);
+                var sendPackages = send.Sum(a => a.count);
+
+                var received = service
+                    .Select(a => a.GetSendBytesPerSecond());
+                var receivedBytes = send.Sum(a => a.bytes);
+                var receivedPackages = send.Sum(a => a.count);
+
+                var sessions = service.GroupBy(a => a.SessionId).Count();
+                var users = service.GroupBy(a => a.UserId).Count();
+
+                //var received = service.GetSendBytesPerSecond();
                 return new FabricServiceSnapshot(
-                    service.ServiceId.ToString(),
-                    send.bytes,
-                    received.bytes,
-                    send.count,
-                    received.count,
-                    0,
-                    0);
+                    service.Key.ToString(),
+                    sendBytes,
+                    receivedBytes,
+                    sendPackages,
+                    receivedPackages,
+                    sessions,
+                    users);
             })
             .OrderBy(service => service.ServiceId, StringComparer.Ordinal)
             .ToArray();
