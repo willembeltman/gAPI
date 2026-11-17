@@ -1,11 +1,11 @@
 ﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Security.Claims;
@@ -13,6 +13,7 @@ using System.Security.Claims;
 namespace gAPI.Core.Server.Authentication;
 
 public class AuthenticationService<TUser, TStateDto>(
+    IServiceProvider serviceProvider,
     IAuthenticationStateFactory<TUser> authenticationStateFactory,
     IUserTokenFactory<TUser> userTokenFactory,
     IStateMapping<TUser, TStateDto> stateMapping,
@@ -251,4 +252,23 @@ public class AuthenticationService<TUser, TStateDto>(
         return _AuthenticationState == null || _AuthenticationState.User == null;
     }
 
+    public async Task<AsyncServiceScope> CreateNewAuthenticatedScope(CancellationToken ct)
+    {
+        // Create new scope with serviceProvider
+        var newScope = serviceProvider.CreateAsyncScope();
+
+        // Authenticate new scope
+        var authenticationService = newScope.ServiceProvider.GetRequiredService<IServerAuthenticationService>();
+        await authenticationService.InitializeAsync(
+            Headers.Path,
+            Headers.Query,
+            Headers.IpAdress,
+            Headers.CookieData,
+            SessionId.Value,
+            GetStateData(),
+            ct);
+
+        // Return the new scope
+        return newScope;
+    }
 }

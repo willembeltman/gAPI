@@ -5,12 +5,14 @@ using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Security.Claims;
 
 namespace gAPI.Core.Server.Authentication;
 
 public class NoDbServerAuthenticationService<TUser, TStateDto>(
+    IServiceProvider serviceProvider,
     IStateMapping<TUser, TStateDto> stateMapping,
     IStateParser<TStateDto> stateParser,
     FabricClient fabricClient,
@@ -137,5 +139,10 @@ public class NoDbServerAuthenticationService<TUser, TStateDto>(
     {
         // NoDb is nooit authenticated.
         return Task.FromResult(new ClaimsPrincipal());
+    }
+
+    public async Task<AsyncServiceScope> CreateNewAuthenticatedScope(CancellationToken ct)
+    {
+        return serviceProvider.CreateAsyncScope();
     }
 }
