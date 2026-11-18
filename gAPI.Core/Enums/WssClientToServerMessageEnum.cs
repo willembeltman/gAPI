@@ -6,6 +6,8 @@ public enum WssClientToServerMessageEnum
     Subscribe,
     Unsubscribe,
 
+    SendAndForgetRequest,
+
     SendRequest,
     SendRequestCancelled,
     FabricSendRequestDone,

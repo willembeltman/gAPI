@@ -4,6 +4,7 @@ using gAPI.AutoWss.Client.Generators;
 using gAPI.AutoWss.Client.Generators.ClientConnection;
 using gAPI.AutoWss.Client.Generators.ClientConnectionHostedService;
 using gAPI.AutoWss.Client.Generators.Clients;
+using gAPI.AutoWss.Client.Generators.Controls;
 using gAPI.AutoWss.Client.Generators.Hubs;
 using gAPI.AutoWss.Client.Generators.Startup;
 using gAPI.AutoWss.Client.Models;

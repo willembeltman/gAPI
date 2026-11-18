@@ -8,7 +8,7 @@ namespace gAPI.AutoApi.Client.Generators.Clients;
 
 public class ApiClientGenerator : _BaseGenerator
 {
-    public ApiClientGenerator(Generator context, Interface @interface, CustomObjectMethod[] customMultipartFormDataContentSerializers)
+    public ApiClientGenerator(Generator context, Interface @interface)
     {
         Interface = @interface;
         Context = context;
@@ -21,7 +21,7 @@ public class ApiClientGenerator : _BaseGenerator
 
         TypeSymbol = @interface.NamedTypeSymbol;
 
-        PropertyHelper = new GeneratePropertyHelper([], [], customMultipartFormDataContentSerializers, Reg, NeededSerializers);
+        PropertyHelper = new GeneratePropertyHelper([], [], context.CustomMultipartFormDataContentSerializers, Reg, NeededSerializers);
     }
 
     public Interface Interface { get; }

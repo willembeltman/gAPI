@@ -40,7 +40,6 @@ public class SseServiceSubscription
         StreamingCache streamingCache,
         FabricClient fabricClient,
         ServiceId serviceId,
-        ServiceSubscriptionId serviceSubscriptionId,
         UserId userId,
         SessionId sessionId)
     {
@@ -49,7 +48,7 @@ public class SseServiceSubscription
         FabricClient = fabricClient;
         ServiceId = serviceId;
         SessionId = sessionId;
-        ServiceSubscriptionId = serviceSubscriptionId;
+        ServiceSubscriptionId = ServiceSubscriptionId.New();
         UserId = userId;
         ClientConnectionId = serverConnectionCollection.Add(this);
         serviceSubscriptionCollection.Add(this, serviceId);
@@ -110,22 +109,6 @@ public class SseServiceSubscription
             stateData);
         var sseEvent = new SseEvent("SendAndForgetRequestClientDto", sendRequestClient);
         await Channel.Writer.WriteAsync(sseEvent, ct);
-    }
-    public async Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto cancel, CancellationToken ct)
-    {
-        // Jij hoeft niet zo slim te zijn hahaha
-        //if (Requests.TryRemove(cancel.Routing.RequestId, out _))
-        {
-            var stateIsChanged = AuthenticationService.IsStateDataChanged();
-            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            var cancelClient = new SendRequestCancelledClientDto(
-                cancel.Routing,
-                cancel.Reason,
-                stateIsChanged,
-                stateData);
-            var sseEvent = new SseEvent("SendAndForgetRequestCancelledClientDto", cancelClient);
-            await Channel.Writer.WriteAsync(sseEvent, ct);
-        }
     }
 
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestDto sendRequest, CancellationToken ct)

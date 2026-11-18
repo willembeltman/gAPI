@@ -125,9 +125,14 @@ public class {Name}(
         return $@"
     public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});
         try
         {{
+            ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+            ___timeoutCts.CancelAfter(___timeOut.Value);
+            var ___ct = ___timeoutCts.Token;
+
             var ___routing = new {BusRoutingDto}(
                 ___busConnection.BusConnectionId,
                 {RequestId}.New(),
@@ -140,12 +145,34 @@ public class {Name}(
                 ___throwIfNoReceiver
             );
 
-            var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
-                {arg.Name}"))});
+            ___busConnection.RegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
 
-            await ___busConnection.SendFireAndForgetAsync(
-                ___routing,
-                ___payload);
+            try
+            {{
+                var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+                    {arg.Name}"))});
+
+                await ___busConnection.SendFireAndForgetAsync(
+                    ___routing,
+                    ___payload,
+                    ___ct);
+            }}
+            catch (OperationCanceledException)
+            {{
+                ___Logger.LogInformation(""Bus FireAndForget streaming gecanceld of time-out voor {method.Name}."");
+            }}
+            catch (Exception ex)
+            {{
+                ___Logger.LogError(ex, ""Exception caught in generated server async void method for WriteLine"");
+            }}
+            finally
+            {{
+                ___busConnection.UnRegisterTimeout(
+                    ___routing, 
+                    ___timeoutCts);
+            }}
         }}
         catch (Exception ex)
         {{
@@ -180,7 +207,9 @@ public class {Name}(
             ___busConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+        ___busConnection.RegisterTimeout(
+            ___routing, 
+            ___timeoutCts);
 
         var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
             {arg}"))});

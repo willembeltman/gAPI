@@ -29,13 +29,16 @@ public class SseResponseController_Generator : BaseGenerator
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
     public SharedReference BaseResponse => Context.SharedReferences.BaseResponse;
 
+    public SharedReference SendRequestDoneClientDto => Context.SharedReferences.SendRequestDoneClientDto;
+    public SharedReference InvokeRequestDoneClientDto => Context.SharedReferences.InvokeRequestDoneClientDto;
     public SharedReference InvokeRequestAckClientDto => Context.SharedReferences.InvokeRequestAckClientDto;
     public SharedReference StreamingRequestClientDto => Context.SharedReferences.StreamingRequestClientDto;
     public SharedReference StreamingResponseClientDto => Context.SharedReferences.StreamingResponseClientDto;
 
     public override void GenerateCode()
     {
-        if (Context.ServiceContext.HubInterfaces.Any(a => a.Methods.Any(b => b.ResponseType.IsIAsyncEnumerable)) == false)
+        if (Context.ServiceContext.HubInterfaces.Any(a => a.Methods.Any(b => b.Arguments.Any(c => c.ParameterType.IsIAsyncEnumerable))) == false &&
+            Context.ServiceContext.HubInterfaces.Any(a => a.Methods.Any(b => b.ResponseType.IsVoid == false)) == false)
         {
             Code = "";
             return;
@@ -69,13 +72,35 @@ public class SseResponseController(
     {FabricClient} fabricClient)
     : ControllerBase
 {{
-    [HttpPost(""invokerequestdone"")]
+    [HttpPost(""sendRequestDone"")]
+    public async Task<ActionResult<{BaseResponse}>> SendRequestDone([FromForm] {SendRequestDoneClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
+    {{
+        if (message.StateIsChanged)
+            await authenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await fabricClient.Handle_FabricSendRequestDone_FromClientAsync(message, ct);
+
+        return Ok(new {BaseResponse}() {{ Success = true }});
+    }}
+
+    [HttpPost(""invokeRequestAck"")]
     public async Task<ActionResult<{BaseResponse}>> InvokeRequestAck([FromForm] {InvokeRequestAckClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
     {{
         if (message.StateIsChanged)
             await authenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        await fabricClient.Send_FabricInvokeRequestAck_ToFabricAsync(message, ct);
+        await fabricClient.Handle_FabricInvokeRequestAck_FromClientAsync(message, ct);
+
+        return Ok(new {BaseResponse}() {{ Success = true }});
+    }}
+
+    [HttpPost(""invokeRequestDone"")]
+    public async Task<ActionResult<{BaseResponse}>> InvokeRequestDone([FromForm] {InvokeRequestDoneClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
+    {{
+        if (message.StateIsChanged)
+            await authenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await fabricClient.Handle_FabricInvokeRequestDone_FromClientAsync(message, ct);
 
         return Ok(new {BaseResponse}() {{ Success = true }});
     }}
@@ -86,7 +111,7 @@ public class SseResponseController(
         if (message.StateIsChanged)
             await authenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        await fabricClient.Send_StreamingRequestClientToServer_ToFabricAsync(message, ct);
+        await fabricClient.Handle_StreamingRequest_FromClientAsync(message, ct);
 
         return Ok(new {BaseResponse}() {{ Success = true }});
     }}
@@ -101,7 +126,33 @@ public class SseResponseController(
         if (message.StateIsChanged)
             await authenticationService.UpdateStateDataAsync(message.StateData, ct);
 
-        await fabricClient.Send_StreamingResponseClientToServer_ToFabricAsync(message, ct);
+        fabricClient.Handle_StreamingResponse_FromClientAsync(message, ct);
+
+        return Ok(new {BaseResponse}() {{ Success = true }});
+    }}
+
+    [HttpPost(""fabricstreamingRequest"")]
+    public async Task<ActionResult<{BaseResponse}>> FabricStreamingRequest([FromForm] {StreamingRequestClientDto} message, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
+    {{
+        if (message.StateIsChanged)
+            await authenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await fabricClient.Handle_FabricStreamingRequest_FromClientAsync(message, ct);
+
+        return Ok(new {BaseResponse}() {{ Success = true }});
+    }}
+
+    [HttpPost(""fabricstreamingresponse"")]
+    public async Task<ActionResult<{BaseResponse}>> FabricStreamingResponse([FromForm] string messageJson, CancellationToken ct, [FromHeader(Name = ""X-SessionId"")] string ___sessionId)
+    {{
+        var message = JsonSerializer.Deserialize<{StreamingResponseClientDto}>(messageJson);
+        if (message == null)
+            return NotFound();
+
+        if (message.StateIsChanged)
+            await authenticationService.UpdateStateDataAsync(message.StateData, ct);
+
+        await fabricClient.Handle_FabricStreamingResponse_FromClientAsync(message, ct);
 
         return Ok(new {BaseResponse}() {{ Success = true }});
     }}

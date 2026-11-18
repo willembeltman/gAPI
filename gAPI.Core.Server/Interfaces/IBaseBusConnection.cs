@@ -16,7 +16,7 @@ public interface IBaseBusConnection
     void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts);
     Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex);
 
-    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data);
+    Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct);
     Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
     IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
 }

@@ -25,7 +25,7 @@ public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var results = new List<string>();
 
-        await foreach (var result in fixture.BusContext.MainBus
+        await foreach (var result in fixture.BusContext.ApiBus
             .ToAll(TimeSpan.FromSeconds(10), throwIfNoReceiver: false)
             .InvokeList("no receiver", cts.Token))
         {
@@ -42,7 +42,7 @@ public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
 
         await Assert.ThrowsAsync<RemoteException>(async () =>
         {
-            await foreach (var _ in fixture.BusContext.MainBus
+            await foreach (var _ in fixture.BusContext.ApiBus
                 .ToAll(TimeSpan.FromSeconds(10))
                 .InvokeList("no receiver", cts.Token))
             {

@@ -76,10 +76,8 @@ public abstract class RabbitMQBaseBusConnection(
         Initialized = true;
     }
 
-    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)
+    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
     {
-        //var cts = new CancellationTokenSourceDispose(routing.Timeout);
-        var ct = _lifetimeCts.Token; //cts.Token;
         await TryConnectAsync(ct);
 
         var sendrequest = new BusSendRequestDto(routing, data);

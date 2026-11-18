@@ -29,11 +29,15 @@ public class Program : IIncrementalGenerator
             try
             {
                 var allSymbols = compilation.GlobalNamespace.GetAllTypes().ToArray();
-                var customMultipartFormDataContents = FindCustomSerializer.GetAllCustomMultipartFormDataContents(allSymbols);
-                var sharedReferences = new SharedReferences(allSymbols);
+
                 var serviceContext = new ServiceContext(allSymbols);
                 var serviceModelErrors = serviceContext.CheckForErrors();
-                var generator = new Generator(serviceContext, sharedReferences, customMultipartFormDataContents);
+                var sharedReferences = new SharedReferences(serviceContext, allSymbols);
+                var customSpanSerializers = FindCustomSerializer.GetAllCustomSpanSerializers(allSymbols);
+                var customComparers = FindCustomSerializer.GetAllCustomComparers(allSymbols);
+                var customCreateCopys = FindCustomSerializer.GetAllCustomCreateCopys(allSymbols);
+                var customMultipartFormDataContents = FindCustomSerializer.GetAllCustomMultipartFormDataContents(allSymbols);
+                var generator = new Generator(serviceContext, sharedReferences, customSpanSerializers, customComparers, customCreateCopys, customMultipartFormDataContents);
                 generator.Generate(spc);
 
                 if (serviceModelErrors.Count > 0)
@@ -59,7 +63,7 @@ public class Program : IIncrementalGenerator
     {
         //throw new Exception(errorMessage); // Helps while debugging
         var sourceCode = $"#error gAPI.AutoApiSse.Client: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoSse.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        CurrentSpc.AddSource("Gapi_Error.AutoApi.Client.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
     //public void ShowError(Exception exception)

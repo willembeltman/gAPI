@@ -71,18 +71,18 @@ public class FabricClientSender(
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         try
         {
-            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, tcs), ct);
+            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, completion), ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "EnqueueAsync");
         }
 
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
+        await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public async Task Send_UpdateSession_ToFabricAsync(UpdateSessionDto message, CancellationToken ct)
@@ -168,20 +168,6 @@ public class FabricClientSender(
                 Logger.LogTrace("{now} Send_SendAndForgetRequest_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
             FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequest);
-            writer.Write(message);
-        }, ct);
-    }
-    public async Task Send_SendAndForgetRequestCancelled_ToFabricAsync(SendRequestCancelledDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequestCancelled_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
-
-        await EnqueueAsync(writer =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_SendAndForgetRequestCancelled_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
-
-            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.SendAndForgetRequestCancelled);
             writer.Write(message);
         }, ct);
     }

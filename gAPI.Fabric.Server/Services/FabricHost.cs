@@ -110,14 +110,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
             writer.Write(message);
         }, actor);
     }
-    public async Task Send_SendAndForgetRequestCancelled_ToApiAsync(SendRequestCancelledDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.FabricSendAndForgetRequestCancelled);
-            writer.Write(message);
-        }, actor);
-    }
 
     public async Task Send_SendRequest_ToApiAsync(SendRequestDto message, IActor actor)
     {
@@ -276,13 +268,6 @@ public sealed class FabricHost : IFabricLoggerFactory, IActor
                             var sendRequest = reader.ReadSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_SendAndForgetRequest_FromApiAsync(this, ManagerLogger, sendRequest, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case FabricClientToHostMessageEnum.SendAndForgetRequestCancelled:
-                        {
-                            var sendRequestCancelled = reader.ReadSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_SendAndForgetRequestCancelled_FromApiAsync(this, ManagerLogger, sendRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
 

@@ -111,9 +111,8 @@ public abstract class AzureBaseBusConnection(
         Initialized = true;
     }
 
-    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)
+    public async Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
     {
-        var ct = _lifetimeCts.Token;
         await TryConnectAsync(ct);
 
         var sendrequest = new BusSendRequestDto(routing, data);
@@ -410,7 +409,7 @@ public abstract class AzureBaseBusConnection(
             return new StandardProcessorHandle(p);
         }
     }
-    private async Task HandleIncomingMessageAsync(ServiceBusReceivedMessage message, Func<ServiceBusReceivedMessage, Task> complete, Func<ServiceBusReceivedMessage, Task> abandon, CancellationToken ct)
+    private async Task HandleIncomingMessageAsync(ServiceBusReceivedMessage message, Func<ServiceBusReceivedMessage, Task> completion, Func<ServiceBusReceivedMessage, Task> abandon, CancellationToken ct)
     {
         try
         {
@@ -445,7 +444,7 @@ public abstract class AzureBaseBusConnection(
                     await HandleInvokeRequestCancelled(BusInvokeRequestCancelledDtoSpanSerializer.ReadBusInvokeRequestCancelledDto(body, ref offset6, Config.MaxPackageSize ?? 512 * 1024), _lifetimeCts.Token);
                     break;
             }
-            await complete(message);
+            await completion(message);
         }
         catch { await abandon(message); }
     }

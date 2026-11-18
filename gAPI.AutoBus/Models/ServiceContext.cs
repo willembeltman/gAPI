@@ -30,26 +30,37 @@ public class ServiceContext
 
         foreach (var hubInterface in BusInterfaces)
             foreach (var method in hubInterface.Methods)
-                CheckHub(method.ResponseType, errors, method.Name, hubInterface.FullName);
+                CheckBus(method.ResponseType, errors, method, hubInterface.FullName);
 
         return errors;
     }
-    private void CheckHub(TypeHelper responseType, List<string> errors, string method, string hubInterface)
+
+    private void CheckBus(TypeHelper responseType, List<string> errors, InterfaceMethod method, string apiInterface)
     {
-        //if (responseType.IsTaskT)
-        //{
-        //    errors.Add(
-        //        $"Method '{method}' on interface '{hubInterface}' returns Task<T>. " +
-        //        "Please use IAsyncEnumerable<T> instead. " +
-        //        "When communicating from server to client, the number of client responses is unknown, " +
-        //        "therefore response methods must use IAsyncEnumerable<T>.");
-        //}
-        //else 
+        var methodIdentifier = $"Method '{method}' on interface '{apiInterface}'";
+        CheckVoidWithAsyncEnumerable(responseType, errors, method, methodIdentifier);
+
         if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
         {
             errors.Add(
-                $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
-                "Please use Task (no response) or IAsyncEnumerable<T> (with responses).");
+                $"{methodIdentifier} has an unsupported return type. " +
+                "Please use void or Task (no response), or, Task<T> or IAsyncEnumerable<T> (with responses).");
+        }
+    }
+
+    private static void CheckVoidWithAsyncEnumerable(
+        TypeHelper responseType,
+        List<string> errors,
+        InterfaceMethod method,
+        string methodIdentifier)
+    {
+        var hasAsyncEnumerableArg = method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable);
+        if (responseType.IsVoid && hasAsyncEnumerableArg)
+        {
+            errors.Add(
+                $"{methodIdentifier} accepts an IAsyncEnumerable argument while returning void. " +
+                "You must await the method until completion (by returning Task); otherwise, " +
+                "the CancellationTokenSource timeout will be disposed before streaming starts.");
         }
     }
 }

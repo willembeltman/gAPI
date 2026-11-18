@@ -34,8 +34,8 @@ public abstract class FabricBaseBusConnection(
         => fabricClient.BusUnsubscribeAsync(this, implementation, serviceId, ct);
 
     // This is called when a service has to be called through the service bus
-    public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data)
-        => fabricClient.SendFireAndForgetAsync(this, new(routing, data));
+    public Task SendFireAndForgetAsync(BusRoutingDto routing, byte[] data, CancellationToken ct)
+        => fabricClient.SendFireAndForgetAsync(this, new(routing, data), ct);
     public Task SendAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
         => fabricClient.SendAsync(this, new(routing, data), cts);
     public IAsyncEnumerable<byte[]> InvokeAsync(BusRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)

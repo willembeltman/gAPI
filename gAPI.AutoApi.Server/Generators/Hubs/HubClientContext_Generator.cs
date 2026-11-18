@@ -43,15 +43,16 @@ public class HubClientContext_Generator : BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {FabricClient} fabricClient)
+    {FabricClient} fabricClient,
+    ILoggerFactory loggerFactory)
     : {IClientContext.Name}
 {{
     public {Interface.Name} ToAll(TimeSpan? timeOut = null, bool throwIfNoReceiver = true)
-        => new {SseService.Name}(fabricClient, null, null, timeOut, throwIfNoReceiver);
+        => new {SseService.Name}(fabricClient, loggerFactory, null, null, timeOut, throwIfNoReceiver);
     public {Interface.Name} ToUser({UserId} userId, TimeSpan? timeOut = null)
-        => new {SseService.Name}(fabricClient, userId, null, timeOut);
+        => new {SseService.Name}(fabricClient, loggerFactory, userId, null, timeOut);
     public {Interface.Name} ToSession({SessionId} sessionId, TimeSpan? timeOut = null)
-        => new {SseService.Name}(fabricClient, null, sessionId, timeOut);
+        => new {SseService.Name}(fabricClient, loggerFactory, null, sessionId, timeOut);
 }}
 ";
     }

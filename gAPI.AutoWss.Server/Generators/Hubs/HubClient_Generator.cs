@@ -153,53 +153,64 @@ public class {Name}(
     {
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         return $@"
-public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
-{{
-    await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
-
-    ___timeOut ??= TimeSpan.FromSeconds(100);
-
-    try
+    public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        var ___requestId = {RequestId}.New();
-        var ___routing = new {RoutingDto}(
-            ___fabricClient.FabricManagerId,
-            ___fabricClient.FabricConnectionId,
-            ___requestId,
-            ___ServiceId,
-            new(""{method}""),
-            ___timeOut.Value,
-            ___userId,
-            ___sessionId,
-            ___throwIfNoReceiver
-        );
-        var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
-            {arg.Name}"))});
-
-        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg.Name}, ___{method}_{index}_Serializer, {(ct != null ? ct : "CancellationToken.None")});" : ""))}
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
+        try
         {{
-            await ___fabricClient.SendFireAndForgetAsync(
-                ___routing,
-                ___payload);
+            ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+            ___timeoutCts.CancelAfter(___timeOut.Value);
+            var ___ct = ___timeoutCts.Token;
+
+            await ___fabricClient.WaitForConnectionAsync(___ct);
+
+            var ___routing = new {RoutingDto}(
+                ___fabricClient.FabricManagerId,
+                ___fabricClient.FabricConnectionId,
+                {RequestId}.New(),
+                ___ServiceId,
+                new(""{method}""),
+                ___timeOut.Value,
+                ___userId,
+                ___sessionId,
+                ___throwIfNoReceiver
+            );
+
+            ___fabricClient.RegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+
+            try
+            {{
+                var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+                    {arg.Name}"))});
+            
+                await ___fabricClient.SendFireAndForgetAsync(
+                    ___routing,
+                    ___payload,
+                    ___ct);
+            }}
+            catch (OperationCanceledException)
+            {{
+                ___Logger.LogInformation(""Server FireAndForget streaming gecanceld of time-out voor {method.Name}."");
+            }}
+            catch (Exception ex)
+            {{
+                ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
+            }}
+            finally
+            {{
+                ___fabricClient.UnRegisterTimeout(
+                    ___routing, 
+                    ___timeoutCts);
+            }}
         }}
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        finally
-        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
-        }}" : "")}
-    }}
-    catch (OperationCanceledException)
-    {{
-        ___Logger.LogInformation(""Server FireAndForget streaming gecanceld of time-out voor {method.Name}."");
-    }}
-    catch (Exception ex)
-    {{
-        ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
-    }}
-}}";
+        catch (Exception ex)
+        {{
+            ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
+        }}
+    }}";
     }
     private string GenerateTask(InterfaceMethod method)
     {
@@ -207,65 +218,13 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
-
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
-        ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
         ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;"
-        : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;")}
+        var ___ct = ___timeoutCts.Token;
 
-        var ___requestId = {RequestId}.New();
-        var ___routing = new {RoutingDto}(
-            ___fabricClient.FabricManagerId,
-            ___fabricClient.FabricConnectionId,
-            ___requestId,
-            ___ServiceId,
-            new(""{method}""),
-            ___timeOut.Value,
-            ___userId,
-            ___sessionId,
-            ___throwIfNoReceiver
-        );
-        var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
-            {arg}"))});
-
-        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
-        {{
-            await ___fabricClient.SendAsync(
-                ___routing,
-                ___payload, 
-                ___timeoutCts);
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        finally
-        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
-        }}" : "")}
-    }}";
-    }
-    private string GenerateIAsyncEnumerable(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
-    {
-        var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
-        var responseInnerType = method.ResponseType.UnderlayingTypes.Single();
-        return $@"
-    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
-    {{
-        await ___fabricClient.WaitForConnectionAsync({(ct == null ? "CancellationToken.None" : ct)});
-
-        ___timeOut ??= TimeSpan.FromSeconds(100);{(ct != null
-        ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;"
-        : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;")}
+        await ___fabricClient.WaitForConnectionAsync(___ct);
 
         var ___routing = new {RoutingDto}(
             ___fabricClient.FabricManagerId,
@@ -278,33 +237,103 @@ public async void {method.Name}({string.Join(", ", method.Arguments.Select(arg =
             ___sessionId,
             ___throwIfNoReceiver
         );
-        var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
-            {arg}"))});
-        {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
-        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, {index}, {arg}, ___{method}_{index}_Serializer, {(ct == null ? "___Cts.Token" : ct.Name)});" : ""))}
-       
-        var ___responses = ___fabricClient.InvokeAsync(
+
+        ___fabricClient.RegisterTimeout(
             ___routing, 
-            ___payload, 
             ___timeoutCts);
 
-        {(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
-        try" : "")}
+        try
         {{
+            var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+                {arg}"))});
+            {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            ___fabricClient.RegisterAsyncEnumerableArgument(
+                ___routing, 
+                {index}, 
+                {arg}, 
+                ___{method}_{index}_Serializer, 
+                ___ct);" : ""))}
+
+            await ___fabricClient.SendAsync(
+                ___routing,
+                ___payload, 
+                ___timeoutCts);
+        }}
+        finally
+        {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
+            ___fabricClient.UnRegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+        }}
+    }}";
+    }
+    private string GenerateIAsyncEnumerable(InterfaceMethod method, ref string functions, HashSet<string> functionNames)
+    {
+        var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
+        var responseInnerType = method.ResponseType.UnderlayingTypes.Single();
+        return $@"
+    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
+    {{
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___fabricClient.WaitForConnectionAsync(___ct);
+
+        var ___routing = new {RoutingDto}(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
+            {RequestId}.New(),
+            ___ServiceId,
+            new(""{method}""),
+            ___timeOut.Value,
+            ___userId,
+            ___sessionId,
+            ___throwIfNoReceiver
+        );
+
+        ___fabricClient.RegisterTimeout(
+            ___routing, 
+            ___timeoutCts);
+
+        try
+        {{
+            var ___payload = ___{method}_Serializer({string.Join(", ", method.Arguments.Where(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false).Select(arg => $@"
+                {arg}"))});
+            {string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
+            ___fabricClient.RegisterAsyncEnumerableArgument(
+                ___routing, 
+                {index}, 
+                {arg}, 
+                ___{method}_{index}_Serializer, 
+                ___ct);" : ""))}
+       
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___routing, 
+                ___payload, 
+                ___timeoutCts);
+
             await foreach (var ___response in ___responses)
             {{
-                if ({(ct == null ? "___Cts.Token" : ct.Name)}.IsCancellationRequested)
+                if (___ct.IsCancellationRequested)
                     yield break;
+                ___timeoutCts.CancelAfter(___timeOut.Value);
 
                 var ___offset = 0;
                 var ___span = new Span<byte>(___response);
                 yield return {PropertyHelper.GenerateSpanReadCode(responseInnerType.Type, false, ref functions, functionNames)};
             }}
-        }}{(method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable) ? $@"
+        }}
         finally
         {{{string.Join("", method.Arguments.Select((arg, index) => arg.ParameterType.IsIAsyncEnumerable ? $@"
             await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, {index});" : ""))}
-        }}" : "")}
+            ___fabricClient.UnRegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+        }}
     }}";
     }
     private string GenerateSerializer(InterfaceMethod method)

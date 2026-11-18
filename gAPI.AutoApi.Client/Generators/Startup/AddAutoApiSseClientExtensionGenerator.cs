@@ -1,5 +1,6 @@
 ﻿using gAPI.AutoApi.Client.Generators.Clients;
 using gAPI.AutoApi.Client.Models;
+using System.Linq;
 
 namespace gAPI.AutoApi.Client.Generators.Startup;
 
@@ -18,6 +19,7 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
 
     public Generator Context { get; }
     public ApiClientGenerator[] Clients => Context.Clients;
+    public SharedReference ClientConnectionHostedService => Context.ClientConnectionHostedService;
     public SharedReference ClientConnection => Context.ClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference ISseClientConnection => Context.SharedReferences.ISseClientConnection;
@@ -49,6 +51,16 @@ public class AddAutoApiClientExtensionGenerator : _BaseGenerator
         Reg(DefaultNavigationManager);
         Reg(StaticNavigationManager);
         Reg(WithCookiesHandler);
+        Reg(ClientConnectionHostedService);
+
+        foreach (var @interface in Context.ServiceContext.HubInterfaces)
+        {
+            foreach (var service in @interface.Services)
+            {
+                if (service.IsHostedHubService)
+                    Reg(service);
+            }
+        }
 
         var propertiesCode = "";
         foreach (var client in Clients)
@@ -82,6 +94,9 @@ public static class {Name}
 
         var sseManagerCollection = new {SseManagerCollection}();
         services.AddSingleton(sseManagerCollection);
+        {string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => string.Join("", @interface.Services.Where(a => a.IsHostedHubService).Select(service => $@"
+        services.AddSingleton<{service}>();"))))}
+        services.AddHostedService<{ClientConnectionHostedService}>();
 
         // Het kan helaas niet anders
         services.AddScoped<{IUriNavigationManager}>(sp =>

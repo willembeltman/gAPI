@@ -11,12 +11,20 @@ public class SharedReferences
         AuthenticationInitializeResult = SharedReferenceFinder.Find("gAPI.Core.Server.Authentication.AuthenticationInitializeResult", allSymbols);
         AuthServer_Middleware = SharedReferenceFinder.TryFindStart("gAPI.Core.Server.AuthenticationMiddleware", allSymbols);
         BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
+        
+        CancellationTokenSourceDispose = SharedReferenceFinder.Find("gAPI.Core.Helpers.CancellationTokenSourceDispose", allSymbols);
 
+        SendRequestDoneClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDoneClientDto", allSymbols);
+        InvokeRequestDoneClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDoneClientDto", allSymbols);
         StreamingRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingRequestClientDto", allSymbols);
         StreamingResponseClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseClientDto", allSymbols);
         InvokeRequestAckClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckClientDto", allSymbols);
+        RoutingDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.RoutingDto", allSymbols);
+
+
         IsHubProxyAttribute = SharedReferenceFinder.Find("gAPI.Core.Attributes.IsHubProxyAttribute", allSymbols);
         FabricClient = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClient", allSymbols);
+        FabricClientHostedService = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClientHostedService", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Server.Sse.SseServiceSubscription", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
@@ -35,8 +43,12 @@ public class SharedReferences
     public SharedReference AuthenticationInitializeResult { get; }
     public SharedReference? AuthServer_Middleware { get; }
     public SharedReference BaseResponse { get; }
+    public SharedReference CancellationTokenSourceDispose { get; }
+    public SharedReference SendRequestDoneClientDto { get; }
+    public SharedReference InvokeRequestDoneClientDto { get; }
     public SharedReference IsHubProxyAttribute { get; }
     public SharedReference FabricClient { get; }
+    public SharedReference FabricClientHostedService { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
     public SharedReference ServerConnectionCollection { get; }
     public SharedReference SseServiceSubscription { get; }
@@ -53,4 +65,5 @@ public class SharedReferences
     public SharedReference StreamingResponseClientDto { get; }
     public SharedReference StreamingRequestClientDto { get; }
     public SharedReference InvokeRequestAckClientDto { get; }
+    public SharedReference RoutingDto { get; }
 }

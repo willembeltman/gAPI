@@ -5,7 +5,7 @@ namespace gAPI.AutoApi.Client.Models;
 
 public class SharedReferences
 {
-    public SharedReferences(INamedTypeSymbol[] allSymbols)
+    public SharedReferences(ServiceContext serviceContext, INamedTypeSymbol[] allSymbols)
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
@@ -24,7 +24,7 @@ public class SharedReferences
         ISseClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.ISseClientConnection", allSymbols);
 
         SseManagerCollection = SharedReferenceFinder.Find("gAPI.Core.Client.Collections.SseManagerCollection", allSymbols);
-        SseClient = SharedReferenceFinder.Find("gAPI.Core.Client.Sse.SseClient", allSymbols);
+        SseClientSubscription = SharedReferenceFinder.Find("gAPI.Core.Client.Sse.SseClientSubscription", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
 
         AuthClient_FormFile = SharedReferenceFinder.TryFindByAttribute("gAPI.Core.Attributes.IsFormFileAttribute", allSymbols);
@@ -60,7 +60,7 @@ public class SharedReferences
     public SharedReference SendRequestCancelledClientDto { get; }
     public SharedReference InvokeRequestClientDto { get; }
     public SharedReference InvokeRequestCancelledClientDto { get; }
-    public SharedReference SseClient { get; }
+    public SharedReference SseClientSubscription { get; }
     public SharedReference ClientConfig { get; }
     public SharedReference? AuthClient_FormFile { get; }
     public SharedReference? AuthClient_ToFormFileExtension { get; }

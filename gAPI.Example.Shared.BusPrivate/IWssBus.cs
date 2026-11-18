@@ -1,0 +1,20 @@
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
+
+namespace gAPI.Example.Shared.Private;
+
+[GenerateBus]
+public interface IWssBus
+{
+    void SendAndForget(string message, CancellationToken ct);
+    //void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct);
+    Task Send(string message, CancellationToken ct);
+    Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct);
+    Task<string> InvokeTask(string name, CancellationToken ct);
+    Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, CancellationToken ct);
+    IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
+    IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
+    Task StartServiceTests(SessionId sessionId, CancellationToken ct);
+    void Pong(string v);
+    Task DoPing();
+}

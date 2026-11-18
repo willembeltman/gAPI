@@ -78,11 +78,6 @@ public static class {Name}
 
         return app;
     }}
-}}
-
-";
-
-
-
+}}";
     }
 }

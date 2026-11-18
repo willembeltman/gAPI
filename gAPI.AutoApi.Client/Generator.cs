@@ -1,6 +1,8 @@
 ﻿using gAPI.AutoApi.Client.Generators;
+using gAPI.AutoApi.Client.Generators.ClientConnection;
+using gAPI.AutoApi.Client.Generators.ClientConnectionHostedService;
 using gAPI.AutoApi.Client.Generators.Clients;
-using gAPI.AutoApi.Client.Generators.Sse;
+using gAPI.AutoApi.Client.Generators.Forms;
 using gAPI.AutoApi.Client.Generators.Startup;
 using gAPI.AutoApi.Client.Models;
 using gAPI.AutoSerializer;
@@ -19,19 +21,29 @@ public class Generator
     public Generator(
         ServiceContext serviceContext,
         SharedReferences sharedReferences,
-        CustomObjectMethod[] customMultipartFormDataContentSerializers)
+        CustomObject[] customSpanSerializers,
+        CustomObjectMethod[] customComparers,
+        CustomObjectMethod[] customCreateCopys,
+        CustomObjectMethod[] customMultipartFormDataContents)
     {
         ServiceContext = serviceContext;
         SharedReferences = sharedReferences;
-        CustomMultipartFormDataContentSerializers = customMultipartFormDataContentSerializers;
+
+        CustomSpanSerializers = customSpanSerializers;
+        CustomComparers = customComparers;
+        CustomCreateCopys = customCreateCopys;
+        CustomMultipartFormDataContentSerializers = customMultipartFormDataContents;
 
         FormFile = new FormFileGenerator(this);
         IsFormFileExtension = new FormFileExtensionGenerator(this);
         Clients = ServiceContext.ApiInterfaces
             .Concat(ServiceContext.MinimalApiInterfaces)
-            .Select(service => new ApiClientGenerator(this, service, customMultipartFormDataContentSerializers))
+            .Select(service => new ApiClientGenerator(this, service))
             .ToArray();
         AddAutoClientServices = new AddAutoApiClientExtensionGenerator(this);
+
+        ClientConnectionHostedService = new ClientConnectionHostedServiceGenerator(this);
+        HostedHubServices = new HostedHubServicesGenerator(this);
 
         ClientConnection = new ClientConnectionGenerator(this);
         IClientConnection = new IClientConnectionGenerator(this);
@@ -46,13 +58,17 @@ public class Generator
 
     public ServiceContext ServiceContext { get; }
     public SharedReferences SharedReferences { get; }
+    public CustomObject[] CustomSpanSerializers { get; }
+    public CustomObjectMethod[] CustomComparers { get; }
+    public CustomObjectMethod[] CustomCreateCopys { get; }
     public CustomObjectMethod[] CustomMultipartFormDataContentSerializers { get; }
 
     public FormFileGenerator FormFile { get; }
     public FormFileExtensionGenerator IsFormFileExtension { get; }
     public ApiClientGenerator[] Clients { get; }
     public AddAutoApiClientExtensionGenerator AddAutoClientServices { get; }
-
+    public ClientConnectionHostedServiceGenerator ClientConnectionHostedService { get; }
+    public HostedHubServicesGenerator HostedHubServices { get; }
     public ClientConnectionGenerator ClientConnection { get; }
     public IClientConnectionGenerator IClientConnection { get; }
 
@@ -62,6 +78,9 @@ public class Generator
 
     public void Generate(SourceProductionContext spc)
     {
+        GenerateItem(spc, ClientConnectionHostedService);
+        GenerateItem(spc, HostedHubServices);
+
         FormFile.GenerateCode();
         if (!string.IsNullOrEmpty(FormFile.Code))
         {

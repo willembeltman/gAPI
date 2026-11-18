@@ -34,7 +34,8 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequests = [];
-    readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
+    readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> IncomingTimeouts = [];
+    readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> OutgoingTimeouts = [];
     readonly byte[] ReceiveBuffer;
 
     private ClientWebSocket? Ws;
@@ -248,8 +249,6 @@ public abstract class WssClientConnection : IWssClientConnection
         //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
-        //if (service.TryAdd(implementation, serviceSubscriptionId) == false)
-        //    throw new Exception("Cache");
 
         var subscribe = new SubscribeDto(
             serviceSubscriptionId,
@@ -257,15 +256,18 @@ public abstract class WssClientConnection : IWssClientConnection
             userId,
             sessionId);
 
-        var tcs = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (SubscribeTcss.TryAdd(subscribe, tcs) == false)
-            throw new Exception("Cannot save subscribe request");
+        var completion = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (SubscribeTcss.TryAdd(subscribe, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         try
         {
             await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
 
-            var ack = await tcs.Task.WaitAsync(ct);
+            var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IHubServiceSubscription implementationSubscription)
             {
@@ -281,7 +283,10 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
-            throw new Exception("Cache");
+        {
+            Logger.LogError("Cannot remove subscription");
+            return;
+        }
 
         var unsubscribe = new UnsubscribeDto(
             serviceSubscriptionId,
@@ -289,15 +294,18 @@ public abstract class WssClientConnection : IWssClientConnection
             userId,
             sessionId);
 
-        var tcs = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (UnsubscribeTcss.TryAdd(unsubscribe, tcs) == false)
-            throw new Exception("Cannot save unsubscribe request");
+        var completion = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (UnsubscribeTcss.TryAdd(unsubscribe, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         try
         {
             await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
 
-            var ack = await tcs.Task.WaitAsync(ct);
+            var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IHubServiceSubscription implementationSubscription)
             {
@@ -656,15 +664,16 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        Timeouts[message.Routing.RequestId] = cts;
+        var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+        if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
+            Logger.LogError("Cannot add timeout");
 
         try
         {
             if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, cts.Token);
+                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
 
-            await Send_SendRequest_ToServiceAsync(message, cts.Token);
+            await Send_SendRequest_ToServiceAsync(message, timeoutCts.Token);
         }
         catch (Exception ex)
         {
@@ -672,8 +681,8 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         finally
         {
-            cts.Dispose();
-            Timeouts.TryRemove(message.Routing.RequestId, out _);
+            timeoutCts.Dispose();
+            IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private async Task Received_FabricSendAndForgetRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken ct)
@@ -684,7 +693,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (message.StateIsChanged)
             await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-        if (Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
@@ -696,15 +705,19 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        var cts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        Timeouts[message.Routing.RequestId] = cts;
+        var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+        if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
+        {
+            Logger.LogError("Cannot add timeout");
+            return;
+        }
 
         try
         {
             if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, cts.Token);
+                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
 
-            await Send_SendRequest_ToServiceAsync(message, cts.Token);
+            await Send_SendRequest_ToServiceAsync(message, timeoutCts.Token);
 
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -734,8 +747,8 @@ public abstract class WssClientConnection : IWssClientConnection
                     stateData
                 ), ct);
 
-            cts.Dispose();
-            Timeouts.TryRemove(message.Routing.RequestId, out _);
+            timeoutCts.Dispose();
+            IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private async Task Received_FabricSendRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken ct)
@@ -746,7 +759,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (message.StateIsChanged)
             await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-        if (Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
@@ -779,7 +792,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 completion.TrySetResult(message);
         }
 
-        if (Timeouts.TryRemove(message.Routing.RequestId, out var timeOut))
+        if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var timeOut))
         {
             timeOut.Dispose();
         }
@@ -790,20 +803,24 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        var cts = new CancellationTokenSourceDispose(
+        var timeoutCts = new CancellationTokenSourceDispose(
             message.Routing.Timeout,
             ct);
-        Timeouts[message.Routing.RequestId] = cts;
+        if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
+        {
+            Logger.LogError("Cannot add subscription");
+            return;
+        }
 
         try
         {
             if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, cts.Token);
+                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
 
-            var enumerable = Send_InvokeRequest_ToServiceAsync(message, cts.Token);
-            RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, cts.Token);
+            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts.Token);
+            RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, timeoutCts.Token);
 
-            cts.RegisterDispose(async () =>
+            timeoutCts.RegisterDispose(async () =>
             {
                 await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
             });
@@ -836,8 +853,8 @@ public abstract class WssClientConnection : IWssClientConnection
                     stateData),
                 ct);
 
-            cts.Dispose();
-            Timeouts.TryRemove(message.Routing.RequestId, out _);
+            timeoutCts.Dispose();
+            IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
     private async Task Received_FabricInvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
@@ -848,7 +865,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (message.StateIsChanged)
             await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-        if (Timeouts.TryRemove(message.Routing.RequestId, out var cts))
+        if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
@@ -908,7 +925,7 @@ public abstract class WssClientConnection : IWssClientConnection
             await handler.DisposeAsync();
         }
 
-        if (Timeouts.TryRemove(message.Routing.RequestId, out var timeOut))
+        if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var timeOut))
         {
             timeOut.Dispose();
         }
@@ -919,7 +936,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_StreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
@@ -933,7 +950,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_StreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
@@ -945,7 +962,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_FabricStreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
@@ -959,7 +976,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_FabricStreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (Timeouts.TryGetValue(message.Routing.RequestId, out var timeout))
+        if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
@@ -968,9 +985,9 @@ public abstract class WssClientConnection : IWssClientConnection
 
     private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken ct)
     {
-        foreach (var key in Timeouts.Keys)
+        foreach (var key in IncomingTimeouts.Keys)
         {
-            if (Timeouts.TryRemove(key, out var timeout))
+            if (IncomingTimeouts.TryRemove(key, out var timeout))
             {
                 timeout.Cancel();
                 timeout.Dispose();
@@ -1007,23 +1024,25 @@ public abstract class WssClientConnection : IWssClientConnection
     #endregion
 
     #region Call's vanuit gegenereerde code
-    public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
+
+    public void RegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        OutgoingTimeouts.TryAdd(routing.RequestId, cts);
+    }
+    public void UnRegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
+    {
+        OutgoingTimeouts.TryRemove(routing.RequestId, out _);
+    }
+
+    public async Task Send_FireAndForget_ToServerAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
         try
         {
-            var ct = cts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
-            await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
-
-            cts.Register(async () =>
-            {
-                var stateIsChanged = HttpClient.IsStateDataChanged();
-                var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
-                await Sender.Send_SendRequestCancelled_ToServerAsync(new(routing, "Task is cancelled", stateIsChanged, stateData), CancellationToken.None);
-            });
+            await Sender.Send_SendAndForgetRequest_ToServerAsync(sendRequest, ct);
         }
         catch (OperationCanceledException)
         {
@@ -1040,7 +1059,10 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         var completion = new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingSendRequests.TryAdd(routing.RequestId, completion) == false)
-            throw new Exception("Cannot store taskcompletion");
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         try
         {
@@ -1083,7 +1105,10 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
-            throw new Exception("Cache");
+        {
+            Logger.LogError("Cannot add completion");
+            yield break;
+        }
 
         try
         {
@@ -1117,14 +1142,6 @@ public abstract class WssClientConnection : IWssClientConnection
         {
             PendingInvokeRequests.TryRemove(routing.RequestId, out _);
         }
-    }
-
-    public void RegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
-    {
-    }
-    public void UnRegisterTimeout(RoutingDto routing, CancellationTokenSourceDispose cts)
-    {
-        // TODO Cleanup
     }
 
     protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
@@ -1554,4 +1571,5 @@ public abstract class WssClientConnection : IWssClientConnection
         Ws = null;
         GC.SuppressFinalize(this);
     }
+
 }

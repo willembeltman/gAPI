@@ -24,6 +24,7 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
     public SharedReference IServerAuthenticationService => Context.SharedReferences.IServerAuthenticationService;
 
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
+    public SharedReference FabricClientHostedService => Context.SharedReferences.FabricClientHostedService;
     public SharedReference ServiceSubscriptionCollection => Context.SharedReferences.ServiceSubscriptionCollection;
     public SharedReference ServerConfig => Context.SharedReferences.ServerConfig;
     public SharedReference? Middleware => Context.SharedReferences.AuthServer_Middleware;
@@ -70,6 +71,7 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
         Reg(ServerConfig);
         Reg(FabricClient);
         Reg(ServiceSubscriptionCollection);
+        Reg(FabricClientHostedService);
 
         foreach (var item in Context.ClientContexts)
         {
@@ -145,21 +147,17 @@ public static class {Name}
         var serviceSubscriptionCollection = new {ServiceSubscriptionCollection}();
         services.AddSingleton(serviceSubscriptionCollection);
 
-        services.AddSingleton(sp => new {FabricClient}(
-            sessionCache, 
-            streamingCache,
-            serviceSubscriptionCollection,
-            sp.GetRequiredService<ILoggerFactory>(), 
-            serverConfig));
+        services.AddSingleton<{FabricClient}>();
+        services.AddHostedService<{FabricClientHostedService}>();
 
 {propertiesCode}
         services.AddAuthorization();
         services.AddControllers();
 
-        services.AddScoped<{IClientContext}, {ClientContext}>();
+        services.AddSingleton<{IClientContext}, {ClientContext}>();
 
 {string.Join("", Context.ClientContexts.Select(a => $@"
-        services.AddScoped<{a.IClientContext}, {a}>();"))}
+        services.AddSingleton<{a.IClientContext}, {a}>();"))}
 
         return services;
     }}

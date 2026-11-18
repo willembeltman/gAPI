@@ -96,14 +96,14 @@ public class WssServerConnectionSender(
     }
     private async Task EnqueueAndWaitAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, tcs)))
+        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, completion)))
         {
             return;
         }
 
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
+        await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     private sealed record SendQueueItem(

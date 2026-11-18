@@ -285,15 +285,18 @@ public sealed class BusFabricClient
 
         var message = new BusSubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
 
-        var tcs = new TaskCompletionSource<BusSubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.BusSubscribeTcss.TryAdd(serviceSubscriptionId, tcs) == false)
-            throw new Exception("Cannot save subscribe request");
+        var completion = new TaskCompletionSource<BusSubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.BusSubscribeTcss.TryAdd(serviceSubscriptionId, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         try
         {
             await Sender.Send_BusSubscribe_ToFabricAsync(message, ct);
 
-            var ack = await tcs.Task.WaitAsync(ct);
+            var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IBusServiceSubscription implementationSubscription)
             {
@@ -316,19 +319,25 @@ public sealed class BusFabricClient
 
         var service = StreamingCache.BusServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
-            throw new Exception("Cache");
+        {
+            Logger.LogError("Cannot remove subscription");
+            return;
+        }
 
         var message = new BusUnsubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
 
-        var tcs = new TaskCompletionSource<BusUnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.BusUnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, tcs) == false)
-            throw new Exception("Cannot save subscribe request");
+        var completion = new TaskCompletionSource<BusUnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.BusUnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         try
         {
             await Sender.Send_BusUnsubscribe_ToFabricAsync(message, ct);
 
-            var ack = await tcs.Task.WaitAsync(ct);
+            var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IBusServiceSubscription implementationSubscription)
             {
@@ -648,26 +657,26 @@ public sealed class BusFabricClient
     }
     private void Receive_BusInvokeRequestAck_FromFabricAsync(BusInvokeRequestAckDto message, CancellationToken ct)
     {
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var complete))
+        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                complete.SetCanceled(ct);
+                completion.SetCanceled(ct);
             else if (message.ExceptionMessage != null)
-                complete.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
-                complete.SetResult(message);
+                completion.SetResult(message);
         }
     }
     private async Task Receive_BusInvokeRequestDone_FromFabricAsync(BusInvokeRequestDoneDto message, CancellationToken ct)
     {
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var complete))
+        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                complete.SetCanceled(ct);
+                completion.SetCanceled(ct);
             else if (message.ExceptionMessage != null)
-                complete.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
-                complete.SetCanceled(ct); // hij zit te wachten op beginnen met streamen, maar request is al done.
+                completion.SetCanceled(ct); // hij zit te wachten op beginnen met streamen, maar request is al done.
         }
 
         //if (StreamingCache.BusStreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
@@ -960,12 +969,12 @@ public sealed class BusFabricClient
             });
     }
 
-    public async Task SendFireAndForgetAsync(IBaseBusConnection baseBusConnection, BusSendRequestDto request)
+    public async Task SendFireAndForgetAsync(IBaseBusConnection baseBusConnection, BusSendRequestDto request, CancellationToken ct)
     {
         if (LifeCycleCt == null)
             throw new Exception("BusFabric not initilazed");
 
-        await Sender.Send_BusSendAndForgetRequest_ToFabricAsync(request, LifeCycleCt.Value);
+        await Sender.Send_BusSendAndForgetRequest_ToFabricAsync(request, ct);
     }
     public async Task SendAsync(IBaseBusConnection baseBusConnection, BusSendRequestDto request, CancellationTokenSourceDispose timeoutCts)
     {
@@ -973,7 +982,10 @@ public sealed class BusFabricClient
 
         var completion = new TaskCompletionSource<BusSendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (StreamingCache.PendingBusSendRequests.TryAdd(request.Routing, completion) == false)
-            throw new Exception("Cannot store taskcompletion");
+        {
+            Logger.LogError("Cannot add completion");
+            return;
+        }
 
         timeoutCts.RegisterDispose(async () =>
         {
@@ -998,7 +1010,10 @@ public sealed class BusFabricClient
 
         var completion = new TaskCompletionSource<BusInvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (StreamingCache.PendingBusInvokeRequests.TryAdd(request.Routing, completion) == false)
-            throw new Exception("Cannot store taskcompletion");
+        {
+            Logger.LogError("Cannot add completion");
+            yield break;
+        }
 
         try
         {

@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI.Core.Client\gAPI.Core.Client.csproj" />
+		<ProjectReference Include="..\gAPI.AutoAuth.Client\gAPI.AutoAuth.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.AutoApi.Client\gAPI.AutoApi.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.Example.Shared.ApiPublic\gAPI.Example.Shared.ApiPublic.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="appsettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+</Project>

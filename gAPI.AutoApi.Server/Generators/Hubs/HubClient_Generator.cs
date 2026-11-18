@@ -28,7 +28,9 @@ public class HubClient_Generator : BaseGenerator
     public SharedReference SessionId => Context.SharedReferences.SessionId;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
     public SharedReference RequestId => Context.SharedReferences.RequestId;
+    public SharedReference RoutingDto => Context.SharedReferences.RoutingDto;
     public SharedReference IsHubProxyAttribute => Context.SharedReferences.IsHubProxyAttribute;
+    public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
 
     public override void GenerateCode()
     {
@@ -40,8 +42,10 @@ public class HubClient_Generator : BaseGenerator
         Reg(SessionId);
         Reg(RequestId);
         Reg(ServiceId);
+        Reg(RoutingDto);
         Reg(ServiceId);
         Reg(ServiceMethodId);
+        Reg(CancellationTokenSourceDispose);
         var methodsCode = GenerateMethods();
 
 
@@ -51,13 +55,15 @@ namespace {Namespace};
 
 [{IsHubProxyAttribute}]
 public class {Name}(
-    {FabricClient} ___FabricClient,
+    {FabricClient} ___fabricClient,
+    ILoggerFactory ___loggerFactory,
     {UserId}? ___UserId = null,
     {SessionId}? ___SessionId = null,
     TimeSpan? ___timeOut = null,
     bool ___throwIfNoReceiver = true)
     : {Interface}
 {{
+    readonly ILogger ___Logger = ___loggerFactory.CreateLogger<{Name}>();
     private readonly {ServiceId} ___ServiceId = new {ServiceId}(""{Interface}"");
 {methodsCode}
 {string.Join("\r\n", Interface.Methods.Select(m => @$"
@@ -91,32 +97,15 @@ public class {Name}(
             if (hasFile)
                 throw new Exception(
                     $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` " +
-                    "IFormFile is not supported by SignalR");
-
-            //var isTask = method.ResponseType.Name != "Void" || method.ResponseType.Name != "Task";
-            //if (isTask == false || method.ResponseType.UnderlayingTypes.Length > 0)
-            //    throw new Exception(
-            //        $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-            //        "3 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
+                    "IFormFile is not supported by right now");
 
             RegRange(method.Arguments.SelectMany(b => b.ParameterType.Namespaces));
-            //var methodArguments = method.Arguments
-            //        .Select(arg =>
-            //        {
-            //            RegRange(arg.ParameterType.Namespaces);
-            //            return $"{arg.ParameterType.Name} {arg.Name}";
-            //        })
-            //        .ToList();
-
-            //var methodSignature = string.Join(", ", methodArguments);
-            //var methodCall = string.Join(", ", method.Arguments.Select(a => $"{a.Name}"));
-
             RegRange(method.ResponseType.Namespaces);
 
             var args = method.Arguments
                 .Where(a => a.ParameterType.Name != "CancellationToken")
                 .ToArray();
-            var cancellationToken = method.Arguments
+            var ct = method.Arguments
                 .FirstOrDefault(a => a.ParameterType.Name == "CancellationToken");
 
             if (method.ResponseType.IsTaskT)
@@ -133,121 +122,185 @@ public class {Name}(
                 //    "1 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
 
                 code += $@"
-    public void {method.Name}(
+    public async void {method.Name}(
         {string.Join(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(cancellationToken == null ? $@"
-        var ___cts = new CancellationTokenSource();" : $@"
-        var ___cts = CancellationTokenSource.CreateLinkedTokenSource({cancellationToken.Name});")}
-        ___cts.CancelAfter(___timeOut.Value);
-        var ___ct = ___cts.Token;
-        _ = Task.Run(async () =>
+        try
         {{
+            ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+            ___timeoutCts.CancelAfter(___timeOut.Value);
+            var ___ct = ___timeoutCts.Token;
 
-            var ___payload = new {Interface.Title}_{method.Name}
+            await ___fabricClient.WaitForConnectionAsync(___ct);
+
+            var ___routing = new {RoutingDto}(
+                ___fabricClient.FabricManagerId, 
+                ___fabricClient.FabricConnectionId, 
+                {RequestId}.New(), 
+                ___ServiceId, 
+                new(""{method.Name}""), 
+                ___timeOut.Value,
+                ___UserId, 
+                ___SessionId,
+                ___throwIfNoReceiver);
+
+            ___fabricClient.RegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+
+            try
             {{
-                {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
-            }};
-            var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-            var ___json = JsonSerializer.Serialize(___payload);
-            var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
-            var ___requestId = {RequestId}.New();
-            await ___FabricClient.SendAsync(
-                new (
-                    ___FabricClient.FabricManagerId, 
-                    ___FabricClient.FabricConnectionId, 
-                    ___requestId, 
-                    ___ServiceId, 
-                    ___serviceMethodId, 
-                    ___timeOut.Value,
-                    ___UserId, 
-                    ___SessionId,
-                    ___throwIfNoReceiver), 
-                ___bytes{(cancellationToken == null ? @", 
-                ___ct" : $@", 
-                {cancellationToken.Name}")});
+                var ___payloadModel = new {Interface.Title}_{method.Name}
+                {{
+                    {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
+                }};
+                var ___payloadJson = JsonSerializer.Serialize(___payloadModel);
+                var ___payload = System.Text.Encoding.UTF8.GetBytes(___payloadJson);
 
-            await Task.Delay(5);
-            ___cts.Dispose();
-        }}, ___ct);
+                await ___fabricClient.SendFireAndForgetAsync(
+                    ___routing, 
+                    ___payload,
+                    ___ct);
+            }}
+            catch (OperationCanceledException)
+            {{
+                ___Logger.LogInformation(""Server FireAndForget streaming gecanceld of time-out voor {method.Name}."");
+            }}
+            catch (Exception ex)
+            {{
+                ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
+            }}
+            finally
+            {{
+                ___fabricClient.UnRegisterTimeout(
+                    ___routing, 
+                    ___timeoutCts);
+            }}
+        }}
+        catch (Exception ex)
+        {{
+            ___Logger.LogError(ex, ""Fout opgevangen in gegenereerde server async void methode voor {method.Name}"");
+        }}
     }}";
             }
             else if (method.ResponseType.IsTask)
             {
-                //if (method.ResponseType.Name != "Task")
-                //    throw new Exception(
-                //    $"`{method.ResponseType.Name} {Interface.Name}.{method.Name}` has a error: " +
-                //    "1 Only one-way calls (void / Task) are allowed, there is no return value, use the API directly for this");
-
                 code += $@"
     public async Task {method.Name}(
         {string.Join(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});
-        var ___payload = new {Interface.Title}_{method.Name}
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___fabricClient.WaitForConnectionAsync(___ct);
+
+        var ___routing = new {RoutingDto}(
+            ___fabricClient.FabricManagerId, 
+            ___fabricClient.FabricConnectionId, 
+            {RequestId}.New(), 
+            ___ServiceId, 
+            new(""{method.Name}""), 
+            ___timeOut.Value,
+            ___UserId, 
+            ___SessionId,
+            ___throwIfNoReceiver
+        );
+        ___fabricClient.RegisterTimeout(
+            ___routing, 
+            ___timeoutCts);
+
+        try
         {{
-            {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
-        }};
-        var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-        var ___json = JsonSerializer.Serialize(___payload);
-        var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
-        var ___requestId = {RequestId}.New();
-        await ___FabricClient.SendAsync(
-            new (
-                ___FabricClient.FabricManagerId, 
-                ___FabricClient.FabricConnectionId, 
-                ___requestId, 
-                ___ServiceId, 
-                ___serviceMethodId, 
-                ___timeOut.Value,
-                ___UserId, 
-                ___SessionId,
-                ___throwIfNoReceiver), 
-            ___bytes{(cancellationToken == null ? @", 
-            default" : $@", 
-            {cancellationToken.Name}")});
+            var ___payloadModel = new {Interface.Title}_{method.Name}
+            {{
+                {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
+            }};
+            var ___payloadJson = JsonSerializer.Serialize(___payloadModel);
+            var ___payload = System.Text.Encoding.UTF8.GetBytes(___payloadJson);
+
+            await ___fabricClient.SendAsync(
+                ___routing, 
+                ___payload,
+                ___timeoutCts);
+        }}
+        finally
+        {{
+            ___fabricClient.UnRegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+        }}
     }}";
             }
             else if (method.ResponseType.IsIAsyncEnumerable)
             {
-
                 code += $@"
     public async {method.ResponseType} {method.Name}(
         {string.Join(
             $",\r\n        ",
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});
-        var ___payload = new {Interface.Title}_{method.Name}
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___fabricClient.WaitForConnectionAsync(___ct);
+
+        var ___routing = new {RoutingDto}(
+            ___fabricClient.FabricManagerId, 
+            ___fabricClient.FabricConnectionId, 
+            {RequestId}.New(), 
+            ___ServiceId, 
+            new {ServiceMethodId}(""{method.Name}""), 
+            ___timeOut.Value,
+            ___UserId, 
+            ___SessionId,
+            ___throwIfNoReceiver
+        );
+
+        ___fabricClient.RegisterTimeout(
+            ___routing, 
+            ___timeoutCts);
+
+        try
         {{
-            {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
-        }};
-        var ___serviceMethodId = new {ServiceMethodId}(""{method.Name}"");
-        var ___json = JsonSerializer.Serialize(___payload);
-        var ___bytes = System.Text.Encoding.UTF8.GetBytes(___json);
-        var ___requestId = {RequestId}.New();
-        var ___list = ___FabricClient.InvokeAsync(
-            new (
-                ___FabricClient.FabricManagerId, 
-                ___FabricClient.FabricConnectionId, 
-                ___requestId, 
-                ___ServiceId, 
-                ___serviceMethodId, 
-                ___timeOut.Value,
-                ___UserId, 
-                ___SessionId,
-                ___throwIfNoReceiver), 
-            ___bytes{(cancellationToken == null ? @", 
-            default" : $@", 
-            {cancellationToken.Name}")});
-        await foreach (var ___responseBytes in ___list)
+            var ___payloadModel = new {Interface.Title}_{method.Name}
+            {{
+                {string.Join($",\r\n            ", args.Select(a => @$"{a.Name} = {a.Name}"))}
+            }};
+            var ___payloadJson = JsonSerializer.Serialize(___payloadModel);
+            var ___payload = System.Text.Encoding.UTF8.GetBytes(___payloadJson);
+            
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___routing, 
+                ___payload,
+                ___timeoutCts);
+
+            await foreach (var ___responseBytes in ___responses)
+            {{
+                if (___ct.IsCancellationRequested)
+                    yield break;
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
+                yield return JsonSerializer.Deserialize<{method.ResponseType.UnderlayingTypes.First()}>(
+                    System.Text.Encoding.UTF8.GetString(___responseBytes));
+            }}
+        }}
+        finally
         {{
-            yield return JsonSerializer.Deserialize<{method.ResponseType.UnderlayingTypes.First()}>(
-                System.Text.Encoding.UTF8.GetString(___responseBytes));
+            ___fabricClient.UnRegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
         }}
     }}";
             }

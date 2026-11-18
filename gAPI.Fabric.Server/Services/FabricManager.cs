@@ -186,23 +186,7 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_SendAndForgetRequestCancelled_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
-    {
-        // Fire and forget so we just search for everybody and fire cancel
-        _ = Task.Run(async () =>
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-                logger.LogTrace("{now}: Receive_SendAndForgetRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
-
-            (var fabricHostsEnumerable, var actor) = Services[cancel.Routing.ServiceId]
-                .GetFabricHosts(cancel.Routing.UserId, cancel.Routing.SessionId);
-            var fabricHosts = fabricHostsEnumerable.ToArray();
-            actor.EnqueueReceive(receiveSize);
-
-            foreach (var fabricHost in fabricHosts)
-                await fabricHost.Send_SendAndForgetRequestCancelled_ToApiAsync(cancel, actor);
-        }, ct);
-    }
+    
 
     public async Task Receive_SendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestDto request, long receiveSize, CancellationToken ct)
     {
@@ -344,7 +328,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new SendRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}",
+                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
                         null),
                     actor);
                 return;
@@ -673,7 +657,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 var ack = new BusSendRequestDoneDto(
                     request.Routing,
                     false,
-                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}'",
+                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
                     null);
                 await caller.Send_BusSendRequestDone_ToApiAsync(ack, actor);
                 return;
@@ -791,7 +775,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new BusInvokeRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}",
+                        $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
                         null),
                     actor);
                 return;

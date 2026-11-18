@@ -28,16 +28,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Generators\BusHostedService\**" />
+	  <EmbeddedResource Remove="Generators\BusHostedService\**" />
+	  <None Remove="Generators\BusHostedService\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Generators\BusHostedService\" />
 	</ItemGroup>
 
 </Project>

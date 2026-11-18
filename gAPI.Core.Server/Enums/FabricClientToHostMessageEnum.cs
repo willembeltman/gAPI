@@ -6,7 +6,6 @@ public enum FabricClientToHostMessageEnum
     Unsubscribe,
 
     SendAndForgetRequest,
-    SendAndForgetRequestCancelled,
 
     SendRequest,
     SendRequestCancelled,

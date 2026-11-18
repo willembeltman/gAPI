@@ -46,6 +46,13 @@ public class Interface
             .Where(m => !m.GetAttributes().Any(attr => attr.AttributeClass?.Name == "IsHiddenAttribute"))
             .Select(methodSymbol => new InterfaceMethod(dataModel, this, methodSymbol))
             .ToArray();
+
+        Services = allSymbols
+            .Where(a =>
+                a.TypeKind == TypeKind.Class &&
+                a.Interfaces.Any(@interface => @interface.ToDisplayString() == namedTypeSymbol.ToDisplayString()))
+            .Select(a => new Service(this, a))
+            .ToArray();
     }
 
     public INamedTypeSymbol NamedTypeSymbol { get; }
@@ -57,6 +64,7 @@ public class Interface
     public bool IsAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
+    public Service[] Services { get; }
 
     public override string ToString()
     {

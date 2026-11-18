@@ -53,53 +53,79 @@ public class ServiceContext
 
         foreach (var hubInterface in HubInterfaces)
             foreach (var method in hubInterface.Methods)
-                CheckHub(method.ResponseType, errors, method.Name, hubInterface.FullName);
+                CheckHub(method.ResponseType, errors, method, hubInterface.FullName);
 
-        foreach (var apiInterface in ApiInterfaces)
-            foreach (var method in apiInterface.Methods)
-                CheckApi(method, apiInterface, errors);
+        //foreach (var hubInterface in ApiInterfaces)
+        //    foreach (var method in hubInterface.Methods)
+        //        CheckApi(method.ResponseType, errors, method, hubInterface.FullName);
 
-        foreach (var apiInterface in MinimalApiInterfaces)
-            foreach (var method in apiInterface.Methods)
-                CheckApi(method, apiInterface, errors);
+        //foreach (var hubInterface in MinimalApiInterfaces)
+        //    foreach (var method in hubInterface.Methods)
+        //        CheckApi(method.ResponseType, errors, method, hubInterface.FullName);
 
         return errors;
     }
-
-    private void CheckHub(TypeHelper responseType, List<string> errors, string method, string hubInterface)
+    private void CheckHub(TypeHelper responseType, List<string> errors, InterfaceMethod method, string hubInterface)
     {
+        var methodIdentifier = $"Method '{method}' on interface '{hubInterface}'";
+
         if (responseType.IsTaskT)
         {
             errors.Add(
-                $"Method '{method}' on interface '{hubInterface}' returns Task<T>. " +
-                "Please use IAsyncEnumerable<T> instead. " +
-                "When communicating from server to client, the number of client responses is unknown, " +
-                "therefore response methods must use IAsyncEnumerable<T>.");
+                $"{methodIdentifier} returns Task<T>, which is not supported. Please use IAsyncEnumerable<T> instead. " +
+                "Because the number of client responses is unknown in server-to-client communication, " +
+                "methods with responses must return IAsyncEnumerable<T>.");
+            return;
         }
-        else if (!responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
+        if (method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable))
         {
             errors.Add(
-                $"Method '{method}' on interface '{hubInterface}' appears to be synchronous. " +
-                "Please use Task (no response) or IAsyncEnumerable<T> (with responses).");
+                $"{methodIdentifier} uses an IAsyncEnumerable argument, which is currently not supported for standard REST calls in AutoApi. " +
+                "Need this feature? Please open an issue or reach out to let me know!");
+        }
+
+        if (!responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
+        {
+            errors.Add(
+                $"{methodIdentifier} has an unsupported return type. " +
+                "Please use void, Task (no response), or IAsyncEnumerable<T> (with responses).");
+        }
+    }
+    private void CheckApi(TypeHelper responseType, List<string> errors, InterfaceMethod method, string apiInterface)
+    {
+        var methodIdentifier = $"Method '{method}' on interface '{apiInterface}'";
+
+        if (method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable))
+        {
+            errors.Add(
+                $"{methodIdentifier} uses an IAsyncEnumerable argument, which is currently not supported for standard REST calls in AutoApi. " +
+                "Need this feature? Please open an issue or reach out to let me know!");
+        }
+
+        if (!responseType.IsTaskT && !responseType.IsTask && !responseType.IsIAsyncEnumerable && !responseType.IsVoid)
+        {
+            errors.Add(
+                $"{methodIdentifier} has an unsupported return type. " +
+                "Please use void or Task (no response), or Task<T> or IAsyncEnumerable<T> (with responses).");
         }
     }
 
-
-    private void CheckApi(InterfaceMethod method, Interface apiInterface, List<string> errors)
+    private static bool CheckVoidWithAsyncEnumerable(
+        TypeHelper responseType,
+        List<string> errors,
+        InterfaceMethod method,
+        string methodIdentifier)
     {
-        //var args = method.Arguments.Where(a => a.IsIEnumerable).ToArray();
-        //foreach (var arg in args) 
-        //{
-        //    errors.Add(
-        //        $"Method '{method}' on interface '{apiInterface}' '{arg}' " +
-        //        "This is not supported.");
+        var hasAsyncEnumerableArg = method.Arguments.Any(a => a.ParameterType.IsIAsyncEnumerable);
 
-        //}
-        if (!method.ResponseType.IsTaskT && !method.ResponseType.IsTask && !method.ResponseType.IsVoid)
+        if (responseType.IsVoid && hasAsyncEnumerableArg)
         {
             errors.Add(
-                $"Method '{method}' on interface '{apiInterface}' appears to not be supported. " +
-                "Please use Task (no response), Task<T> or IAsyncEnumerable<T> (with responses).");
+                $"{methodIdentifier} accepts an IAsyncEnumerable argument while returning void. " +
+                "You must await the method until completion (by returning Task); otherwise, " +
+                "the CancellationTokenSource timeout will be disposed before streaming starts.");
+            return false;
         }
+        return true;
     }
 }

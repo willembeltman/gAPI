@@ -7,7 +7,6 @@ public interface IServerConnection : ISpeedGetter
     string Id { get; }
 
     Task Send_FabricSendAndForgetRequest_ToClientAsync(SendRequestDto message, CancellationToken ct);
-    Task Send_FabricSendAndForgetRequestCancelled_ToClientAsync(SendRequestCancelledDto message, CancellationToken ct);
 
     Task Send_FabricSendRequest_ToClientAsync(SendRequestDto message, CancellationToken ct);
     Task Send_FabricSendRequestCancelled_ToClientAsync(SendRequestCancelledDto message, CancellationToken ct);

@@ -54,7 +54,7 @@ public class Program : IIncrementalGenerator
     {
         //throw new Exception(errorMessage); // Helps while debugging
         var sourceCode = $"#error gAPI.AutoApiSse: {errorMessage.Replace("\r", "").Replace("\n", " ")}";
-        CurrentSpc.AddSource("Gapi_Error.AutoSse.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
+        CurrentSpc.AddSource("Gapi_Error.AutoApi.Server.g.cs", SourceText.From(sourceCode, Encoding.UTF8));
     }
 
     //public void ShowError(Exception exception)

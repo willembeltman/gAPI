@@ -119,14 +119,14 @@ public class WssClientConnectionSender
             await Task.Delay(10);
         }
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, tcs)))
+        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, completion)))
         {
             return;
         }
 
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
+        await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public void ClearQueue()
@@ -190,6 +190,23 @@ public class WssClientConnectionSender
         }, ct);
     }
 
+    public async Task Send_SendAndForgetRequest_ToServerAsync(SendRequestClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_SendAndForgetRequest_ToServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
+        await EnqueueAndWaitAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_SendAndForgetRequest_ToServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.SendAndForgetRequest);
+            writer.Write(ref offset, message);
+
+            return offset;
+        }, ct);
+    }
     public async Task Send_SendRequest_ToServerAsync(SendRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

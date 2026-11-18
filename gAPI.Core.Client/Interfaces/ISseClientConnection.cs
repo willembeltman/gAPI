@@ -6,15 +6,17 @@ public interface ISseClientConnection : IDisposable
 {
     bool Initialized { get; }
 
+    void Start(CancellationToken ct);
+
     Task SubscribeAsync(object implementation, CancellationToken ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ct = default);
 
-    Task SendRequest_ReceivedAsync(
+    Task Send_SendRequest_ToServiceAsync(
         ServiceId serviceId,
         ServiceMethodId methodId,
         byte[] data,
         CancellationToken ct);
-    IAsyncEnumerable<byte[]> InvokeRequest_ReceivedAsync(
+    IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(
         ServiceId serviceId,
         ServiceMethodId methodId,
         byte[] data,

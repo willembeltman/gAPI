@@ -1,6 +1,7 @@
 ﻿using gAPI.AutoSerializer;
 using gAPI.AutoSerializer.Generators;
 using gAPI.AutoWss.Server.Generators;
+using gAPI.AutoWss.Server.Generators.ClientContext;
 using gAPI.AutoWss.Server.Generators.Endpoints;
 using gAPI.AutoWss.Server.Generators.Hubs;
 using gAPI.AutoWss.Server.Generators.Startup;

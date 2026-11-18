@@ -1,3 +1,4 @@
+using gAPI.AutoWss.Server.Generators.ClientContext;
 using gAPI.AutoWss.Server.Generators.Hubs;
 using gAPI.AutoWss.Server.Generators.Wss;
 using gAPI.AutoWss.Server.Models;

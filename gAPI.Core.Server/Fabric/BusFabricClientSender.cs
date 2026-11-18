@@ -72,18 +72,18 @@ public class BusFabricClientSender(
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         try
         {
-            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, tcs), ct);
+            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, completion), ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
         }
 
-        await tcs.Task.WaitAsync(ct).ConfigureAwait(false);
+        await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }
 
     public async Task Send_BusSubscribe_ToFabricAsync(BusSubscribeDto message, CancellationToken ct)

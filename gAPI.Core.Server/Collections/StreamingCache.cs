@@ -11,7 +11,8 @@ public class StreamingCache
 {
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> WssTimeouts = [];
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusTimeouts = [];
-    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> FabricTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> FabricOutgoingTimeouts = [];
+
     public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> BusServiceSubscriptionIds = [];
 
     public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
