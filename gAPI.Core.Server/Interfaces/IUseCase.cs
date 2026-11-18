@@ -1,19 +1,19 @@
 ﻿namespace gAPI.Core.Server.Interfaces;
 
-public interface IUseCase<TEntity, TDto, TKey>
+public interface IUseCase<TDbContext, TEntity, TDto, TKey>
 {
-    Task<bool> IsAllowedAsync(CancellationToken ct);
-    Task<bool> CanCreateAsync(CancellationToken ct);
-    Task<bool> CanListAsync(CancellationToken ct);
-    Task<bool> CanCreateAsync(TDto dto, CancellationToken ct);
-    Task<bool> CanReadAsync(TDto dto, CancellationToken ct);
-    Task<bool> CanUpdateAsync(TDto dto, CancellationToken ct);
-    Task<bool> CanDeleteAsync(TDto dto, CancellationToken ct);
+    Task<bool> IsAllowedAsync(TDbContext dbContext, CancellationToken ct);
+    Task<bool> CanCreateAsync(TDbContext dbContext, CancellationToken ct);
+    Task<bool> CanListAsync(TDbContext dbContext, CancellationToken ct);
+    Task<bool> CanCreateAsync(TDbContext dbContext, TDto dto, CancellationToken ct);
+    Task<bool> CanReadAsync(TDbContext dbContext, TDto dto, CancellationToken ct);
+    Task<bool> CanUpdateAsync(TDbContext dbContext, TDto dto, CancellationToken ct);
+    Task<bool> CanDeleteAsync(TDbContext dbContext, TDto dto, CancellationToken ct);
 
-    Task<TEntity?> FindByIdAsync(TKey id, CancellationToken ct);
-    Task<TEntity?> FindByMatchAsync(TDto dto, CancellationToken ct);
-    IQueryable<TEntity> ListAll();
-    Task<bool> AddAsync(TEntity entity, CancellationToken ct);
-    Task<bool> RemoveAsync(TEntity entity, CancellationToken ct);
-    Task<bool> UpdateAsync(TEntity entity, TDto dto, CancellationToken ct);
+    Task<TEntity?> FindByIdAsync(TDbContext dbContext, TKey id, CancellationToken ct);
+    Task<TEntity?> FindByMatchAsync(TDbContext dbContext, TDto dto, CancellationToken ct);
+    IQueryable<TEntity> ListAll(TDbContext dbContext);
+    Task<bool> AddAsync(TDbContext dbContext, TEntity entity, CancellationToken ct);
+    Task<bool> RemoveAsync(TDbContext dbContext, TEntity entity, CancellationToken ct);
+    Task<bool> UpdateAsync(TDbContext dbContext, TEntity entity, TDto dto, CancellationToken ct);
 }

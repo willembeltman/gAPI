@@ -162,6 +162,11 @@ a.ForeignEntityNameProperties
 
         Save(Context.Config.OverwriteMappers);
     }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
 
 #nullable disable

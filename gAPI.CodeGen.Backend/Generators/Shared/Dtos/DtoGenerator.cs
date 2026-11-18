@@ -347,4 +347,8 @@ public class DtoGenerator : BaseGenerator
         };
     }
 
+    public override string ToString()
+    {
+        return Name;
+    }
 }

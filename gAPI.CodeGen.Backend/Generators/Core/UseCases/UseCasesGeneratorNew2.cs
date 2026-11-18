@@ -3,6 +3,7 @@ using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
+using gAPI.Core.Server.Interfaces;
 
 namespace gAPI.CodeGen.Backend.Generators.Core.UseCases;
 
@@ -30,6 +31,7 @@ public class UseCasesGenerator : BaseGenerator
     public DbContext DbContext => Context.DbContext;
 
     public SharedReference IAuthenticationService => Context.SharedReferences.IAuthenticationService;
+    public SharedReference IUseCase => Context.SharedReferences.IUseCase;
     public SharedReference StateDto => Context.State;
     public SharedReference User => Context.DbContext.UserEntity;
 
@@ -40,6 +42,7 @@ public class UseCasesGenerator : BaseGenerator
         Reg(DbContext);
         Reg(User);
         Reg(Entity);
+        Reg(IUseCase);
         Reg(IAuthenticationService);
         Reg("Microsoft.EntityFrameworkCore");
 
@@ -59,6 +62,7 @@ namespace {Namespace};
 
 public class {Name}(
     {IAuthenticationService}<{User}, {StateDto.FullName}> authenticationService)
+    : {IUseCase}<{DbContext}, {Entity.FullName}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
     public async Task<bool> IsAllowedAsync({DbContext} db, CancellationToken ct) => {authenticated};
     public async Task<bool> CanListAsync({DbContext} db, CancellationToken ct) => {authenticated};
@@ -100,5 +104,10 @@ public class {Name}(
 }}
 ";
         Save(Context.Config.OverwriteUseCases);
+    }
+
+    public override string ToString()
+    {
+        return Name;
     }
 }

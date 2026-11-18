@@ -1,5 +1,7 @@
 ﻿using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Models;
+using gAPI.CodeGen.Backend.Models.Entities;
+using gAPI.Core.Server.Interfaces;
 
 namespace gAPI.CodeGen.Backend.Generators.Api;
 
@@ -22,10 +24,13 @@ public class AddCrudExtensionsGenerator : BaseGenerator
     public SharedReference DbContext => Context.DbContext;
     public DtoGenerator[] Dtos => Context.Dtos;
     public SharedReference Mapping => Context.SharedReferences.Mapping;
+    public SharedReference IUseCase => Context.SharedReferences.IUseCase;
 
     public void GenerateCode()
     {
         Reg(Mapping);
+        Reg(IUseCase);
+        Reg(DbContext);
         Reg("Microsoft.Extensions.DependencyInjection");
 
         var useCaseCode = "";
@@ -35,12 +40,13 @@ public class AddCrudExtensionsGenerator : BaseGenerator
             var entity = dto.Entity;
             var useCase = dto.CrudUseCase;
             var mapping = dto.CrudMapping;
+            Reg(entity);
             Reg(useCase);
             Reg(mapping);
             useCaseCode += @$"
-        services.AddScoped<{useCase.Name}>();";
+        services.AddScoped<{IUseCase}<{DbContext}, {entity}, {dto.FullName}, {entity.KeyProperty.TypeSimpleName}>, {useCase}>();";
             mappingCode += @$"
-        services.AddScoped<{Mapping}<{DbContext.FullName}, {entity.FullName}, {dto.FullName}>, {mapping.Name}>();";
+        services.AddScoped<{Mapping}<{DbContext}, {entity}, {dto.FullName}>, {mapping}>();";
         }
 
         Code = $@"{GetNamespacesCode()}
