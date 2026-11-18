@@ -28,7 +28,6 @@ public class MappingGenerator : BaseGenerator
     public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
     public SharedReference IStorageService => Context.SharedReferences.IStorageService;
     public SharedReference IUseCase => Context.SharedReferences.IUseCase;
-    public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbContext DbContext => Context.DbContext;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
@@ -67,7 +66,7 @@ public class MappingGenerator : BaseGenerator
         };
 
         Reg(ApplyOrderByExtension);
-        Reg(CrudUseCase);
+        
         Reg(IUseCase);
         Reg(Entity);
         Reg(DbContext);

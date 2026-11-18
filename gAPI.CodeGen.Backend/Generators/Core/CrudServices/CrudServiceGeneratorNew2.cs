@@ -4,6 +4,7 @@ using gAPI.CodeGen.Backend.Generators.Shared.Interfaces;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
+using gAPI.Core.Server.Interfaces;
 
 namespace gAPI.CodeGen.Backend.Generators.Core.CrudServices;
 
@@ -27,7 +28,6 @@ public class CrudServiceGenerator : BaseGenerator
     public DtoGenerator Dto { get; }
 
     public CrudServiceInterfaceGenerator ServiceInterface => Dto.ServiceInterface;
-    public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbContext DbContext => Context.DbContext;
 
     public Entity Entity => Dto.Entity;
@@ -39,14 +39,15 @@ public class CrudServiceGenerator : BaseGenerator
     public SharedReference StateDto => Context.State;
     public SharedReference User => Context.DbContext.UserEntity;
     public SharedReference BaseResponseErrorEnum => Context.SharedReferences.BaseResponseErrorEnum;
+    public SharedReference IUseCase => Context.SharedReferences.IUseCase;
 
     public void GenerateCode()
     {
         Reg(Dto);
+        Reg(StateDto);
         Reg(ServiceInterface);
         Reg(BaseResponseT);
         Reg(BaseResponseErrorEnum);
-        Reg(CrudUseCase);
         Reg("Microsoft.EntityFrameworkCore");
 
         if (Entity.Properties.Any(p => p.IsStateManaged != null))
@@ -231,10 +232,10 @@ namespace {Namespace};
 
 public class {Name}(
     IDbContextFactory<{DbContext.FullName}> dbFactory,
-    {CrudUseCase.Name} useCase,
-    {Mapping.FullName}<{DbContext.FullName}, {Entity.FullName}, {Dto.Name}> mapping{(useStorageFile ? @",
+    {IUseCase.FullName}<{DbContext.FullName}, {Entity.FullName}, {Dto}, {Entity.KeyProperty.TypeSimpleName}> useCase,
+    {Mapping.FullName}<{DbContext.FullName}, {Entity.FullName}, {Dto}> mapping{(useStorageFile ? @",
     IStorageService storageService" : "")}{(Entity.Properties.Any(a => a.IsStateManaged != null) ? $@",
-    IAuthenticationService<{User.FullName}, {StateDto.FullName}> authenticationService" : "")})
+    IAuthenticationService<{User.FullName}, {StateDto}> authenticationService" : "")})
     : {ServiceInterface.Name}
 {{
     public async Task<{BaseResponseT.Name}<{Dto.Name}>> Create({Dto.Name} dto, CancellationToken ct)
