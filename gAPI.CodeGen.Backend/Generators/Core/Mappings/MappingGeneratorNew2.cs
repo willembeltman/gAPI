@@ -3,6 +3,7 @@ using gAPI.CodeGen.Backend.Generators.Shared.Dtos;
 using gAPI.CodeGen.Backend.Helpers;
 using gAPI.CodeGen.Backend.Models;
 using gAPI.CodeGen.Backend.Models.Entities;
+using gAPI.Core.Server.Interfaces;
 
 namespace gAPI.CodeGen.Backend.Generators.Core.Mappings;
 
@@ -26,6 +27,7 @@ public class MappingGenerator : BaseGenerator
 
     public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
     public SharedReference IStorageService => Context.SharedReferences.IStorageService;
+    public SharedReference IUseCase => Context.SharedReferences.IUseCase;
     public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
     public DbContext DbContext => Context.DbContext;
     public DbSet DbSet => Dto.DbSet;
@@ -66,6 +68,9 @@ public class MappingGenerator : BaseGenerator
 
         Reg(ApplyOrderByExtension);
         Reg(CrudUseCase);
+        Reg(IUseCase);
+        Reg(Entity);
+        Reg(DbContext);
         if (Entity.HasIStorageFileInterface)
             Reg(IStorageService);
 
@@ -75,7 +80,7 @@ public class MappingGenerator : BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {CrudUseCase.Name} useCase{(Entity.HasIStorageFileInterface ? @$", 
+    {IUseCase}<{DbContext}, {Entity}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}> useCase{(Entity.HasIStorageFileInterface ? @$", 
     {IStorageService} storageService" : "")}) 
     : gAPI.Core.Server.Interfaces.Mapping<{DbContext.FullName}, {typeEntity.FullName}, {typeDto.FullName}>
 {{

@@ -62,7 +62,7 @@ namespace {Namespace};
 
 public class {Name}(
     {IAuthenticationService}<{User}, {StateDto.FullName}> authenticationService)
-    : {IUseCase}<{DbContext}, {Entity.FullName}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
+    : {IUseCase}<{DbContext}, {Entity}, {Dto.FullName}, {Entity.KeyProperty.TypeSimpleName}>
 {{
     public async Task<bool> IsAllowedAsync({DbContext} db, CancellationToken ct) => {authenticated};
     public async Task<bool> CanListAsync({DbContext} db, CancellationToken ct) => {authenticated};
