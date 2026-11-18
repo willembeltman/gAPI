@@ -1,21 +1,46 @@
-﻿using System.Runtime.CompilerServices;
+﻿//using System.Runtime.CompilerServices;
+
+//namespace gAPI.Core.Server.Interfaces;
+
+//public abstract class Mapping<TEntity, TDto>
+//{
+//    public abstract Task<TDto> ToDtoAsync(TEntity entity, TDto dto, CancellationToken ct);
+//    public abstract TEntity ToEntity(TDto dto, TEntity entity);
+//    public abstract IAsyncEnumerable<TDto> ProjectToDtosAsync(IQueryable<TEntity> entities, string[]? orderby, int? skip, int? take, CancellationToken ct);
+//    public abstract Task ExtendDto(TDto dto, CancellationToken ct);
+
+//    public async IAsyncEnumerable<TDto> EnumerateDtosAsync(IEnumerable<TDto> items, [EnumeratorCancellation] CancellationToken ct)
+//    {
+//        foreach (var item in items)
+//        {
+//            if (item != null)
+//            {
+//                await ExtendDto(item, ct);
+//                yield return item;
+//            }
+//        }
+//    }
+//}
+
+
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Server.Interfaces;
 
-public abstract class Mapping<TEntity, TDto>
+public abstract class Mapping<TDbContext, TEntity, TDto>
 {
-    public abstract Task<TDto> ToDtoAsync(TEntity entity, TDto dto, CancellationToken ct);
+    public abstract Task<TDto> ToDtoAsync(TDbContext dbContext, TEntity entity, TDto dto, CancellationToken ct);
     public abstract TEntity ToEntity(TDto dto, TEntity entity);
-    public abstract IAsyncEnumerable<TDto> ProjectToDtosAsync(IQueryable<TEntity> entities, string[]? orderby, int? skip, int? take, CancellationToken ct);
-    public abstract Task ExtendDto(TDto dto, CancellationToken ct);
+    public abstract IAsyncEnumerable<TDto> ProjectToDtosAsync(TDbContext dbContext, IQueryable<TEntity> entities, string[]? orderby, int? skip, int? take, CancellationToken ct);
+    public abstract Task ExtendDto(TDbContext dbContext, TDto dto, CancellationToken ct);
 
-    public async IAsyncEnumerable<TDto> EnumerateDtosAsync(IEnumerable<TDto> items, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<TDto> EnumerateDtosAsync(TDbContext dbContext, IEnumerable<TDto> items, [EnumeratorCancellation] CancellationToken ct)
     {
         foreach (var item in items)
         {
             if (item != null)
             {
-                await ExtendDto(item, ct);
+                await ExtendDto(dbContext, item, ct);
                 yield return item;
             }
         }

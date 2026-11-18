@@ -27,9 +27,9 @@ public class MappingGenerator : BaseGenerator
     public SharedReference ApplyOrderByExtension => Context.SharedReferences.ApplyOrderByExtension;
     public SharedReference IStorageService => Context.SharedReferences.IStorageService;
     public UseCasesGenerator CrudUseCase => Dto.CrudUseCase;
+    public DbContext DbContext => Context.DbContext;
     public DbSet DbSet => Dto.DbSet;
     public Entity Entity => Dto.Entity;
-
 
     public void GenerateCode()
     {
@@ -77,7 +77,7 @@ namespace {Namespace};
 public class {Name}(
     {CrudUseCase.Name} useCase{(Entity.HasIStorageFileInterface ? @$", 
     {IStorageService} storageService" : "")}) 
-    : gAPI.Core.Server.Interfaces.Mapping<{typeEntity.FullName}, {typeDto.FullName}>
+    : gAPI.Core.Server.Interfaces.Mapping<{DbContext.FullName}, {typeEntity.FullName}, {typeDto.FullName}>
 {{
     public override {typeEntity.FullName} ToEntity(
         {typeDto.FullName} dto, 
@@ -91,6 +91,7 @@ context.MatchedEntityProperties
     }}
 
     public override async Task<{typeDto.FullName}> ToDtoAsync(
+        {DbContext.FullName} dbContext,
         {typeEntity.FullName} entity, 
         {typeDto.FullName} dto,
         CancellationToken ct)
@@ -104,12 +105,13 @@ context.MatchedEntityProperties
         .Select(p => p.IsName?.Format($"(entity?.{a.NameProperty!.Name}?.{p.Name} ?? default)"))
 )};
 "))}
-        await ExtendDto(dto, ct);
+        await ExtendDto(dbContext, dto, ct);
 
         return dto;
     }}
 
     public override IAsyncEnumerable<{typeDto.FullName}> ProjectToDtosAsync(
+        {DbContext.FullName} dbContext,
         IQueryable<{typeEntity.FullName}> entities,
         string[]? orderby, 
         int? skip, 
@@ -144,16 +146,17 @@ a.ForeignEntityNameProperties
             dtos = dtos.Take(take.Value);
         }}
 
-        return EnumerateDtosAsync(dtos, ct);
+        return EnumerateDtosAsync(dbContext, dtos, ct);
     }}
 
     public override async Task ExtendDto(
+        {DbContext.FullName} dbContext,
         {typeDto.FullName} dto,
         CancellationToken ct)
     {{{(Entity.HasIStorageFileInterface ? @$"
         dto.StorageFileUrl = await storageService.GetStorageFileUrlAsync($""{Entity.Name}/{{dto.{Entity.KeyProperty.Name}}}"", ct);" : "")}
-        dto.CanUpdate = await useCase.CanUpdateAsync(dto, ct);
-        dto.CanDelete = await useCase.CanDeleteAsync(dto, ct);
+        dto.CanUpdate = await useCase.CanUpdateAsync(dbContext, dto, ct);
+        dto.CanDelete = await useCase.CanDeleteAsync(dbContext, dto, ct);
     }}
 }}";
 
