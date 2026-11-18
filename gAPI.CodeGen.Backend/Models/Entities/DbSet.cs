@@ -19,4 +19,9 @@ public class DbSet
     public Entity Entity { get; }
 
     public bool IsUser => Entity.IsUser;
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

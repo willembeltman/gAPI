@@ -19,7 +19,7 @@ public class UseCasesGenerator : BaseGenerator
         Dto = dto;
 
         Name = $"{Entity.Name.ToMultiple()}{context.Config.Core_CrudUseCasesEnd}";
-        FileName = $"{Name}{(Context.Config.OverwriteUseCases ? ".g" : "")}.cs";
+        FileName = $"{Name}{(Context.Config.OverwriteUseCases ? "" : "")}.cs";
     }
 
     public BackendGenerator Context { get; }
@@ -37,13 +37,15 @@ public class UseCasesGenerator : BaseGenerator
     {
         var keyType = Entity.Properties.FirstOrDefault(a => a.IsKey)?.TypeSimpleName ?? "long";
 
+        Reg(DbContext);
         Reg(User);
+        Reg(Entity);
         Reg(IAuthenticationService);
         Reg("Microsoft.EntityFrameworkCore");
 
         var attachCode = @$" 
     {{
-        await db.{DbSet.Name}.AddAsync(entityToAdd, ct);
+        await db.{DbSet}.AddAsync(entityToAdd, ct);
         await db.SaveChangesAsync(ct);
         return true;
     }}";
@@ -56,42 +58,42 @@ public class UseCasesGenerator : BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IAuthenticationService}<{User.FullName}, {StateDto.FullName}> authenticationService)
+    {IAuthenticationService}<{User}, {StateDto.FullName}> authenticationService)
 {{
-    public async Task<bool> IsAllowedAsync({DbContext.FullName} db, CancellationToken ct) => {authenticated};
-    public async Task<bool> CanListAsync({DbContext.FullName} db, CancellationToken ct) => {authenticated};
-    public async Task<bool> CanCreateAsync({DbContext.FullName} db, CancellationToken ct) => authenticationService.State.User != null;
-    public async Task<bool> CanCreateAsync({DbContext.FullName} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
-    public async Task<bool> CanReadAsync({DbContext.FullName} db, {Dto.FullName} dto, CancellationToken ct) => {authenticated};
-    public async Task<bool> CanUpdateAsync({DbContext.FullName} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
-    public async Task<bool> CanDeleteAsync({DbContext.FullName} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> IsAllowedAsync({DbContext} db, CancellationToken ct) => {authenticated};
+    public async Task<bool> CanListAsync({DbContext} db, CancellationToken ct) => {authenticated};
+    public async Task<bool> CanCreateAsync({DbContext} db, CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> CanCreateAsync({DbContext} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> CanReadAsync({DbContext} db, {Dto.FullName} dto, CancellationToken ct) => {authenticated};
+    public async Task<bool> CanUpdateAsync({DbContext} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
+    public async Task<bool> CanDeleteAsync({DbContext} db, {Dto.FullName} dto, CancellationToken ct) => authenticationService.State.User != null;
 
-    public async Task<{Entity.FullName}?> FindByMatchAsync({DbContext.FullName} db, {Dto.FullName} dto, CancellationToken ct) {(Entity.Properties.Any(a => a.IsName != null) ? $@"
-        => await db.{DbSet.Name}{string.Join("", Entity.ForeignKeyProperties.Select(p => $@"
+    public async Task<{Entity}?> FindByMatchAsync({DbContext} db, {Dto.FullName} dto, CancellationToken ct) {(Entity.Properties.Any(a => a.IsName != null) ? $@"
+        => await db.{DbSet}{string.Join("", Entity.ForeignKeyProperties.Select(p => $@"
             .Include(a => a.{p.Name})"))} // Add your filter query
             .FirstOrDefaultAsync(a => {string.Join(" &&", Entity.Properties.Where(p => p.IsName != null).Select(p => $@"
                 a.{p.Name} == dto.{p.Name}"))}, ct);" : $@"
         => null; // If you implement this, also use includes")}
 
-    public async Task<{Entity.FullName}?> FindByIdAsync({DbContext.FullName} db, {keyType} id, CancellationToken ct) 
-        => await db.{DbSet.Name}{string.Join("", Entity.ForeignKeyProperties.Select(p => $@"
+    public async Task<{Entity}?> FindByIdAsync({DbContext} db, {keyType} id, CancellationToken ct) 
+        => await db.{DbSet}{string.Join("", Entity.ForeignKeyProperties.Select(p => $@"
             .Include(a => a.{p.Name})"))} // Add your filter query
             .FirstOrDefaultAsync(a => a.Id == id, ct);
 
-    public IQueryable<{Entity.FullName}> ListAll({DbContext.FullName} db)
-        => db.{DbSet.Name}; // Add your filter query, no need for includes here
+    public IQueryable<{Entity}> ListAll({DbContext} db)
+        => db.{DbSet}; // Add your filter query, no need for includes here
 
-    public async Task<bool> AddAsync({DbContext.FullName} db, {Entity.FullName} entityToAdd, CancellationToken ct){attachCode}
+    public async Task<bool> AddAsync({DbContext} db, {Entity} entityToAdd, CancellationToken ct){attachCode}
 
-    public async Task<bool> UpdateAsync({DbContext.FullName} db, {Entity.FullName} updatedEntity, {Dto.FullName} dto, CancellationToken ct)
+    public async Task<bool> UpdateAsync({DbContext} db, {Entity} updatedEntity, {Dto.FullName} dto, CancellationToken ct)
     {{
         await db.SaveChangesAsync(ct);
         return true;
     }}
 
-    public async Task<bool> RemoveAsync({DbContext.FullName} db, {Entity.FullName} entity, CancellationToken ct)
+    public async Task<bool> RemoveAsync({DbContext} db, {Entity} entity, CancellationToken ct)
     {{
-        db.{DbSet.Name}.Remove(entity);
+        db.{DbSet}.Remove(entity);
         await db.SaveChangesAsync(ct);
         return true;
     }}
