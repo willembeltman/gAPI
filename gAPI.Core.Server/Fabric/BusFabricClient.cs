@@ -276,12 +276,8 @@ public sealed class BusFabricClient
                 implementation,
                 serviceId);
 
-        //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = StreamingCache.BusServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
-
-        //if (service.TryAdd(implementation, serviceSubscriptionId) == false)
-        //    throw new Exception("Cache");
 
         var message = new BusSubscribeDto(serviceSubscriptionId, serviceId, busConnection.BusConnectionId);
 
@@ -362,8 +358,8 @@ public sealed class BusFabricClient
             {
                 var messageType = BusFabricConverter.ReadHostToClientMessageType(binaryReader);
 
-                //if (Logger.IsEnabled(LogLevel.Trace))
-                //    Logger.LogTrace("{now} ReceiveKernel(messageType = {messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now} ReceiveKernel(messageType = {messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
 
                 switch (messageType)
                 {
@@ -606,6 +602,9 @@ public sealed class BusFabricClient
     }
     private void Receive_BusSendRequestAck_FromFabricAsync(BusSendRequestDoneDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_BusSendRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         if (StreamingCache.PendingBusSendRequests.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
@@ -657,6 +656,9 @@ public sealed class BusFabricClient
     }
     private void Receive_BusInvokeRequestAck_FromFabricAsync(BusInvokeRequestAckDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_BusInvokeRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
@@ -669,6 +671,9 @@ public sealed class BusFabricClient
     }
     private async Task Receive_BusInvokeRequestDone_FromFabricAsync(BusInvokeRequestDoneDto message, CancellationToken ct)
     {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} Receive_BusInvokeRequestDone_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
         if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)

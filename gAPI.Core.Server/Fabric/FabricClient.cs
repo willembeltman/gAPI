@@ -303,7 +303,7 @@ public sealed class FabricClient
 
     #region Subscription
 
-    public async Task SubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
+    public Task SubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -318,17 +318,12 @@ public sealed class FabricClient
 
         if (UseFabric == false)
         {
-            if (StreamingCache.SubscribeTcss.TryRemove(request.ServiceSubscriptionId, out var completion))
-            {
-                var ack = new SubscribeAckDto(request, false, null, null);
-                completion.SetResult(ack);
-            }
-            return;
+            return Received_SubscribeAck_FromFabric(new(request, false, null, null), ct);
         }
 
-        await Sender.Send_Subscribe_ToFabricAsync(request, ct);
+        return Sender.Send_Subscribe_ToFabricAsync(request, ct);
     }
-    public async Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
+    public Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -342,17 +337,12 @@ public sealed class FabricClient
             serviceSubscription.SessionId
         );
 
-        //if (UseFabric == false)
-        //{
-        //    if (StreamingCache.UnsubscribeTcss.TryRemove(request.ServiceSubscriptionId, out var tcs))
-        //    {
-        //        var ack = new UnsubscribeAckDto(request, false, null, null);
-        //        tcs.SetResult(ack);
-        //    }
-        //    return;
-        //}
+        if (UseFabric == false)
+        {
+            return Received_UnsubscribeAck_FromFabric(new(request, false, null, null), ct);
+        }
 
-        await Sender.Send_Unsubscribe_ToFabricAsync(request, ct);
+        return Sender.Send_Unsubscribe_ToFabricAsync(request, ct);
     }
 
     #endregion
@@ -880,51 +870,51 @@ public sealed class FabricClient
 
     public async Task Handle_FabricSendRequestDone_FromClientAsync(SendRequestDoneDto message, CancellationToken ct)
     {
-        // Voor als er geen fabric is
         if (StreamingCache.PendingClientSendRequests.TryRemove(message.Routing.RequestId, out var completion))
         {
+            // Ik heb er hard over na gedacht en deze moet dus blijven. Als er geen fabric wordt gebruikt, blijven
+            // we gewoon de fabric callbacks naar de client gebruiken, deze worden in de PendingClientSendRequests
+            // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
                 completion.SetCanceled(ct);
             else if (message.ExceptionMessage != null)
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 completion.TrySetResult(message);
+            return;
         }
-        else
+        if (!UseFabric)
         {
-            if (UseFabric)
-            {
-                await Sender.Send_SendRequestDone_ToFabricAsync(message, ct);
-            }
-            else
-            {
-                Receive_SendRequestDone_FromFabricAsync(message, ct);
-            }
+            // gekke situatie, maar laat maar staan, deze is een fallback voor die hierboven staat. Beetje onmogelijke situatie.
+            Receive_SendRequestDone_FromFabricAsync(message, ct);
+            return;
         }
+        await Sender.Send_SendRequestDone_ToFabricAsync(message, ct);
+
     }
 
     public async Task Handle_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckDto message, CancellationToken ct)
     {
         if (StreamingCache.PendingClientInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
         {
+            // Ik heb er hard over na gedacht en deze moet dus blijven. Als er geen fabric wordt gebruikt, blijven
+            // we gewoon de fabric callbacks naar de client gebruiken, deze worden in de PendingClientSendRequests
+            // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
                 completion.SetCanceled(ct);
             else if (message.ExceptionMessage != null)
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 completion.TrySetResult(message);
+            return;
         }
-        else
+        if (!UseFabric)
         {
-            if (UseFabric)
-            {
-                await Sender.Send_InvokeRequestAck_ToFabricAsync(message, ct);
-            }
-            else
-            {
-                Receive_InvokeRequestAck_FromFabricAsync(message, ct);
-            }
+            // gekke situatie, maar laat maar staan, deze is een fallback voor die hierboven staat. Beetje onmogelijke situatie.
+            Receive_InvokeRequestAck_FromFabricAsync(message, ct);
+            return;
         }
+        await Sender.Send_InvokeRequestAck_ToFabricAsync(message, ct);
     }
     public async Task Handle_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneDto message, CancellationToken ct)
     {
@@ -936,23 +926,19 @@ public sealed class FabricClient
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 completion.TrySetResult(message);
+            return;
         }
-        else
+        if (!UseFabric)
         {
-            if (UseFabric)
-            {
-                await Sender.Send_InvokeRequestDone_ToFabricAsync(message, ct);
-            }
-            else
-            {
-                Receive_InvokeRequestDone_FromFabricAsync(message, ct);
-            }
+            Receive_InvokeRequestDone_FromFabricAsync(message, ct);
+            return;
         }
+        await Sender.Send_InvokeRequestDone_ToFabricAsync(message, ct);
 
-        if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
-        {
-            await handler.DisposeAsync();
-        }
+        //if (StreamingCache.StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
+        //{
+        //    await handler.DisposeAsync();
+        //}
     }
 
     public async Task Handle_FabricStreamingRequest_FromClientAsync(StreamingRequestDto message, CancellationToken ct)
@@ -1142,7 +1128,7 @@ public sealed class FabricClient
                             streamId,
                             true,
                             true,
-                            ex.Message, 
+                            ex.Message,
                             ex.InnerException?.Message,
                             []);
                     }
