@@ -40,15 +40,15 @@ public class MappingGenerator : BaseGenerator
         var context = new NameContext()
         {
             DtoNameProperties = [.. Entity.Properties
-                .Where(a =>
-                    a.IsHidden == false &&
-                    a.IsLijst == false &&
-                    a.NavigationDbSet != null)
-                .Select(a => new DtoNameProperty()
-                {
-                    NameProperty = a,
-                    ForeignEntityNameProperties = [.. a.NavigationDbSet!.Entity.Properties.Where(a => a.IsName != null)]
-                })],
+                        .Where(a =>
+                            a.IsHidden == false &&
+                            a.IsLijst == false &&
+                            a.NavigationDbSet != null)
+                        .Select(a => new DtoNameProperty()
+                        {
+                            NameProperty = a,
+                            ForeignEntityNameProperties = [.. a.NavigationDbSet!.Entity.Properties.Where(a => a.IsName != null)]
+                        })],
 
             MatchedEntityProperties = Entity.Properties
                 .Where(a =>
