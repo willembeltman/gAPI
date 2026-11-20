@@ -446,7 +446,7 @@ public class FabricManager : IDashboardSnapshotGetter
         if (logger.IsEnabled(LogLevel.Trace))
             logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
 
-        if (!state.TryReady())
+        if (!state.TryComplete())
             return;
 
         var exceptions = state.Exceptions.Count == 0

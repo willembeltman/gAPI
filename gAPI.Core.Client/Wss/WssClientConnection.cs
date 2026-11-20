@@ -84,6 +84,7 @@ public abstract class WssClientConnection : IWssClientConnection
             await ConnectAsync();
         }
     }
+
     private async Task ConnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -159,6 +160,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 {
                     Logger.LogError(ex2, "Gated_ConnectAsync catch");
                 }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
     }
