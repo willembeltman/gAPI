@@ -43,8 +43,7 @@ public class Generator
 
         if (SharedReferences.AzureBaseBusConnection != null)
             BusConnection = new BusConnectionGenerator(this, "AzureServiceBus", SharedReferences.AzureBaseBusConnection);
-
-        if (SharedReferences.RabbitMQBaseBusConnection != null)
+        else if (SharedReferences.RabbitMQBaseBusConnection != null)
             if (BusConnection == null)
                 BusConnection = new BusConnectionGenerator(this, "RabbitMQ", SharedReferences.RabbitMQBaseBusConnection);
             else
@@ -54,6 +53,9 @@ public class Generator
                 BusConnection = new BusConnectionGenerator(this, "Fabric", SharedReferences.BaseFabricConnection, overloadFabricClient: true);
             else
                 throw new Exception("You cannot have two or more service bus providers in the same project");
+        else
+            throw new Exception("You must reference one of the base bus projects");
+
 
         AddAutoBusExtension = new AddAutoBusExtensionGenerator(this);
 

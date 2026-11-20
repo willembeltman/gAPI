@@ -31,8 +31,7 @@ public class ApiHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             var ___ct = ___timeoutCts.Token;
 
             await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -92,8 +91,7 @@ public class ApiHub(
         CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -140,8 +138,7 @@ public class ApiHub(
         CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -200,8 +197,7 @@ public class ApiHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
             await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -262,8 +258,7 @@ public class ApiHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
             await ___fabricClient.WaitForConnectionAsync(___ct);

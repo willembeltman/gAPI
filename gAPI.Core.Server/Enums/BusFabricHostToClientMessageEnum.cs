@@ -8,7 +8,6 @@ public enum BusFabricHostToClientMessageEnum
     UnsubscribeAck,
 
     BusFireAndForget,
-    BusFireAndForgetCancelled,
 
     BusSendRequest,
     BusSendRequestCancelled,

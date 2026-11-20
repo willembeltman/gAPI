@@ -171,7 +171,7 @@ public class EditViewGenerator : BaseGenerator
         );
         await {entityName}.LoadModelAsync({idGetter});{string.Join("", clients.Select(p => $@"
 
-        {p.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
+        {p.Name.ToMultiple()} = new {ListDataSource.Name}<{p.ForeignKeyType!.Name}, {p.ForeignKeyType.KeyProperty!.TypeSimpleName}>(
             JS,
             StateHasChanged,
             GetPrimaryKey: x => x.{p.ForeignKeyType.KeyProperty.Name},

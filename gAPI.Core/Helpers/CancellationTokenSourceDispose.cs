@@ -12,6 +12,7 @@ public sealed class CancellationTokenSourceDispose : IDisposable
         TimeSpan timeoutDuration)
         : this(null)
     {
+        TimeoutDuration = timeoutDuration;
         _cts.CancelAfter(timeoutDuration);
     }
     public CancellationTokenSourceDispose(
@@ -19,9 +20,10 @@ public sealed class CancellationTokenSourceDispose : IDisposable
         CancellationToken? ct = null)
         : this(ct)
     {
+        TimeoutDuration = timeoutDuration;
         _cts.CancelAfter(timeoutDuration);
     }
-    public CancellationTokenSourceDispose(
+    private CancellationTokenSourceDispose(
         CancellationToken? ct = null)
     {
         _cts = ct?.CanBeCanceled == true
@@ -31,7 +33,12 @@ public sealed class CancellationTokenSourceDispose : IDisposable
 
     public CancellationToken Token => _cts.Token;
     public bool IsCancellationRequested => _cts.IsCancellationRequested;
+    public TimeSpan TimeoutDuration { get; }
 
+    public void Reset()
+    {
+        _cts.CancelAfter(TimeoutDuration);
+    }
     public void Register(Action action)
     {
         _cts.Token.Register(action);

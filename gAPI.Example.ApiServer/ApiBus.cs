@@ -15,7 +15,7 @@ public class ApiBus(
     , IHostedBusService
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<ApiBus>();
-    private TaskCompletionSource<string>? PontResult;
+    private TaskCompletionSource<string>? PongResult;
 
     public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
     {
@@ -40,18 +40,18 @@ public class ApiBus(
         {
             var sw2 = Stopwatch.StartNew();
 
-            PontResult = new TaskCompletionSource<string>();
+            PongResult = new TaskCompletionSource<string>();
 
-            busContext.Bus1.ToAny().Ping("hoi, dit is een lange zin. of zo.");
+            busContext.Bus2.ToAny().Ping("hoi, dit is een lange zin. of zo.");
 
-            var str = await PontResult.Task.WaitAsync(CancellationToken.None);
+            var str = await PongResult.Task.WaitAsync(CancellationToken.None);
 
-            Logger.LogInformation($"mainBus => Bus1 - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
+            Logger.LogInformation($"apiBus => Bus2 - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
         }
     }
     public void Pong(string v)
     {
-        PontResult?.SetResult(v);
+        PongResult?.SetResult(v);
     }
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)

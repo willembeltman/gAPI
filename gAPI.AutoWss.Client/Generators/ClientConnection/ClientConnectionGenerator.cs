@@ -46,6 +46,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
+    public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -69,6 +70,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(WssClientConnection);
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
+        Reg(CancellationTokenSourceDispose);
         //Reg(SubscribeDto);
         Reg(InvokeRequestDto);
         Reg(SendRequestDto);
@@ -138,7 +140,7 @@ public class {Name}
     {GenerateSubscribe()}{GenerateUnsubscibe()}
     {GenerateOnDisconnected()}{GenerateOnRestoreSubscriptions()}
 
-    {GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
+    {GenerateSendAndForgetRequest(ref functions, functionNames)}{GenerateSendRequest(ref functions, functionNames)}{GenerateInvokeRequest(ref functions, functionNames)}
     {string.Join("", Context.ServiceContext.HubInterfaces.Select(Interface => GenerateMethods(ref functions, functionNames, Interface)))}
     {functions}
 }}";
@@ -281,18 +283,17 @@ public class {Name}
     }}";
     }
 
-
-    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    private string GenerateSendAndForgetRequest(ref string functions2, HashSet<string> functionNames)
     {
         var functions = "";
         var code = $@"
-    protected override async Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendAndForgetRequest_ToServiceAsync({SendRequestDto} ___sendRequest, CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{{now}} Send_SendRequest_ToServiceAsync({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
-        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)) ? $@"
+        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask || a.ResponseType.IsVoid)).Select(hub => $@"
+        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)).Select(hub => $@"
             case ""{hub}"":
                 {{
                     var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
@@ -302,12 +303,9 @@ public class {Name}
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            .Select((arg, index) => (arg, index))
-            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-                : $@"
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => $@"
                                 var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
@@ -317,23 +315,49 @@ public class {Name}
                                 }}
                                 return;
                             }}"))}
-                    {string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
+                    }}
+                    break;
+                }}"))}
+        }}" : "")}
+
+        throw new Exception($""Service \""{{___sendRequest.Routing.ServiceId.Value}}\"" / Method \""{{___sendRequest.Routing.MethodId.Value}}\"" not found"");
+    }}";
+        functions2 += functions;
+        return code;
+    }
+
+    private string GenerateSendRequest(ref string functions2, HashSet<string> functionNames)
+    {
+        var functions = "";
+        var code = $@"
+    protected override async Task Send_SendRequest_ToServiceAsync({SendRequestDto} ___sendRequest, {CancellationTokenSourceDispose} ___timeoutCts)
+    {{
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace(""{{now}} Send_SendRequest_ToServiceAsync({{___sendRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___sendRequest);
+        {(Context.ServiceContext.HubInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {{{string.Join("", Context.ServiceContext.HubInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
+            case ""{hub}"":
+                {{
+                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
                         case ""{method}"":
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            .Select((arg, index) => (arg, index))
-            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-                : $@"
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
+                                    : $@"
                                 var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                 }}
                                 return;
                             }}"))}
@@ -351,7 +375,7 @@ public class {Name}
     {
         var functions2 = "";
         var code = $@"
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{{now}} Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
@@ -373,18 +397,18 @@ public class {Name}
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
-            .Select((arg, index) => (arg, index))
-            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-                : $@"
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
+                                    : $@"
                                 var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     var response = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                     {(returnTypeInner.IsHubResultT ? $@"
                                     response.UserId = HttpClient.UserId;
                                     response.SessionId = HttpClient.SessionId;
@@ -404,14 +428,14 @@ public class {Name}
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
                                     .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
                                     ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                                     : $@"
                                 var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     var responses = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                     await foreach (var response in responses)
                                     {{{(returnTypeInner.IsHubResultT ? $@"
                                         response.UserId = HttpClient.UserId;

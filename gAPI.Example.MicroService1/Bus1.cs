@@ -63,7 +63,7 @@ public class Bus1(
             stopwatch = Stopwatch.StartNew();
             completion = new TaskCompletionSource<double>();
 
-            await busContext.Bus2.ToAny().Ping(ct);
+            await busContext.Bus2.ToAny().RealPing(ct);
             yield return await completion.Task.WaitAsync(ct);
         }
     }
@@ -115,7 +115,33 @@ public class Bus1(
                 Logger.LogInformation($"Service2.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
             }
 
-            await busContext.Bus2.ToAny().StartServiceTests(sessionId, to, ct);
+
+
+            busContext.WssBus.ToAny().SendAndForget("hoi", ct);
+            Logger.LogInformation($"MainService.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
+            await busContext.WssBus.ToAny().Send("hoi", ct);
+            Logger.LogInformation("MainService.Send");
+
+            result = await busContext.WssBus.ToAny().InvokeTask("hoi", ct);
+            Logger.LogInformation($"MainService.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+
+            await foreach (var item in busContext.WssBus.ToAny().InvokeList("hoi", ct))
+            {
+                result = item;
+                Logger.LogInformation($"MainService.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+            }
+
+            result = await busContext.WssBus.ToAny().InvokeTaskWithList(MyList(), ct);
+            Logger.LogInformation($"MainService.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
+
+            await foreach (var item in busContext.WssBus.ToAny().InvokeListWithList(MyList(), ct))
+            {
+                result = item;
+                Logger.LogInformation($"MainService.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+            }
+
+            await busContext.WssBus.ToAny().StartServiceTests(sessionId, ct);
 
             Logger.LogInformation($"Bus2 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
         }
@@ -181,7 +207,6 @@ public class Bus1(
 
     public void Ping(string v)
     {
-        busContext.ApiBus.ToAny().Pong(v);
         busContext.WssBus.ToAny().Pong(v);
     }
 }

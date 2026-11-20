@@ -6,20 +6,20 @@ namespace gAPI.Core.Helpers;
 
 public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
-    private readonly TimeSpan _timeOut;
+    private readonly CancellationTokenSourceDispose _timeOutCts;
     private readonly Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> _create;
     private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> _requestNext;
     private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, Task> _cancelled;
     private readonly Action<StreamId> _dispose;
 
     public RemoteAsyncEnumerable(
-        TimeSpan timeOut,
+        CancellationTokenSourceDispose timeoutCts,
         Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> construct,
         Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> requestNext,
         Func<StreamId, IRemoteAsyncEnumerator<T>, Task> cancelled,
         Action<StreamId> dispose)
     {
-        _timeOut = timeOut;
+        _timeOutCts = timeoutCts;
         _create = construct;
         _requestNext = requestNext;
         _cancelled = cancelled;
@@ -29,7 +29,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
     public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         return new Enumerator(
-            _timeOut,
+            _timeOutCts,
             _create,
             _requestNext,
             _cancelled,
@@ -41,36 +41,35 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
     {
         private readonly StreamId _streamId = StreamId.New();
         private readonly Channel<T> _items = Channel.CreateUnbounded<T>();
-        private readonly TimeSpan _timeOut;
+        private readonly CancellationTokenSourceDispose _timeoutCts;
         private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> _requestNext;
         private readonly Func<StreamId, IRemoteAsyncEnumerator<T>, Task> _cancelled;
         private readonly Action<StreamId> _dispose;
         private readonly CancellationToken _cancellationToken;
-        private readonly ResettableTimeout _timeout;
         private readonly TaskCompletionSource _remoteCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         private int _cancelSent;
         private int _completed;
 
         public Enumerator(
-            TimeSpan timeOut,
+            CancellationTokenSourceDispose timeOutCts,
             Action<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken> create,
             Func<StreamId, IRemoteAsyncEnumerator<T>, CancellationToken, Task> requestNext,
             Func<StreamId, IRemoteAsyncEnumerator<T>, Task> cancelled,
             Action<StreamId> dispose,
             CancellationToken cancellationToken)
         {
-            _timeOut = timeOut;
+            _timeoutCts = timeOutCts;
             _requestNext = requestNext;
             _cancelled = cancelled;
             _dispose = dispose;
             _cancellationToken = cancellationToken;
 
-            _timeout = new ResettableTimeout(
-                _timeOut,
-                () => Complete(
+            _timeoutCts.Register(() => {
+                Complete(
                     new TimeoutException(
-                        "Remote async enumerable timed out.")));
+                        "Remote async enumerable timed out."));
+            });
 
             create(_streamId, this, cancellationToken);
         }
@@ -83,7 +82,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
                 return;
 
             if (_items.Writer.TryWrite(item))
-                _timeout.Reset();
+                _timeoutCts.Reset();
         }
 
         public void Complete(Exception? error = null)
@@ -91,7 +90,7 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
             if (Interlocked.Exchange(ref _completed, 1) != 0)
                 return;
 
-            _timeout.Dispose();
+            //_timeout.Dispose();
             _remoteCompletion.TrySetResult();
             _items.Writer.TryComplete(error);
         }

@@ -130,9 +130,8 @@ public class {Name}(
         try
         {{
             ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
             var ___ct = ___timeoutCts.Token;
 
             await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -196,9 +195,8 @@ public class {Name}(
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
 
         await ___fabricClient.WaitForConnectionAsync(___ct);
@@ -249,9 +247,8 @@ public class {Name}(
             method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
 
         await ___fabricClient.WaitForConnectionAsync(___ct);

@@ -158,8 +158,8 @@ public class {Name}(
         try
         {{
             ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
             ___timeoutCts.CancelAfter(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
@@ -219,8 +219,8 @@ public class {Name}(
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -276,8 +276,8 @@ public class {Name}(
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 

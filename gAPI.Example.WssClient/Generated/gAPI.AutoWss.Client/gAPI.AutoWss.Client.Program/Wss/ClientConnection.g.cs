@@ -3,6 +3,7 @@ using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
@@ -153,7 +154,7 @@ public class ClientConnection
     }
 
     
-    protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendAndForgetRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
@@ -202,7 +203,25 @@ public class ClientConnection
                                 }
                                 return;
                             }
-                    
+                    }
+                    break;
+                }
+        }
+
+        throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
+    }
+    protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationTokenSourceDispose ___timeoutCts)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
+        
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {
+            case "IWssHub":
+                {
+                    var clients = await GetWssHubsSnapshotAsync();
+                    switch (___sendRequest.Routing.MethodId.Value)
+                    {
                         case "Send":
                             {
                                 var ___offset = 0;
@@ -212,7 +231,7 @@ public class ClientConnection
                                 {
                                     await client.Send(
                                         message,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -220,12 +239,12 @@ public class ClientConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssHub_SendWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssHub_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -236,7 +255,7 @@ public class ClientConnection
 
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("{now} Send_InvokeRequest_ToServiceAsync({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
@@ -258,7 +277,7 @@ public class ClientConnection
                                 {
                                     var responses = client.InvokeList(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IWssHub_InvokeList_Serializer(response);
@@ -270,12 +289,12 @@ public class ClientConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssHub_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssHub_InvokeListWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IWssHub_InvokeListWithList_Serializer(response);

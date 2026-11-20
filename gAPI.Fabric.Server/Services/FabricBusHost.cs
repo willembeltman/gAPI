@@ -122,14 +122,6 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
             writer.Write(message);
         }, actor);
     }
-    public async Task Send_BusFireAndForgetCancelled_ToApiAsync(BusSendRequestCancelledDto message, IActor actor)
-    {
-        await Enqueue(writer =>
-        {
-            BusFabricConverter.WriteHostToClientMessageType(writer, BusFabricHostToClientMessageEnum.BusFireAndForgetCancelled);
-            writer.Write(message);
-        }, actor);
-    }
 
     public async Task Send_BusSendRequest_ToApiAsync(BusSendRequestDto message, IActor actor)
     {
@@ -274,13 +266,6 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
                             var busFireAndForget = reader.ReadBusSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
                             await Manager.Receive_BusSendFireAndForget_FromApiAsync(this, ManagerLogger, busFireAndForget, receiveSize, Cts.Token);
-                        }
-                        break;
-                    case BusFabricClientToHostMessageEnum.BusFireAndForgetCancelled:
-                        {
-                            var busFireAndForgetCancelled = reader.ReadBusSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
-                            var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendFireAndForgetCancelled_FromApiAsync(this, ManagerLogger, busFireAndForgetCancelled, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusSendRequest:

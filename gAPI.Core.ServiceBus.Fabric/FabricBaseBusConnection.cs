@@ -10,8 +10,10 @@ using Microsoft.Extensions.Logging;
 namespace gAPI.Core.ServiceBus.Fabric;
 
 public abstract class FabricBaseBusConnection(
+#pragma warning disable CS9113 // Parameter is unread.
     IHostApplicationLifetime appLifetime,
     ILoggerFactory loggerFactory,
+#pragma warning restore CS9113 // Parameter is unread.
     BusFabricClient fabricClient,
     ServiceBusConfig config)
     : IFabricBaseBusConnection
@@ -47,10 +49,10 @@ public abstract class FabricBaseBusConnection(
     public void UnRegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
         => fabricClient.UnRegisterTimeout(routing, cts);
 
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer) 
-        => fabricClient.RegisterBusRemoteAsyncEnumerableArgument<T>(routing, argumentIndex, deserializer);
-    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts)
-        => fabricClient.RegisterBusAsyncEnumerableArgument<T>(routing, argumentIndex, source, serializer, cts);
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer, CancellationTokenSourceDispose timeoutCts) 
+        => fabricClient.RegisterBusRemoteAsyncEnumerableArgument<T>(routing, argumentIndex, deserializer, timeoutCts);
+    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
+        => fabricClient.RegisterBusAsyncEnumerableArgument<T>(routing, argumentIndex, source, serializer, timeoutCts);
     public async Task UnRegisterAsyncEnumerableArgument(BusRoutingDto routing, int argumentIndex) 
         => await fabricClient.UnRegisterBusAsyncEnumerableArgument(routing, argumentIndex);
 
@@ -60,7 +62,7 @@ public abstract class FabricBaseBusConnection(
 
     // Calling this will route the request to service
     public abstract Task Send_FireAndForgetRequest_ToServiceAsync(BusSendRequestDto requestDto, CancellationToken ct);
-    public abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationToken ct);
-    public abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationToken ct);
+    public abstract Task Send_SendRequest_ToServiceAsync(BusSendRequestDto sendRequest, CancellationTokenSourceDispose timeoutCts);
+    public abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto invokeRequest, CancellationTokenSourceDispose timeoutCts);
 
 }

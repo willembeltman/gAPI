@@ -67,12 +67,13 @@ public class ApiHub(
 
     public async Task StartAllTests(CancellationToken ct)
     {
+        var sw = Stopwatch.StartNew();
+
         //await Task.Delay(2000);
 
         for (int i = 0; i < 10; i++)
             await mainApi.InvokeTask("hoi", ct);
         Logger.LogInformation("mainApi - Warmup done");
-
 
         for (var y = 0; y < 50; y++)
         {
@@ -87,9 +88,6 @@ public class ApiHub(
             Logger.LogInformation($"mainClient => mainApi - PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
         }
 
-
-        var sw = Stopwatch.StartNew();
-
         mainApi.SendAndForget("hoi", ct);
         Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
@@ -98,21 +96,6 @@ public class ApiHub(
 
         var result = await mainApi.InvokeTask("hoi", ct);
         Logger.LogInformation($"> mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
-
-        //await foreach (var item in mainApi.InvokeList("hoi", ct))
-        //{
-        //    result = item;
-        //    Logger.LogInformation($"> mainApi.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
-        //}
-
-        //result = await mainApi.InvokeTaskWithList(MyList(), ct);
-        //Logger.LogInformation($"> mainApi.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
-
-        //await foreach (var item in mainApi.InvokeListWithList(MyList(), ct))
-        //{
-        //    result = item;
-        //    Logger.LogInformation($"> mainApi.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
-        //}
 
         await mainApi.StartServerTests(sw.Elapsed.TotalMilliseconds, ct);
 

@@ -11,14 +11,7 @@ public sealed class WithCookiesHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            return await base.SendAsync(request, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return await base.SendAsync(request, cancellationToken);
     }
 }

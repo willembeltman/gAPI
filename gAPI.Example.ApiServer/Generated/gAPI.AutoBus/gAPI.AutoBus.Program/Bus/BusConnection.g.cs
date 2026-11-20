@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Config;
@@ -458,6 +459,18 @@ public class BusConnection
                                 }
                                 return;
                             }
+                        case "Ping":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                string str = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    client.Ping(
+                                        str);
+                                }
+                                return;
+                            }
                     }
                     break;
                 }
@@ -497,7 +510,7 @@ public class BusConnection
         }
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    public override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationToken ___ct)
+    public override async Task Send_SendRequest_ToServiceAsync(BusSendRequestDto ___sendRequest, CancellationTokenSourceDispose ___timeoutCts)
     {
         switch (___sendRequest.Routing.ServiceId.Value)
         {
@@ -515,7 +528,7 @@ public class BusConnection
                                 {
                                     await client.Send(
                                         message,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -523,12 +536,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IApiBus_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IApiBus_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
                                         test,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -541,7 +554,7 @@ public class BusConnection
                                 {
                                     await client.StartServiceTests(
                                         sessionId,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -572,7 +585,7 @@ public class BusConnection
                                     await client.StartServiceTests(
                                         sessionId,
                                         to,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -585,7 +598,7 @@ public class BusConnection
                                 {
                                     await client.Send(
                                         message,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -593,12 +606,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus1_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus1_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
                                         test,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -607,7 +620,7 @@ public class BusConnection
                                 foreach (var client in clients)
                                 {
                                     await client.PongTask(
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -628,7 +641,7 @@ public class BusConnection
                                 {
                                     await client.Send(
                                         message,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -636,21 +649,21 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IBus2_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
                                         test,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
-                        case "Ping":
+                        case "RealPing":
                             {
                                 foreach (var client in clients)
                                 {
-                                    await client.Ping(
-                                        ___ct);
+                                    await client.RealPing(
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -665,7 +678,7 @@ public class BusConnection
                                     await client.StartServiceTests(
                                         sessionId,
                                         to,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -686,7 +699,7 @@ public class BusConnection
                                 {
                                     await client.Send(
                                         message,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -694,12 +707,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssBus_SendWithList_0_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssBus_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     await client.SendWithList(
                                         test,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -712,7 +725,7 @@ public class BusConnection
                                 {
                                     await client.StartServiceTests(
                                         sessionId,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                 }
                                 return;
                             }
@@ -730,7 +743,7 @@ public class BusConnection
         }
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(BusInvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
     {
         switch (___invokeRequest.Routing.ServiceId.Value)
         {
@@ -748,7 +761,7 @@ public class BusConnection
                                 {
                                     var response = await client.InvokeTask(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IApiBus_InvokeTask_Serializer(response);
                                 }
                             }
@@ -757,12 +770,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiBus_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiBus_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IApiBus_InvokeTaskWithList_Serializer(response);
                                 }
                             }
@@ -776,7 +789,7 @@ public class BusConnection
                                 {
                                     var responses = client.InvokeList(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IApiBus_InvokeList_Serializer(response);
@@ -788,12 +801,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiBus_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiBus_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IApiBus_InvokeListWithList_Serializer(response);
@@ -818,7 +831,7 @@ public class BusConnection
                                 {
                                     var response = await client.InvokeTask(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IBus1_InvokeTask_Serializer(response);
                                 }
                             }
@@ -827,12 +840,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IBus1_InvokeTaskWithList_Serializer(response);
                                 }
                             }
@@ -846,7 +859,7 @@ public class BusConnection
                                 {
                                     var responses = client.InvokeList(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IBus1_InvokeList_Serializer(response);
@@ -858,12 +871,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus1_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IBus1_InvokeListWithList_Serializer(response);
@@ -876,7 +889,7 @@ public class BusConnection
                                 foreach (var client in clients)
                                 {
                                     var responses = client.PingEnumerable(
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IBus1_PingEnumerable_Serializer(response);
@@ -901,7 +914,7 @@ public class BusConnection
                                 {
                                     var response = await client.InvokeTask(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IBus2_InvokeTask_Serializer(response);
                                 }
                             }
@@ -910,12 +923,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IBus2_InvokeTaskWithList_Serializer(response);
                                 }
                             }
@@ -929,7 +942,7 @@ public class BusConnection
                                 {
                                     var responses = client.InvokeList(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IBus2_InvokeList_Serializer(response);
@@ -941,12 +954,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IBus2_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IBus2_InvokeListWithList_Serializer(response);
@@ -971,7 +984,7 @@ public class BusConnection
                                 {
                                     var response = await client.InvokeTask(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IWssBus_InvokeTask_Serializer(response);
                                 }
                             }
@@ -980,12 +993,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssBus_InvokeTaskWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssBus_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var response = await client.InvokeTaskWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     yield return IWssBus_InvokeTaskWithList_Serializer(response);
                                 }
                             }
@@ -999,7 +1012,7 @@ public class BusConnection
                                 {
                                     var responses = client.InvokeList(
                                         name,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IWssBus_InvokeList_Serializer(response);
@@ -1011,12 +1024,12 @@ public class BusConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssBus_InvokeListWithList_0_Deserializer);
+                                var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssBus_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.InvokeListWithList(
                                         list,
-                                        ___ct);
+                                        ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
                                         yield return IWssBus_InvokeListWithList_Serializer(response);
@@ -1266,6 +1279,7 @@ public class BusConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
 
 
 

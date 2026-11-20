@@ -6,7 +6,6 @@ namespace gAPI.Core.Server.Collections;
 
 public sealed class ServiceSubscriptionCollection
 {
-    long _nextId;
     readonly ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription> ServiceSubscriptions = new();
     public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>> Services = [];
 

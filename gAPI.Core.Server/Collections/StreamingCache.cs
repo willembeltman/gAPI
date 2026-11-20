@@ -9,9 +9,10 @@ namespace gAPI.Core.Server.Collections;
 
 public class StreamingCache
 {
-    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> WssTimeouts = [];
-    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusTimeouts = [];
-    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> FabricOutgoingTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> WssReceivedTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> FabricSenderTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusReceivedTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusSenderTimeouts = [];
 
     public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> BusServiceSubscriptionIds = [];
 
@@ -37,6 +38,5 @@ public class StreamingCache
 
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> BusStreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> BusStreamingResponseHandlers = [];
-
 
 }

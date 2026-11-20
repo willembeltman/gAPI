@@ -31,6 +31,7 @@ public class SseClientSubscription : IDisposable
         FabricConnectionId != null &&
         FabricManagerId != null;
 
+    private readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> Timeouts = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     private readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseDto>> StreamingResponseHandlers = [];
     private readonly ISseClientConnection SseClientConnection;
@@ -315,6 +316,10 @@ public class SseClientSubscription : IDisposable
         {
             try
             {
+                var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+                Timeouts.TryAdd(message.Routing.RequestId, timeoutCts);
+                ct = timeoutCts.Token;
+
                 if (message.StateIsChanged)
                     await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
@@ -328,7 +333,7 @@ public class SseClientSubscription : IDisposable
                     message.Routing,
                     -1,
                     enumerable,
-                    ct);
+                    timeoutCts);
 
                 ct.Register(async () =>
                 {
@@ -494,7 +499,7 @@ public class SseClientSubscription : IDisposable
             Logger.LogTrace("{now}: Receive_SubscribeAck_FromServerAsync({message})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
     }
 
-    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -503,7 +508,7 @@ public class SseClientSubscription : IDisposable
                 argumentIndex);
 
         return new RemoteAsyncEnumerable<byte[]>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -561,13 +566,13 @@ public class SseClientSubscription : IDisposable
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
         return new RemoteAsyncEnumerable<T>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -657,7 +662,7 @@ public class SseClientSubscription : IDisposable
         await Sender.Send_FabricStreamingRequest_ToServerAsync(streamingResponseClient, ct);
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -675,11 +680,10 @@ public class SseClientSubscription : IDisposable
                         streamId,
                         _ =>
                         {
-                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                             return new AsyncEnumerableRegistrationInstance<T>(
-                                source.GetAsyncEnumerator(linked.Token),
+                                source.GetAsyncEnumerator(timeoutCts.Token),
                                 new SemaphoreSlim(1, 1),
-                                linked);
+                                timeoutCts);
                         });
 
                     var entered = false;
@@ -727,7 +731,7 @@ public class SseClientSubscription : IDisposable
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
-                        cancellationToken.IsCancellationRequested)
+                        timeoutCts.IsCancellationRequested)
                     {
                         Logger.LogError(ex, "Cancelled");
 
@@ -776,7 +780,7 @@ public class SseClientSubscription : IDisposable
                     }
                 }));
     }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -791,11 +795,10 @@ public class SseClientSubscription : IDisposable
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                     return new AsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(linked.Token),
+                        source.GetAsyncEnumerator(timeoutCts.Token),
                         new SemaphoreSlim(1, 1),
-                        linked);
+                        timeoutCts);
                 });
 
             var entered = false;
@@ -844,7 +847,7 @@ public class SseClientSubscription : IDisposable
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
-                cancellationToken.IsCancellationRequested)
+                timeoutCts.IsCancellationRequested)
             {
                 Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
 

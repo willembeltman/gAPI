@@ -136,9 +136,8 @@ public sealed class {Name}(
         try
         {{
             ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
             var ___ct = ___timeoutCts.Token;
 
             await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -197,9 +196,8 @@ public sealed class {Name}(
     public async Task {method}({string.Join(", ", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -226,7 +224,7 @@ public sealed class {Name}(
             {index}, 
             {arg}, 
             ___{method}_{index}_Serializer, 
-            ___timeoutCts.Token);" : ""))}
+            ___timeoutCts);" : ""))}
         
         try
         {{
@@ -254,9 +252,8 @@ public sealed class {Name}(
     public async Task<{responseInnerType}{(responseInnerType.IsNullable ? "?" : "")}> {method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"{arg.ParameterType} {arg}" : $@"{arg.ParameterType} {arg} = default"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -283,7 +280,7 @@ public sealed class {Name}(
             {index},
             {arg}, 
             ___{method}_{index}_Serializer, 
-            ___timeoutCts.Token);" : ""))}
+            ___timeoutCts);" : ""))}
         
         {responseInnerType}{(responseInnerType.IsNullable ? "?" : "")} ___result = default!;
 
@@ -327,8 +324,8 @@ public sealed class {Name}(
     public async IAsyncEnumerable<{responseInnerType}{(responseInnerType.IsNullable ? "?" : "")}> {method}({string.Join(", ", method.Arguments.Select(arg => !arg.ParameterType.IsCancellationToken ? $@"{arg.ParameterType} {arg}" : $@"[EnumeratorCancellation] {arg.ParameterType} {arg} = default"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -356,7 +353,7 @@ public sealed class {Name}(
             {index}, 
             {arg}, 
             ___{method}_{index}_Serializer, 
-            ___timeoutCts.Token);" : ""))}
+            ___timeoutCts);" : ""))}
         
         try
         {{

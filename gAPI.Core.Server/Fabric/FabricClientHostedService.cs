@@ -7,12 +7,11 @@ public class FabricClientHostedService(
     FabricClient fabricClient)
     : IHostedService
 {
-    private AsyncServiceScope? Scope;
     private CancellationTokenSource? Cts;
 
     public async Task StartAsync(CancellationToken ct)
     {
-        if (Scope != null || Cts != null)
+        if (Cts != null)
             return;
 
         Cts = new CancellationTokenSource();
@@ -22,7 +21,7 @@ public class FabricClientHostedService(
     }
     public async Task StopAsync(CancellationToken ct)
     {
-        if (Scope == null)
+        if (Cts == null)
             return;
 
         var cts = Cts;

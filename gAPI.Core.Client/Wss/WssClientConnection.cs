@@ -119,11 +119,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 var socket = Ws;
                 var connectedCts = ConnectedCts;
 
-                var initialize = new InitializeDto()
-                {
-                    StateData = stateData,
-                    SessionId = sessionId
-                };
+                var initialize = new InitializeDto(stateData, sessionId);
 
                 var senderTask = Sender.SendKernel(socket, initialize, connectedCts.Token);
                 var receiverTask = ReceiverKernel(socket, connectedCts.Token);
@@ -388,6 +384,9 @@ public abstract class WssClientConnection : IWssClientConnection
 
                 var messageType = span.ReadWssServerToClientMessageEnum(ref offset);
 
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now} ReceiveKernel(messageType = {messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+
                 switch (messageType)
                 {
                     case WssServerToClientMessageEnum.SynchronizeClientIds:
@@ -618,7 +617,7 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private void Received_SynchronizeClientIds_FromServer(SynchronizeClientIdsDto synchronizeClientIds, CancellationToken ct)
+    private void Received_SynchronizeClientIds_FromServer(SynchronizeClientIdsDto synchronizeClientIds, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SynchronizeClientIds_FromServer({synchronizeClientIds})", DateTime.Now.ToString("HH:mm:ss.fff"), synchronizeClientIds);
@@ -628,7 +627,7 @@ public abstract class WssClientConnection : IWssClientConnection
         ClientConnectionId = synchronizeClientIds.ClientConnectionId;
     }
 
-    private void Received_SubscribeAck_FromServer(SubscribeAckDto message, CancellationToken ct)
+    private void Received_SubscribeAck_FromServer(SubscribeAckDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SubscribeAck_FromServer({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
@@ -636,14 +635,14 @@ public abstract class WssClientConnection : IWssClientConnection
         if (SubscribeTcss.TryRemove(message.SubscribeDto, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled(ct);
+                completion.SetCanceled();
             else if (message.ExceptionMessage != null)
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 completion.TrySetResult(message);
         }
     }
-    private void Received_UnsubscribeAck_FromServer(UnsubscribeAckDto message, CancellationToken ct)
+    private void Received_UnsubscribeAck_FromServer(UnsubscribeAckDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_UnsubscribeAck_FromServer({ack})", DateTime.Now.ToString("HH:mm:ss.fff"), message);
@@ -651,7 +650,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (UnsubscribeTcss.TryRemove(message.UnsubscribeDto, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled(ct);
+                completion.SetCanceled();
             else if (message.ExceptionMessage != null)
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
@@ -659,39 +658,23 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task Received_FabricSendAndForgetRequest_FromServer(SendRequestClientDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
-
-        var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
-        if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
-            Logger.LogError("Cannot add timeout");
-
-        try
-        {
-            if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
-
-            await Send_SendRequest_ToServiceAsync(message, timeoutCts.Token);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error processing SendAndForgetRequest for {requestId}", message.Routing.RequestId);
-        }
-        finally
-        {
-            timeoutCts.Dispose();
-            IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
-        }
-    }
-    private async Task Received_FabricSendAndForgetRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken ct)
+    private async Task Received_FabricSendAndForgetRequest_FromServer(SendRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         if (message.StateIsChanged)
-            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+            await HttpClient.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
+
+        await Send_SendAndForgetRequest_ToServiceAsync(message, connectionLifecycleCt);
+    }
+    private async Task Received_FabricSendAndForgetRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken connectionLifecycleCt)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now}: Received_SendAndForgetRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
+        if (message.StateIsChanged)
+            await HttpClient.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
 
         if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
@@ -700,24 +683,25 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task Received_FabricSendRequest_FromServer(SendRequestClientDto message, CancellationToken ct)
+    private async Task Received_FabricSendRequest_FromServer(SendRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, ct);
+        var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, connectionLifecycleCt);
         if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
         {
             Logger.LogError("Cannot add timeout");
             return;
         }
+        var ct = timeoutCts.Token;
 
         try
         {
             if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
+                await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-            await Send_SendRequest_ToServiceAsync(message, timeoutCts.Token);
+            await Send_SendRequest_ToServiceAsync(message, timeoutCts);
 
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -751,19 +735,20 @@ public abstract class WssClientConnection : IWssClientConnection
             IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
-    private async Task Received_FabricSendRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken ct)
+    private async Task Received_FabricSendRequestCancelled_FromServer(SendRequestCancelledClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequest_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         if (message.StateIsChanged)
-            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+            await HttpClient.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
 
         if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
         }
+        var ct = cts?.Token ?? connectionLifecycleCt;
 
         var stateIsChanged = HttpClient.IsStateDataChanged();
         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
@@ -777,7 +762,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 stateData
             ), ct);
     }
-    private void Received_SendRequestDone_FromServer(SendRequestDoneClientDto message, CancellationToken ct)
+    private void Received_SendRequestDone_FromServer(SendRequestDoneClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
@@ -785,7 +770,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (PendingSendRequests.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled(ct);
+                completion.SetCanceled();
             else if (message.ExceptionMessage != null)
                 completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
@@ -798,27 +783,28 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task Received_FabricInvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken ct)
+    private async Task Received_FabricInvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         var timeoutCts = new CancellationTokenSourceDispose(
             message.Routing.Timeout,
-            ct);
+            connectionLifecycleCt);
         if (IncomingTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
         {
             Logger.LogError("Cannot add subscription");
             return;
         }
+        var ct = timeoutCts.Token;
 
         try
         {
             if (message.StateIsChanged)
-                await HttpClient.UpdateStateDataAsync(message.StateData, timeoutCts.Token);
+                await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts.Token);
-            RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, timeoutCts.Token);
+            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
+            RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, timeoutCts);
 
             timeoutCts.RegisterDispose(async () =>
             {
@@ -857,19 +843,20 @@ public abstract class WssClientConnection : IWssClientConnection
             IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
     }
-    private async Task Received_FabricInvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto message, CancellationToken ct)
+    private async Task Received_FabricInvokeRequestCancelled_FromServerAsync(InvokeRequestCancelledClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_InvokeRequestCancelled_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         if (message.StateIsChanged)
-            await HttpClient.UpdateStateDataAsync(message.StateData, ct);
+            await HttpClient.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
 
         if (IncomingTimeouts.TryRemove(message.Routing.RequestId, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
         }
+        var ct = cts?.Token ?? connectionLifecycleCt;
 
         var stateIsChanged = HttpClient.IsStateDataChanged();
         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -883,7 +870,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 stateData
             ), ct);
     }
-    private void Received_InvokeRequestAck_FromServerAsync(InvokeRequestAckClientDto message, CancellationToken ct)
+    private void Received_InvokeRequestAck_FromServerAsync(InvokeRequestAckClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_InvokeRequestAck_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
@@ -891,14 +878,14 @@ public abstract class WssClientConnection : IWssClientConnection
         if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
         {
             if (message.Cancelled)
-                channel.SetCanceled(ct);
+                channel.SetCanceled();
             else if (message.ExceptionMessage != null)
                 channel.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 channel.SetResult(message);
         }
     }
-    private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
+    private async Task Received_InvokeRequestDone_FromServerAsync(InvokeRequestDoneClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_InvokeRequestDone_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
@@ -906,17 +893,17 @@ public abstract class WssClientConnection : IWssClientConnection
         if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
         {
             if (message.Cancelled)
-                channel.SetCanceled(ct);
+                channel.SetCanceled();
             else if (message.ExceptionMessage != null)
                 channel.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
             else
                 channel.SetResult(
                     new InvokeRequestAckClientDto(
-                        message.Routing, 
-                        false, 
+                        message.Routing,
+                        false,
                         null,
-                        null, 
-                        message.StateIsChanged, 
+                        null,
+                        message.StateIsChanged,
                         message.StateData));
         }
 
@@ -931,13 +918,14 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task Received_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private async Task Received_StreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_StreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now}: Received_StreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
+        var ct = timeout?.Token ?? connectionLifecycleCt;
 
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
@@ -945,10 +933,10 @@ public abstract class WssClientConnection : IWssClientConnection
             await Sender.Send_StreamingResponse_ToServerAsync(response, ct);
         }
     }
-    private void Received_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private void Received_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_StreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now}: Received_StreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
@@ -957,13 +945,14 @@ public abstract class WssClientConnection : IWssClientConnection
             responseHandler.Invoke(message);
     }
 
-    private async Task Received_FabricStreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken ct)
+    private async Task Received_FabricStreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_FabricStreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now}: Received_FabricStreamingRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
+        var ct = timeout?.Token ?? connectionLifecycleCt;
 
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
@@ -971,10 +960,10 @@ public abstract class WssClientConnection : IWssClientConnection
             await Sender.Send_FabricStreamingResponse_ToServerAsync(response, ct);
         }
     }
-    private void Received_FabricStreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken ct)
+    private void Received_FabricStreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_FabricStreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now}: Received_FabricStreamingResponse_FromServer({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         if (IncomingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
@@ -983,7 +972,7 @@ public abstract class WssClientConnection : IWssClientConnection
             responseHandler.Invoke(message);
     }
 
-    private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken ct)
+    private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken connectionLifecycleCt)
     {
         foreach (var key in IncomingTimeouts.Keys)
         {
@@ -999,11 +988,11 @@ public abstract class WssClientConnection : IWssClientConnection
         //    list.Clear();
         //}
 
-        await OnDisconnectedAsync(ct);
+        await OnDisconnectedAsync(connectionLifecycleCt);
     }
-    private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken ct)
+    private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken connectionLifecycleCt)
     {
-        await OnRestoreSubscriptionsAsync(ct);
+        await OnRestoreSubscriptionsAsync(connectionLifecycleCt);
     }
 
     #endregion
@@ -1014,12 +1003,15 @@ public abstract class WssClientConnection : IWssClientConnection
     public abstract Task OnDisconnectedAsync(CancellationToken lifeCycleCt);
     public abstract Task OnRestoreSubscriptionsAsync(CancellationToken lifeCycleCt);
 
-    protected abstract Task Send_SendRequest_ToServiceAsync(
+    protected abstract Task Send_SendAndForgetRequest_ToServiceAsync(
         SendRequestDto sendRequest,
         CancellationToken ct);
+    protected abstract Task Send_SendRequest_ToServiceAsync(
+        SendRequestDto sendRequest,
+        CancellationTokenSourceDispose timeoutCts);
     protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(
         InvokeRequestDto invokeRequest,
-        CancellationToken ct);
+        CancellationTokenSourceDispose timeoutCts);
 
     #endregion
 
@@ -1055,25 +1047,25 @@ public abstract class WssClientConnection : IWssClientConnection
             throw;
         }
     }
-    public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
+    public async Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         var completion = new TaskCompletionSource<SendRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingSendRequests.TryAdd(routing.RequestId, completion) == false)
         {
             Logger.LogError("Cannot add completion");
-            return;
+            throw new Exception("Cannot add requestid");
         }
 
         try
         {
-            var ct = cts.Token;
+            var ct = timeoutCts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var sendRequest = new SendRequestClientDto(routing, data, stateIsChanged, stateData);
 
             await Sender.Send_SendRequest_ToServerAsync(sendRequest, ct);
 
-            cts.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 var requestCancelled = new SendRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_SendRequestCancelled_ToServerAsync(requestCancelled, ct);
@@ -1084,7 +1076,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (response.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(
                     response.StateData,
-                    cts.Token);
+                    timeoutCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -1101,18 +1093,18 @@ public abstract class WssClientConnection : IWssClientConnection
             PendingSendRequests.TryRemove(routing.RequestId, out _);
         }
     }
-    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
+    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
     {
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
         {
             Logger.LogError("Cannot add completion");
-            yield break;
+            throw new Exception("Cannot add requestid");
         }
 
         try
         {
-            var ct = cts.Token;
+            var ct = timeoutCts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);
@@ -1132,7 +1124,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     response.StateData,
                     ct);
 
-            var list = RegisterRemoteAsyncEnumerableArgumentByte(routing, -1);
+            var list = RegisterRemoteAsyncEnumerableArgumentByte(routing, -1, timeoutCts);
             await foreach (var item in list)
             {
                 yield return item;
@@ -1144,7 +1136,7 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex)
+    protected IAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -1153,7 +1145,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 argumentIndex);
 
         return new RemoteAsyncEnumerable<byte[]>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<byte[]> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -1211,13 +1203,13 @@ public abstract class WssClientConnection : IWssClientConnection
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, Func<byte[], T> deserializer, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterRemoteAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
         return new RemoteAsyncEnumerable<T>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -1280,7 +1272,7 @@ public abstract class WssClientConnection : IWssClientConnection
             });
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1298,11 +1290,10 @@ public abstract class WssClientConnection : IWssClientConnection
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                     return new AsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(linked.Token),
+                        source.GetAsyncEnumerator(timeoutCts.Token),
                         new SemaphoreSlim(1, 1),
-                        linked);
+                        timeoutCts);
                 });
 
             var entered = false;
@@ -1350,7 +1341,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
-                cancellationToken.IsCancellationRequested)
+                timeoutCts.IsCancellationRequested)
             {
                 Logger.LogError(ex, "Cancelled");
 
@@ -1399,7 +1390,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }));
     }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1414,11 +1405,10 @@ public abstract class WssClientConnection : IWssClientConnection
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                     return new AsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(linked.Token),
+                        source.GetAsyncEnumerator(timeoutCts.Token),
                         new SemaphoreSlim(1, 1),
-                        linked);
+                        timeoutCts);
                 });
 
             var entered = false;
@@ -1467,7 +1457,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
-                cancellationToken.IsCancellationRequested)
+                timeoutCts.IsCancellationRequested)
             {
                 Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
 

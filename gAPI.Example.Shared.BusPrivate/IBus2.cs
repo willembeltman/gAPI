@@ -15,6 +15,7 @@ public interface IBus2
     IAsyncEnumerable<string> InvokeList(string name, CancellationToken ct);
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
 
-    Task Ping(CancellationToken ct);
+    Task RealPing(CancellationToken ct);
+    void Ping(string str);
     Task StartServiceTests(SessionId sessionId, string to, CancellationToken ct);
 }

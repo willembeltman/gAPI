@@ -3,7 +3,6 @@ using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Helpers;
@@ -17,7 +16,9 @@ using System.Collections.Concurrent;
 namespace gAPI.Core.ServiceBus.RabbitMQ;
 
 public abstract class RabbitMQBaseBusConnection(
+#pragma warning disable CS9113 // Parameter is unread.
     IHostApplicationLifetime appLifetime,
+#pragma warning restore CS9113 // Parameter is unread.
     ILoggerFactory loggerFactory,
     ServiceBusConfig config)
     : IBaseBusConnection, IAsyncDisposable
@@ -453,7 +454,9 @@ public abstract class RabbitMQBaseBusConnection(
             if (--registration.SubscriptionCount > 0) return;
             ServiceConsumers.TryRemove(serviceId, out _);
             await StopConsumersAsync(registration, ct);
-            await _channel!.QueueDeleteAsync($"q.{serviceId}.all.{BusConnectionId}", cancellationToken: ct);
+            if (_channel == null)
+                return;
+            await _channel.QueueDeleteAsync($"q.{serviceId}.all.{BusConnectionId}", cancellationToken: ct);
             await _channel.QueueDeleteAsync($"q.{serviceId}.connection.{BusConnectionId}", cancellationToken: ct);
         }
         finally { SubscriptionLock.Release(); }
@@ -538,7 +541,7 @@ public abstract class RabbitMQBaseBusConnection(
 
     private async Task HandleSendAndForgetRequest(BusSendRequestDto request, CancellationToken ct)
     {
-        using var timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
@@ -561,7 +564,7 @@ public abstract class RabbitMQBaseBusConnection(
     }
     private async Task HandleSendRequestAsync(BusSendRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     {
-        using var timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         ct = timeoutCts.Token;
@@ -606,7 +609,7 @@ public abstract class RabbitMQBaseBusConnection(
     }
     private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, CancellationToken ct)
     {
-        var timeoutCts = new CancellationTokenSourceDispose(ct);
+        var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         timeoutCts.Token.Register(() =>
@@ -745,10 +748,10 @@ public abstract class RabbitMQBaseBusConnection(
         _activeRequests.TryRemove(routing.RequestId, out _);
     }
 
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer, CancellationTokenSourceDispose timeoutCts)
     {
         return new RemoteAsyncEnumerable<T>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);

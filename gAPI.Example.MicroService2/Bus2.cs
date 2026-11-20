@@ -30,7 +30,7 @@ public class Bus2(
     {
     }
 
-    public Task Ping(CancellationToken ct)
+    public Task RealPing(CancellationToken ct)
     {
         return busContext.Bus1.ToAny().PongTask(ct);
     }
@@ -50,38 +50,56 @@ public class Bus2(
             }
             var sw = Stopwatch.StartNew();
 
-            busContext.WssBus.ToAny().SendAndForget("hoi", ct);
+            busContext.Bus1.ToAny().SendAndForget("hoi", ct);
+            Logger.LogInformation($"Service2.SendAndForget - {sw.ElapsedMilliseconds}ms");
+
+            await busContext.Bus1.ToAny().Send("hoi", ct);
+            Logger.LogInformation("Service2.Send");
+
+            var result = await busContext.Bus1.ToAny().InvokeTask("hoi", ct);
+            Logger.LogInformation($"Service2.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
+
+            await foreach (var item in busContext.Bus1.ToAny().InvokeList("hoi", ct))
+            {
+                result = item;
+                Logger.LogInformation($"Service2.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
+            }
+
+            result = await busContext.Bus1.ToAny().InvokeTaskWithList(MyList(), ct);
+            Logger.LogInformation($"Service2.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
+
+            await foreach (var item in busContext.Bus1.ToAny().InvokeListWithList(MyList(), ct))
+            {
+                result = item;
+                Logger.LogInformation($"Service2.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
+            }
+
+
+            busContext.ApiBus.ToAny().SendAndForget("hoi", ct);
             Logger.LogInformation($"MainService.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
-            await busContext.WssBus.ToAny().Send("hoi", ct);
+            await busContext.ApiBus.ToAny().Send("hoi", ct);
             Logger.LogInformation("MainService.Send");
 
-            var result = await busContext.WssBus.ToAny().InvokeTask("hoi", ct);
+            result = await busContext.ApiBus.ToAny().InvokeTask("hoi", ct);
             Logger.LogInformation($"MainService.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
 
-            await foreach (var item in busContext.WssBus.ToAny().InvokeList("hoi", ct))
+            await foreach (var item in busContext.ApiBus.ToAny().InvokeList("hoi", ct))
             {
                 result = item;
                 Logger.LogInformation($"MainService.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
             }
 
-            result = await busContext.WssBus.ToAny().InvokeTaskWithList(MyList(), ct);
+            result = await busContext.ApiBus.ToAny().InvokeTaskWithList(MyList(), ct);
             Logger.LogInformation($"MainService.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
 
-            await foreach (var item in busContext.WssBus.ToAny().InvokeListWithList(MyList(), ct))
+            await foreach (var item in busContext.ApiBus.ToAny().InvokeListWithList(MyList(), ct))
             {
                 result = item;
                 Logger.LogInformation($"MainService.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
             }
 
-            if (to == "api")
-            {
-                await busContext.ApiBus.ToAny().StartServiceTests(sessionId, ct);
-            }
-            else
-            {
-                await busContext.WssBus.ToAny().StartServiceTests(sessionId, ct);
-            }
+            await busContext.ApiBus.ToAny().StartServiceTests(sessionId, ct);
 
             Logger.LogInformation($"MainBus ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
         }
@@ -143,6 +161,11 @@ public class Bus2(
         yield return "1";
         yield return "2";
         yield return "3";
+    }
+
+    public void Ping(string v)
+    {
+        busContext.ApiBus.ToAny().Pong(v);
     }
 
 }

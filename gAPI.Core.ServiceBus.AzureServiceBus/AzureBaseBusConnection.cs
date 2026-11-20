@@ -16,7 +16,9 @@ using System.Collections.Concurrent;
 namespace gAPI.Core.ServiceBus.AzureServiceBus;
 
 public abstract class AzureBaseBusConnection(
+#pragma warning disable CS9113 // Parameter is unread.
     IHostApplicationLifetime appLifetime,
+#pragma warning restore CS9113 // Parameter is unread.
     ILoggerFactory loggerFactory,
     ServiceBusConfig config)
     : IBaseBusConnection
@@ -505,7 +507,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleSendRequestAsync(BusSendRequestDto request, string replyTo, string correlationId, string sessionId, CancellationToken ct)
     {
-        using var timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try
@@ -540,7 +542,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleInvokeRequestAsync(BusInvokeRequestDto request, string replyTo, string correlationId, string sessionId, CancellationToken ct)
     {
-        using var timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try
@@ -582,7 +584,7 @@ public abstract class AzureBaseBusConnection(
     }
     private async Task HandleSendAndForgetRequest(BusSendRequestDto request, CancellationToken ct)
     {
-        using var timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var timeoutCts = new CancellationTokenSourceDispose(request.Routing.Timeout, ct);
         _activeRequests[request.Routing.RequestId] = timeoutCts;
         timeoutCts.CancelAfter(request.Routing.Timeout);
         try { await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token); }
@@ -620,10 +622,10 @@ public abstract class AzureBaseBusConnection(
         _activeRequests.TryRemove(routing.RequestId, out _);
     }
 
-    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer)
+    protected IAsyncEnumerable<T> RegisterRemoteAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, Func<byte[], T> deserializer, CancellationTokenSourceDispose timeoutCts)
     {
         return new RemoteAsyncEnumerable<T>(
-            timeOut: routing.Timeout,
+            timeoutCts: timeoutCts,
             construct: (StreamId streamId, IRemoteAsyncEnumerator<T> enumerator, CancellationToken ct) =>
             {
                 var key = new RequestArgumentIndexStreamDto(routing.RequestId, argumentIndex, streamId);
@@ -740,11 +742,11 @@ public abstract class AzureBaseBusConnection(
             {
                 await Cleanup();
                 return new BusStreamingResponseDto(
-                    routing, 
-                    argumentIndex, 
+                    routing,
+                    argumentIndex,
                     streamId,
-                    true, 
-                    true, 
+                    true,
+                    true,
                     ex.Message,
                     ex.InnerException?.Message,
                     []);
@@ -753,12 +755,12 @@ public abstract class AzureBaseBusConnection(
             {
                 await Cleanup();
                 return new BusStreamingResponseDto(
-                    routing, 
-                    argumentIndex, 
+                    routing,
+                    argumentIndex,
                     streamId,
                     true,
                     false,
-                    ex.Message, 
+                    ex.Message,
                     ex.InnerException?.Message,
                     []);
             }

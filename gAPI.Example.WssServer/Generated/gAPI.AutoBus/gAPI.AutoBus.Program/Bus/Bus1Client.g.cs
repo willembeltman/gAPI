@@ -35,10 +35,9 @@ public class Bus1Client(
 
     public async Task StartServiceTests(SessionId sessionId, string to, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -93,8 +92,7 @@ public class Bus1Client(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new BusRoutingDto(
@@ -159,10 +157,9 @@ public class Bus1Client(
 
     public async Task Send(string message, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -211,10 +208,9 @@ public class Bus1Client(
 
     public async Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -268,8 +264,7 @@ public class Bus1Client(
     public async Task<string> InvokeTask(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -333,8 +328,7 @@ public class Bus1Client(
     public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -402,8 +396,7 @@ public class Bus1Client(
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -460,8 +453,7 @@ public class Bus1Client(
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -527,8 +519,7 @@ public class Bus1Client(
     public async IAsyncEnumerable<double> PingEnumerable([EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -574,10 +565,9 @@ public class Bus1Client(
 
     public async Task PongTask(CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -619,8 +609,7 @@ public class Bus1Client(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new BusRoutingDto(

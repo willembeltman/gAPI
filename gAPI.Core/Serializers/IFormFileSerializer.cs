@@ -52,7 +52,7 @@ public static class IFormFileSerializer
         var keyCount = ___reader.ReadInt32();
         for (int i = 0; i < keyCount; i++)
         {
-            var key = ___reader.ReadBoolean() ? ___reader.ReadString() : null;
+            var key = ___reader.ReadBoolean() ? ___reader.ReadString() : throw new Exception("Cannot read the key");
             var value = ___reader.ReadString();
             obj.Headers[key] = new StringValues(value);
         }
@@ -122,7 +122,9 @@ public static class IFormFileSerializer
         var keyCount = PrimitivesSpanSerializer.ReadInt32(span, ref offset);
         for (int i = 0; i < keyCount; i++)
         {
-            var key = PrimitivesSpanSerializer.ReadBoolean(span, ref offset) == false ? null : PrimitivesSpanSerializer.ReadString(span, ref offset);
+            var key = PrimitivesSpanSerializer.ReadBoolean(span, ref offset) == false 
+                ? throw new Exception("Cannot read key")
+                : PrimitivesSpanSerializer.ReadString(span, ref offset);
             var value = PrimitivesSpanSerializer.ReadString(span, ref offset);
             obj.Headers[key] = new StringValues(value);
         }

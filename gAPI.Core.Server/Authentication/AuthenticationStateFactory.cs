@@ -10,7 +10,9 @@ public class AuthenticationStateFactory<TUser>(
     TimeProvider dateTime,
     double ShortHoursAgo,
     double LongHoursAgo,
+#pragma warning disable CS9113 // Parameter is unread.
     bool UseMemoryDatabase)
+#pragma warning restore CS9113 // Parameter is unread.
     : IAuthenticationStateFactory<TUser>
     where TUser : AuthUser
 {
@@ -77,7 +79,7 @@ public class AuthenticationStateFactory<TUser>(
                 var ct = cts.Token;
                 await DoTheRest(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
             }
-            catch (Exception ex)
+            catch 
             {
             }
         });
@@ -101,7 +103,7 @@ public class AuthenticationStateFactory<TUser>(
         {
             return await DoTheRest_EFCore(headers, userId, authenticationTokenId, dbUser, dbToken, dbIp, ct);
         }
-        catch (Exception ex)
+        catch 
         {
 
         }

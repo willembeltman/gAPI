@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
@@ -50,7 +51,7 @@ public class ServerConnection : WssServerConnection
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
     }
     
-    protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
+    protected override async Task Send_SendAndForgetRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___sendRequest.BinaryData);
@@ -83,13 +84,27 @@ public class ServerConnection : WssServerConnection
                                 ___ct);
                         }
                         return;
-            
+                }
+                break;
+        }
+        throw new Exception($"Send {___sendRequest.Routing.ServiceId.Value}.{___sendRequest.Routing.MethodId.Value} not implemented");
+    }
+    
+    protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationTokenSourceDispose ___timeoutCts)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___sendRequest.BinaryData);
+        switch (___sendRequest.Routing.ServiceId.Value)
+        {
+            case "IWssApi":
+                switch (___sendRequest.Routing.MethodId.Value)
+                {
                     case "StartServerTests":
                         {
                             await IWssApi_StartServerTests(
                                 ___sendRequest,
                                 PrimitivesSpanSerializer.ReadDouble(___span, ref ___offset),
-                                ___ct);
+                                ___timeoutCts.Token);
                         }
                         return;
                     case "Send":
@@ -97,15 +112,15 @@ public class ServerConnection : WssServerConnection
                             await IWssApi_Send(
                                 ___sendRequest,
                                 PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                                ___ct);
+                                ___timeoutCts.Token);
                         }
                         return;
                     case "SendWithList":
                         {
                             await IWssApi_SendWithList(
                                 ___sendRequest,
-                                RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssApi_SendWithList_0_Deserializer),
-                                ___ct);
+                                RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssApi_SendWithList_0_Deserializer, ___timeoutCts),
+                                ___timeoutCts.Token);
                         }
                         return;
                 }
@@ -114,7 +129,7 @@ public class ServerConnection : WssServerConnection
         throw new Exception($"Send {___sendRequest.Routing.ServiceId.Value}.{___sendRequest.Routing.MethodId.Value} not implemented");
     }
     
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
@@ -128,7 +143,7 @@ public class ServerConnection : WssServerConnection
                             await foreach (var ___packet in IWssApi_InvokeTask(
                                 ___invokeRequest,
                                 PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                                ___ct))
+                                ___timeoutCts.Token))
                             {
                                 yield return ___packet;
                             }
@@ -138,8 +153,8 @@ public class ServerConnection : WssServerConnection
                         {
                             await foreach (var ___packet in IWssApi_InvokeTaskWithList(
                                 ___invokeRequest,
-                                RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssApi_InvokeTaskWithList_0_Deserializer),
-                                ___ct))
+                                RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssApi_InvokeTaskWithList_0_Deserializer, ___timeoutCts),
+                                ___timeoutCts.Token))
                             {
                                 yield return ___packet;
                             }
@@ -150,7 +165,7 @@ public class ServerConnection : WssServerConnection
                             await foreach (var ___packet in IWssApi_InvokeList(
                                 ___invokeRequest,
                                 PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
-                                ___ct))
+                                ___timeoutCts.Token))
                             {
                                 yield return ___packet;
                             }
@@ -160,8 +175,8 @@ public class ServerConnection : WssServerConnection
                         {
                             await foreach (var ___packet in IWssApi_InvokeListWithList(
                                 ___invokeRequest,
-                                RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssApi_InvokeListWithList_0_Deserializer),
-                                ___ct))
+                                RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssApi_InvokeListWithList_0_Deserializer, ___timeoutCts),
+                                ___timeoutCts.Token))
                             {
                                 yield return ___packet;
                             }

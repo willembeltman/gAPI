@@ -54,12 +54,12 @@ public class ConsoleBuffer : ILoggerProvider
             if (!IsEnabled(logLevel)) return;
 
             // Formatteer het bericht (inclusief eventuele log-parameters)
-            string message = formatter(state, exception);
+            string message = formatter(state, exception!);
             string fullMessage = $"[{logLevel}] [{_categoryName}] {message}";
 
             if (logLevel >= LogLevel.Error)
             {
-                _buffer.WriteError(fullMessage, exception);
+                _buffer.WriteError(fullMessage, exception!);
             }
             else
             {

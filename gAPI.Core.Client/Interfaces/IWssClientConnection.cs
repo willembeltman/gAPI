@@ -25,7 +25,8 @@ public interface IWssClientConnection : IClientLoggerFactory
     Task Send_SendRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose ct);
     IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose ct);
     
-    void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken);
+    void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timoutCts);
     Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
+
     Task WaitForConnectionAsync(CancellationToken ct);
 }

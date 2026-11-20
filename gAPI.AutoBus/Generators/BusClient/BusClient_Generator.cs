@@ -128,9 +128,8 @@ public class {Name}(
         try
         {{
             ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}();" : $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct.Name});")}
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new {BusRoutingDto}(
@@ -187,14 +186,10 @@ public class {Name}(
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
-        ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;"
-        : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;")}
+            ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new {BusRoutingDto}(
             ___busConnection.BusConnectionId,
@@ -237,14 +232,10 @@ public class {Name}(
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
-        ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;"
-        : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;")}
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new {BusRoutingDto}(
             ___busConnection.BusConnectionId,
@@ -301,14 +292,10 @@ public class {Name}(
         return $@"
     public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
     {{
-        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct != null
-        ? $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}({ct});
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;"
-        : $@"
-        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;")}
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
+        var ___ct = ___timeoutCts.Token;
 
         var ___routing = new {BusRoutingDto}(
             ___busConnection.BusConnectionId,

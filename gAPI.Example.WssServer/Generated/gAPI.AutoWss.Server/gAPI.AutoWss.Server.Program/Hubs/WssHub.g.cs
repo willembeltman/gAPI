@@ -39,7 +39,7 @@ public class WssHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             ___timeoutCts.CancelAfter(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
@@ -108,7 +108,7 @@ public class WssHub(
     public async Task Send(string message, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -165,7 +165,7 @@ public class WssHub(
     public async Task SendWithList(IAsyncEnumerable<string> list, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -231,7 +231,7 @@ public class WssHub(
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -299,7 +299,7 @@ public class WssHub(
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -378,7 +378,7 @@ public class WssHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             ___timeoutCts.CancelAfter(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
@@ -449,7 +449,7 @@ public class WssHub(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             ___timeoutCts.CancelAfter(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 

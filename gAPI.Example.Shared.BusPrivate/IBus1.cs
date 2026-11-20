@@ -9,7 +9,6 @@ public interface IBus1
     Task StartServiceTests(SessionId sessionId, string to, CancellationToken ct);
 
     void SendAndForget(string message, CancellationToken ct);
-    //void SendAndForgetWithList(IAsyncEnumerable<string> test, CancellationToken ct);
     Task Send(string message, CancellationToken ct);
     Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct);
     Task<string> InvokeTask(string name, CancellationToken ct);

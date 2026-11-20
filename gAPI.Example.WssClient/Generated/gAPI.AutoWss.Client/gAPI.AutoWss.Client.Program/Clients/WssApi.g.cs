@@ -37,8 +37,7 @@ public sealed class WssApi(
     public async Task StartServerTests(double time, CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -94,8 +93,7 @@ public sealed class WssApi(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             var ___ct = ___timeoutCts.Token;
 
             await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -162,8 +160,7 @@ public sealed class WssApi(
     public async Task Send(string message, CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -217,8 +214,7 @@ public sealed class WssApi(
     public async Task SendWithList(IAsyncEnumerable<string> list, CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -244,7 +240,7 @@ public sealed class WssApi(
             0, 
             list, 
             ___SendWithList_0_Serializer, 
-            ___timeoutCts.Token);
+            ___timeoutCts);
         
         try
         {
@@ -283,8 +279,7 @@ public sealed class WssApi(
     public async Task<string> InvokeTask(string name,CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -354,8 +349,7 @@ public sealed class WssApi(
     public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list,CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -381,7 +375,7 @@ public sealed class WssApi(
             0,
             list, 
             ___InvokeTaskWithList_0_Serializer, 
-            ___timeoutCts.Token);
+            ___timeoutCts);
         
         string ___result = default!;
 
@@ -436,7 +430,7 @@ public sealed class WssApi(
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -503,7 +497,7 @@ public sealed class WssApi(
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct = default)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         ___timeoutCts.CancelAfter(___timeOut.Value);
         var ___ct = ___timeoutCts.Token;
 
@@ -530,7 +524,7 @@ public sealed class WssApi(
             0, 
             list, 
             ___InvokeListWithList_0_Serializer, 
-            ___timeoutCts.Token);
+            ___timeoutCts);
         
         try
         {
@@ -583,8 +577,7 @@ public sealed class WssApi(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
             await ___clientConnection.WaitForConnectionAsync(___ct);
@@ -653,8 +646,7 @@ public sealed class WssApi(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose();
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
 
             await ___clientConnection.WaitForConnectionAsync(___ct);

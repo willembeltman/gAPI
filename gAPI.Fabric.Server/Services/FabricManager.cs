@@ -634,17 +634,6 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    public async Task Receive_BusSendFireAndForgetCancelled_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
-    {
-        _ = Task.Run(async () =>
-        {
-            (var targets, var actor) = ResolveBusTargets(cancel.Routing, receiveSize);
-            foreach (var target in targets)
-            {
-                await target.Send_BusFireAndForgetCancelled_ToApiAsync(cancel, actor);
-            }
-        }, ct);
-    }
 
     public async Task Receive_BusSendRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSendRequestDto request, long receiveSize, CancellationToken ct)
     {

@@ -42,6 +42,7 @@ public class BusConnectionGenerator : _BaseGenerator
     public SharedReference? FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference IHostedBusService => Context.SharedReferences.IHostedBusService;
     public SharedReference IBusServiceSubscription => Context.SharedReferences.IBusServiceSubscription;
+    public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -72,6 +73,8 @@ public class BusConnectionGenerator : _BaseGenerator
         Reg(BaseConnection);
         Reg(HostedBusServices);
         Reg(IHostedBusService);
+
+        Reg(CancellationTokenSourceDispose);
 
         if (OverloadFabricClient && FabricClient != null)
             Reg(FabricClient);
@@ -262,12 +265,9 @@ public class {Name}
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            .Select((arg, index) => (arg, index))
-            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
-                : $@"
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
@@ -290,7 +290,7 @@ public class {Name}
     {
         var functions = "";
         var code = $@"
-    public override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, CancellationToken ___ct)
+    public override async Task Send_SendRequest_ToServiceAsync({BusSendRequestDto} ___sendRequest, {CancellationTokenSourceDispose} ___timeoutCts)
     {{{(Context.ServiceContext.BusInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
@@ -307,14 +307,14 @@ public class {Name}
             .Where(a => a.arg.ParameterType.IsCancellationToken == false)
             .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
                 ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                 : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                 }}
                                 return;
                             }}"))}
@@ -331,7 +331,7 @@ public class {Name}
     {
         var functions2 = "";
         var code = $@"
-    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({BusInvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts)
     {{{(Context.ServiceContext.BusInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.BusInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable))
@@ -354,14 +354,14 @@ public class {Name}
             .Where(a => a.arg.ParameterType.IsCancellationToken == false)
             .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
                 ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                 : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     var response = await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                     yield return {hub}_{method}_Serializer(response);
                                 }}
                             }}
@@ -377,14 +377,14 @@ public class {Name}
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
                                     .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
                                     ? $@"
-                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer);"
+                                var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer,  ___timeoutCts);"
                                     : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
                                 foreach (var client in clients)
                                 {{
                                     var responses = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
-                                        ___ct"))});
+                                        ___timeoutCts.Token"))});
                                     await foreach (var response in responses)
                                     {{
                                         yield return {hub}_{method}_Serializer(response);

@@ -33,6 +33,7 @@ public class ApiApi(
     {
         var sw = Stopwatch.StartNew();
         var sessionId = authenticationService.SessionId;
+        var result = string.Empty;
 
         for (var y = 0; y < 50; y++)
         {
@@ -55,20 +56,11 @@ public class ApiApi(
         await clientContext.ApiHub.ToSession(sessionId).Send("hoi", ct);
         Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
 
-        //await clientContext.ApiHub.ToSession(sessionId).SendWithList(MyList(), ct);
-        //Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
-
-        var result = string.Empty;
         await foreach (var item in clientContext.ApiHub.ToSession(sessionId).InvokeList("hoi", ct))
         {
             result = item;
             Logger.LogInformation($"MainHub.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
-        //await foreach (var item in clientContext.ApiHub.ToSession(sessionId).InvokeListWithList(MyList(), ct))
-        //{
-        //    result = item;
-        //    Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
-        //}
 
         // Naar de interne singleton service over de bus - optie 1
         if (busConnection.HostedBusServices?.gAPI_Example_ApiServer_Server_ApiBus != null)
@@ -101,7 +93,7 @@ public class ApiApi(
             Logger.LogInformation($"Service1.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        await busContext.Bus1.ToAny().StartServiceTests(sessionId, "api", ct);
+        await busContext.Bus2.ToAny().StartServiceTests(sessionId, "api", ct);
 
         Logger.LogInformation($"Bus1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }

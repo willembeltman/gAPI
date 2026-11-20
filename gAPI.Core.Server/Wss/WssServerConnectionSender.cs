@@ -295,12 +295,12 @@ public class WssServerConnectionSender(
     public async Task Send_StreamingRequest_ToClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_StreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_StreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_StreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.StreamingRequest);
@@ -311,12 +311,12 @@ public class WssServerConnectionSender(
     public async Task Send_StreamingResponse_ToClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_StreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAndWaitAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_StreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.StreamingResponse);
@@ -328,12 +328,12 @@ public class WssServerConnectionSender(
     public async Task Send_FabricStreamingRequest_ToClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_FabricStreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_FabricStreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_FabricStreamingRequest_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingRequest);
@@ -344,12 +344,12 @@ public class WssServerConnectionSender(
     public async Task Send_FabricStreamingResponse_ToClientAsync(StreamingResponseClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_FabricStreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_FabricStreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAndWaitAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_FabricStreamingResponse_ToClientAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             var offset = 0;
             writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.FabricStreamingResponse);

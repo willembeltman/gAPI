@@ -129,20 +129,6 @@ public class BusFabricClientSender(
             writer.Write(message);
         }, ct);
     }
-    public async Task Send_BusSendAndForgetRequestCancelled_ToFabricAsync(BusSendRequestCancelledDto message, CancellationToken ct)
-    {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Send_BusSendAndForgetRequestCancelled_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
-
-        await EnqueueAsync(writer =>
-        {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_BusSendAndForgetRequestCancelled_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
-
-            BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusFireAndForgetCancelled);
-            writer.Write(message);
-        }, ct);
-    }
 
     public async Task Send_BusSendRequest_ToFabricAsync(BusSendRequestDto message, CancellationToken ct)
     {
@@ -247,12 +233,12 @@ public class BusFabricClientSender(
     public async Task Send_BusStreamingRequest_ToFabricAsync(BusStreamingRequestDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_BusStreamingRequest_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_BusStreamingRequest_ToFabricAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_BusStreamingRequest_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_BusStreamingRequest_ToFabricAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusStreamingRequest);
             writer.Write(message);
@@ -261,12 +247,12 @@ public class BusFabricClientSender(
     public async Task Send_BusStreamingResponse_ToFabricAsync(BusStreamingResponseDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} QUEUED Send_BusStreamingResponse_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now} QUEUED Send_BusStreamingResponse_ToFabricAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
         await EnqueueAndWaitAsync(writer =>
         {
             if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace("{now} Send_BusStreamingResponse_ToFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+                Logger.LogTrace("{now} Send_BusStreamingResponse_ToFabricAsync({RequestId}, {ServiceId}, {MethodId}, {index})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId, message.ArgumentIndex);
 
             BusFabricConverter.WriteClientToHostMessageType(writer, BusFabricClientToHostMessageEnum.BusStreamingResponse);
             writer.Write(message);

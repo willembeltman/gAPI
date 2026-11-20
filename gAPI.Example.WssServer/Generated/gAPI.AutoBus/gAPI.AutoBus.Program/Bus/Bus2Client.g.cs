@@ -38,8 +38,7 @@ public class Bus2Client(
         try
         {
             ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-            ___timeoutCts.CancelAfter(___timeOut.Value);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new BusRoutingDto(
@@ -104,10 +103,9 @@ public class Bus2Client(
 
     public async Task Send(string message, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -156,10 +154,9 @@ public class Bus2Client(
 
     public async Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
@@ -213,8 +210,7 @@ public class Bus2Client(
     public async Task<string> InvokeTask(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -278,8 +274,7 @@ public class Bus2Client(
     public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -347,8 +342,7 @@ public class Bus2Client(
     public async IAsyncEnumerable<string> InvokeList(string name, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -405,8 +399,7 @@ public class Bus2Client(
     public async IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
@@ -469,18 +462,17 @@ public class Bus2Client(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public async Task Ping(CancellationToken ct)
+    public async Task RealPing(CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
             RequestId.New(),
             ___ServiceId,
-            new("Ping"),
+            new("RealPing"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
@@ -491,7 +483,7 @@ public class Bus2Client(
             ___routing, 
             ___timeoutCts);
 
-        var ___payload = ___Ping_Serializer();
+        var ___payload = ___RealPing_Serializer();
         
         
         try
@@ -506,17 +498,84 @@ public class Bus2Client(
             ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
-    private byte[] ___Ping_Serializer()
+    private byte[] ___RealPing_Serializer()
     {
         return [];
     }
 
+    public async void Ping(string str)
+    {
+        try
+        {
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
+            var ___ct = ___timeoutCts.Token;
+
+            var ___routing = new BusRoutingDto(
+                ___busConnection.BusConnectionId,
+                RequestId.New(),
+                ___ServiceId,
+                new("Ping"),
+                ___timeOut.Value,
+                ___deliveryMode,
+                ___to,
+                ___busConnectionId,
+                ___throwIfNoReceiver
+            );
+
+            ___busConnection.RegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+
+            try
+            {
+                var ___payload = ___Ping_Serializer(
+                    str);
+
+                await ___busConnection.SendFireAndForgetAsync(
+                    ___routing,
+                    ___payload,
+                    ___ct);
+            }
+            catch (OperationCanceledException)
+            {
+                ___Logger.LogInformation("Bus FireAndForget streaming gecanceld of time-out voor Ping.");
+            }
+            catch (Exception ex)
+            {
+                ___Logger.LogError(ex, "Exception caught in generated server async void method for WriteLine");
+            }
+            finally
+            {
+                ___busConnection.UnRegisterTimeout(
+                    ___routing, 
+                    ___timeoutCts);
+            }
+        }
+        catch (Exception ex)
+        {
+            ___Logger.LogError(ex, "Exception caught in generated server async void method for WriteLine");
+        }
+    }
+    private byte[] ___Ping_Serializer(string str)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, str);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, str);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+
     public async Task StartServiceTests(SessionId sessionId, string to, CancellationToken ct)
     {
-        ___timeOut ??= TimeSpan.FromSeconds(100);
-        using var ___timeoutCts = new CancellationTokenSourceDispose(ct);
-        ___timeoutCts.CancelAfter(___timeOut.Value);
-        var ___ct = ___timeoutCts.Token;
+            ___timeOut ??= TimeSpan.FromSeconds(100);
+            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+            var ___ct = ___timeoutCts.Token;
 
         var ___routing = new BusRoutingDto(
             ___busConnection.BusConnectionId,
