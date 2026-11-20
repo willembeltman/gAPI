@@ -34,6 +34,9 @@ public sealed class CancellationTokenSourceDispose : IDisposable
     public CancellationToken Token => _cts.Token;
     public bool IsCancellationRequested => _cts.IsCancellationRequested;
     public TimeSpan TimeoutDuration { get; }
+    public bool IsTimedOut => IsCancelled == false;
+    private bool IsCancelled;
+
 
     public void Reset()
     {
@@ -58,6 +61,8 @@ public sealed class CancellationTokenSourceDispose : IDisposable
     {
         if (IsDisposed)
             return;
+
+        IsCancelled = true;
 
         await _cts.CancelAsync();
     }

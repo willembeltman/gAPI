@@ -65,10 +65,16 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
             _dispose = dispose;
             _cancellationToken = cancellationToken;
 
-            _timeoutCts.Register(() => {
-                Complete(
-                    new TimeoutException(
-                        "Remote async enumerable timed out."));
+            _timeoutCts.Register(() =>
+            {
+                if (_timeoutCts.IsTimedOut)
+                {
+                    Complete(new TimeoutException("Remote async enumerable timed out."));
+                }
+                else
+                {
+                    Complete(new TaskCanceledException("Remote async enumerable was cancelled."));
+                }
             });
 
             create(_streamId, this, cancellationToken);
