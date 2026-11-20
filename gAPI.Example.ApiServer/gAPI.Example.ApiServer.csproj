@@ -23,7 +23,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\gAPI.AutoApi.Server\gAPI.AutoApi.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.AutoPlane\gAPI.AutoPlane.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\gAPI.Example.Shared.ApiPublic\gAPI.Example.Shared.ApiPublic.csproj" />
 		<ProjectReference Include="..\gAPI.Example.Shared.BusPrivate\gAPI.Example.Shared.BusPrivate.csproj" />
 	</ItemGroup>

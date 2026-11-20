@@ -16,6 +16,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
     public ConcurrentDictionary<SessionId, Session> Sessions { get; } = new();
     public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
     public ConcurrentDictionary<BusConnectionId, BusConnection> BusConnections { get; } = new();
+    public ConcurrentDictionary<PlaneConnectionId, PlaneConnection> PlaneConnections { get; } = new();
 
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
@@ -71,6 +72,18 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         BusConnections.TryRemove(busConnectionId, out _);
         EnqueueReceive(receiveSize);
     }
+    public async Task PlaneSubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, long receiveSize)
+    {
+        PlaneConnections.AddOrUpdate(planeConnectionId,
+            (planeConnectionId) => new PlaneConnection(planeConnectionId, connection),
+            (planeConnectionId, planeConnection) => planeConnection);
+        EnqueueReceive(receiveSize);
+    }
+    public async Task PlaneUnsubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, long receiveSize)
+    {
+        PlaneConnections.TryRemove(planeConnectionId, out _);
+        EnqueueReceive(receiveSize);
+    }
 
     internal void RemoveConnection(FabricHost host)
     {
@@ -96,6 +109,17 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         BusConnections.TryRemove(busConnection.BusConnectionId, out _);
     }
 
+    internal void RemovePlaneConnection(FabricPlaneHost host)
+    {
+        var planeConnection = PlaneConnections.Values
+            .FirstOrDefault(a => a.Connection.FabricPlaneConnectionId == host.FabricPlaneConnectionId);
+        if (planeConnection == null)
+        {
+            return;
+        }
+        PlaneConnections.TryRemove(planeConnection.PlaneConnectionId, out _);
+    }
+
     public (IEnumerable<FabricHost>, IActor) GetFabricHosts(UserId? userId, SessionId? sessionId)
     {
         if (userId != null)
@@ -116,25 +140,6 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
             return (Connections.Values, this);
         }
     }
-    //public (IEnumerable<FabricBusHost>, IActor) GetFabricBusHosts(BusToChoice To, BusConnectionId? ToBusConnectionId)
-    //{
-    //    if (To == BusToChoice.ToAny)
-    //    {
-    //        var busConnection = BusConnections.Values.FirstOrDefault(); // TODO iets met loadbalancing doen
-    //        if (busConnection == null) return ([], this);
-    //        return ([busConnection.Connection], busConnection);
-    //    }
-    //    else if (To == BusToChoice.ToBusConnectionId && ToBusConnectionId != null)
-    //    {
-    //        if (BusConnections.TryGetValue(ToBusConnectionId, out var busConnection) == false)
-    //            return ([], this);
-    //        return ([busConnection.Connection], busConnection);
-    //    }
-    //    else
-    //    {
-    //        return (BusConnections.Values.Select(a => a.Connection), this);
-    //    }
-    //}
 
     private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
     {

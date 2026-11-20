@@ -9,10 +9,10 @@ namespace gAPI.Example.WssServer.Server;
 
 public class WssApi(
     ILoggerFactory loggerFactory,
-    IWssBus mainBus,
+    IWssPlane mainPlane,
     IAuthenticationService authenticationService,
-    IBusConnection busConnection,
-    IBusContext busContext,
+    IPlaneConnection busConnection,
+    IPlaneContext busContext,
     IClientContext clientContext)
     : IWssApi
 {
@@ -71,39 +71,39 @@ public class WssApi(
         }
 
         // Naar de interne singleton service over de bus - optie 1
-        if (busConnection.HostedBusServices?.gAPI_Example_WssServer_Server_WssBus != null)
-            await busConnection.HostedBusServices.gAPI_Example_WssServer_Server_WssBus.DoPing();
+        if (busConnection.HostedPlaneServices?.gAPI_Example_WssServer_Server_WssPlane != null)
+            await busConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane.DoPing();
 
         // Naar de interne singleton service over de bus - optie 1
-        await mainBus.DoPing();
+        await mainPlane.DoPing();
 
-        busContext.Bus1.ToAny().SendAndForget("hoi", ct);
+        busContext.Plane1.ToAny().SendAndForget("hoi", ct);
         Logger.LogInformation($"Service1.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
-        await busContext.Bus1.ToAny().Send("hoi", ct);
+        await busContext.Plane1.ToAny().Send("hoi", ct);
         Logger.LogInformation("Service1.Send");
 
-        result = await busContext.Bus1.ToAny().InvokeTask("hoi", ct);
+        result = await busContext.Plane1.ToAny().InvokeTask("hoi", ct);
         Logger.LogInformation($"Service1.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
 
-        await foreach (var item in busContext.Bus1.ToAny().InvokeList("hoi", ct))
+        await foreach (var item in busContext.Plane1.ToAny().InvokeList("hoi", ct))
         {
             result = item;
             Logger.LogInformation($"Service1.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        result = await busContext.Bus1.ToAny().InvokeTaskWithList(MyList(), ct);
+        result = await busContext.Plane1.ToAny().InvokeTaskWithList(MyList(), ct);
         Logger.LogInformation($"Service1.InvokeTaskWithList - {result} - {sw.ElapsedMilliseconds}ms");
 
-        await foreach (var item in busContext.Bus1.ToAny().InvokeListWithList(MyList(), ct))
+        await foreach (var item in busContext.Plane1.ToAny().InvokeListWithList(MyList(), ct))
         {
             result = item;
             Logger.LogInformation($"Service1.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
         }
 
-        await busContext.Bus1.ToAny().StartServiceTests(sessionId, "wss", ct);
+        await busContext.Plane1.ToAny().StartServiceTests(sessionId, "wss", ct);
 
-        Logger.LogInformation($"Bus1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
+        Logger.LogInformation($"Plane1 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }
 
     public async void SendAndForget(string message, CancellationToken ct)

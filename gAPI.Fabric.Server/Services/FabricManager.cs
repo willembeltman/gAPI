@@ -24,9 +24,11 @@ public class FabricManager : IDashboardSnapshotGetter
     public readonly FabricManagerId FabricManagerId;
     public readonly FabricHostCollection AllConnections;
     public readonly FabricBusHostCollection AllBusConnections;
+    public readonly FabricPlaneHostCollection AllPlaneConnections;
     public readonly ServiceCollection Services;
     public readonly ConcurrentDictionary<RequestId, RequestState> OpenRequests;
     public readonly ConcurrentDictionary<RequestId, BusRequestState> OpenBusRequests;
+    public readonly ConcurrentDictionary<RequestId, PlaneRequestState> OpenPlaneRequests;
     private int _roundRobinIndex = 0;
     public readonly Service Logging;
     public readonly Service System;
@@ -42,9 +44,11 @@ public class FabricManager : IDashboardSnapshotGetter
         SessionCache = new();
         AllConnections = new();
         AllBusConnections = new();
+        AllPlaneConnections = new();
         Services = new(this);
         OpenRequests = new();
         OpenBusRequests = new();
+        OpenPlaneRequests = new();
         Console = consoleBuffer; // Initial state
 
         System = Services[new ServiceId("Fabric System")];
@@ -97,13 +101,36 @@ public class FabricManager : IDashboardSnapshotGetter
             item.Value.RemoveBusHost(host);
         }
     }
+
+    public void StartNewPlaneFabricHost(TcpClient tcpClient)
+    {
+        // FabricHost abonneert zichzelf op connections
+        var fabricPlaneHost = new FabricPlaneHost(this, tcpClient);
+        fabricPlaneHost.Start();
+    }
+    public void Disconnected(FabricPlaneHost host)
+    {
+        var connectionId = host.FabricPlaneConnectionId;
+
+        AllPlaneConnections.RemoveConnection(connectionId);
+        Services.RemovePlaneConnection(host);
+
+        foreach (var item in OpenPlaneRequests)
+        {
+            if (item.Value.Caller.FabricPlaneConnectionId == connectionId)
+            {
+                OpenPlaneRequests.TryRemove(item);
+            }
+            item.Value.RemovePlaneHost(host);
+        }
+    }
     public async Task DisconnectAllAsync()
     {
         foreach (var conn in AllConnections)
             conn.Dispose();
-
-        //NotifyChanged();
     }
+
+    #region Normal Wss/Api fabric (9494)
 
     public async Task Receive_UpdateSession_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, UpdateSessionDto updateSession, long receiveSize, CancellationToken ct)
     {
@@ -186,7 +213,6 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-    
 
     public async Task Receive_SendRequest_FromApiAsync(FabricHost caller, ILogger<FabricManager> logger, SendRequestDto request, long receiveSize, CancellationToken ct)
     {
@@ -516,6 +542,10 @@ public class FabricManager : IDashboardSnapshotGetter
         }, ct);
     }
 
+    #endregion
+
+    #region Bus
+
     public async Task Receive_BusStreamingRequest_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusStreamingRequestDto request, long receiveSize, CancellationToken ct)
     {
         _ = Task.Run(async () =>
@@ -589,8 +619,6 @@ public class FabricManager : IDashboardSnapshotGetter
             }
         }, ct);
     }
-
-
 
     public async Task Receive_BusSubscribe_FromApiAsync(FabricBusHost caller, ILogger<FabricManager> logger, BusSubscribeDto subscribe, long receiveSize, CancellationToken ct)
     {
@@ -903,8 +931,8 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryReady())
             return;
 
-        var exceptions = 
-            state.Exceptions.Count == 0 
+        var exceptions =
+            state.Exceptions.Count == 0
             ? null
             : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
         var innerExceptions =
@@ -920,8 +948,6 @@ public class FabricManager : IDashboardSnapshotGetter
                 innerExceptions
             ), state.Actor);
     }
-
-
 
     private (FabricBusHost[], IActor) ResolveBusTargets(BusRoutingDto routing, long receiveSize)
     {
@@ -949,6 +975,442 @@ public class FabricManager : IDashboardSnapshotGetter
         return ([hosts[idx]], service);
     }
 
+
+    #endregion
+
+    #region Plane
+
+    public async Task Receive_PlaneStreamingRequest_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneStreamingRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneStreamingRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(request.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            if (state.Targets.Count == 0)
+            {
+                try
+                {
+                    await state.Caller.Send_PlaneStreamingResponse_ToApiAsync(
+                        new PlaneStreamingResponseDto(
+                            request.Routing,
+                            request.ArgumentIndex,
+                            request.StreamId,
+                            true,
+                            request.Cancelled,
+                            request.Cancelled ? "Task is cancelled" : null,
+                            null,
+                            []),
+                        state.Actor);
+                }
+                finally
+                {
+                    OpenPlaneRequests.TryRemove(request.Routing.RequestId, out _);
+                    state.TryComplete();
+                }
+
+                return;
+            }
+
+            if (state.StreamRoutes.TryAdd(request.StreamId, caller))
+            {
+                if (request.ArgumentIndex < 0)
+                {
+                    foreach (var target in state.Targets.Values)
+                    {
+                        await target.Send_PlaneStreamingRequest_ToApiAsync(request, state.Actor);
+                    }
+                }
+                else
+                {
+                    await state.Caller.Send_PlaneStreamingRequest_ToApiAsync(request, state.Actor);
+                }
+            }
+        }, ct);
+    }
+    public async Task Receive_PlaneStreamingResponse_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneStreamingResponseDto response, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneStreamingResponse_FromApiAsync({response}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), response, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(response.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            if (state.StreamRoutes.TryRemove(response.StreamId, out var sender))
+            {
+                await sender.Send_PlaneStreamingResponse_ToApiAsync(response, state.Actor);
+            }
+        }, ct);
+    }
+
+    public async Task Receive_PlaneSubscribe_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneSubscribeDto subscribe, long receiveSize, CancellationToken ct)
+    {
+        //_ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_Subscribe_FromApiAsync({subscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), subscribe, receiveSize);
+
+            var actor = Services[subscribe.ServiceId];
+            await actor
+                .PlaneSubscribe(caller, subscribe.PlaneConnectionId, receiveSize);
+
+            var ack = new PlaneSubscribeAckDto(subscribe, false, null, null);
+            await caller.Send_PlaneSubscribeAck_ToApiAsync(ack, actor);
+        }//, ct);
+    }
+    public async Task Receive_PlaneUnsubscribe_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneUnsubscribeDto unsubscribe, long receiveSize, CancellationToken ct)
+    {
+        //_ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_Unsubscribe_FromApiAsync({unsubscribe}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), unsubscribe, receiveSize);
+
+            var actor = Services[unsubscribe.ServiceId];
+            await actor
+                .PlaneUnsubscribe(caller, unsubscribe.PlaneConnectionId, receiveSize);
+
+            var ack = new PlaneUnsubscribeAckDto(unsubscribe, false, null, null);
+            await caller.Send_PlaneUnsubscribeAck_ToApiAsync(ack, actor);
+        }//, ct);
+    }
+
+    public async Task Receive_PlaneSendFireAndForget_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneSendRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            (var targets, var actor) = ResolvePlaneTargets(request.Routing, receiveSize);
+            foreach (var target in targets)
+            {
+                await target.Send_PlaneFireAndForget_ToApiAsync(request, actor);
+            }
+        }, ct);
+    }
+
+    public async Task Receive_PlaneSendRequest_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneSendRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            (var fabricHosts, var actor) = ResolvePlaneTargets(request.Routing, receiveSize);
+
+            if (fabricHosts.Length == 0)
+            {
+                var ack = new PlaneSendRequestDoneDto(
+                    request.Routing,
+                    false,
+                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
+                    null);
+                await caller.Send_PlaneSendRequestDone_ToApiAsync(ack, actor);
+                return;
+            }
+
+            var state = new PlaneRequestState
+            {
+                Routing = request.Routing,
+                Actor = actor,
+                Caller = caller,
+                Targets = new ConcurrentDictionary<FabricPlaneConnectionId, FabricPlaneHost>(
+                    fabricHosts.ToDictionary(a => a.FabricPlaneConnectionId))
+            };
+
+            if (!OpenPlaneRequests.TryAdd(request.Routing.RequestId, state))
+                return;
+
+            state.StartTimeout(request.Routing.Timeout, () =>
+            {
+                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null));
+                _ = CompletePlaneRequestAsync(logger, state);
+            });
+
+            foreach (var host in fabricHosts)
+                await host.Send_PlaneSendRequest_ToApiAsync(request, actor);
+        }, ct);
+    }
+    public async Task Receive_PlaneSendRequestCancelled_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneSendRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_SendRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(cancel.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            foreach (var host in state.Targets.Values)
+                await host.Send_PlaneSendRequestCancelled_ToApiAsync(cancel, state.Actor);
+
+            state.Cancel();
+        }, ct);
+    }
+    public async Task Receive_PlaneSendRequestDone_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneSendRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_SendRequestDone_FromApiAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            state.CompletedTargets[caller.FabricPlaneConnectionId] = 1;
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+            }
+            if (done.Cancelled)
+            {
+                state.Cancel();
+            }
+
+            if (state.CompletedTargets.Count == state.Targets.Count)
+            {
+                await CompletePlaneRequestAsync(logger, state);
+            }
+        }, ct);
+    }
+    private async Task CompletePlaneRequestAsync(ILogger<FabricManager> logger, PlaneRequestState state)
+    {
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("{now}: CompleteRequestAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+
+        if (!state.TryComplete())
+            return;
+
+        OpenPlaneRequests.TryRemove(state.Routing.RequestId, out _);
+
+        var exceptionMessage =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+        var innerExceptionMessage =
+            state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        await state.Caller.Send_PlaneSendRequestDone_ToApiAsync(
+            new PlaneSendRequestDoneDto(
+                state.Routing,
+                state.Cancelled,
+                exceptionMessage,
+                innerExceptionMessage
+            ), state.Actor);
+    }
+
+    public async Task Receive_PlaneInvokeRequest_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneInvokeRequestDto request, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneInvokeRequest_FromApiAsync({request}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), request, receiveSize);
+
+            (var fabricHosts, var actor) = ResolvePlaneTargets(request.Routing, receiveSize);
+
+            if (fabricHosts.Length == 0 && request.Routing.ThrowIfNoReceiver)
+            {
+                await caller.Send_PlaneInvokeRequestDone_ToApiAsync(
+                    new PlaneInvokeRequestDoneDto(
+                        request.Routing,
+                        false,
+                        $"No fabric connections found with To {request.Routing.To} or ToPlaneConnectionId {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
+                        null),
+                    actor);
+                return;
+            }
+
+            var state = new PlaneRequestState
+            {
+                Routing = request.Routing,
+                Actor = actor,
+                Caller = caller,
+                Targets = new ConcurrentDictionary<FabricPlaneConnectionId, FabricPlaneHost>(
+                    fabricHosts.ToDictionary(a => a.FabricPlaneConnectionId))
+            };
+
+            if (!OpenPlaneRequests.TryAdd(request.Routing.RequestId, state))
+                return;
+
+            state.StartTimeout(request.Routing.Timeout, () =>
+            {
+                if (state.Targets.Count == 0)
+                {
+                    OpenPlaneRequests.TryRemove(state.Routing.RequestId, out _);
+                    state.TryComplete();
+                    return;
+                }
+
+                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null));
+                _ = ReadyPlaneInvokeAsync(logger, state);
+            });
+
+            if (fabricHosts.Length == 0)
+            {
+                await ReadyPlaneInvokeAsync(logger, state);
+                return;
+            }
+
+            foreach (var host in fabricHosts)
+                await host.Send_PlaneInvokeRequest_ToApiAsync(request, actor);
+        }, ct);
+    }
+    public async Task Receive_PlaneInvokeRequestCancelled_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneInvokeRequestCancelledDto cancel, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneInvokeRequestCancelled_FromApiAsync({cancel}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), cancel, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(cancel.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor.EnqueueReceive(receiveSize);
+
+            foreach (var host in state.Targets.Values)
+                await host.Send_PlaneInvokeRequestCancelled_ToApiAsync(cancel, state.Actor);
+
+            state.Cancel();
+            if (state.Targets.Count == 0)
+            {
+                OpenPlaneRequests.TryRemove(cancel.Routing.RequestId, out _);
+                state.TryComplete();
+            }
+        }, ct);
+    }
+    public async Task Receive_PlaneInvokeRequestAck_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneInvokeRequestAckDto done, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneInvokeRequestAckAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            state.ReadyTargets[caller.FabricPlaneConnectionId] = 0;
+
+            if (state.ReadyTargets.Count == state.Targets.Count)
+            {
+                await ReadyPlaneInvokeAsync(logger, state);
+            }
+        }, ct);
+    }
+    public async Task Receive_PlaneInvokeRequestDone_FromApiAsync(FabricPlaneHost caller, ILogger<FabricManager> logger, PlaneInvokeRequestDoneDto done, long receiveSize, CancellationToken ct)
+    {
+        _ = Task.Run(async () =>
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+                logger.LogTrace("{now}: Receive_PlaneInvokeRequestDoneAsync({done}, {receiveSize})", DateTime.Now.ToString("HH:mm:ss.fff"), done, receiveSize);
+
+            if (!OpenPlaneRequests.TryGetValue(done.Routing.RequestId, out var state))
+                return;
+
+            state.ResetTimeout();
+            state.Actor?.EnqueueReceive(receiveSize);
+
+            state.CompletedTargets[caller.FabricPlaneConnectionId] = 0;
+            if (done.ExceptionMessage != null)
+            {
+                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+            }
+            if (done.Cancelled)
+            {
+                state.Cancel();
+            }
+
+            if (state.CompletedTargets.Count == state.Targets.Count)
+            {
+                await CompletePlaneInvokeAsync(logger, state);
+            }
+        }, ct);
+    }
+    private async Task ReadyPlaneInvokeAsync(ILogger<FabricManager> logger, PlaneRequestState state)
+    {
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+
+        if (!state.TryReady())
+            return;
+
+        await state.Caller.Send_PlaneInvokeRequestAck_ToApiAsync(
+            new PlaneInvokeRequestAckDto(
+                state.Routing,
+                false,
+                null,
+                null
+            ), state.Actor);
+    }
+    private async Task CompletePlaneInvokeAsync(ILogger<FabricManager> logger, PlaneRequestState state)
+    {
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("{now}: ReadyInvokeAsync({state})", DateTime.Now.ToString("HH:mm:ss.fff"), state);
+
+        if (!state.TryReady())
+            return;
+
+        var exceptions =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+        var innerExceptions =
+            state.Exceptions.Values.Count(a => a.InnerException != null) == 0
+            ? null
+            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+
+        await state.Caller.Send_PlaneInvokeRequestDone_ToApiAsync(
+            new PlaneInvokeRequestDoneDto(
+                state.Routing,
+                state.Cancelled,
+                exceptions,
+                innerExceptions
+            ), state.Actor);
+    }
+
+    private (FabricPlaneHost[], IActor) ResolvePlaneTargets(PlaneRoutingDto routing, long receiveSize)
+    {
+        var service = Services[routing.ServiceId];
+        service.EnqueueReceive(receiveSize);
+
+        if (routing.To == PlaneToChoice.ToPlaneConnectionId && routing.ToPlaneConnectionId != null)
+        {
+            if (service.PlaneConnections.TryGetValue(routing.ToPlaneConnectionId, out var target) == false)
+                return ([], service);
+            return ([target.Connection], target);
+        }
+        var subscribers = service.PlaneConnections.Values.Select(a => a.Connection);
+        var hosts = subscribers.Distinct().ToArray();
+        if (hosts.Length == 0)
+            return ([], service);
+
+        if (routing.To == PlaneToChoice.ToAll)
+        {
+            return (hosts, service);
+        }
+
+        // ToAny => Round-robin
+        var idx = (uint)Interlocked.Increment(ref _roundRobinIndex) % (uint)hosts.Length;
+        return ([hosts[idx]], service);
+    }
+
+    #endregion
+
     public FabricDashboardSnapshot GetDashboardSnapshot()
     {
         var connections1 = AllConnections
@@ -963,13 +1425,13 @@ public class FabricManager : IDashboardSnapshotGetter
                     send.count,
                     receive.count);
             });
-        var connections2 = AllBusConnections
+        var connections2 = AllPlaneConnections
             .Select(connection =>
             {
                 var send = connection.GetSendBytesPerSecond();
                 var receive = connection.GetReceiveBytesPerSecond();
                 return new FabricConnectionSnapshot(
-                    "Bus #" + connection.FabricBusConnectionId.Value.ToString(),
+                    "Plane #" + connection.FabricPlaneConnectionId.Value.ToString(),
                     send.bytes,
                     receive.bytes,
                     send.count,
@@ -1003,7 +1465,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     sendSpeed += sendUser.bytes;
                     sendCount += sendUser.count;
                 }
-                foreach (var busconnection in service.BusConnections.Values)
+                foreach (var busconnection in service.PlaneConnections.Values)
                 {
                     var sendUser = busconnection.GetSendSpeed();
                     sendSpeed += sendUser.bytes;

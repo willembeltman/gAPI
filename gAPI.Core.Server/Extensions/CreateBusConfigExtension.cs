@@ -13,12 +13,12 @@ public static class CreateBusConfigExtension
 
         var queueName = m.GetSection("QueueName").Value ?? "Standard";
 
-        // Aspire vult dit nu automatisch in omdat de component "ServiceBus" heet in de AppHost
-        var connectionString = m.GetConnectionString("ServiceBus")
+        // Aspire vult dit nu automatisch in omdat de component "BackPlaneConnection" heet in de AppHost
+        var connectionString = m.GetConnectionString("BackPlaneConnection")
             ?? m.GetConnectionString("Fabric")
             ?? m.GetConnectionString("fabric")
             ?? m.GetSection("FabricConnectionString").Value
-            ?? throw new Exception("ServiceBus connectionstring not found in config");
+            ?? throw new Exception("BackPlaneConnection connectionstring not found in config");
 
         return new ServiceBusConfig(
             maxPackageSize,

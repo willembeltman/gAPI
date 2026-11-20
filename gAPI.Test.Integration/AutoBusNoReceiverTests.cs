@@ -10,11 +10,11 @@ using Xunit;
 
 namespace gAPI.Test.Integration;
 
-public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
+public sealed class AutoPlaneNoReceiverTests : IClassFixture<AutoPlaneFabricFixture>
 {
-    private readonly AutoBusFabricFixture fixture;
+    private readonly AutoPlaneFabricFixture fixture;
 
-    public AutoBusNoReceiverTests(AutoBusFabricFixture fixture)
+    public AutoPlaneNoReceiverTests(AutoPlaneFabricFixture fixture)
     {
         this.fixture = fixture;
     }
@@ -25,7 +25,7 @@ public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var results = new List<string>();
 
-        await foreach (var result in fixture.BusContext.ApiBus
+        await foreach (var result in fixture.PlaneContext.ApiPlane
             .ToAll(TimeSpan.FromSeconds(10), throwIfNoReceiver: false)
             .InvokeList("no receiver", cts.Token))
         {
@@ -42,7 +42,7 @@ public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
 
         await Assert.ThrowsAsync<RemoteException>(async () =>
         {
-            await foreach (var _ in fixture.BusContext.ApiBus
+            await foreach (var _ in fixture.PlaneContext.ApiPlane
                 .ToAll(TimeSpan.FromSeconds(10))
                 .InvokeList("no receiver", cts.Token))
             {
@@ -51,12 +51,12 @@ public sealed class AutoBusNoReceiverTests : IClassFixture<AutoBusFabricFixture>
     }
 }
 
-public sealed class AutoBusFabricFixture : IAsyncLifetime
+public sealed class AutoPlaneFabricFixture : IAsyncLifetime
 {
     private DistributedApplication? application;
     private IHost? clientHost;
 
-    public IBusContext BusContext { get; private set; } = null!;
+    public IPlaneContext PlaneContext { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
@@ -69,21 +69,21 @@ public sealed class AutoBusFabricFixture : IAsyncLifetime
         hostBuilder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["QueueName"] = "Standard",
-            ["ConnectionStrings:ServiceBus"] = "Server=localhost;Port=9595"
+            ["ConnectionStrings:BackPlane"] = "Server=localhost;Port=9595"
         });
-        hostBuilder.Services.AddAutoBus(hostBuilder.Configuration);
+        hostBuilder.Services.AddAutoPlane(hostBuilder.Configuration);
         clientHost = hostBuilder.Build();
 
         await clientHost.StartAsync();
 
-        var fabricClient = clientHost.Services.GetRequiredService<BusFabricClient>();
+        var fabricClient = clientHost.Services.GetRequiredService<PlaneFabricClient>();
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         while (fabricClient.FabricConnectionId.Value < 0)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(50), timeout.Token);
         }
 
-        BusContext = clientHost.Services.GetRequiredService<IBusContext>();
+        PlaneContext = clientHost.Services.GetRequiredService<IPlaneContext>();
     }
 
     public async Task DisposeAsync()

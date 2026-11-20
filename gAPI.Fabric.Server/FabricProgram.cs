@@ -8,9 +8,9 @@ namespace gAPI.Fabric.Server;
 
 public static class FabricProgram
 {
-    public static async Task StartAsync(string name, int port = 9494, int busPort = 9595, CancellationToken ct = default)
+    public static async Task StartAsync(string name, int port = 9494, int busPort = 9595, int planePort = 9696, CancellationToken ct = default)
     {
-        var config = new FabricConfig { Port = port, BusPort = busPort };
+        var config = new FabricConfig { Port = port, BusPort = busPort, PlanePort = planePort };
         await StartAsync(name, config, ct);
     }
     public static async Task StartAsync(string name, FabricConfig config, CancellationToken ct = default)

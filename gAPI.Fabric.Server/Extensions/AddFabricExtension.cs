@@ -28,6 +28,7 @@ public static class AddFabricExtension
         // Hosted services starten
         builder.Services.AddHostedService<FabricServer>();
         builder.Services.AddHostedService<FabricBusServer>();
+        builder.Services.AddHostedService<FabricPlaneServer>();
 
         if (useConsoleDashboard && CanRenderConsole())
             builder.Services.AddHostedService<DashboardConsoleOutput>();

@@ -1,7 +1,5 @@
 ﻿using gAPI.Generated;
-using gAPI.Example.MicroService2;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Globalization;
 
@@ -20,8 +18,7 @@ if (File.Exists("appsettings.Development.json"))
 }
 #endif
 
-builder.Services.AddAutoBus(builder.Configuration);
-//builder.Services.AddHostedService<Service2>();
+builder.Services.AddAutoPlane(builder.Configuration);
 
 var app = builder.Build();
 app.Run();

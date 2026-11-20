@@ -252,14 +252,14 @@ public sealed class FabricClient
         }
 
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Reconnecting BusFabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
+            Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
     }
 
     private async Task DisconnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Error))
             Logger.LogError(
-                "Disconnecting BusFabricClient {Id}",
+                "Disconnecting FabricClient {Id}",
                 FabricConnectionId);
 
         await ConnectingGate.WaitAsync();
@@ -749,13 +749,6 @@ public sealed class FabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_FabricInvokeRequest_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        //using var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, connectionLifecycleCt);
-        //if (StreamingCache.BusReceivedTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
-        //{
-        //    Logger.LogError("Cannot add key");
-        //    return;
-        //}
-        //var ct = timeoutCts.Token;
 
         var ct = connectionLifecycleCt;
 
@@ -1272,7 +1265,7 @@ public sealed class FabricClient
     public Task SendFireAndForgetAsync(RoutingDto routing, byte[] data, CancellationToken ct)
     {
         if (LifeCycleCt == null)
-            throw new Exception("BusFabric not initilazed");
+            throw new Exception("FabricClient not initilazed");
 
         var request = new SendRequestDto(routing, data);
 

@@ -11,7 +11,7 @@ public record StorageFileCacheValue(string? Url, DateTimeOffset Created);
 
 public class StorageServerService(
     StorageServerConfig config,
-    IStorageServiceBus gapiStorageService,
+    IStorageBackPlane gapiStorageService,
     TimeProvider dateTime)
     : IStorageService
 {

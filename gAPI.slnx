@@ -4,6 +4,7 @@
         <Project Path="gAPI.AutoApi.Server/gAPI.AutoApi.Server.csproj" />
         <Project Path="gAPI.AutoAuth.Client/gAPI.AutoAuth.Client.csproj" />
         <Project Path="gAPI.AutoAuth.Server/gAPI.AutoAuth.Server.csproj" />
+        <Project Path="gAPI.AutoPlane/gAPI.AutoPlane.csproj" />
         <Project Path="gAPI.AutoBus/gAPI.AutoBus.csproj" />
         <Project Path="gAPI.AutoComponent/gAPI.AutoComponent.csproj" />
         <Project Path="gAPI.AutoPage/gAPI.AutoPage.csproj" />
@@ -14,6 +15,9 @@
         <Project Path="gAPI.CodeGen.Frontend/gAPI.CodeGen.Frontend.csproj" />
         <Project Path="gAPI.Core.Client/gAPI.Core.Client.csproj" />
         <Project Path="gAPI.Core.Server/gAPI.Core.Server.csproj" />
+        <Project Path="gAPI.Core.BackPlane.AzureServiceBus/gAPI.Core.BackPlane.AzureServiceBus.csproj" />
+        <Project Path="gAPI.Core.BackPlane.Fabric/gAPI.Core.BackPlane.Fabric.csproj" />
+        <Project Path="gAPI.Core.BackPlane.RabbitMQ/gAPI.Core.BackPlane.RabbitMQ.csproj" />
         <Project Path="gAPI.Core.ServiceBus.AzureServiceBus/gAPI.Core.ServiceBus.AzureServiceBus.csproj" />
         <Project Path="gAPI.Core.ServiceBus.Fabric/gAPI.Core.ServiceBus.Fabric.csproj" />
         <Project Path="gAPI.Core.ServiceBus.RabbitMQ/gAPI.Core.ServiceBus.RabbitMQ.csproj" />

@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+
+		<Version>0.0.4-beta</Version>
+		<Authors>Willem Beltman</Authors>
+		<Company>Willem Beltman</Company>
+
+		<PackageId>gAPI.AutoPlane</PackageId>
+		<Description>gAPI AutoPlane server source generator for automatic WebSocket API and Hub generation.</Description>
+		<PackageTags>gapi;api;websocket;wss;rpc;roslyn;source-generator;analyzer;codegen;dotnet;aspnetcore</PackageTags>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/willembeltman/gAPI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/willembeltman/gAPI</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Generators\PlaneHostedService\**" />
+	  <EmbeddedResource Remove="Generators\PlaneHostedService\**" />
+	  <None Remove="Generators\PlaneHostedService\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+
+</Project>

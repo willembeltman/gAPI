@@ -13,8 +13,11 @@ public class StreamingCache
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> FabricSenderTimeouts = [];
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusReceivedTimeouts = [];
     public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> BusSenderTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> PlaneReceivedTimeouts = [];
+    public readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> PlaneSenderTimeouts = [];
 
     public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> BusServiceSubscriptionIds = [];
+    public readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> PlaneServiceSubscriptionIds = [];
 
     public readonly ConcurrentDictionary<SessionId, TaskCompletionSource<string?>> PendingGetSessionRequests = [];
 
@@ -24,19 +27,26 @@ public class StreamingCache
     public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<BusSubscribeAckDto>> BusSubscribeTcss = [];
     public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<BusUnsubscribeAckDto>> BusUnsubscribeTcss = [];
 
+    public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<PlaneSubscribeAckDto>> PlaneSubscribeTcss = [];
+    public readonly ConcurrentDictionary<ServiceSubscriptionId, TaskCompletionSource<PlaneUnsubscribeAckDto>> PlaneUnsubscribeTcss = [];
+
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingClientSendRequests = [];
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckDto>> PendingClientInvokeRequests = [];
 
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneDto>> PendingFabricSendRequests = [];
     public readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckDto>> PendingFabricInvokeRequests = [];
-
     public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusSendRequestDoneDto>> PendingBusSendRequests = [];
     public readonly ConcurrentDictionary<BusRoutingDto, TaskCompletionSource<BusInvokeRequestAckDto>> PendingBusInvokeRequests = [];
+
+    public readonly ConcurrentDictionary<PlaneRoutingDto, TaskCompletionSource<PlaneSendRequestDoneDto>> PendingPlaneSendRequests = [];
+    public readonly ConcurrentDictionary<PlaneRoutingDto, TaskCompletionSource<PlaneInvokeRequestAckDto>> PendingPlaneInvokeRequests = [];
 
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseDto>> StreamingResponseHandlers = [];
 
     public readonly ConcurrentDictionary<RequestArgumentIndexDto, IBusAsyncEnumerableRegistration> BusStreamingRequestHandlers = [];
     public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<BusStreamingResponseDto>> BusStreamingResponseHandlers = [];
+    public readonly ConcurrentDictionary<RequestArgumentIndexDto, IPlaneAsyncEnumerableRegistration> PlaneStreamingRequestHandlers = [];
+    public readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<PlaneStreamingResponseDto>> PlaneStreamingResponseHandlers = [];
 
 }

@@ -21,9 +21,9 @@
 	</Target>
 
 	<ItemGroup>
-		<!--<ProjectReference Include="..\gAPI.Core.ServiceBus.AzureServiceBus\gAPI.Core.ServiceBus.AzureServiceBus.csproj" />-->
-		<!--<ProjectReference Include="..\gAPI.Core.ServiceBus.RabbitMQ\gAPI.Core.ServiceBus.RabbitMQ.csproj" />-->
-		<ProjectReference Include="..\gAPI.Core.ServiceBus.Fabric\gAPI.Core.ServiceBus.Fabric.csproj" />
+		<!--<ProjectReference Include="..\gAPI.Core.BackPlane.AzureServicePlane\gAPI.Core.BackPlane.AzureServicePlane.csproj" />-->
+		<!--<ProjectReference Include="..\gAPI.Core.BackPlane.RabbitMQ\gAPI.Core.BackPlane.RabbitMQ.csproj" />-->
+		<ProjectReference Include="..\gAPI.Core.BackPlane.Fabric\gAPI.Core.BackPlane.Fabric.csproj" />
 	</ItemGroup>
 
 </Project>

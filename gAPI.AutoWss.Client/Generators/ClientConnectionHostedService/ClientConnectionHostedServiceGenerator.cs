@@ -46,7 +46,7 @@ public class ClientConnectionHostedServiceGenerator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name}(
-    {IClientConnection} busConnection,
+    {IClientConnection} clientConnection,
     IServiceProvider serviceProvider)
     : IHostedService
 {{
@@ -61,7 +61,7 @@ public class {Name}(
         Cts = new CancellationTokenSource();
         ct = Cts.Token;
 
-        busConnection.Start(ct);
+        clientConnection.Start(ct);
 
         Scope = serviceProvider.CreateAsyncScope();{string.Join("", Context.ServiceContext.HubInterfaces
         .Select(@interface => string.Join("", @interface.Services
@@ -70,9 +70,9 @@ public class {Name}(
 
         var {service.FullName.Replace(".", "_")} = Scope.Value.ServiceProvider.GetRequiredService<{service.FullName}>();
         await {service.FullName.Replace(".", "_")}.OnStartedAsync(new {ServiceId}(""{@interface}""), ct);
-        await busConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
+        await clientConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
 
-        busConnection.HostedHubServices = new {HostedHubServices}({string.Join("", Context.ServiceContext.HubInterfaces
+        clientConnection.HostedHubServices = new {HostedHubServices}({string.Join("", Context.ServiceContext.HubInterfaces
             .SelectMany(@interface => @interface.Services)
             .Where(a => a.IsHostedHubService)
             .Select(service => $@"
@@ -93,18 +93,18 @@ public class {Name}(
 
         Cts = null;
 
-        var services = busConnection.HostedHubServices;
+        var services = clientConnection.HostedHubServices;
 
         if (services != null)
         {{{string.Join("", Context.ServiceContext.HubInterfaces
         .Select(@interface => string.Join("\r\n", @interface.Services
             .Where(a => a.IsHostedHubService)
             .Select(service => $@"
-            await busConnection.UnsubscribeAsync(busConnection.HostedHubServices.{service.FullName.Replace(".", "_")}, ct);
-            await busConnection.HostedHubServices.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);"))))}
+            await clientConnection.UnsubscribeAsync(clientConnection.HostedHubServices.{service.FullName.Replace(".", "_")}, ct);
+            await clientConnection.HostedHubServices.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);"))))}
         }}
 
-        busConnection.HostedHubServices = null;
+        clientConnection.HostedHubServices = null;
 
         await Scope.Value.DisposeAsync();
         Scope = null;

@@ -41,6 +41,13 @@ public class ServiceCollection : IEnumerable<Service>
             service.RemoveBusConnection(host);
         }
     }
+    public void RemovePlaneConnection(FabricPlaneHost host)
+    {
+        foreach (var service in Services.Values)
+        {
+            service.RemovePlaneConnection(host);
+        }
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

@@ -26,7 +26,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public HubClientContext_Generator[] ClientContexts => Context.ClientContexts;
     public IClientContext_Generator IClientContext => Context.IClientContext;
     public ClientContext_Generator ClientContext => Context.ClientContext;
-    //public ServiceRouter_Generator ServiceRouter => Context.ServiceRouter;
 
     public SharedReference FabricClientHostedService => Context.SharedReferences.FabricClientHostedService;
     public SharedReference FabricClient => Context.SharedReferences.FabricClient;
@@ -35,7 +34,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
     public SharedReference ServerConnectionCollection => Context.SharedReferences.ServerConnectionCollection;
     public SharedReference SessionCache => Context.SharedReferences.SessionCache;
     public SharedReference StreamingCache => Context.SharedReferences.StreamingCache;
-    public SharedReference BusConnectionCollection => Context.SharedReferences.BusConnectionCollection;
     public SharedReference SessionCacheCleaner => Context.SharedReferences.SessionCacheCleaner;
 
     public override void GenerateCode()
@@ -48,7 +46,6 @@ public class AddAutoWssServerExtensionGenerator : _BaseGenerator
         Reg(ServerConfig);
         Reg(ServerConnectionCollection);
         Reg(ServiceSubscriptionCollection);
-        Reg(BusConnectionCollection);
         Reg(SessionCache);
         Reg(SessionCacheCleaner);
         Reg("Microsoft.AspNetCore.HttpOverrides");

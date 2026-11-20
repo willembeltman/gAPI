@@ -27,3 +27,16 @@ public class BusFabricConverter
     public static void WriteHostToClientMessageType(BinaryWriter w, BusFabricHostToClientMessageEnum type)
         => w.Write((byte)type);
 }
+
+public class PlaneFabricConverter
+{
+    public static PlaneFabricClientToHostMessageEnum ReadClientToHostMessageType(BinaryReader Reader)
+        => (PlaneFabricClientToHostMessageEnum)Reader.ReadByte();
+    public static PlaneFabricHostToClientMessageEnum ReadHostToClientMessageType(BinaryReader Reader)
+        => (PlaneFabricHostToClientMessageEnum)Reader.ReadByte();
+
+    public static void WriteClientToHostMessageType(BinaryWriter w, PlaneFabricClientToHostMessageEnum type)
+        => w.Write((byte)type);
+    public static void WriteHostToClientMessageType(BinaryWriter w, PlaneFabricHostToClientMessageEnum type)
+        => w.Write((byte)type);
+}

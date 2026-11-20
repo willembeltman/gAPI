@@ -7,7 +7,7 @@ CultureInfo.DefaultThreadCurrentCulture = invariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddAutoBus(builder.Configuration);
+builder.Services.AddAutoPlane(builder.Configuration);
 builder.Services.AddStorageServer(builder.Configuration);
 
 var app = builder.Build();

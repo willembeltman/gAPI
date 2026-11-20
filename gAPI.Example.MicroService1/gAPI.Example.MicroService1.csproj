@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI.AutoBus\gAPI.AutoBus.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI.AutoPlane\gAPI.AutoPlane.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\gAPI.Example.Shared.BusPrivate\gAPI.Example.Shared.BusPrivate.csproj" />
 	</ItemGroup>
 

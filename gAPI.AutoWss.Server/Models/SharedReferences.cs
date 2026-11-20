@@ -40,7 +40,6 @@ public class SharedReferences
 
 
         ServiceSubscriptionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServiceSubscriptionCollection", allSymbols);
-        BusConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.BusConnectionCollection", allSymbols);
         ServerConnectionCollection = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.ServerConnectionCollection", allSymbols);
         SessionCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.SessionCache", allSymbols);
         StreamingCache = SharedReferenceFinder.Find("gAPI.Core.Server.Collections.StreamingCache", allSymbols);
@@ -64,7 +63,6 @@ public class SharedReferences
     public SharedReference IsHubProxyAttribute { get; }
     public SharedReference IsApiProxyAttribute { get; }
     public SharedReference ServiceSubscriptionCollection { get; }
-    public SharedReference BusConnectionCollection { get; }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }

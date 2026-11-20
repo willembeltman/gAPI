@@ -12,10 +12,10 @@ public class StorageService : IStorageService
     private readonly IStorageService Implementation;
 
     public StorageConfig Config { get; }
-    public IStorageServiceBus? GapiStorageServices { get; }
+    public IStorageBackPlane? GapiStorageServices { get; }
 
     public StorageService(
-        IEnumerable<IStorageServiceBus> gapiStorageServices,
+        IEnumerable<IStorageBackPlane> gapiStorageServices,
         StorageConfig config,
         TimeProvider dateTime)
     {
@@ -72,7 +72,7 @@ public class StorageService : IStorageService
     private StorageServerService CreateStorageServerService(Dictionary<string, string> parts, TimeProvider dateTime)
     {
         if (GapiStorageServices == null)
-            throw new Exception("AutoBus is not installed");
+            throw new Exception("AutoPlane is not installed");
 
         if (parts.TryGetValue("UrlTimeout", out var urlTimeoutString) == false)
             throw new Exception("Cannot find UrlTimeout");
