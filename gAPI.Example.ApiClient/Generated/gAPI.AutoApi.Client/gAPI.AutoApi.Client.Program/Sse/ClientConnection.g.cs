@@ -127,7 +127,7 @@ public class ClientConnection : SseClientConnection, IClientConnection
         ServiceId serviceId,
         ServiceMethodId methodId,
         byte[] data,
-        CancellationToken ct)
+        [EnumeratorCancellation] CancellationToken ct)
     {
         switch (serviceId.Value)
         {

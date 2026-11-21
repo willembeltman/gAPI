@@ -260,7 +260,8 @@ public class {Name}(
             var ___responses = ___busConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {{
@@ -321,7 +322,8 @@ public class {Name}(
             var ___responses = ___busConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {{

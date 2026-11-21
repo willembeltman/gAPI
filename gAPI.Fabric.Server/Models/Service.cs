@@ -6,13 +6,14 @@ using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Services;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Fabric.Server.Models;
 
 public record Service(ServiceId Id, FabricManager FabricManager) : IActor
 {
     public ServiceId Id { get; } = Id;
-    public ConcurrentDictionary<UserId, User> Users { get; } = new();
+    public ConcurrentDictionary<UserId, UserSubsciption> Users { get; } = new();
     public ConcurrentDictionary<SessionId, Session> Sessions { get; } = new();
     public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
     public ConcurrentDictionary<BusConnectionId, BusConnection> BusConnections { get; } = new();
@@ -23,21 +24,23 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceiveLogger = new();
 
-
-    public async Task Subscribe(FabricHost connection, UserId userId, SessionId sessionId, long receiveSize)
+    public async Task Subscribe(FabricHost connection, UserId? userId, SessionId sessionId, long receiveSize)
     {
-        Users.AddOrUpdate(userId,
-            (userId) =>
-            {
-                var user = new User(userId);
-                user.Subscribe(connection);
-                return user;
-            },
-            (userId, user) =>
-            {
-                user.Subscribe(connection);
-                return user;
-            });
+        if (userId != null)
+        {
+            Users.AddOrUpdate(userId,
+                (userId) =>
+                {
+                    var user = new UserSubsciption(userId);
+                    user.Subscribe(connection);
+                    return user;
+                },
+                (userId, user) =>
+                {
+                    user.Subscribe(connection);
+                    return user;
+                });
+        }
         Sessions.AddOrUpdate(sessionId,
             (sessionId) =>
             {
@@ -53,9 +56,10 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         Connections.TryAdd(connection.FabricConnectionId, connection);
         EnqueueReceive(receiveSize);
     }
-    public async Task Unsubscribe(FabricHost connection, UserId userId, SessionId sessionId, long receiveSize)
+    public async Task Unsubscribe(FabricHost connection, UserId? userId, SessionId sessionId, long receiveSize)
     {
-        Users.TryRemove(userId, out _);
+        if (userId != null)
+            Users.TryRemove(userId, out _);
         Sessions.TryRemove(sessionId, out _);
         Connections.TryRemove(connection.FabricConnectionId, out _);
         EnqueueReceive(receiveSize);
@@ -124,14 +128,14 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
     {
         if (userId != null)
         {
-            
-            if (Users.TryGetValue(userId, out var user) == false) 
+
+            if (Users.TryGetValue(userId, out var user) == false)
                 return ([], this);
             return (user.Connections.Values, user);
         }
         else if (sessionId != null)
         {
-            if (Sessions.TryGetValue(sessionId, out var session) == false) 
+            if (Sessions.TryGetValue(sessionId, out var session) == false)
                 return ([], this);
             return (session.Connections.Values, session);
         }

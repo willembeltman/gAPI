@@ -100,8 +100,11 @@ public class {Name}(
         .Select(@interface => string.Join("\r\n", @interface.Services
             .Where(a => a.IsHostedHubService)
             .Select(service => $@"
-            await clientConnection.UnsubscribeAsync(clientConnection.HostedHubServices.{service.FullName.Replace(".", "_")}, ct);
-            await clientConnection.HostedHubServices.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);"))))}
+            if (services.{service.FullName.Replace(".", "_")} != null)
+            {{
+                await clientConnection.UnsubscribeAsync(services.{service.FullName.Replace(".", "_")}, ct);
+                await services.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);
+            }}"))))}
         }}
 
         clientConnection.HostedHubServices = null;

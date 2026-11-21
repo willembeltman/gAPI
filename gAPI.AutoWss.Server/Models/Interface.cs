@@ -36,6 +36,9 @@ public class Interface : SharedReference
         IsAuthorized = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
 
+        IsNotAuthorized = NamedTypeSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "IsNotAuthorizedAttribute");
+
         IsHidden = NamedTypeSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsHiddenAttribute");
 
@@ -62,6 +65,7 @@ public class Interface : SharedReference
     public string CleanName { get; }
     public string Title { get; }
     public bool IsAuthorized { get; }
+    public bool IsNotAuthorized { get; }
     public bool IsHidden { get; }
     public InterfaceMethod[] Methods { get; }
     public Service Service { get; }

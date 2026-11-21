@@ -237,7 +237,6 @@ public class ClientConnection
                             }
                         case "SendWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssHub_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -255,7 +254,7 @@ public class ClientConnection
 
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("{now} Send_InvokeRequest_ToServiceAsync({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
@@ -287,7 +286,6 @@ public class ClientConnection
                             yield break;
                         case "InvokeListWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssHub_InvokeListWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)

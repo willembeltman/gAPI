@@ -17,7 +17,6 @@ namespace gAPI.Generated;
 [ApiController]
 [Route("sseservicesubscription")]
 public class SseResponseController(
-    StreamingCache StreamingCache,
     IServerAuthenticationService authenticationService,
     FabricClient fabricClient)
     : ControllerBase

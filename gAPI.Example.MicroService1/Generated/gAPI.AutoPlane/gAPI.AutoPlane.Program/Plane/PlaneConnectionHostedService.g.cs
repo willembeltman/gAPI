@@ -52,8 +52,11 @@ public class PlaneConnectionHostedService(
 
         if (services != null)
         {
-            await planeConnection.UnsubscribeAsync(planeConnection.HostedPlaneServices.gAPI_Example_MicroService2_Plane1, ct);
-            await planeConnection.HostedPlaneServices.gAPI_Example_MicroService2_Plane1.OnStoppedAsync(new ServiceId("IPlane1"), ct);
+            if (services.gAPI_Example_MicroService2_Plane1 != null)
+            {
+                await planeConnection.UnsubscribeAsync(services.gAPI_Example_MicroService2_Plane1, ct);
+                await services.gAPI_Example_MicroService2_Plane1.OnStoppedAsync(new ServiceId("IPlane1"), ct);
+            }
         }
 
         planeConnection.HostedPlaneServices = null;

@@ -430,7 +430,7 @@ public abstract class WssServerConnection : IServerConnection
             var connections = ConnectedServiceSubscriptions.GetOrAdd(
                 message.ServiceId,
                 a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-            if (connections.TryAdd(subscription.ServiceSubscriptionId, subscription) == false)
+            if (connections.TryAdd(subscription.Id, subscription) == false)
             {
                 Logger.LogError("Cannot add subscription");
                 return;
@@ -465,19 +465,51 @@ public abstract class WssServerConnection : IServerConnection
         if (message.StateIsChanged)
             await AuthenticationService.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
 
+        //try
+        //{
+
         await Send_SendAndForgetRequest_ToServiceAsync(message, connectionLifecycleCt);
 
-        var stateIsChanged = AuthenticationService.IsStateDataChanged();
-        var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-        await Sender.Send_SendRequestDone_ToClientAsync(
-            new SendRequestDoneClientDto(
-                message.Routing,
-                false,
-                null,
-                null,
-                stateIsChanged,
-                stateData
-            ), connectionLifecycleCt);
+        //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        //    await Sender.Send_SendRequestDone_ToClientAsync(
+        //        new SendRequestDoneClientDto(
+        //            message.Routing,
+        //            false,
+        //            null,
+        //            null,
+        //            stateIsChanged,
+        //            stateData
+        //        ), connectionLifecycleCt);
+        //}
+        //catch (TaskCanceledException ex)
+        //{
+        //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        //    await Sender.Send_SendRequestDone_ToClientAsync(
+        //        new SendRequestDoneClientDto(
+        //            message.Routing,
+        //            true,
+        //            ex.Message,
+        //            ex.InnerException?.Message,
+        //            stateIsChanged,
+        //            stateData
+        //        ), connectionLifecycleCt);
+        //}
+        //catch (Exception ex)
+        //{
+        //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+        //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+        //    await Sender.Send_SendRequestDone_ToClientAsync(
+        //        new SendRequestDoneClientDto(
+        //            message.Routing,
+        //            false,
+        //            ex.Message,
+        //            ex.InnerException?.Message,
+        //            stateIsChanged,
+        //            stateData
+        //        ), connectionLifecycleCt);
+        //}
     }
 
     private async Task Receive_SendRequest_FromClientAsync(SendRequestClientDto message, CancellationToken connectionLifecycleCt)
@@ -512,6 +544,25 @@ public abstract class WssServerConnection : IServerConnection
                     stateIsChanged,
                     stateData
                 ), ct);
+        }
+        catch (TaskCanceledException ex)
+        {
+            Logger.LogError(ex, "Receive_SendRequest_FromClientAsync");
+
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_SendRequestDone_ToClientAsync(
+                new SendRequestDoneClientDto(
+                    message.Routing,
+                    true,
+                    ex.Message,
+                    ex.InnerException?.Message,
+                    stateIsChanged,
+                    stateData
+                ), ct);
+
+            timeoutCts.Dispose();
+            StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
         catch (Exception ex)
         {
@@ -590,7 +641,7 @@ public abstract class WssServerConnection : IServerConnection
                 await AuthenticationService.UpdateStateDataAsync(message.StateData, ct);
 
             // Get the enumerable
-            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
+            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts, ct);
 
             // Register it for streaming
             RegisterAsyncEnumerableArgumentByte(
@@ -617,6 +668,25 @@ public abstract class WssServerConnection : IServerConnection
                     stateIsChanged,
                     stateData
                 ), ct);
+        }
+        catch (TaskCanceledException ex)
+        {
+            Logger.LogError(ex, "Receive_InvokeRequest_FromClientAsync");
+
+            var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            await Sender.Send_InvokeRequestDone_ToClientAsync(
+                new InvokeRequestDoneClientDto(
+                    message.Routing,
+                    true,
+                    ex.Message,
+                    ex.InnerException?.Message,
+                    stateIsChanged,
+                    stateData
+                ), ct);
+
+            timeoutCts.Dispose();
+            StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
         }
         catch (Exception ex)
         {
@@ -920,7 +990,7 @@ public abstract class WssServerConnection : IServerConnection
 
     protected abstract Task Send_SendAndForgetRequest_ToServiceAsync(SendRequestDto sendRequest, CancellationToken ct);
     protected abstract Task Send_SendRequest_ToServiceAsync(SendRequestDto sendRequest, CancellationTokenSourceDispose timeoutCts);
-    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto invokeRequest, CancellationTokenSourceDispose timeoutCts);
+    protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto invokeRequest, CancellationTokenSourceDispose timeoutCts, CancellationToken ct);
 
     #endregion
 
@@ -1159,7 +1229,7 @@ public abstract class WssServerConnection : IServerConnection
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogWarning(ex, "Error while disposing hubhost {hubHost.Id}", hubHost.ServiceSubscriptionId);
+                    Logger.LogWarning(ex, "Error while disposing hubhost {hubHost.Id}", hubHost.Id);
                 }
             }
         }

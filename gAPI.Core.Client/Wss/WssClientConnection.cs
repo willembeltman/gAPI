@@ -11,6 +11,7 @@ using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Client.Wss;
 
@@ -243,7 +244,7 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<UnsubscribeDto, TaskCompletionSource<UnsubscribeAckDto>> UnsubscribeTcss = [];
     readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> ServiceSubscriptionIds = [];
 
-    public async Task Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
+    public async Task Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId? userId, SessionId sessionId, CancellationToken ct)
     {
         //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
@@ -278,7 +279,7 @@ public abstract class WssClientConnection : IWssClientConnection
             SubscribeTcss.TryRemove(subscribe, out _);
         }
     }
-    public async Task Send_Unsubscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId userId, SessionId sessionId, CancellationToken ct)
+    public async Task Send_Unsubscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId? userId, SessionId sessionId, CancellationToken ct)
     {
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
@@ -806,7 +807,7 @@ public abstract class WssClientConnection : IWssClientConnection
             if (message.StateIsChanged)
                 await HttpClient.UpdateStateDataAsync(message.StateData, ct);
 
-            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
+            var enumerable = Send_InvokeRequest_ToServiceAsync(message, timeoutCts, timeoutCts.Token);
             RegisterAsyncEnumerableArgumentByte(message.Routing, -1, enumerable, timeoutCts);
 
             timeoutCts.RegisterDispose(async () =>
@@ -1014,7 +1015,8 @@ public abstract class WssClientConnection : IWssClientConnection
         CancellationTokenSourceDispose timeoutCts);
     protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(
         InvokeRequestDto invokeRequest,
-        CancellationTokenSourceDispose timeoutCts);
+        CancellationTokenSourceDispose timeoutCts, 
+        CancellationToken ct);
 
     #endregion
 
@@ -1096,7 +1098,7 @@ public abstract class WssClientConnection : IWssClientConnection
             PendingSendRequests.TryRemove(routing.RequestId, out _);
         }
     }
-    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
+    public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
@@ -1107,7 +1109,7 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
-            var ct = timeoutCts.Token;
+            //var ct = timeoutCts.Token;
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync(false, ct) : null;
             var invokeRequest = new InvokeRequestClientDto(routing, data, stateIsChanged, stateData);

@@ -554,10 +554,6 @@ public class SseClientSubscription : IDisposable
                     streamId,
                     true,
                     CancellationToken.None);
-                //return Send_StreamingCancelled_ToServerAsync(
-                //    routing,
-                //    argumentIndex,
-                //    streamId);
             },
 
             dispose: (StreamId streamId) =>

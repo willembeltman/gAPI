@@ -11,6 +11,7 @@ using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Server.Fabric;
 
@@ -619,7 +620,7 @@ public sealed class PlaneFabricClient
 
         try
         {
-            var enumerable = PlaneConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
+            var enumerable = PlaneConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts, timeoutCts.Token);
             RegisterPlaneAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
             await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(new(message.Routing, false, null, null), ct);
         }
@@ -1024,10 +1025,8 @@ public sealed class PlaneFabricClient
         if (message.ExceptionMessage != null)
             throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
     }
-    public async IAsyncEnumerable<byte[]> InvokeAsync(IBasePlaneConnection basePlaneConnection, PlaneInvokeRequestDto request, CancellationTokenSourceDispose timeoutCts)
+    public async IAsyncEnumerable<byte[]> InvokeAsync(IBasePlaneConnection basePlaneConnection, PlaneInvokeRequestDto request, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {
-        var ct = timeoutCts.Token;
-
         var completion = new TaskCompletionSource<PlaneInvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (StreamingCache.PendingPlaneInvokeRequests.TryAdd(request.Routing, completion) == false)
         {

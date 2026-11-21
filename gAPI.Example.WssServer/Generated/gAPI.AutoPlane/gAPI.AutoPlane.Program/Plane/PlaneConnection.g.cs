@@ -534,7 +534,6 @@ public class PlaneConnection
                             }
                         case "SendWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IApiPlane_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -560,6 +559,7 @@ public class PlaneConnection
                             }
                         case "DoPing":
                             {
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.DoPing();
@@ -604,7 +604,6 @@ public class PlaneConnection
                             }
                         case "SendWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IPlane1_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -617,6 +616,7 @@ public class PlaneConnection
                             }
                         case "PongTask":
                             {
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.PongTask(
@@ -647,7 +647,6 @@ public class PlaneConnection
                             }
                         case "SendWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IPlane2_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -660,6 +659,7 @@ public class PlaneConnection
                             }
                         case "RealPing":
                             {
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.RealPing(
@@ -705,7 +705,6 @@ public class PlaneConnection
                             }
                         case "SendWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssPlane_SendWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -731,6 +730,7 @@ public class PlaneConnection
                             }
                         case "DoPing":
                             {
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.DoPing();
@@ -743,7 +743,7 @@ public class PlaneConnection
         }
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(PlaneInvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
+    public override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(PlaneInvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts, [EnumeratorCancellation] CancellationToken ___ct)
     {
         switch (___invokeRequest.Routing.ServiceId.Value)
         {
@@ -768,7 +768,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeTaskWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiPlane_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -799,7 +798,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeListWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiPlane_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
@@ -838,7 +836,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeTaskWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane1_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -869,7 +866,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeListWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane1_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
@@ -886,6 +882,7 @@ public class PlaneConnection
                             yield break;
                         case "PingEnumerable":
                             {
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.PingEnumerable(
@@ -921,7 +918,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeTaskWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane2_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -952,7 +948,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeListWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane2_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
@@ -991,7 +986,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeTaskWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssPlane_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
                                 foreach (var client in clients)
@@ -1022,7 +1016,6 @@ public class PlaneConnection
                             yield break;
                         case "InvokeListWithList":
                             {
-                                var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssPlane_InvokeListWithList_0_Deserializer,  ___timeoutCts);
                                 foreach (var client in clients)
@@ -1039,6 +1032,7 @@ public class PlaneConnection
                             yield break;
                         case "VideoFeedTest":
                             {
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.VideoFeedTest(

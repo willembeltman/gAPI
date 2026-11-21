@@ -261,7 +261,7 @@ public class Plane1Client(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public async Task<string> InvokeTask(string name, [EnumeratorCancellation] CancellationToken ct)
+    public async Task<string> InvokeTask(string name, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
@@ -289,7 +289,8 @@ public class Plane1Client(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {
@@ -325,7 +326,7 @@ public class Plane1Client(
         return ___buffer;
     }
 
-    public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, [EnumeratorCancellation] CancellationToken ct)
+    public async Task<string> InvokeTaskWithList(IAsyncEnumerable<string> list, CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
@@ -353,7 +354,8 @@ public class Plane1Client(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {
@@ -421,7 +423,8 @@ public class Plane1Client(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {
@@ -479,7 +482,8 @@ public class Plane1Client(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {
@@ -543,7 +547,8 @@ public class Plane1Client(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {

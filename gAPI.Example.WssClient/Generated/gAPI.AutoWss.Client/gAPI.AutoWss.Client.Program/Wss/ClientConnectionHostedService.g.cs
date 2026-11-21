@@ -52,8 +52,11 @@ public class ClientConnectionHostedService(
 
         if (services != null)
         {
-            await clientConnection.UnsubscribeAsync(clientConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub, ct);
-            await clientConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub.OnStoppedAsync(new ServiceId("IWssHub"), ct);
+            if (services.gAPI_Example_ApiServer_Client_WssHub != null)
+            {
+                await clientConnection.UnsubscribeAsync(services.gAPI_Example_ApiServer_Client_WssHub, ct);
+                await services.gAPI_Example_ApiServer_Client_WssHub.OnStoppedAsync(new ServiceId("IWssHub"), ct);
+            }
         }
 
         clientConnection.HostedHubServices = null;

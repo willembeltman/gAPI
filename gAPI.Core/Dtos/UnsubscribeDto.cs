@@ -7,7 +7,7 @@ namespace gAPI.Core.Dtos;
 public record UnsubscribeDto(
     ServiceSubscriptionId ServiceSubscriptionId,
     ServiceId ServiceId,
-    UserId UserId,
+    UserId? UserId,
     SessionId SessionId)
 {
     public override string ToString()

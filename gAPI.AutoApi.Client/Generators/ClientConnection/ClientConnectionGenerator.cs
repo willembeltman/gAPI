@@ -160,7 +160,7 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         {ServiceId} serviceId,
         {ServiceMethodId} methodId,
         byte[] data,
-        CancellationToken ct)
+        [EnumeratorCancellation] CancellationToken ct)
     {{{(Interfaces.Length > 0 ? $@"
         switch (serviceId.Value)
         {{{string.Join("\r\n", Interfaces

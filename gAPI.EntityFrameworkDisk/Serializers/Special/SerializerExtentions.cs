@@ -56,17 +56,17 @@ public static class SerializerExtensions
         bw.Write(value.Value);
     }
 
-    public static UserId ReadUserId(this BinaryReader br)
+    public static UserId? ReadUserId(this BinaryReader br)
     {
         if (br.ReadBoolean())
         {
-            return new UserId(null);
+            return null;
         }
         return new UserId(br.ReadString());
     }
-    public static void Write(this BinaryWriter bw, UserId value)
+    public static void Write(this BinaryWriter bw, UserId? value)
     {
-        if (value.Value == null)
+        if (value == null)
         {
             bw.Write(true);
             return;

@@ -35,6 +35,7 @@ public class HubClient_Generator : BaseGenerator
     public override void GenerateCode()
     {
         Reg("System.Text.Json");
+        Reg("System.Runtime.CompilerServices");
         Reg(Interface);
         Reg(IsHubProxyAttribute);
         Reg(FabricClient);
@@ -142,6 +143,8 @@ public class {Name}(
                 {RequestId}.New(), 
                 ___ServiceId, 
                 new(""{method.Name}""), 
+                {(method.IsAuthorized ? "true" : "false")},
+                {(method.IsNotAuthorized ? "true" : "false")},
                 ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,
@@ -207,6 +210,8 @@ public class {Name}(
             {RequestId}.New(), 
             ___ServiceId, 
             new(""{method.Name}""), 
+            {(method.IsAuthorized ? "true" : "false")},
+            {(method.IsNotAuthorized ? "true" : "false")},
             ___timeOut.Value,
             ___UserId, 
             ___SessionId,
@@ -244,7 +249,7 @@ public class {Name}(
     public async {method.ResponseType} {method.Name}(
         {string.Join(
             $",\r\n        ",
-            method.Arguments.Select(a => @$"{a.ParameterType.Name} {a.Name}"))})
+            method.Arguments.Select(a => @$"{(a.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{a.ParameterType.Name} {a.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
@@ -259,6 +264,8 @@ public class {Name}(
             {RequestId}.New(), 
             ___ServiceId, 
             new {ServiceMethodId}(""{method.Name}""), 
+            {(method.IsAuthorized ? "true" : "false")},
+            {(method.IsNotAuthorized ? "true" : "false")},
             ___timeOut.Value,
             ___UserId, 
             ___SessionId,
@@ -289,8 +296,10 @@ public class {Name}(
                     yield break;
                 ___timeoutCts.CancelAfter(___timeOut.Value);
 
-                yield return JsonSerializer.Deserialize<{method.ResponseType.UnderlayingTypes.First()}>(
+                var item = JsonSerializer.Deserialize<{method.ResponseType.UnderlayingTypes.First()}>(
                     System.Text.Encoding.UTF8.GetString(___responseBytes));
+                if (item != null)
+                    yield return item;
             }}
         }}
         finally

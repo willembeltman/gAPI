@@ -11,5 +11,5 @@ public class StorageFile
     public string FileName { get; set; } = string.Empty;
     public long Length { set; get; }
     public string MimeType { set; get; } = string.Empty;
-    public string Hash { get; internal set; }
+    public string Hash { get; set; } = string.Empty;
 }

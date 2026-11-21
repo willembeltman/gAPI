@@ -40,8 +40,8 @@ public abstract class FabricBasePlaneConnection(
         => fabricClient.SendFireAndForgetAsync(this, new(routing, data), ct);
     public Task SendAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
         => fabricClient.SendAsync(this, new(routing, data), cts);
-    public IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts)
-        => fabricClient.InvokeAsync(this, new(routing, data), cts);
+    public IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts, CancellationToken ct)
+        => fabricClient.InvokeAsync(this, new(routing, data), cts, ct);
 
     // Therse functions are called when there are Enumerable arguments 
     public void RegisterTimeout(PlaneRoutingDto routing, CancellationTokenSourceDispose cts)
@@ -63,6 +63,6 @@ public abstract class FabricBasePlaneConnection(
     // Calling this will route the request to service
     public abstract Task Send_FireAndForgetRequest_ToServiceAsync(PlaneSendRequestDto requestDto, CancellationToken ct);
     public abstract Task Send_SendRequest_ToServiceAsync(PlaneSendRequestDto sendRequest, CancellationTokenSourceDispose timeoutCts);
-    public abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(PlaneInvokeRequestDto invokeRequest, CancellationTokenSourceDispose timeoutCts);
+    public abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(PlaneInvokeRequestDto invokeRequest, CancellationTokenSourceDispose timeoutCts, CancellationToken ct);
 
 }

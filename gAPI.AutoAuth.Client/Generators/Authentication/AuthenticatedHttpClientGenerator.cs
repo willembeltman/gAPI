@@ -68,7 +68,7 @@ public class {Name}(
     public event {StateChangedHandler}? OnStateHasChanged;
 
     public {SessionId} SessionId {{ get; private set; }} = SessionId.New();
-    public {UserId} UserId => new(State?.User?.Id.ToString());
+    public {UserId}? UserId => State?.User == null ? null : new {UserId}(State.User.Id.ToString());
     public Uri? BaseUri => HttpClient.BaseAddress;
 
     public async Task<bool?> IsAuthenticatedAsync(CancellationToken ct)

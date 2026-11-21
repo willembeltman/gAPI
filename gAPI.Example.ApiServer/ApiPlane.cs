@@ -56,16 +56,6 @@ public class ApiPlane(
 
     public async Task StartServiceTests(SessionId sessionId, CancellationToken ct)
     {
-        async IAsyncEnumerable<string> MyList()
-        {
-            yield return "1";
-            Logger.LogInformation($"MyList - 1");
-            yield return "2";
-            Logger.LogInformation($"MyList - 2");
-            yield return "3";
-            Logger.LogInformation($"MyList - 3");
-        }
-
         var sw = Stopwatch.StartNew();
 
         clientContext.ApiHub.ToSession(sessionId).SendAndForget("hoi", ct);
@@ -80,12 +70,6 @@ public class ApiPlane(
             result = item;
             Logger.LogInformation($"MainHub.InvokeList - {item} - {sw.ElapsedMilliseconds}ms");
         }
-
-        //await foreach (var item in clientContext.ApiHub.ToSession(sessionId).InvokeListWithList(MyList(), ct))
-        //{
-        //    result = item;
-        //    Logger.LogInformation($"MainHub.InvokeListWithList - {item} - {sw.ElapsedMilliseconds}ms");
-        //}
 
         Logger.LogInformation($"MainService ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
     }

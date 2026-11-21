@@ -134,6 +134,11 @@ public class InterfaceMethod
             methodSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsAuthorizedAttribute");
 
+        IsNotAuthorized =
+            @interface.IsNotAuthorized ||
+            methodSymbol.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "IsNotAuthorizedAttribute");
+
         IsHidden =
             @interface.IsHidden ||
             methodSymbol.GetAttributes()
@@ -175,6 +180,7 @@ public class InterfaceMethod
     public string? IsPageResponseText { get; }
     public bool IsAsync { get; }
     public bool IsAuthorized { get; }
+    public bool IsNotAuthorized { get; }
     public bool IsHidden { get; }
     public string Timeout { get; }
 

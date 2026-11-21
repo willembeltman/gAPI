@@ -1,8 +1,6 @@
 ﻿using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Ids;
-using gAPI.Generated;
 using gAPI.Example.Shared.WssPublic;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -11,11 +9,8 @@ namespace gAPI.Example.ApiServer.Client;
 
 public class WssHub(
     ILoggerFactory loggerFactory,
-    IWssApi mainApi,
-    IClientConnection clientConnection)
+    IWssApi mainApi)
     : IWssHub
-    //, IHostedService
-    //, IHubServiceSubscription
     , IHostedHubService
 {
 
@@ -36,29 +31,8 @@ public class WssHub(
     }
 
     private readonly ILogger Logger = loggerFactory.CreateLogger<WssHub>();
-    private CancellationTokenSource? Cts;
 
     public TaskCompletionSource<string>? PontResult { get; private set; }
-
-    //async Task IHostedService.StartAsync(CancellationToken ct)
-    //{
-    //    if (Cts != null)
-    //        return;
-    //    Cts = new CancellationTokenSource();
-    //    ct = Cts.Token;
-    //    await clientConnection.SubscribeAsync(this, ct);
-
-    //    _ = StartAllTests(ct);
-    //}
-    //async Task IHostedService.StopAsync(CancellationToken ct)
-    //{
-    //    if (Cts == null)
-    //        return;
-    //    await clientConnection.UnsubscribeAsync(this, ct);
-    //    Cts.Cancel();
-    //    Cts.Dispose();
-    //    Cts = null;
-    //}
 
     private async IAsyncEnumerable<string> MyList()
     {
@@ -83,9 +57,7 @@ public class WssHub(
             }
             i2++;
         }
-        await Task.Delay(TimeSpan.FromSeconds(100), ct);
-        return;
-
+        await Task.Delay(TimeSpan.FromSeconds(10), ct);
 
         for (int i = 0; i < 10; i++)
             await mainApi.InvokeTask("hoi", ct);

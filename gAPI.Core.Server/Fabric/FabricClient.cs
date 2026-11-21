@@ -311,7 +311,7 @@ public sealed class FabricClient
                 serviceSubscription);
 
         var request = new SubscribeDto(
-            serviceSubscription.ServiceSubscriptionId,
+            serviceSubscription.Id,
             serviceSubscription.ServiceId,
             serviceSubscription.UserId,
             serviceSubscription.SessionId);
@@ -331,7 +331,7 @@ public sealed class FabricClient
                 serviceSubscription);
 
         var request = new UnsubscribeDto(
-            serviceSubscription.ServiceSubscriptionId,
+            serviceSubscription.Id,
             serviceSubscription.ServiceId,
             serviceSubscription.UserId,
             serviceSubscription.SessionId
@@ -644,7 +644,7 @@ public sealed class FabricClient
         {
             foreach (var serviceSubscription in serviceSubscriptions.Values)
             {
-                if (serviceSubscription.ServiceSubscriptionId == message.SubscribeDto.ServiceSubscriptionId)
+                if (serviceSubscription.Id == message.SubscribeDto.ServiceSubscriptionId)
                 {
                     await serviceSubscription.Connection.Send_SubscribeAck_ToClientAsync(message, connectionLifecycleCt);
                 }
@@ -660,7 +660,7 @@ public sealed class FabricClient
         {
             foreach (var serviceSubscription in serviceSubscriptions.Values)
             {
-                if (serviceSubscription.ServiceSubscriptionId == message.UnsubscribeDto.ServiceSubscriptionId)
+                if (serviceSubscription.Id == message.UnsubscribeDto.ServiceSubscriptionId)
                 {
                     await serviceSubscription.Connection.Send_UnsubscribeAck_ToClientAsync(message, connectionLifecycleCt);
                 }
@@ -674,47 +674,37 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_FabricSendAndForgetRequest_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         // Routeren naar client(s)
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                continue;
+
             await serviceSubscription.Connection.Send_FabricSendAndForgetRequest_ToClientAsync(message, connectionLifecycleCt);
         }
     }
-    
+
     private async Task Receive_FabricSendRequest_FromFabricAsync(SendRequestDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_FabricSendRequest_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        //using var timeoutCts = new CancellationTokenSourceDispose(message.Routing.Timeout, connectionLifecycleCt);
-        //if (StreamingCache.WssReceivedTimeouts.TryAdd(message.Routing.RequestId, timeoutCts) == false)
-        //{
-        //    Logger.LogError("Cannot add key");
-        //    return;
-        //}
-        //var ct = timeoutCts.Token;
         var ct = connectionLifecycleCt;
 
         // Routeren naar client(s)
         var called = false;
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                continue;
+
             await serviceSubscription.Connection.Send_FabricSendRequest_ToClientAsync(message, ct);
             called = true;
         }
 
         if (!called)
-        {
-            if (message.Routing.ThrowIfNoReceiver)
-            {
-                await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, "No receivers found", null), ct);
-            }
-            else
-            {
-                await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, null, null), ct);
-            }
-        }
+            await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, message.Routing.ThrowIfNoReceiver ? "No receivers found" : null, null), ct);
     }
     private async Task Receive_FabricSendRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken connectionLifecycleCt)
     {
@@ -722,9 +712,12 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_FabricSendRequestCancelled_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         // Routeren naar client(s)
-        var serviceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in serviceSubscriptions)
+        foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                continue;
+
             await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(message, connectionLifecycleCt);
         }
     }
@@ -754,9 +747,12 @@ public sealed class FabricClient
 
         // Routeren naar client(s)
         var called = false;
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                continue;
+
             await serviceSubscription.Connection.Send_FabricInvokeRequest_ToClientAsync(message, ct);
             called = true;
         }
@@ -779,9 +775,12 @@ public sealed class FabricClient
             Logger.LogTrace("{now} Receive_FabricInvokeRequestCancelled_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         // Routeren naar client(s)
-        var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-        foreach (var serviceSubscription in SseServiceSubscriptions)
+        foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                continue;
+
             await serviceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(message, connectionLifecycleCt);
         }
     }
@@ -829,9 +828,12 @@ public sealed class FabricClient
         {
             // Routeren naar client(s)
             var called = false;
-            var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-            foreach (var serviceSubscription in SseServiceSubscriptions)
+            foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
             {
+                if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                    message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                    continue;
+
                 await serviceSubscription.Connection.Send_FabricStreamingRequest_ToClientAsync(message, ct);
                 called = true;
             }
@@ -848,7 +850,7 @@ public sealed class FabricClient
                 await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
             }
             else
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No StreamingRequestHandlers found", null, []), ct);
+                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No StreamingRequestHandlers found" : null, null, []), ct);
         }
     }
     private async Task Receive_StreamingResponse_FromFabricAsync(StreamingResponseDto message, CancellationToken connectionLifecycleCt)
@@ -871,9 +873,12 @@ public sealed class FabricClient
         else
         {
             // Routeren naar client(s)
-            var SseServiceSubscriptions = GetServiceSubscriptions(message.Routing);
-            foreach (var serviceSubscription in SseServiceSubscriptions)
+            foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
             {
+                if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
+                    message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
+                    continue;
+
                 await serviceSubscription.Connection.Send_FabricStreamingResponse_ToClientAsync(message, ct);
             }
         }

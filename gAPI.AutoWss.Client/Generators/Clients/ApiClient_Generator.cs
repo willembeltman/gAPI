@@ -148,6 +148,8 @@ public sealed class {Name}(
                 {RequestId}.New(),
                 ___ServiceId,
                 new(""{method}""),
+                {(method.IsAuthorized ? "true" : "false")},
+                {(method.IsNotAuthorized ? "true" : "false")},
                 ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
@@ -208,6 +210,8 @@ public sealed class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            {(method.IsAuthorized ? "true" : "false")},
+            {(method.IsNotAuthorized ? "true" : "false")},
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -264,6 +268,8 @@ public sealed class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            {(method.IsAuthorized ? "true" : "false")},
+            {(method.IsNotAuthorized ? "true" : "false")},
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -289,7 +295,8 @@ public sealed class {Name}(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {{
@@ -337,6 +344,8 @@ public sealed class {Name}(
             {RequestId}.New(),
             ___ServiceId,
             new(""{method}""),
+            {(method.IsAuthorized ? "true" : "false")},
+            {(method.IsNotAuthorized ? "true" : "false")},
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -360,7 +369,8 @@ public sealed class {Name}(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {{

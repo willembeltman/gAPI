@@ -13,9 +13,9 @@ public sealed class ServiceSubscriptionCollection
 
     public void Add(IServiceSubscription client, ServiceId serviceId)
     {
-        ServiceSubscriptions[client.ServiceSubscriptionId] = client;
+        ServiceSubscriptions[client.Id] = client;
         var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>(); });
-        connections[client.ServiceSubscriptionId] = client;
+        connections[client.Id] = client;
     }
 
     public bool Remove(ServiceSubscriptionId id)

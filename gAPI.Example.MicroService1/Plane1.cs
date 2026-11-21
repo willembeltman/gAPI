@@ -145,7 +145,7 @@ public class Plane1(
 
             Logger.LogInformation($"Plane2 ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
         }
-        catch (Exception ex)
+        catch // (Exception ex)
         {
             throw;
         }

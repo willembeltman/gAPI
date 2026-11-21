@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace gAPI.Fabric.Server.Models;
 
-public record User(UserId Id) : IActor
+public record UserSubsciption(UserId Id) : IActor
 {
     public UserId Id { get; } = Id;
     public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();

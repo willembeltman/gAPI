@@ -103,7 +103,7 @@ public class Plane2(
 
             Logger.LogInformation($"MainPlane ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
         }
-        catch (Exception ex)
+        catch //(Exception ex)
         {
             throw;
         }

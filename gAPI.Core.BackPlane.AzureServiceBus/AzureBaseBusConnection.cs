@@ -12,6 +12,7 @@ using gAPI.Core.Server.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.BackPlane.AzureServiceBus;
 
@@ -204,14 +205,14 @@ public abstract class AzureBasePlaneConnection(
             await _adminClient.DeleteTopicAsync(replyTopic, CancellationToken.None);
         }
     }
-    public async IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts)
+    public async IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {
         if (routing.To == PlaneToChoice.ToAll)
         {
             throw new NotSupportedException("Streaming or synchronous RPC calls via ToAll are not supported on the Service Plane. Use ToAny instead.");
         }
 
-        var ct = timeoutCts.Token;
+        //var ct = timeoutCts.Token;
         await TryConnectAsync(ct);
 
         var correlationId = routing.RequestId.ToString();

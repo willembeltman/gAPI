@@ -52,8 +52,11 @@ public class PlaneConnectionHostedService(
 
         if (services != null)
         {
-            await planeConnection.UnsubscribeAsync(planeConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane, ct);
-            await planeConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane.OnStoppedAsync(new ServiceId("IWssPlane"), ct);
+            if (services.gAPI_Example_WssServer_Server_WssPlane != null)
+            {
+                await planeConnection.UnsubscribeAsync(services.gAPI_Example_WssServer_Server_WssPlane, ct);
+                await services.gAPI_Example_WssServer_Server_WssPlane.OnStoppedAsync(new ServiceId("IWssPlane"), ct);
+            }
         }
 
         planeConnection.HostedPlaneServices = null;

@@ -105,8 +105,11 @@ public class {Name}(
         .Select(@interface => string.Join("\r\n", @interface.Services
             .Where(a => a.IsHostedPlaneService)
             .Select(service => $@"
-            await planeConnection.UnsubscribeAsync(planeConnection.HostedPlaneServices.{service.FullName.Replace(".", "_")}, ct);
-            await planeConnection.HostedPlaneServices.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);"))))}
+            if (services.{service.FullName.Replace(".", "_")} != null)
+            {{
+                await planeConnection.UnsubscribeAsync(services.{service.FullName.Replace(".", "_")}, ct);
+                await services.{service.FullName.Replace(".", "_")}.OnStoppedAsync(new {ServiceId}(""{@interface}""), ct);
+            }}"))))}
         }}
 
         planeConnection.HostedPlaneServices = null;

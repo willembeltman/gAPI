@@ -152,8 +152,9 @@ public class {Name} : {WssServerConnection}
                 {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsVoid).Select(method =>
         {
             return $@"
-                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
-                        if (___authenticationService.Result.Authenticated)" : "")}
+                    case ""{method}"":{(method.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}{(method.IsNotAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated == false)" : "")}
                         {{
                             {@interface}_{method}(
                                 ___sendRequest,{string.Join("", method.Arguments
@@ -162,7 +163,7 @@ public class {Name} : {WssServerConnection}
                                     .Select(a => $@"
                                 {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
                                 ___ct);
-                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        }}{(method.IsAuthorized ? $@"
                         else
                         {{
                             ___logger.LogWarning(""Ongeautoriseerde SendRequest poging voor {{Service}}/{{Method}}"", ___sendRequest.Routing.ServiceId.Value, ___sendRequest.Routing.MethodId.Value);
@@ -194,8 +195,9 @@ public class {Name} : {WssServerConnection}
                 {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method =>
         {
             return $@"
-                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
-                        if (___authenticationService.Result.Authenticated)" : "")}
+                    case ""{method}"":{(method.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}{(method.IsNotAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated == false)" : "")}
                         {{
                             await {@interface}_{method}(
                                 ___sendRequest,{string.Join("", method.Arguments
@@ -207,7 +209,7 @@ public class {Name} : {WssServerConnection}
                                         : $@"
                                 {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)},"))}
                                 ___timeoutCts.Token);
-                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        }}{(method.IsAuthorized ? $@"
                         else
                         {{
                             ___logger.LogWarning(""Ongeautoriseerde SendRequest poging voor {{Service}}/{{Method}}"", ___sendRequest.Routing.ServiceId.Value, ___sendRequest.Routing.MethodId.Value);
@@ -228,7 +230,7 @@ public class {Name} : {WssServerConnection}
     {
         var functions = "";
         var code = $@"
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts, [EnumeratorCancellation] CancellationToken ___ct)
     {{{(Context.ServiceContext.ApiInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT)) ? $@"
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
@@ -237,8 +239,9 @@ public class {Name} : {WssServerConnection}
             case ""{@interface}"":
                 switch (___invokeRequest.Routing.MethodId.Value)
                 {{{(string.Join("", @interface.Methods.Where(a => a.ResponseType.IsIAsyncEnumerable || a.ResponseType.IsTaskT).Select(method => $@"
-                    case ""{method}"":{(method.IsAuthorized || @interface.IsAuthorized ? $@"
-                        if (___authenticationService.Result.Authenticated)" : "")}
+                    case ""{method}"":{(method.IsAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated)" : "")}{(method.IsNotAuthorized ? $@"
+                        if (___authenticationService.Result.Authenticated == false)" : "")}
                         {{
                             await foreach (var ___packet in {@interface}_{method}(
                                 ___invokeRequest,{string.Join("", method.Arguments
@@ -254,7 +257,7 @@ public class {Name} : {WssServerConnection}
                                 yield return ___packet;
                             }}
                             yield break;
-                        }}{(method.IsAuthorized || @interface.IsAuthorized ? $@"
+                        }}{(method.IsAuthorized ? $@"
                         else
                         {{
                             ___logger.LogWarning(""Ongeautoriseerde InvokeRequest poging voor {{Service}}/{{Method}}"", ___invokeRequest.Routing.ServiceId.Value, ___invokeRequest.Routing.MethodId.Value);

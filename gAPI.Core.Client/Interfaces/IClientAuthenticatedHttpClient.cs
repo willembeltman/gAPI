@@ -8,7 +8,7 @@ public interface IClientAuthenticatedHttpClient : IDisposable
     event StateChangedHandler? OnStateHasChanged;
 
     SessionId SessionId { get; }
-    UserId UserId { get; }
+    UserId? UserId { get; }
     Uri? BaseUri { get; }
 
     Task<bool?> IsAuthenticatedAsync(CancellationToken ct = default);

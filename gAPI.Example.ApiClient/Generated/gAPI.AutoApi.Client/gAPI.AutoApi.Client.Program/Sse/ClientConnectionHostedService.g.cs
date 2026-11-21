@@ -52,8 +52,11 @@ public class ClientConnectionHostedService(
 
         if (services != null)
         {
-            await busConnection.UnsubscribeAsync(busConnection.HostedHubServices.gAPI_Example_ApiServer_Client_ApiHub, ct);
-            await busConnection.HostedHubServices.gAPI_Example_ApiServer_Client_ApiHub.OnStoppedAsync(new ServiceId("IApiHub"), ct);
+            if (services.gAPI_Example_ApiServer_Client_ApiHub != null)
+            {
+                await busConnection.UnsubscribeAsync(services.gAPI_Example_ApiServer_Client_ApiHub, ct);
+                await services.gAPI_Example_ApiServer_Client_ApiHub.OnStoppedAsync(new ServiceId("IApiHub"), ct);
+            }
         }
 
         busConnection.HostedHubServices = null;

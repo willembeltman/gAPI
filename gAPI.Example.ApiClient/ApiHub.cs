@@ -31,39 +31,8 @@ public class ApiHub(
     }
 
     private readonly ILogger Logger = loggerFactory.CreateLogger<ApiHub>();
-    private CancellationTokenSource? Cts;
 
     public TaskCompletionSource<string>? PontResult { get; private set; }
-
-    //async Task IHostedService.StartAsync(CancellationToken ct)
-    //{
-    //    if (Cts != null)
-    //        return;
-    //    Cts = new CancellationTokenSource();
-    //    ct = Cts.Token;
-    //    await clientConnection.SubscribeAsync(this, ct);
-
-    //    _ = StartAllTests(ct);
-    //}
-    //async Task IHostedService.StopAsync(CancellationToken ct)
-    //{
-    //    if (Cts == null)
-    //        return;
-    //    await clientConnection.UnsubscribeAsync(this, ct);
-    //    Cts.Cancel();
-    //    Cts.Dispose();
-    //    Cts = null;
-    //}
-
-    private async IAsyncEnumerable<string> MyList()
-    {
-        yield return "1";
-        Logger.LogInformation($"MyList - 1");
-        yield return "2";
-        Logger.LogInformation($"MyList - 2");
-        yield return "3";
-        Logger.LogInformation($"MyList - 3");
-    }
 
     public async Task StartAllTests(CancellationToken ct)
     {

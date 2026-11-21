@@ -7,7 +7,7 @@ public class HubResult
     /// <summary>
     /// Not required, will be set by the framework
     /// </summary>
-    public UserId UserId { get; set; } = default!;
+    public UserId? UserId { get; set; }
 
     /// <summary>
     /// Not required, will be set by the framework

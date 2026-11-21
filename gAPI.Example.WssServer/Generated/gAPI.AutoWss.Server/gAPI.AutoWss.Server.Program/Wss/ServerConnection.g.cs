@@ -129,7 +129,7 @@ public class ServerConnection : WssServerConnection
         throw new Exception($"Send {___sendRequest.Routing.ServiceId.Value}.{___sendRequest.Routing.MethodId.Value} not implemented");
     }
     
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationTokenSourceDispose ___timeoutCts, [EnumeratorCancellation] CancellationToken ___ct)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___invokeRequest.BinaryData);

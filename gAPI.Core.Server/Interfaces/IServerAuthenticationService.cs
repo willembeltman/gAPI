@@ -8,7 +8,7 @@ namespace gAPI.Core.Server.Interfaces;
 
 public interface IServerAuthenticationService
 {
-    UserId UserId { get; }
+    UserId? UserId { get; }
     SessionId SessionId { get; }
     bool Initialized { get; }
     AuthenticationInitializeResult Result { get; }

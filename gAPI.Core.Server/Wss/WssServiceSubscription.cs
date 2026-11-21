@@ -20,14 +20,14 @@ public class WssServiceSubscription
         ClientConnectionId clientConnectionId,
         ServiceSubscriptionId serviceSubscriptionId,
         ServiceId serviceId,
-        UserId userId,
+        UserId? userId,
         SessionId sessionId)
     {
         ServiceSubscriptionCollection = serviceSubscriptionCollection;
         Connection = connection;
         FabricClient = fabricClient;
         ClientConnectionId = clientConnectionId;
-        ServiceSubscriptionId = serviceSubscriptionId;
+        Id = serviceSubscriptionId;
         SessionId = sessionId;
         UserId = userId;
         ServiceId = serviceId;
@@ -45,10 +45,12 @@ public class WssServiceSubscription
     public ServiceSubscriptionCollection ServiceSubscriptionCollection { get; }
     public FabricClient FabricClient { get; }
     public ClientConnectionId ClientConnectionId { get; }
-    public ServiceSubscriptionId ServiceSubscriptionId { get; }
+    public ServiceSubscriptionId Id { get; }
     public ServiceId ServiceId { get; }
-    public UserId UserId { get; }
+    public UserId? UserId { get; }
     public SessionId SessionId { get; }
+
+    public bool IsAuthenticated => UserId != null;
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
     private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
@@ -90,7 +92,7 @@ public class WssServiceSubscription
         if (Interlocked.Exchange(ref Disposed, 1) == 0)
         {
             await FabricClient.UnsubscribeAsync(this, default);
-            ServiceSubscriptionCollection.Remove(ServiceSubscriptionId);
+            ServiceSubscriptionCollection.Remove(Id);
         }
         GC.SuppressFinalize(this);
     }

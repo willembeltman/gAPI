@@ -300,13 +300,13 @@ public class {Name}
                     switch (___sendRequest.Routing.MethodId.Value)
                     {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsVoid).Select(method => $@"
                         case ""{method}"":
-                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
-                                var ___offset = 0;
+                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
+                                var ___offset = 0;" : "")}
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
                                     .Select((arg, index) => (arg, index))
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
                                     .Select(a => $@"
-                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
+                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
                                 foreach (var client in clients)
                                 {{
                                     client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
@@ -343,8 +343,8 @@ public class {Name}
                     switch (___sendRequest.Routing.MethodId.Value)
                     {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
                         case ""{method}"":
-                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
-                                var ___offset = 0;
+                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
+                                var ___offset = 0;" : "")}
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
                                     .Select((arg, index) => (arg, index))
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
@@ -352,7 +352,7 @@ public class {Name}
                                         ? $@"
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                                     : $@"
-                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}" : "")}
+                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
                                 foreach (var client in clients)
                                 {{
                                     await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
@@ -375,7 +375,7 @@ public class {Name}
     {
         var functions2 = "";
         var code = $@"
-    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts)
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync({InvokeRequestDto} ___invokeRequest, {CancellationTokenSourceDispose} ___timeoutCts, [EnumeratorCancellation] CancellationToken ___ct)
     {{
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace(""{{now}} Send_InvokeRequest_ToServiceAsync({{___invokeRequest}})"", DateTime.Now.ToString(""HH:mm:ss.fff""), ___invokeRequest);
@@ -394,8 +394,8 @@ public class {Name}
                 method.ResponseType.IsTaskT
                 ? $@"
                         case ""{method}"":
-                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
-                                var ___offset = 0;
+                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
+                                var ___offset = 0;" : "")}
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
                                     .Select((arg, index) => (arg, index))
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
@@ -403,7 +403,7 @@ public class {Name}
                                         ? $@"
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                                     : $@"
-                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
+                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}
                                 foreach (var client in clients)
                                 {{
                                     var response = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
@@ -421,8 +421,8 @@ public class {Name}
                     method.ResponseType.IsIAsyncEnumerable
                     ? $@"
                         case ""{method}"":
-                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false) ? $@"
-                                var ___offset = 0;
+                            {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
+                                var ___offset = 0;" : "")}
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);{string.Join("", method.Arguments
                                     .Select((arg, index) => (arg, index))
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
@@ -430,7 +430,7 @@ public class {Name}
                                     ? $@"
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                                     : $@"
-                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}" : "")}
+                                var {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}
                                 foreach (var client in clients)
                                 {{
                                     var responses = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"

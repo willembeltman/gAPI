@@ -18,5 +18,5 @@ public interface IBasePlaneConnection
 
     Task SendFireAndForgetAsync(PlaneRoutingDto routing, byte[] data, CancellationToken ct);
     Task SendAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
-    IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts);
+    IAsyncEnumerable<byte[]> InvokeAsync(PlaneRoutingDto routing, byte[] data, CancellationTokenSourceDispose cts, CancellationToken ct);
 }

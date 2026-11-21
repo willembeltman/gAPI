@@ -6,7 +6,6 @@ using gAPI.Core.Server.Interfaces;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.ServerSentEvents;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
@@ -24,14 +23,16 @@ public class SseServiceSubscription
     private byte closed;
 
     IServerConnection IServiceSubscription.Connection => this;
-    string IServerConnection.Id => ServiceSubscriptionId.Value.ToString();
+    string IServerConnection.Id => Id.Value.ToString();
 
     public ClientConnectionId ClientConnectionId { get; }
-    public ServiceSubscriptionId ServiceSubscriptionId { get; }
+    public ServiceSubscriptionId Id { get; }
     public ServiceId ServiceId { get; }
     public SessionId SessionId { get; }
-    public UserId UserId { get; }
+    public UserId? UserId { get; }
     public Stopwatch Stopwatch { get; }
+
+    public bool IsAuthenticated => UserId != null;
 
     public SseServiceSubscription(
         IServerAuthenticationService authenticationService,
@@ -40,7 +41,7 @@ public class SseServiceSubscription
         StreamingCache streamingCache,
         FabricClient fabricClient,
         ServiceId serviceId,
-        UserId userId,
+        UserId? userId,
         SessionId sessionId)
     {
         AuthenticationService = authenticationService;
@@ -48,7 +49,7 @@ public class SseServiceSubscription
         FabricClient = fabricClient;
         ServiceId = serviceId;
         SessionId = sessionId;
-        ServiceSubscriptionId = ServiceSubscriptionId.New();
+        Id = ServiceSubscriptionId.New();
         UserId = userId;
         ClientConnectionId = serverConnectionCollection.Add(this);
         serviceSubscriptionCollection.Add(this, serviceId);
@@ -62,7 +63,7 @@ public class SseServiceSubscription
 
         try
         {
-            yield return new SseItem<string>(ServiceSubscriptionId.Value.ToString(), "ServiceSubscriptionId");
+            yield return new SseItem<string>(Id.Value.ToString(), "ServiceSubscriptionId");
             yield return new SseItem<string>(ClientConnectionId.Value.ToString(), "ClientConnectionId");
             yield return new SseItem<string>(FabricClient.FabricConnectionId.Value.ToString(), "FabricConnectionId");
             yield return new SseItem<string>(FabricClient.FabricManagerId.Value.ToString(), "FabricManagerId");
@@ -92,7 +93,7 @@ public class SseServiceSubscription
             if (Interlocked.Exchange(ref closed, 1) == 0)
             {
                 await FabricClient.UnsubscribeAsync(this, ct);
-                ServiceSubscriptionCollection.Remove(ServiceSubscriptionId);
+                ServiceSubscriptionCollection.Remove(Id);
                 Cts.Dispose();
             }
         }

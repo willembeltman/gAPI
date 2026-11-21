@@ -46,7 +46,7 @@ public class WssPlane(
         }
         finally
         {
-            await Task.Delay(TimeSpan.FromSeconds(100));
+            await Task.Delay(TimeSpan.FromSeconds(10));
         }
     }
 
@@ -107,7 +107,7 @@ public class WssPlane(
 
             Logger.LogInformation($"MainService ALL TESTS DONE - {sw.ElapsedMilliseconds}ms");
         }
-        catch (Exception ex)
+        catch //(Exception ex)
         {
             throw;
         }

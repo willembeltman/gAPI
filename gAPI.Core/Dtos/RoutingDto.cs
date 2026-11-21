@@ -11,10 +11,13 @@ public record RoutingDto(
     RequestId RequestId,
     ServiceId ServiceId,
     ServiceMethodId MethodId,
+    bool IsAuthenticated,
+    bool IsNotAuthenticated,
 
     TimeSpan Timeout,
 
     UserId? UserId,
     SessionId? SessionId,
+
     bool ThrowIfNoReceiver = true
     );

@@ -48,6 +48,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("StartServerTests"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -104,6 +106,8 @@ public sealed class WssApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("SendAndForget"),
+                false,
+                false,
                 ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
@@ -171,6 +175,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("Send"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -225,6 +231,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("SendWithList"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -290,6 +298,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeTask"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -309,7 +319,8 @@ public sealed class WssApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
@@ -360,6 +371,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeTaskWithList"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -384,7 +397,8 @@ public sealed class WssApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
@@ -442,6 +456,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeList"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -459,7 +475,8 @@ public sealed class WssApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
@@ -509,6 +526,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("InvokeListWithList"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -531,7 +550,8 @@ public sealed class WssApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {
@@ -588,6 +608,8 @@ public sealed class WssApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("Ping"),
+                false,
+                false,
                 ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
@@ -657,6 +679,8 @@ public sealed class WssApi(
                 RequestId.New(),
                 ___ServiceId,
                 new("Pong"),
+                false,
+                false,
                 ___timeOut.Value,
                 ___httpClient.UserId,
                 ___httpClient.SessionId
@@ -725,6 +749,8 @@ public sealed class WssApi(
             RequestId.New(),
             ___ServiceId,
             new("VideoFeedTest"),
+            false,
+            false,
             ___timeOut.Value,
             ___httpClient.UserId,
             ___httpClient.SessionId
@@ -741,7 +767,8 @@ public sealed class WssApi(
             var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
                 ___routing,
                 ___payload,
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var item in ___responses)
             {

@@ -33,7 +33,7 @@ public class WssApi(
         }
         finally
         {
-            await Task.Delay(TimeSpan.FromSeconds(100));
+            await Task.Delay(TimeSpan.FromSeconds(10));
         }
     }
 

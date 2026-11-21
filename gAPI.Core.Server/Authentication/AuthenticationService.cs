@@ -46,8 +46,8 @@ public class AuthenticationService<TUser, TStateDto>(
         => _AuthenticationState ?? throw new Exception("Initialize the ServerAuthenticationService first please");
     public SessionId SessionId
         => _Headers?.SessionId ?? throw new Exception("Initialize the ServerAuthenticationService first please");
-    public UserId UserId
-        => new(_AuthenticationState?.User?.Id.ToString());
+    public UserId? UserId
+        => _AuthenticationState?.User == null ? null : new (_AuthenticationState.User.Id.ToString());
     public AuthenticationHeaders Headers
         => _Headers ?? throw new Exception("Initialize the ServerAuthenticationService first please");
 

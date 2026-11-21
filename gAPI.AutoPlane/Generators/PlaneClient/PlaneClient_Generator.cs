@@ -230,7 +230,7 @@ public class {Name}(
         var ct = method.Arguments.FirstOrDefault(a => a.ParameterType.IsCancellationToken);
         var responseInnerType = method.ResponseType.UnderlayingTypes.Single();
         return $@"
-    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{(arg.ParameterType.IsCancellationToken ? "[EnumeratorCancellation] " : "")}{arg.ParameterType.Name} {arg.Name}"))})
+    public async {method.ResponseType} {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
         ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
@@ -260,7 +260,8 @@ public class {Name}(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {{
@@ -321,7 +322,8 @@ public class {Name}(
             var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
-                ___timeoutCts);
+                ___timeoutCts,
+                ___timeoutCts.Token);
 
             await foreach (var ___response in ___responses)
             {{

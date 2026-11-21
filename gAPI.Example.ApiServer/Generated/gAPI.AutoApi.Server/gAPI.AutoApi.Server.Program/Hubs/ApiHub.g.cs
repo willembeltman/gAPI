@@ -4,6 +4,7 @@ using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Server.Fabric;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,8 @@ public class ApiHub(
                 RequestId.New(), 
                 ___ServiceId, 
                 new("SendAndForget"), 
+                false,
+                false,
                 ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,
@@ -102,6 +105,8 @@ public class ApiHub(
             RequestId.New(), 
             ___ServiceId, 
             new("Send"), 
+            false,
+            false,
             ___timeOut.Value,
             ___UserId, 
             ___SessionId,
@@ -135,7 +140,7 @@ public class ApiHub(
 
     public async IAsyncEnumerable<string> InvokeList(
         string name,
-        CancellationToken ct)
+        [EnumeratorCancellation] CancellationToken ct)
     {
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
@@ -149,6 +154,8 @@ public class ApiHub(
             RequestId.New(), 
             ___ServiceId, 
             new ServiceMethodId("InvokeList"), 
+            false,
+            false,
             ___timeOut.Value,
             ___UserId, 
             ___SessionId,
@@ -179,8 +186,10 @@ public class ApiHub(
                     yield break;
                 ___timeoutCts.CancelAfter(___timeOut.Value);
 
-                yield return JsonSerializer.Deserialize<string>(
+                var item = JsonSerializer.Deserialize<string>(
                     System.Text.Encoding.UTF8.GetString(___responseBytes));
+                if (item != null)
+                    yield return item;
             }
         }
         finally
@@ -208,6 +217,8 @@ public class ApiHub(
                 RequestId.New(), 
                 ___ServiceId, 
                 new("Ping"), 
+                false,
+                false,
                 ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,
@@ -269,6 +280,8 @@ public class ApiHub(
                 RequestId.New(), 
                 ___ServiceId, 
                 new("Pong"), 
+                false,
+                false,
                 ___timeOut.Value,
                 ___UserId, 
                 ___SessionId,

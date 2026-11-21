@@ -160,11 +160,13 @@ public static class AccountServiceApiEndpointsExtensions
     {
         ___httpContext.Response.Headers["X-SessionId"] = ___authentication.SessionId.ToStringValues();
         ___httpContext.Response.Headers["X-StateData"] = ___authentication.GetStateData();
-        if (___authentication.IsCookieDataChanged() && ___authentication.GetCookieData() != null)
+        var cookieIsChanged = ___authentication.IsCookieDataChanged();
+        var cookieData = ___authentication.GetCookieData();
+        if (cookieIsChanged && cookieData != null)
         {
             ___httpContext.Response.Cookies.Append(
                 "AuthenticationToken",
-                ___authentication.GetCookieData(),
+                cookieData,
                 new CookieOptions
                 {
                     SameSite = ___hostEnvironment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,

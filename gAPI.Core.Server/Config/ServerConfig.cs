@@ -3,8 +3,8 @@
 namespace gAPI.Core.Server.Config;
 
 public record ServerConfig(
+    string FrontendUrl,
     int? MaxPackageSize = null,
-    string? FrontendUrl = null,
     string? DefaultConnectionString = null,
     string? StorageConnectionString = null,
     string? FabricConnectionString = null,
