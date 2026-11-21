@@ -3,11 +3,11 @@ var builder = DistributedApplication.CreateBuilder(args);
 // OPTIE 1: Fabric (gAPI Fabric Server)
 var backplane = builder.AddProject<Projects.gAPI_Example_Fabric>("backplane")
     .WithEnvironment("Port", "9494")
-    .WithEnvironment("PlanePort", "9595");
+    .WithEnvironment("PlanePort", "9696");
 
 var storage = builder.AddProject<Projects.gAPI_Example_Storage>("storage")
     .WithEnvironment("BaseUrl", "https://localhost:7275")
-    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9595");
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
 
 var apiServer = builder.AddProject<Projects.gAPI_Example_ApiServer>("apiserver")
     .WithReference(backplane)
@@ -20,7 +20,7 @@ var apiServer = builder.AddProject<Projects.gAPI_Example_ApiServer>("apiserver")
     .WithEnvironment("ConnectionStrings__DefaultConnection", "UsingMemoryDatabase_SoNoConnectionstring")
     .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;UrlTimeout=1;AuthenticateTimeout=15")
     .WithEnvironment("ConnectionStrings__FabricConnection", "Server=localhost;Port=9494")
-    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9595");
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
 
 var apiClient = builder.AddProject<Projects.gAPI_Example_ApiClient>("apiclient")
     .WithReference(apiServer)
@@ -39,7 +39,7 @@ var wssServer = builder.AddProject<Projects.gAPI_Example_WssServer>("wssserver")
     .WithEnvironment("ConnectionStrings__DefaultConnection", "UsingMemoryDatabase_SoNoConnectionstring")
     .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;UrlTimeout=1;AuthenticateTimeout=15")
     .WithEnvironment("ConnectionStrings__FabricConnection", "Server=localhost;Port=9494")
-    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9595");
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
 
 var wssClient = builder.AddProject<Projects.gAPI_Example_WssClient>("wssclient")
     .WithReference(wssServer)
@@ -50,13 +50,13 @@ var wssClient = builder.AddProject<Projects.gAPI_Example_WssClient>("wssclient")
 var microService1 = builder.AddProject<Projects.gAPI_Example_MicroService1>("microservice1")
     .WithReference(backplane)
     .WaitFor(backplane)
-    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9595")
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696")
     .WithEnvironment("QueueName", "Standard");
 
 var microService2 = builder.AddProject<Projects.gAPI_Example_Microservice2>("microservice2")
     .WithReference(backplane)
     .WaitFor(backplane)
-    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9595")
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696")
     .WithEnvironment("QueueName", "Standard");
 
 builder.AddProject<Projects.gAPI_Example_Storage>("gapi-test-storage");

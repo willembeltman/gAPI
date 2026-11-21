@@ -69,7 +69,7 @@ public sealed class AutoPlaneFabricFixture : IAsyncLifetime
         hostBuilder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["QueueName"] = "Standard",
-            ["ConnectionStrings:BackPlane"] = "Server=localhost;Port=9595"
+            ["ConnectionStrings:BackPlane"] = "Server=localhost;Port=9696"
         });
         hostBuilder.Services.AddAutoPlane(hostBuilder.Configuration);
         clientHost = hostBuilder.Build();

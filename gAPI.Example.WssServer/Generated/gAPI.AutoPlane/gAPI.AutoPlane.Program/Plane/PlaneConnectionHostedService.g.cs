@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 namespace gAPI.Generated;
 
 public class PlaneConnectionHostedService(
-    IPlaneConnection busConnection,
+    IPlaneConnection planeConnection,
     IServiceProvider serviceProvider)
     : IHostedService
 {
@@ -22,15 +22,15 @@ public class PlaneConnectionHostedService(
         Cts = new CancellationTokenSource();
         ct = Cts.Token;
 
-        busConnection.Start(ct);
+        planeConnection.Start(ct);
 
         Scope = serviceProvider.CreateAsyncScope();
 
         var gAPI_Example_WssServer_Server_WssPlane = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Example.WssServer.Server.WssPlane>();
         await gAPI_Example_WssServer_Server_WssPlane.OnStartedAsync(new ServiceId("IWssPlane"), ct);
-        await busConnection.SubscribeAsync(gAPI_Example_WssServer_Server_WssPlane, ct);
+        await planeConnection.SubscribeAsync(gAPI_Example_WssServer_Server_WssPlane, ct);
 
-        busConnection.HostedPlaneServices = new HostedPlaneServices(
+        planeConnection.HostedPlaneServices = new HostedPlaneServices(
             gAPI_Example_WssServer_Server_WssPlane);
     }
     public async Task StopAsync(CancellationToken ct)
@@ -48,15 +48,15 @@ public class PlaneConnectionHostedService(
 
         Cts = null;
 
-        var services = busConnection.HostedPlaneServices;
+        var services = planeConnection.HostedPlaneServices;
 
         if (services != null)
         {
-            await busConnection.UnsubscribeAsync(busConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane, ct);
-            await busConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane.OnStoppedAsync(new ServiceId("IWssPlane"), ct);
+            await planeConnection.UnsubscribeAsync(planeConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane, ct);
+            await planeConnection.HostedPlaneServices.gAPI_Example_WssServer_Server_WssPlane.OnStoppedAsync(new ServiceId("IWssPlane"), ct);
         }
 
-        busConnection.HostedPlaneServices = null;
+        planeConnection.HostedPlaneServices = null;
 
         await Scope.Value.DisposeAsync();
         Scope = null;

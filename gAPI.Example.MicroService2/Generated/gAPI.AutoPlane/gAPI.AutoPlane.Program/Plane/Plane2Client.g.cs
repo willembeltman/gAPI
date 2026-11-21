@@ -19,11 +19,11 @@ namespace gAPI.Generated;
 
 public class Plane2Client(
     ILoggerFactory ___loggerFactory,
-    IPlaneConnection ___busConnection,
+    IPlaneConnection ___planeConnection,
     TimeSpan? ___timeOut, 
     DeliveryMode ___deliveryMode,
     PlaneToChoice ___to,
-    PlaneConnectionId? ___busConnectionId = null,
+    PlaneConnectionId? ___planeConnectionId = null,
     bool ___throwIfNoReceiver = true)
     : IPlane2
     , IDisposable
@@ -31,7 +31,7 @@ public class Plane2Client(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<Plane2Client>();
     readonly ServiceId ___ServiceId = new("IPlane2");
-    int ___maxBufferSize => ___busConnection.Config.MaxPackageSize ?? 512 * 1024;
+    int ___maxBufferSize => ___planeConnection.Config.MaxPackageSize ?? 512 * 1024;
 
     public async void SendAndForget(string message, CancellationToken ct)
     {
@@ -42,18 +42,18 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new PlaneRoutingDto(
-                ___busConnection.PlaneConnectionId,
+                ___planeConnection.PlaneConnectionId,
                 RequestId.New(),
                 ___ServiceId,
                 new("SendAndForget"),
                 ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
-                ___busConnectionId,
+                ___planeConnectionId,
                 ___throwIfNoReceiver
             );
 
-            ___busConnection.RegisterTimeout(
+            ___planeConnection.RegisterTimeout(
                 ___routing, 
                 ___timeoutCts);
 
@@ -62,7 +62,7 @@ public class Plane2Client(
                 var ___payload = ___SendAndForget_Serializer(
                     message);
 
-                await ___busConnection.SendFireAndForgetAsync(
+                await ___planeConnection.SendFireAndForgetAsync(
                     ___routing,
                     ___payload,
                     ___ct);
@@ -77,7 +77,7 @@ public class Plane2Client(
             }
             finally
             {
-                ___busConnection.UnRegisterTimeout(
+                ___planeConnection.UnRegisterTimeout(
                     ___routing, 
                     ___timeoutCts);
             }
@@ -108,17 +108,17 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Send"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(
+        ___planeConnection.RegisterTimeout(
             ___routing, 
             ___timeoutCts);
 
@@ -128,14 +128,14 @@ public class Plane2Client(
         
         try
         {
-            await ___busConnection.SendAsync(
+            await ___planeConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
         }
         finally
         {
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___Send_Serializer(string message)
@@ -159,35 +159,35 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("SendWithList"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(
+        ___planeConnection.RegisterTimeout(
             ___routing, 
             ___timeoutCts);
 
         var ___payload = ___SendWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendWithList_0_Serializer, ___timeoutCts);
+        ___planeConnection.RegisterAsyncEnumerableArgument(___routing, 0, test, ___SendWithList_0_Serializer, ___timeoutCts);
         
         try
         {
-            await ___busConnection.SendAsync(
+            await ___planeConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
         }
         finally
         {
-            await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            await ___planeConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___SendWithList_Serializer()
@@ -214,17 +214,17 @@ public class Plane2Client(
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeTask"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+        ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
 
         var ___payload = ___InvokeTask_Serializer(
             name);
@@ -232,7 +232,7 @@ public class Plane2Client(
        
         try
         {
-            var ___responses = ___busConnection.InvokeAsync(
+            var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
                 ___timeoutCts);
@@ -251,7 +251,7 @@ public class Plane2Client(
         }
         finally
         {
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
         if (___throwIfNoReceiver)
             throw new KeyNotFoundException();
@@ -278,25 +278,25 @@ public class Plane2Client(
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeTaskWithList"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+        ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
 
         var ___payload = ___InvokeTaskWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___timeoutCts);
+        ___planeConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeTaskWithList_0_Serializer, ___timeoutCts);
        
         try
         {
-            var ___responses = ___busConnection.InvokeAsync(
+            var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
                 ___timeoutCts);
@@ -315,8 +315,8 @@ public class Plane2Client(
         }
         finally
         {
-            await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            await ___planeConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
         if (___throwIfNoReceiver)
             throw new KeyNotFoundException();
@@ -346,17 +346,17 @@ public class Plane2Client(
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeList"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+        ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
        
         var ___payload = ___InvokeList_Serializer(
             name);
@@ -364,7 +364,7 @@ public class Plane2Client(
        
         
         {
-            var ___responses = ___busConnection.InvokeAsync(
+            var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
                 ___timeoutCts);
@@ -403,26 +403,26 @@ public class Plane2Client(
         var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("InvokeListWithList"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(___routing, ___timeoutCts);
+        ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
        
         var ___payload = ___InvokeListWithList_Serializer();
         
-        ___busConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___timeoutCts);
+        ___planeConnection.RegisterAsyncEnumerableArgument(___routing, 0, list, ___InvokeListWithList_0_Serializer, ___timeoutCts);
        
         
         try
         {
-            var ___responses = ___busConnection.InvokeAsync(
+            var ___responses = ___planeConnection.InvokeAsync(
                 ___routing, 
                 ___payload, 
                 ___timeoutCts);
@@ -441,8 +441,8 @@ public class Plane2Client(
         }
         finally
         {
-            await ___busConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            await ___planeConnection.UnRegisterAsyncEnumerableArgument(___routing, 0);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___InvokeListWithList_Serializer()
@@ -469,17 +469,17 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("RealPing"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(
+        ___planeConnection.RegisterTimeout(
             ___routing, 
             ___timeoutCts);
 
@@ -488,14 +488,14 @@ public class Plane2Client(
         
         try
         {
-            await ___busConnection.SendAsync(
+            await ___planeConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
         }
         finally
         {
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___RealPing_Serializer()
@@ -512,18 +512,18 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
             var ___routing = new PlaneRoutingDto(
-                ___busConnection.PlaneConnectionId,
+                ___planeConnection.PlaneConnectionId,
                 RequestId.New(),
                 ___ServiceId,
                 new("Ping"),
                 ___timeOut.Value,
                 ___deliveryMode,
                 ___to,
-                ___busConnectionId,
+                ___planeConnectionId,
                 ___throwIfNoReceiver
             );
 
-            ___busConnection.RegisterTimeout(
+            ___planeConnection.RegisterTimeout(
                 ___routing, 
                 ___timeoutCts);
 
@@ -532,7 +532,7 @@ public class Plane2Client(
                 var ___payload = ___Ping_Serializer(
                     str);
 
-                await ___busConnection.SendFireAndForgetAsync(
+                await ___planeConnection.SendFireAndForgetAsync(
                     ___routing,
                     ___payload,
                     ___ct);
@@ -547,7 +547,7 @@ public class Plane2Client(
             }
             finally
             {
-                ___busConnection.UnRegisterTimeout(
+                ___planeConnection.UnRegisterTimeout(
                     ___routing, 
                     ___timeoutCts);
             }
@@ -578,17 +578,17 @@ public class Plane2Client(
             var ___ct = ___timeoutCts.Token;
 
         var ___routing = new PlaneRoutingDto(
-            ___busConnection.PlaneConnectionId,
+            ___planeConnection.PlaneConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("StartServiceTests"),
             ___timeOut.Value,
             ___deliveryMode,
             ___to,
-            ___busConnectionId,
+            ___planeConnectionId,
             ___throwIfNoReceiver
         );
-        ___busConnection.RegisterTimeout(
+        ___planeConnection.RegisterTimeout(
             ___routing, 
             ___timeoutCts);
 
@@ -599,14 +599,14 @@ public class Plane2Client(
         
         try
         {
-            await ___busConnection.SendAsync(
+            await ___planeConnection.SendAsync(
                 ___routing,
                 ___payload, 
                 ___timeoutCts);
         }
         finally
         {
-            ___busConnection.UnRegisterTimeout(___routing, ___timeoutCts);
+            ___planeConnection.UnRegisterTimeout(___routing, ___timeoutCts);
         }
     }
     private byte[] ___StartServiceTests_Serializer(SessionId sessionId, string to)

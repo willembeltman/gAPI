@@ -10,5 +10,5 @@ public interface IPlane1Context
 {
     IPlane1 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true);
     IPlane1 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
-    IPlane1 ToPlaneConnectionId(PlaneConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
+    IPlane1 ToPlaneConnectionId(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient);
 }

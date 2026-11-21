@@ -1037,6 +1037,19 @@ public class PlaneConnection
                                 }
                             }
                             yield break;
+                        case "VideoFeedTest":
+                            {
+                                foreach (var client in clients)
+                                {
+                                    var responses = client.VideoFeedTest(
+                                        ___timeoutCts.Token);
+                                    await foreach (var response in responses)
+                                    {
+                                        yield return IWssPlane_VideoFeedTest_Serializer(response);
+                                    }
+                                }
+                            }
+                            yield break;
                     }
                     break;
                 }
@@ -1357,5 +1370,18 @@ public class PlaneConnection
 
 
 
+
+    public byte[] IWssPlane_VideoFeedTest_Serializer(ReadOnlyMemory<byte> value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
     
 }

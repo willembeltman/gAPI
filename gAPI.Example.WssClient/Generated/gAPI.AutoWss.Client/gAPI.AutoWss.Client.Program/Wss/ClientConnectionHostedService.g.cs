@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 namespace gAPI.Generated;
 
 public class ClientConnectionHostedService(
-    IClientConnection busConnection,
+    IClientConnection clientConnection,
     IServiceProvider serviceProvider)
     : IHostedService
 {
@@ -22,15 +22,15 @@ public class ClientConnectionHostedService(
         Cts = new CancellationTokenSource();
         ct = Cts.Token;
 
-        busConnection.Start(ct);
+        clientConnection.Start(ct);
 
         Scope = serviceProvider.CreateAsyncScope();
 
         var gAPI_Example_ApiServer_Client_WssHub = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Example.ApiServer.Client.WssHub>();
         await gAPI_Example_ApiServer_Client_WssHub.OnStartedAsync(new ServiceId("IWssHub"), ct);
-        await busConnection.SubscribeAsync(gAPI_Example_ApiServer_Client_WssHub, ct);
+        await clientConnection.SubscribeAsync(gAPI_Example_ApiServer_Client_WssHub, ct);
 
-        busConnection.HostedHubServices = new HostedHubServices(
+        clientConnection.HostedHubServices = new HostedHubServices(
             gAPI_Example_ApiServer_Client_WssHub);
     }
     public async Task StopAsync(CancellationToken ct)
@@ -48,15 +48,15 @@ public class ClientConnectionHostedService(
 
         Cts = null;
 
-        var services = busConnection.HostedHubServices;
+        var services = clientConnection.HostedHubServices;
 
         if (services != null)
         {
-            await busConnection.UnsubscribeAsync(busConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub, ct);
-            await busConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub.OnStoppedAsync(new ServiceId("IWssHub"), ct);
+            await clientConnection.UnsubscribeAsync(clientConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub, ct);
+            await clientConnection.HostedHubServices.gAPI_Example_ApiServer_Client_WssHub.OnStoppedAsync(new ServiceId("IWssHub"), ct);
         }
 
-        busConnection.HostedHubServices = null;
+        clientConnection.HostedHubServices = null;
 
         await Scope.Value.DisposeAsync();
         Scope = null;

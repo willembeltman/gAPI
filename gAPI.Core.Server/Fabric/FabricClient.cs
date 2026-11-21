@@ -989,7 +989,7 @@ public sealed class FabricClient
 
         if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
-            var response = await handler.Invoke(message.StreamId, false, ct);
+            var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
             return response;
         }
         return null;

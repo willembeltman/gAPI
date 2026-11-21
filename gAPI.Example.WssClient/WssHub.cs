@@ -74,6 +74,19 @@ public class WssHub(
     {
         await Task.Delay(2000);
 
+        int i2 = 0;
+        await foreach (var data in mainApi.VideoFeedTest(ct))
+        {
+            if (i2 == 1)
+            {
+                break;
+            }
+            i2++;
+        }
+        await Task.Delay(TimeSpan.FromSeconds(100), ct);
+        return;
+
+
         for (int i = 0; i < 10; i++)
             await mainApi.InvokeTask("hoi", ct);
         Logger.LogInformation("mainApi - Warmup done");

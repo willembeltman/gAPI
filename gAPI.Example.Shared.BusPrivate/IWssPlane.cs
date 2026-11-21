@@ -17,4 +17,5 @@ public interface IWssPlane
     Task StartServiceTests(SessionId sessionId, CancellationToken ct);
     void Pong(string v);
     Task DoPing();
+    IAsyncEnumerable<ReadOnlyMemory<byte>> VideoFeedTest(CancellationToken ct);
 }

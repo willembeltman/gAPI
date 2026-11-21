@@ -20,6 +20,23 @@ public class WssApi(
 
     public TaskCompletionSource<string>? PontResult { get; private set; }
 
+
+
+    public async IAsyncEnumerable<ReadOnlyMemory<byte>> VideoFeedTest([EnumeratorCancellation] CancellationToken ct)
+    {
+        try
+        {
+            await foreach (var item in busContext.WssPlane.ToAny().VideoFeedTest(ct))
+            {
+                yield return item;
+            }
+        }
+        finally
+        {
+            await Task.Delay(TimeSpan.FromSeconds(100));
+        }
+    }
+
     private async IAsyncEnumerable<string> MyList()
     {
         yield return "1";

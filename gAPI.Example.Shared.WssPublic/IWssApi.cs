@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Ids;
 
 namespace gAPI.Example.Shared.WssPublic;
 
@@ -17,4 +16,5 @@ public interface IWssApi
     IAsyncEnumerable<string> InvokeListWithList(IAsyncEnumerable<string> list, CancellationToken ct);
     void Ping(string v);
     void Pong(string v);
+    IAsyncEnumerable<ReadOnlyMemory<byte>> VideoFeedTest(CancellationToken ct);
 }

@@ -182,6 +182,16 @@ public class ServerConnection : WssServerConnection
                             }
                             yield break;
                         }
+                    case "VideoFeedTest":
+                        {
+                            await foreach (var ___packet in IWssApi_VideoFeedTest(
+                                ___invokeRequest,
+                                ___timeoutCts.Token))
+                            {
+                                yield return ___packet;
+                            }
+                            yield break;
+                        }
                 }
                 break;
         }
@@ -359,6 +369,31 @@ public class ServerConnection : WssServerConnection
         //    ___logger.LogTrace("{now} IWssApi_Pong({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         WssApi.Pong(v);
+    }
+
+    public async IAsyncEnumerable<byte[]> IWssApi_VideoFeedTest(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IWssApi_VideoFeedTest({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
+
+        var ___responseList = WssApi.VideoFeedTest(
+            ___ct);
+        await foreach (var response in ___responseList)
+        {
+            yield return IWssApi_VideoFeedTest_Serializer(response);
+        }
+    }
+    public byte[] IWssApi_VideoFeedTest_Serializer(ReadOnlyMemory<byte> value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthByteReadOnlyMemory(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteByteReadOnlyMemory(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
     }
 
     

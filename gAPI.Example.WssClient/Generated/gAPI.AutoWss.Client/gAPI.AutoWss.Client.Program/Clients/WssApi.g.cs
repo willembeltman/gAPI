@@ -709,6 +709,63 @@ public sealed class WssApi(
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
     }
+
+    public async IAsyncEnumerable<ReadOnlyMemory<byte>> VideoFeedTest([EnumeratorCancellation] CancellationToken ct = default)
+    {
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+        ___timeoutCts.CancelAfter(___timeOut.Value);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___clientConnection.WaitForConnectionAsync(___ct);
+
+        var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
+            RequestId.New(),
+            ___ServiceId,
+            new("VideoFeedTest"),
+            ___timeOut.Value,
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        ___clientConnection.RegisterTimeout(
+            ___routing, 
+            ___timeoutCts);
+
+        var ___payload = ___VideoFeedTest_Serializer();
+        
+        
+        try
+        {
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___payload,
+                ___timeoutCts);
+
+            await foreach (var item in ___responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
+                
+                ___timeoutCts.CancelAfter(___timeOut.Value);
+
+                var ___offset = 0;
+                var ___span = new Span<byte>(item);
+                yield return PrimitivesSpanSerializer.ReadByteReadOnlyMemory(___span, ref ___offset, ___maxBufferSize);
+            }
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterTimeout(
+                ___routing, 
+                ___timeoutCts);
+        }
+    }
+    private byte[] ___VideoFeedTest_Serializer()
+    {
+        return [];
+    }
     
     
     public void Dispose()

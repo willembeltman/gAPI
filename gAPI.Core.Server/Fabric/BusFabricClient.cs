@@ -704,7 +704,7 @@ public sealed class BusFabricClient
         {
             try
             {
-                var response = await handler.Invoke(message.StreamId, false, ct);
+                var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
                 await Sender.Send_BusStreamingResponse_ToFabricAsync(response, ct);
             }
             catch (Exception ex)

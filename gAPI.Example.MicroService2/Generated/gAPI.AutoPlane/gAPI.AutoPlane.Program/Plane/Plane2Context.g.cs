@@ -9,13 +9,13 @@ namespace gAPI.Generated;
 
 public class Plane2Context(
     ILoggerFactory loggerFactory,
-    IPlaneConnection busConnection)
+    IPlaneConnection planeConnection)
     : IPlane2Context
 {
     public IPlane2 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
-        => new Plane2Client(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
+        => new Plane2Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
     public IPlane2 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Plane2Client(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
-    public IPlane2 ToPlaneConnectionId(PlaneConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Plane2Client(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, busConnectionId);
+        => new Plane2Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
+    public IPlane2 ToPlaneConnectionId(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Plane2Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, planeConnectionId);
 }

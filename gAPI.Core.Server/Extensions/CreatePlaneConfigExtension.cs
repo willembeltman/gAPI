@@ -15,6 +15,7 @@ public static class CreatePlaneConfigExtension
 
         // Aspire vult dit nu automatisch in omdat de component "BackPlane" heet in de AppHost
         var connectionString = m.GetConnectionString("BackPlaneConnection")
+            ?? m.GetConnectionString("BackPlane")
             ?? m.GetConnectionString("PlaneConnection")
             ?? m.GetConnectionString("Fabric")
             ?? m.GetConnectionString("fabric")

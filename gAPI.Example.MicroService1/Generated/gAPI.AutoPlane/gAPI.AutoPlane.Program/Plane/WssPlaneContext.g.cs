@@ -9,13 +9,13 @@ namespace gAPI.Generated;
 
 public class WssPlaneContext(
     ILoggerFactory loggerFactory,
-    IPlaneConnection busConnection)
+    IPlaneConnection planeConnection)
     : IWssPlaneContext
 {
     public IWssPlane ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
-        => new WssPlaneClient(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
     public IWssPlane ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new WssPlaneClient(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
-    public IWssPlane ToPlaneConnectionId(PlaneConnectionId busConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new WssPlaneClient(loggerFactory, busConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, busConnectionId);
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
+    public IWssPlane ToPlaneConnectionId(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, planeConnectionId);
 }

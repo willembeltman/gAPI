@@ -34,6 +34,22 @@ public class WssPlane(
     }
 
 
+    public async IAsyncEnumerable<ReadOnlyMemory<byte>> VideoFeedTest([EnumeratorCancellation] CancellationToken ct)
+    {
+        try
+        {
+            byte[] buffer = new byte[256];
+            while (ct.IsCancellationRequested == false)
+            {
+                yield return new ReadOnlyMemory<byte>(buffer);
+            }
+        }
+        finally
+        {
+            await Task.Delay(TimeSpan.FromSeconds(100));
+        }
+    }
+
     public async Task DoPing()
     {
         for (var y = 0; y < 50; y++)
