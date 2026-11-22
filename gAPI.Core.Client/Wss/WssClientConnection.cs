@@ -142,7 +142,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "Gated_ConnectAsync");
+                        Logger.LogWarning(ex, "Gated_ConnectAsync");
                     }
                 });
             }

@@ -71,6 +71,8 @@ public sealed class CancellationTokenSourceDispose : IDisposable
         if (IsDisposed)
             return;
 
+        IsCancelled = true;
+
         _cts.Cancel();
     }
     public void CancelAfter(TimeSpan timeSpan)

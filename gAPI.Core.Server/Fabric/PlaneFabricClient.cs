@@ -176,7 +176,8 @@ public sealed class PlaneFabricClient
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Gated_ConnectAsync");
+                // Is niet bereikbaar, niet loggen
+                //Logger.LogWarning(ex, "Gated_ConnectAsync");
 
                 try
                 {
@@ -488,8 +489,8 @@ public sealed class PlaneFabricClient
         }
         catch (Exception ex)
         {
-            Logger.LogError(
-                "FabricClient #{Id.Value}: Exception occured, restarting fabric client\r\n{ex}",
+            Logger.LogWarning(
+                "FabricClient #{Id.Value}: Exception occured, probably disconnect, restarting fabric client\r\n{ex}",
                 FabricConnectionId?.Value,
                 ex);
         }
