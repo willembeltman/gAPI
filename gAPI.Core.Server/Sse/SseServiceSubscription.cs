@@ -191,8 +191,7 @@ public class SseServiceSubscription
             message.StreamId,
             message.IsCompleted,
             message.IsCancelled,
-            message.ExceptionMessage,
-            message.InnerExceptionMessage,
+            message.Exception,
             message.BinaryData,
             stateIsChanged,
             stateData);
@@ -225,8 +224,7 @@ public class SseServiceSubscription
             message.StreamId,
             message.IsCompleted,
             message.IsCancelled,
-            message.ExceptionMessage,
-            message.InnerExceptionMessage,
+            message.Exception,
             message.BinaryData,
             stateIsChanged,
             stateData);

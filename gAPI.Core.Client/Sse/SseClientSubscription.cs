@@ -290,7 +290,12 @@ public class SseClientSubscription : IDisposable
 
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-            var returnmessage = new SendRequestDoneClientDto(message.Routing, false, null, null, stateIsChanged, stateData);
+            var returnmessage = new SendRequestDoneClientDto(
+                message.Routing,
+                false,
+                null,
+                stateIsChanged,
+                stateData);
             await Sender.Send_SendRequestDone_ToServerAsync(returnmessage, ct);
         }, ct);
     }
@@ -347,7 +352,6 @@ public class SseClientSubscription : IDisposable
                         message.Routing,
                         false,
                         null,
-                        null,
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -361,8 +365,7 @@ public class SseClientSubscription : IDisposable
                     new InvokeRequestDoneClientDto(
                         message.Routing,
                         false,
-                        ex.Message,
-                        ex.InnerException?.Message,
+                        new ExceptionDto(ex.Message, ex.InnerException?.Message, ex.StackTrace?.ToString()),
                         stateIsChanged,
                         stateData
                     ), ct);
@@ -404,8 +407,7 @@ public class SseClientSubscription : IDisposable
                     response.StreamId,
                     response.IsCompleted,
                     response.IsCancelled,
-                    response.ExceptionMessage,
-                    response.InnerExceptionMessage,
+                    response.Exception,
                     response.BinaryData,
                     stateIsChanged,
                     stateData);
@@ -452,8 +454,7 @@ public class SseClientSubscription : IDisposable
                     response.StreamId,
                     response.IsCompleted,
                     response.IsCancelled,
-                    response.ExceptionMessage,
-                    response.InnerExceptionMessage,
+                    response.Exception,
                     response.BinaryData,
                     stateIsChanged,
                     stateData);
@@ -516,13 +517,13 @@ public class SseClientSubscription : IDisposable
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -576,13 +577,13 @@ public class SseClientSubscription : IDisposable
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -715,7 +716,6 @@ public class SseClientSubscription : IDisposable
                             !hasNext,
                             cancelled,
                             null,
-                            null,
                             hasNext ? serializer(enumerator.Current) : [],
                             stateIsChanged,
                             stateData);
@@ -742,8 +742,7 @@ public class SseClientSubscription : IDisposable
                             streamId,
                             true,
                             true,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            new ExceptionDto(ex),
                             [],
                             stateIsChanged,
                             stateData);
@@ -763,8 +762,7 @@ public class SseClientSubscription : IDisposable
                             streamId,
                             true,
                             false,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            new ExceptionDto(ex),
                             [],
                             stateIsChanged,
                             stateData);
@@ -831,7 +829,6 @@ public class SseClientSubscription : IDisposable
                     !hasNext,
                     cancelled,
                     null,
-                    null,
                     hasNext ? enumerator.Current : [],
                     stateIsChanged,
                     stateData);
@@ -858,8 +855,7 @@ public class SseClientSubscription : IDisposable
                     streamId,
                     true,
                     true,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     [],
                     stateIsChanged,
                     stateData);
@@ -879,8 +875,7 @@ public class SseClientSubscription : IDisposable
                     streamId,
                     true,
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     [],
                     stateIsChanged,
                     stateData);

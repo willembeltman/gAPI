@@ -24,7 +24,9 @@ public class ClientLogDto
     //public SignalRLogDataDto[]? Data { get; set; }
 
     // For errors
-    public string? StackTrace { get; set; }
+    public string? ExceptionMessage { get; set; }
+    public string? ExceptionInnerMessage { get; set; }
+    public string? ExceptionStackTrace { get; set; }
 }
 
 

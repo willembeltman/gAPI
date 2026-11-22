@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 
 namespace gAPI.Core.Server.Dtos;
 
@@ -6,8 +7,7 @@ namespace gAPI.Core.Server.Dtos;
 public record PlaneUnsubscribeAckDto(
     PlaneUnsubscribeDto UnsubscribeDto,
     bool Cancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage)
+    ExceptionDto? Exception)
 {
     public override string ToString()
     {

@@ -53,7 +53,7 @@ public sealed class ClientLoggerFactory(
         return null;
     }
 
-    // Eigen methode die naar SignalR stuurt
+    // Eigen methode die naar de api stuurt
     public void LogToHub(
         LogLevel level,
         string message,
@@ -70,7 +70,9 @@ public sealed class ClientLoggerFactory(
                 Message = message,
                 Category = Category,
                 Timestamp = DateTimeOffset.UtcNow,
-                StackTrace = exception?.ToString()
+                ExceptionMessage = exception?.Message,
+                ExceptionInnerMessage = exception?.InnerException?.Message,
+                ExceptionStackTrace = exception?.StackTrace?.ToString(),
             };
 
             await hub.Send_Log_ToServerAsync(dto, default);

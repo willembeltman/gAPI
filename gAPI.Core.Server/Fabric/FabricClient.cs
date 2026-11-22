@@ -318,7 +318,12 @@ public sealed class FabricClient
 
         if (UseFabric == false)
         {
-            return Received_SubscribeAck_FromFabric(new(request, false, null, null), ct);
+            return Received_SubscribeAck_FromFabric(
+                new SubscribeAckDto(
+                    request, 
+                    false, 
+                    null), 
+                ct);
         }
 
         return Sender.Send_Subscribe_ToFabricAsync(request, ct);
@@ -339,7 +344,12 @@ public sealed class FabricClient
 
         if (UseFabric == false)
         {
-            return Received_UnsubscribeAck_FromFabric(new(request, false, null, null), ct);
+            return Received_UnsubscribeAck_FromFabric(
+                new UnsubscribeAckDto(
+                    request,
+                    false,
+                    null),
+                ct);
         }
 
         return Sender.Send_Unsubscribe_ToFabricAsync(request, ct);
@@ -704,7 +714,12 @@ public sealed class FabricClient
         }
 
         if (!called)
-            await Sender.Send_SendRequestDone_ToFabricAsync(new(message.Routing, false, message.Routing.ThrowIfNoReceiver ? "No receivers found" : null, null), ct);
+            await Sender.Send_SendRequestDone_ToFabricAsync(
+                new SendRequestDoneDto(
+                    message.Routing,
+                    false,
+                    message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No receivers found", null, Environment.StackTrace) : null),
+                ct);
     }
     private async Task Receive_FabricSendRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken connectionLifecycleCt)
     {
@@ -730,8 +745,8 @@ public sealed class FabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -761,11 +776,21 @@ public sealed class FabricClient
         {
             if (message.Routing.ThrowIfNoReceiver)
             {
-                await Sender.Send_InvokeRequestAck_ToFabricAsync(new(message.Routing, false, "No receivers found", null), ct);
+                await Sender.Send_InvokeRequestAck_ToFabricAsync(
+                    new InvokeRequestAckDto(
+                        message.Routing,
+                        false,
+                        new ExceptionDto("No receivers found", null, null)),
+                    ct);
             }
             else
             {
-                await Sender.Send_InvokeRequestAck_ToFabricAsync(new(message.Routing, false, null, null), ct);
+                await Sender.Send_InvokeRequestAck_ToFabricAsync(
+                    new InvokeRequestAckDto(
+                        message.Routing,
+                        false,
+                        null),
+                    ct);
             }
         }
     }
@@ -793,8 +818,8 @@ public sealed class FabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -808,8 +833,8 @@ public sealed class FabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -839,7 +864,16 @@ public sealed class FabricClient
             }
 
             if (!called)
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No clients subscribed" : null, null, []), ct);
+                await Sender.Send_StreamingResponse_ToFabricAsync(
+                    new StreamingResponseDto(
+                        message.Routing,
+                        message.ArgumentIndex,
+                        message.StreamId,
+                        true,
+                        false,
+                        message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No clients subscribed", null, Environment.StackTrace) : null,
+                        []),
+                    ct);
         }
         else
         {
@@ -850,7 +884,16 @@ public sealed class FabricClient
                 await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
             }
             else
-                await Sender.Send_StreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, message.Routing.ThrowIfNoReceiver ? "No StreamingRequestHandlers found" : null, null, []), ct);
+                await Sender.Send_StreamingResponse_ToFabricAsync(
+                    new StreamingResponseDto(
+                        message.Routing,
+                        message.ArgumentIndex,
+                        message.StreamId,
+                        true,
+                        false,
+                        message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No StreamingRequestHandlers found", null, null) : null,
+                        []),
+                    ct);
         }
     }
     private async Task Receive_StreamingResponse_FromFabricAsync(StreamingResponseDto message, CancellationToken connectionLifecycleCt)
@@ -897,8 +940,8 @@ public sealed class FabricClient
             // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
             return;
@@ -922,8 +965,8 @@ public sealed class FabricClient
             // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
             return;
@@ -942,8 +985,8 @@ public sealed class FabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled(ct);
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
             return;
@@ -1024,13 +1067,13 @@ public sealed class FabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -1128,7 +1171,6 @@ public sealed class FabricClient
                             !hasNext,
                             cancelled,
                             null,
-                            null,
                             hasNext ? serializer(stream.enumerator.Current) : []);
 
                         if (!hasNext)
@@ -1148,9 +1190,8 @@ public sealed class FabricClient
                             argumentIndex,
                             streamId,
                             true,
-                            true,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            true, 
+                            new ExceptionDto(ex),
                             []);
                     }
                     catch (Exception ex)
@@ -1164,8 +1205,7 @@ public sealed class FabricClient
                             streamId,
                             true,
                             false,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            new ExceptionDto(ex),
                             []);
                     }
                     finally
@@ -1201,13 +1241,13 @@ public sealed class FabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 

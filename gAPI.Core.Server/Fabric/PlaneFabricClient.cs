@@ -515,8 +515,8 @@ public sealed class PlaneFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -530,8 +530,8 @@ public sealed class PlaneFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -567,17 +567,32 @@ public sealed class PlaneFabricClient
         try
         {
             await PlaneConnection.Send_SendRequest_ToServiceAsync(message, timeoutCts);
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(new(message.Routing, false, null, null), ct);
+            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
+                new PlaneSendRequestDoneDto(
+                    message.Routing, 
+                    false,
+                    null),
+                ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task is cancelled");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(new(message.Routing, true, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
+                new PlaneSendRequestDoneDto(
+                    message.Routing,
+                    true,
+                    new ExceptionDto(ex)), 
+                ct);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Could not send data to fabric");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(new(message.Routing, false, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
+                new PlaneSendRequestDoneDto(
+                    message.Routing,
+                    false,
+                    new ExceptionDto(ex)),
+                ct);
         }
         finally
         {
@@ -601,8 +616,8 @@ public sealed class PlaneFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -624,17 +639,32 @@ public sealed class PlaneFabricClient
         {
             var enumerable = PlaneConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts, timeoutCts.Token);
             RegisterPlaneAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
-            await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(new(message.Routing, false, null, null), ct);
+            await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
+                new PlaneInvokeRequestAckDto(
+                    message.Routing,
+                    false,
+                    null),
+                ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task was cancelled");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(new(message.Routing, true, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
+                new PlaneSendRequestDoneDto(
+                    message.Routing,
+                    true,
+                    new ExceptionDto(ex)),
+                ct);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Receive_PlaneInvokeRequest_FromFabricAsync");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(new(message.Routing, false, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
+                new PlaneSendRequestDoneDto(
+                    message.Routing, 
+                    false,
+                    new ExceptionDto(ex)), 
+                ct);
         }
     }
     private void Receive_PlaneInvokeRequestCancelled_FromFabricAsync(PlaneInvokeRequestCancelledDto message, CancellationToken connectionLifecycleCt)
@@ -657,8 +687,8 @@ public sealed class PlaneFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.SetResult(message);
         }
@@ -675,8 +705,8 @@ public sealed class PlaneFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.SetCanceled(); // hij zit te wachten op beginnen met streamen, maar request is al done. Dus error?! Iig out-of-sync
         }
@@ -703,7 +733,14 @@ public sealed class PlaneFabricClient
 
         var ct = timeoutCts?.Token ?? connectionLifecycleCt;
 
-        if (StreamingCache.PlaneStreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
+        if (ct.IsCancellationRequested)
+        {
+            Logger.LogError("Receive_PlaneStreamingRequest_FromFabricAsync CANCELLATION IS REQUESTED {timeout}, {timeout2}", timeout != null, timeout2 != null);
+
+        }
+
+
+        if (!ct.IsCancellationRequested && StreamingCache.PlaneStreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
             try
             {
@@ -717,7 +754,16 @@ public sealed class PlaneFabricClient
         }
         else
         {
-            await Sender.Send_PlaneStreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No StreamingRequestHandlers found", null, []), ct);
+            await Sender.Send_PlaneStreamingResponse_ToFabricAsync(
+                new PlaneStreamingResponseDto(
+                    message.Routing, 
+                    message.ArgumentIndex, 
+                    message.StreamId, 
+                    true, 
+                    false, 
+                    new ExceptionDto("No StreamingRequestHandlers found", null, Environment.StackTrace),
+                    []), 
+                ct);
         }
     }
     private void Receive_PlaneStreamingResponse_FromFabricAsync(PlaneStreamingResponseDto message, CancellationToken connectionLifecycleCt)
@@ -775,13 +821,13 @@ public sealed class PlaneFabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -855,7 +901,12 @@ public sealed class PlaneFabricClient
                 linkedCts.Dispose();
                 if (argumentIndex == -1)
                 {
-                    await Sender.Send_PlaneInvokeRequestDone_ToFabricAsync(new PlaneInvokeRequestDoneDto(routing, false, ex?.Message, ex?.InnerException?.Message), ct);
+                    await Sender.Send_PlaneInvokeRequestDone_ToFabricAsync(
+                        new PlaneInvokeRequestDoneDto(
+                            routing, 
+                            false,
+                            new ExceptionDto(ex)), 
+                        ct);
                 }
             }
 
@@ -873,7 +924,6 @@ public sealed class PlaneFabricClient
                     streamId,
                     !hasNext,
                     cancelled,
-                    null,
                     null,
                     hasNext ? serializer(enumerator.Current) : []);
 
@@ -896,8 +946,7 @@ public sealed class PlaneFabricClient
                     streamId,
                     true,
                     true,
-                    ex.Message, 
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             catch (Exception ex)
@@ -912,8 +961,7 @@ public sealed class PlaneFabricClient
                     streamId,
                     true,
                     false,
-                    ex.Message, 
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             finally
@@ -942,13 +990,13 @@ public sealed class PlaneFabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -1024,8 +1072,9 @@ public sealed class PlaneFabricClient
         });
 
         var message = await completion.Task.WaitAsync(timeoutCts.Token);
-        if (message.ExceptionMessage != null)
-            throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+
+        if (message.Exception != null)
+            throw new RemoteException(message.Exception);
     }
     public async IAsyncEnumerable<byte[]> InvokeAsync(IBasePlaneConnection basePlaneConnection, PlaneInvokeRequestDto request, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {

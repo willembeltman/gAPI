@@ -6,5 +6,4 @@ namespace gAPI.Core.Dtos;
 public record SendRequestDoneDto(
     RoutingDto Routing,
     bool Cancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage);
+    ExceptionDto? Exception);

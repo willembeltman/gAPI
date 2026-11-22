@@ -1,4 +1,5 @@
 using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 
 namespace gAPI.Core.Server.Dtos;
@@ -10,6 +11,5 @@ public record PlaneStreamingResponseDto(
     StreamId StreamId,
     bool IsCompleted,
     bool IsCancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage,
+    ExceptionDto? Exception,
     byte[] BinaryData);

@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Ids;
 
 namespace gAPI.Core.Dtos;
 
@@ -7,8 +6,7 @@ namespace gAPI.Core.Dtos;
 public record UnsubscribeAckDto(
     UnsubscribeDto UnsubscribeDto,
     bool Cancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage)
+    ExceptionDto? Exception)
 {
     public override string ToString()
     {

@@ -1,4 +1,5 @@
 using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 
 namespace gAPI.Core.Server.Dtos;
 
@@ -6,5 +7,4 @@ namespace gAPI.Core.Server.Dtos;
 public record BusSendRequestDoneDto(
     BusRoutingDto Routing,
     bool Cancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage);
+    ExceptionDto? Exception);

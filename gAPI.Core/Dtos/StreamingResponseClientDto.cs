@@ -10,9 +10,8 @@ public record StreamingResponseClientDto(
     StreamId StreamId,
     bool IsCompleted,
     bool Cancelled,
-    string? ExceptionMessage,
-    string? InnerExceptionMessage,
+    ExceptionDto? Exception,
     byte[] BinaryData,
     bool StateIsChanged,
     string? StateData)
-    : StreamingResponseDto(Routing, ArgumentIndex, StreamId, IsCompleted, Cancelled, ExceptionMessage, InnerExceptionMessage, BinaryData);
+    : StreamingResponseDto(Routing, ArgumentIndex, StreamId, IsCompleted, Cancelled, Exception, BinaryData);

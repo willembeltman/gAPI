@@ -512,8 +512,8 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -527,8 +527,8 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception!= null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -564,17 +564,32 @@ public sealed class BusFabricClient
         try
         {
             await BusConnection.Send_SendRequest_ToServiceAsync(message, timeoutCts);
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, false, null, null), ct);
+            await Sender.Send_BusSendRequestDone_ToFabricAsync(
+                new BusSendRequestDoneDto(
+                    message.Routing, 
+                    false, 
+                    null), 
+                ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task is cancelled");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, true, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_BusSendRequestDone_ToFabricAsync(
+                new BusSendRequestDoneDto(
+                    message.Routing, 
+                    true,
+                    new ExceptionDto(ex)), 
+                ct);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Could not send data to fabric");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, false, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_BusSendRequestDone_ToFabricAsync(
+                new BusSendRequestDoneDto(
+                    message.Routing,
+                    false,
+                    new ExceptionDto(ex)), 
+                ct);
         }
         finally
         {
@@ -598,8 +613,8 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -621,17 +636,32 @@ public sealed class BusFabricClient
         {
             var enumerable = BusConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
             RegisterBusAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
-            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(new(message.Routing, false, null, null), ct);
+            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
+                new BusInvokeRequestAckDto(
+                    message.Routing, 
+                    false,
+                    null),
+                ct);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task was cancelled");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, true, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_BusSendRequestDone_ToFabricAsync(
+                new BusSendRequestDoneDto(
+                    message.Routing, 
+                    true,
+                    new ExceptionDto(ex)), 
+                ct);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Receive_BusInvokeRequest_FromFabricAsync");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(new(message.Routing, false, ex.Message, ex.InnerException?.Message), ct);
+            await Sender.Send_BusSendRequestDone_ToFabricAsync(
+                new BusSendRequestDoneDto(
+                    message.Routing, 
+                    false,
+                    new ExceptionDto(ex)), 
+                ct);
         }
     }
     private void Receive_BusInvokeRequestCancelled_FromFabricAsync(BusInvokeRequestCancelledDto message, CancellationToken connectionLifecycleCt)
@@ -654,8 +684,8 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.SetResult(message);
         }
@@ -672,8 +702,8 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.SetCanceled(); // hij zit te wachten op beginnen met streamen, maar request is al done. Dus error?! Iig out-of-sync
         }
@@ -714,7 +744,16 @@ public sealed class BusFabricClient
         }
         else
         {
-            await Sender.Send_BusStreamingResponse_ToFabricAsync(new(message.Routing, message.ArgumentIndex, message.StreamId, true, false, "No StreamingRequestHandlers found", null, []), ct);
+            await Sender.Send_BusStreamingResponse_ToFabricAsync(
+                new BusStreamingResponseDto(
+                    message.Routing, 
+                    message.ArgumentIndex,
+                    message.StreamId,
+                    true, 
+                    false,
+                    new ExceptionDto("No StreamingRequestHandlers found", null, Environment.StackTrace),
+                    []),
+                ct);
         }
     }
     private void Receive_BusStreamingResponse_FromFabricAsync(BusStreamingResponseDto message, CancellationToken connectionLifecycleCt)
@@ -772,13 +811,13 @@ public sealed class BusFabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -852,7 +891,12 @@ public sealed class BusFabricClient
                 linkedCts.Dispose();
                 if (argumentIndex == -1)
                 {
-                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(new BusInvokeRequestDoneDto(routing, false, ex?.Message, ex?.InnerException?.Message), ct);
+                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(
+                        new BusInvokeRequestDoneDto(
+                            routing,
+                            false,
+                            ex == null ? null : new ExceptionDto(ex)),
+                        ct); 
                 }
             }
 
@@ -870,7 +914,6 @@ public sealed class BusFabricClient
                     streamId,
                     !hasNext,
                     cancelled,
-                    null,
                     null,
                     hasNext ? serializer(enumerator.Current) : []);
 
@@ -893,8 +936,7 @@ public sealed class BusFabricClient
                     streamId,
                     true,
                     true,
-                    ex.Message, 
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             catch (Exception ex)
@@ -909,8 +951,7 @@ public sealed class BusFabricClient
                     streamId,
                     true,
                     false,
-                    ex.Message, 
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             finally
@@ -939,13 +980,13 @@ public sealed class BusFabricClient
                 {
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message));
                         return;
                     }
 
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -1021,8 +1062,9 @@ public sealed class BusFabricClient
         });
 
         var message = await completion.Task.WaitAsync(timeoutCts.Token);
-        if (message.ExceptionMessage != null)
-            throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+
+        if (message.Exception != null)
+            throw new RemoteException(message.Exception);
     }
     public async IAsyncEnumerable<byte[]> InvokeAsync(IBaseBusConnection baseBusConnection, BusInvokeRequestDto request, CancellationTokenSourceDispose timeoutCts)
     {

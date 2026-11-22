@@ -55,7 +55,7 @@ public sealed class FabricLogger(
                 Message = message,
                 Category = Category,
                 Timestamp = DateTimeOffset.UtcNow,
-                StackTrace = exception?.ToString()
+                ExceptionStackTrace = exception?.ToString()
             };
 
             await hub.Send_Log_ToServerAsync(dto, default);

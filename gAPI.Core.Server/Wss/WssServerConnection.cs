@@ -540,7 +540,6 @@ public abstract class WssServerConnection : IServerConnection
                     message.Routing,
                     false,
                     null,
-                    null,
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -555,8 +554,7 @@ public abstract class WssServerConnection : IServerConnection
                 new SendRequestDoneClientDto(
                     message.Routing,
                     true,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -574,8 +572,7 @@ public abstract class WssServerConnection : IServerConnection
                 new SendRequestDoneClientDto(
                     message.Routing,
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -604,7 +601,6 @@ public abstract class WssServerConnection : IServerConnection
             new SendRequestDoneClientDto(
                 message.Routing,
                 true,
-                null,
                 null,
                 stateIsChanged,
                 stateData
@@ -664,7 +660,6 @@ public abstract class WssServerConnection : IServerConnection
                     message.Routing,
                     false,
                     null,
-                    null,
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -679,8 +674,7 @@ public abstract class WssServerConnection : IServerConnection
                 new InvokeRequestDoneClientDto(
                     message.Routing,
                     true,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -698,8 +692,7 @@ public abstract class WssServerConnection : IServerConnection
                 new InvokeRequestDoneClientDto(
                     message.Routing,
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     stateIsChanged,
                     stateData
                 ), ct);
@@ -764,8 +757,7 @@ public abstract class WssServerConnection : IServerConnection
                 message.StreamId,
                 true,
                 false,
-                "Could not get response, enumerator might be freed",
-                null,
+                new ExceptionDto("Could not get response, enumerator might be freed", null, Environment.StackTrace),
                 []);
             await Send_StreamingResponse_ToClientAsync(response, ct);
             return;
@@ -823,9 +815,17 @@ public abstract class WssServerConnection : IServerConnection
         {
             if (log.Category == null) return;
             var logger = LoggerFactory.CreateLogger(log.Category);
-            logger.Log(
-                log.Level,
-                log.Message);
+
+            if (log.ExceptionMessage != null)
+            {
+                logger.LogError(new RemoteException(log.ExceptionMessage, log.ExceptionInnerMessage, log.ExceptionStackTrace), log.Message);
+            }
+            else
+            {
+                logger.Log(
+                    log.Level,
+                    log.Message);
+            }
         }
         catch//(Exception ex)
         {
@@ -899,8 +899,7 @@ public abstract class WssServerConnection : IServerConnection
             response.StreamId,
             response.IsCompleted,
             response.IsCancelled,
-            response.ExceptionMessage,
-            response.InnerExceptionMessage,
+            response.Exception,
             response.BinaryData,
             stateIsChanged,
             stateData);
@@ -929,8 +928,7 @@ public abstract class WssServerConnection : IServerConnection
             streamingResponse.StreamId,
             streamingResponse.IsCompleted,
             streamingResponse.IsCancelled,
-            streamingResponse.ExceptionMessage,
-            streamingResponse.InnerExceptionMessage,
+            streamingResponse.Exception,
             streamingResponse.BinaryData,
             stateIsChanged,
             stateData);
@@ -961,8 +959,8 @@ public abstract class WssServerConnection : IServerConnection
         {
             if (message.Cancelled)
                 completion.SetCanceled(ct);
-            else if (message.ExceptionMessage != null)
-                completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
         }
@@ -1039,7 +1037,6 @@ public abstract class WssServerConnection : IServerConnection
                             !hasNext,
                             cancelled,
                             null,
-                            null,
                             hasNext ? enumerator.Current : []);
 
                         if (!hasNext)
@@ -1061,8 +1058,7 @@ public abstract class WssServerConnection : IServerConnection
                             streamId,
                             true,
                             true,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            new ExceptionDto(ex),
                             []);
                     }
                     catch (Exception ex)
@@ -1077,8 +1073,7 @@ public abstract class WssServerConnection : IServerConnection
                             streamId,
                             true,
                             false,
-                            ex.Message,
-                            ex.InnerException?.Message,
+                            new ExceptionDto(ex),
                             []);
                     }
                     finally
@@ -1118,13 +1113,13 @@ public abstract class WssServerConnection : IServerConnection
                 {
                     if (response.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(response.ExceptionMessage));
+                        enumerator.Complete(new TaskCanceledException(response.Exception?.Message));
                         return;
                     }
 
-                    if (response.ExceptionMessage != null)
+                    if (response.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(response.ExceptionMessage, response.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(response.Exception));
                         return;
                     }
 

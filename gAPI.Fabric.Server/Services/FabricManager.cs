@@ -175,7 +175,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .Subscribe(caller, subscribe.UserId, subscribe.SessionId, receiveSize);
 
-            var ack = new SubscribeAckDto(subscribe, false, null, null);
+            var ack = new SubscribeAckDto(
+                subscribe,
+                false,
+                null);
             await caller.Send_SubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -190,7 +193,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .Unsubscribe(caller, unsubscribe.UserId, unsubscribe.SessionId, receiveSize);
 
-            var ack = new UnsubscribeAckDto(unsubscribe, false, null, null);
+            var ack = new UnsubscribeAckDto(
+                unsubscribe,
+                false,
+                null);
             await caller.Send_UnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -233,8 +239,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new SendRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}",
-                        null),
+                        new ExceptionDto($"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}", null, Environment.StackTrace)),
                     actor);
                 return;
             }
@@ -252,7 +257,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Request timed out.", null, null));
                 _ = CompleteRequestAsync(logger, state);
             });
 
@@ -293,9 +298,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricConnectionId] = 1;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -321,17 +326,23 @@ public class FabricManager : IDashboardSnapshotGetter
         var exceptionMessage =
             state.Exceptions.Count == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
-        var innerExceptionMessage =
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
+        var exceptionInnerMessage =
             state.Exceptions.Values.Count(a => a.InnerException != null) == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
+
         await state.Caller.Send_SendRequestDone_ToApiAsync(
             new SendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptionMessage,
-                innerExceptionMessage
+                exceptionMessage == null
+                ? null
+                : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
@@ -354,8 +365,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new SendRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
-                        null),
+                        new ExceptionDto($"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
                     actor);
                 return;
             }
@@ -373,7 +383,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Invoke request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricConnectionId, new RemoteException("Invoke request timed out.", null, null));
                 _ = ReadyInvokeAsync(logger, state);
             });
 
@@ -436,9 +446,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor?.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricConnectionId] = 0;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -463,7 +473,6 @@ public class FabricManager : IDashboardSnapshotGetter
             new InvokeRequestAckDto(
                 state.Routing,
                 false,
-                null,
                 null
             ), state.Actor);
     }
@@ -475,21 +484,27 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryComplete())
             return;
 
-        var exceptions = state.Exceptions.Count == 0
+        var exceptionMessage = state.Exceptions.Count == 0
                 ? null
-                : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
+                : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
 
-        var innerExceptions =
+        var exceptionInnerMessage =
                 state.Exceptions.Values.Count(a => a.InnerException != null) == 0
                 ? null
-                : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+                : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
 
         await state.Caller.Send_InvokeRequestDone_ToApiAsync(
             new InvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptions,
-                innerExceptions
+                exceptionMessage == null
+                ? null
+                : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
@@ -570,8 +585,7 @@ public class FabricManager : IDashboardSnapshotGetter
                             request.StreamId,
                             true,
                             request.Cancelled,
-                            request.Cancelled ? "Task is cancelled" : null,
-                            null,
+                            request.Cancelled ? new ExceptionDto("Task is cancelled", null, Environment.StackTrace) : null,
                             []),
                         state.Actor);
                 }
@@ -631,7 +645,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .BusSubscribe(caller, subscribe.BusConnectionId, receiveSize);
 
-            var ack = new BusSubscribeAckDto(subscribe, false, null, null);
+            var ack = new BusSubscribeAckDto(
+                subscribe,
+                false,
+                null);
             await caller.Send_BusSubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -646,7 +663,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .BusUnsubscribe(caller, unsubscribe.BusConnectionId, receiveSize);
 
-            var ack = new BusUnsubscribeAckDto(unsubscribe, false, null, null);
+            var ack = new BusUnsubscribeAckDto(
+                unsubscribe,
+                false,
+                null);
             await caller.Send_BusUnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -674,8 +694,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 var ack = new BusSendRequestDoneDto(
                     request.Routing,
                     false,
-                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
-                    null);
+                    new ExceptionDto($"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace));
                 await caller.Send_BusSendRequestDone_ToApiAsync(ack, actor);
                 return;
             }
@@ -694,7 +713,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null, null));
                 _ = CompleteBusRequestAsync(logger, state);
             });
 
@@ -735,9 +754,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricBusConnectionId] = 1;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -763,17 +782,22 @@ public class FabricManager : IDashboardSnapshotGetter
         var exceptionMessage =
             state.Exceptions.Count == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
-        var innerExceptionMessage =
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
+        var exceptionInnerMessage =
             state.Exceptions.Values.Count(a => a.InnerException != null) == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
         await state.Caller.Send_BusSendRequestDone_ToApiAsync(
             new BusSendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptionMessage,
-                innerExceptionMessage
+                exceptionMessage == null
+                ? null
+                : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
@@ -791,9 +815,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 await caller.Send_BusInvokeRequestDone_ToApiAsync(
                     new BusInvokeRequestDoneDto(
                         request.Routing,
-                        false,
-                        $"No fabric connections found with To {request.Routing.To} or ToBusConnection {request.Routing.ToBusConnection}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
-                        null),
+                        false, new ExceptionDto($"No fabric connections found with To {request.Routing.To} or ToBusConnection {request.Routing.ToBusConnection}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
                     actor);
                 return;
             }
@@ -819,7 +841,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     return;
                 }
 
-                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricBusConnectionId, new RemoteException("Invoke request timed out.", null, null));
                 _ = ReadyBusInvokeAsync(logger, state);
             });
 
@@ -892,9 +914,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor?.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricBusConnectionId] = 0;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricBusConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -919,7 +941,6 @@ public class FabricManager : IDashboardSnapshotGetter
             new BusInvokeRequestAckDto(
                 state.Routing,
                 false,
-                null,
                 null
             ), state.Actor);
     }
@@ -931,21 +952,26 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryReady())
             return;
 
-        var exceptions =
+        var exceptionMessage =
             state.Exceptions.Count == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
-        var innerExceptions =
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
+        var exceptionInnerMessage =
             state.Exceptions.Values.Count(a => a.InnerException != null) == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
 
         await state.Caller.Send_BusInvokeRequestDone_ToApiAsync(
             new BusInvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptions,
-                innerExceptions
+                exceptionMessage == null
+                    ? null
+                    : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
@@ -1004,8 +1030,7 @@ public class FabricManager : IDashboardSnapshotGetter
                             request.StreamId,
                             true,
                             request.Cancelled,
-                            request.Cancelled ? "Task is cancelled" : null,
-                            null,
+                            request.Cancelled ? new ExceptionDto("Task is cancelled", null, Environment.StackTrace) : null,
                             []),
                         state.Actor);
                 }
@@ -1065,7 +1090,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .PlaneSubscribe(caller, subscribe.PlaneConnectionId, subscribe.ServiceSubscriptionId, receiveSize);
 
-            var ack = new PlaneSubscribeAckDto(subscribe, false, null, null);
+            var ack = new PlaneSubscribeAckDto(
+                subscribe,
+                false,
+                null);
             await caller.Send_PlaneSubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -1080,7 +1108,10 @@ public class FabricManager : IDashboardSnapshotGetter
             await actor
                 .PlaneUnsubscribe(caller, unsubscribe.PlaneConnectionId, unsubscribe.ServiceSubscriptionId, receiveSize);
 
-            var ack = new PlaneUnsubscribeAckDto(unsubscribe, false, null, null);
+            var ack = new PlaneUnsubscribeAckDto(
+                unsubscribe,
+                false,
+                null);
             await caller.Send_PlaneUnsubscribeAck_ToApiAsync(ack, actor);
         }//, ct);
     }
@@ -1108,8 +1139,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 var ack = new PlaneSendRequestDoneDto(
                     request.Routing,
                     false,
-                    $"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
-                    null);
+                    new ExceptionDto($"No active service bus subscribers found for service '{request.Routing.ServiceId}', service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace));
                 await caller.Send_PlaneSendRequestDone_ToApiAsync(ack, actor);
                 return;
             }
@@ -1128,7 +1158,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             state.StartTimeout(request.Routing.Timeout, () =>
             {
-                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null, null));
                 _ = CompletePlaneRequestAsync(logger, state);
             });
 
@@ -1169,9 +1199,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricPlaneConnectionId] = 1;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -1197,17 +1227,22 @@ public class FabricManager : IDashboardSnapshotGetter
         var exceptionMessage =
             state.Exceptions.Count == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
-        var innerExceptionMessage =
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
+        var exceptionInnerMessage =
             state.Exceptions.Values.Count(a => a.InnerException != null) == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
         await state.Caller.Send_PlaneSendRequestDone_ToApiAsync(
             new PlaneSendRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptionMessage,
-                innerExceptionMessage
+                exceptionMessage == null
+                ? null
+                : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
@@ -1226,8 +1261,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new PlaneInvokeRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with To {request.Routing.To} or ToPlaneConnection {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
-                        null),
+                        new ExceptionDto($"No fabric connections found with To {request.Routing.To} or ToPlaneConnection {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
                     actor);
                 return;
             }
@@ -1253,7 +1287,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     return;
                 }
 
-                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null));
+                state.Exceptions.TryAdd(state.Caller.FabricPlaneConnectionId, new RemoteException("Invoke request timed out.", null, null));
                 _ = ReadyPlaneInvokeAsync(logger, state);
             });
 
@@ -1326,9 +1360,9 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor?.EnqueueReceive(receiveSize);
 
             state.CompletedTargets[caller.FabricPlaneConnectionId] = 0;
-            if (done.ExceptionMessage != null)
+            if (done.Exception != null)
             {
-                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.ExceptionMessage, done.InnerExceptionMessage));
+                state.Exceptions.TryAdd(caller.FabricPlaneConnectionId, new RemoteException(done.Exception));
             }
             if (done.Cancelled)
             {
@@ -1353,7 +1387,6 @@ public class FabricManager : IDashboardSnapshotGetter
             new PlaneInvokeRequestAckDto(
                 state.Routing,
                 false,
-                null,
                 null
             ), state.Actor);
     }
@@ -1365,21 +1398,26 @@ public class FabricManager : IDashboardSnapshotGetter
         if (!state.TryReady())
             return;
 
-        var exceptions =
+        var exceptionMessage =
             state.Exceptions.Count == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Select(a => a.Message));
-        var innerExceptions =
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.Message));
+        var exceptionInnerMessage =
             state.Exceptions.Values.Count(a => a.InnerException != null) == 0
             ? null
-            : string.Join(", ", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Where(a => a.InnerException != null).Select(a => a.InnerException!.Message));
+        var exceptionStackTrace =
+            state.Exceptions.Count == 0
+            ? null
+            : string.Join("\r\n\r\n===\r\n\r\n", state.Exceptions.Values.Select(a => a.StackTrace));
 
         await state.Caller.Send_PlaneInvokeRequestDone_ToApiAsync(
             new PlaneInvokeRequestDoneDto(
                 state.Routing,
                 state.Cancelled,
-                exceptions,
-                innerExceptions
+                exceptionMessage == null
+                ? null
+                : new ExceptionDto(exceptionMessage, exceptionInnerMessage, exceptionStackTrace)
             ), state.Actor);
     }
 
