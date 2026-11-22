@@ -4,5 +4,6 @@ public enum PlaneToChoice
 {
     ToAll,
     ToAny,
-    ToPlaneConnectionId
+    ToPlaneConnection,
+    ToServiceSubscription
 }

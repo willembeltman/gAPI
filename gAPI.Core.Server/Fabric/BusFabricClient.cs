@@ -296,7 +296,7 @@ public sealed class BusFabricClient
 
             if (implementation is IBusServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnSubscribedAsync(message.ServiceId, ct);
+                await implementationSubscription.OnSubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally
@@ -337,7 +337,7 @@ public sealed class BusFabricClient
 
             if (implementation is IBusServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, ct);
+                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally

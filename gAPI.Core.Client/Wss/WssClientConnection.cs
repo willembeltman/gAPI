@@ -244,40 +244,42 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<UnsubscribeDto, TaskCompletionSource<UnsubscribeAckDto>> UnsubscribeTcss = [];
     readonly ConcurrentDictionary<ServiceId, ConcurrentDictionary<object, ServiceSubscriptionId>> ServiceSubscriptionIds = [];
 
-    public async Task Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId? userId, SessionId sessionId, CancellationToken ct)
+    public async Task<ServiceSubscriptionId> Send_Subscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId? userId, SessionId sessionId, CancellationToken ct)
     {
         //var serviceSubscriptionId = ServiceSubscriptionId.New();
         var service = ServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
 
-        var subscribe = new SubscribeDto(
+        var message = new SubscribeDto(
             serviceSubscriptionId,
             serviceId,
             userId,
             sessionId);
 
         var completion = new TaskCompletionSource<SubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (SubscribeTcss.TryAdd(subscribe, completion) == false)
+        if (SubscribeTcss.TryAdd(message, completion) == false)
         {
             Logger.LogError("Cannot add completion");
-            return;
+            throw new Exception("Cannot add completion");
         }
 
         try
         {
-            await Sender.Send_Subscribe_ToServerAsync(subscribe, ct);
+            await Sender.Send_Subscribe_ToServerAsync(message, ct);
 
             var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IHubServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnSubscribedAsync(subscribe.ServiceId, ct);
+                await implementationSubscription.OnSubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally
         {
-            SubscribeTcss.TryRemove(subscribe, out _);
+            SubscribeTcss.TryRemove(message, out _);
         }
+
+        return serviceSubscriptionId;
     }
     public async Task Send_Unsubscribe_ToServerAsync(object implementation, ServiceId serviceId, UserId? userId, SessionId sessionId, CancellationToken ct)
     {
@@ -288,14 +290,14 @@ public abstract class WssClientConnection : IWssClientConnection
             return;
         }
 
-        var unsubscribe = new UnsubscribeDto(
+        var message = new UnsubscribeDto(
             serviceSubscriptionId,
             serviceId,
             userId,
             sessionId);
 
         var completion = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (UnsubscribeTcss.TryAdd(unsubscribe, completion) == false)
+        if (UnsubscribeTcss.TryAdd(message, completion) == false)
         {
             Logger.LogError("Cannot add completion");
             return;
@@ -303,18 +305,18 @@ public abstract class WssClientConnection : IWssClientConnection
 
         try
         {
-            await Sender.Send_Unsubscribe_ToServerAsync(unsubscribe, ct);
+            await Sender.Send_Unsubscribe_ToServerAsync(message, ct);
 
             var ack = await completion.Task.WaitAsync(ct);
 
             if (implementation is IHubServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnUnsubscribedAsync(unsubscribe.ServiceId, ct);
+                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally
         {
-            UnsubscribeTcss.TryRemove(unsubscribe, out _);
+            UnsubscribeTcss.TryRemove(message, out _);
         }
     }
 

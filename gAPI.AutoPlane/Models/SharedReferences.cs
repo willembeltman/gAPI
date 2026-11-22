@@ -17,6 +17,7 @@ public class SharedReferences
         PlaneRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneRoutingDto", allSymbols);
         PlaneSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneSendRequestDto", allSymbols);
         PlaneInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneInvokeRequestDto", allSymbols);
+        ServiceSubscriptionKeyDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.ServiceSubscriptionKeyDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
 
         IBasePlaneConnection = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IBasePlaneConnection", allSymbols);
@@ -24,6 +25,7 @@ public class SharedReferences
 
         PlaneToChoice = SharedReferenceFinder.Find("gAPI.Core.Enums.PlaneToChoice", allSymbols);
         PlaneConnectionId = SharedReferenceFinder.Find("gAPI.Core.Ids.PlaneConnectionId", allSymbols);
+        ServiceSubscriptionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceSubscriptionId", allSymbols);
         IHostedPlaneService = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IHostedPlaneService", allSymbols);
         IPlaneServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IPlaneServiceSubscription", allSymbols);
 
@@ -46,11 +48,13 @@ public class SharedReferences
     public SharedReference StreamingResponseDto { get; }
     public SharedReference PlaneSendRequestDto { get; }
     public SharedReference PlaneInvokeRequestDto { get; }
+    public SharedReference ServiceSubscriptionKeyDto { get; }
     public SharedReference PlaneRoutingDto { get; }
     public SharedReference IBasePlaneConnection { get; }
     public SharedReference CancellationTokenSourceDispose { get; }
     public SharedReference PlaneToChoice { get; }
     public SharedReference PlaneConnectionId { get; }
+    public SharedReference ServiceSubscriptionId { get; }
     public SharedReference IHostedPlaneService { get; }
     public SharedReference IPlaneServiceSubscription { get; }
     public SharedReference? BaseFabricConnection { get; }

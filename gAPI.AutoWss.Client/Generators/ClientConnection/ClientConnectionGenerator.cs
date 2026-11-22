@@ -43,6 +43,7 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference SendRequestDto => Context.SharedReferences.SendRequestDto;
     //public SharedReference UnsubscribeDto => Context.SharedReferences.UnsubscribeDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference StreamingResponseDto => Context.SharedReferences.StreamingResponseDto;
     public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
@@ -71,6 +72,7 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg(IClientConnection);
         Reg(IClientAuthenticatedHttpClient);
         Reg(CancellationTokenSourceDispose);
+        Reg(ServiceSubscriptionId);
         //Reg(SubscribeDto);
         Reg(InvokeRequestDto);
         Reg(SendRequestDto);
@@ -178,8 +180,9 @@ public class {Name}
     private string GenerateSubscribe()
     {
         return $@"
-    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
+    public async Task<{ServiceSubscriptionId}[]> SubscribeAsync(object implementation, CancellationToken ___ct = default)
+    {{
+        var serviceSubscriptionIds = new List<{ServiceSubscriptionId}>();{string.Join("\r\n", Context.ServiceContext.HubInterfaces.Select(@interface => $@"
         if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
             if (___Logger.IsEnabled(LogLevel.Trace))
@@ -197,13 +200,14 @@ public class {Name}
                 {@interface.CleanName.ToMultiple()}Lock.Release();
             }}
 
-            await Send_Subscribe_ToServerAsync(
+            serviceSubscriptionIds.Add(await Send_Subscribe_ToServerAsync(
                 {@interface.CleanName.ToCamelCase()},
                 new ServiceId(""{@interface}""),
                 HttpClient.UserId,
                 HttpClient.SessionId, 
-                ___ct);
+                ___ct));
         }}"))}
+        return [.. serviceSubscriptionIds];
     }}";
     }
     private string GenerateUnsubscibe()
@@ -248,7 +252,8 @@ public class {Name}
                 if ({@interface.CleanName.ToCamelCase()} is IHubServiceSubscription {@interface.CleanName.ToCamelCase()}HubServiceSubscription)
                 {{
                     var ___serviceId = new {ServiceId}(""{@interface}"");
-                    await {@interface.CleanName.ToCamelCase()}HubServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
+                    var ___serviceSubscriptionId = new {ServiceSubscriptionId}("""");
+                    await {@interface.CleanName.ToCamelCase()}HubServiceSubscription.OnUnsubscribedAsync(___serviceId, ___serviceSubscriptionId, ___ct);
                 }}
             }}
         }}

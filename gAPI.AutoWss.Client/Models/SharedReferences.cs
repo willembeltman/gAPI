@@ -14,6 +14,7 @@ public class SharedReferences
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
+        ServiceSubscriptionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceSubscriptionId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
         BaseResponseT = new SharedReference("gAPI.Core.Dtos.BaseResponseT");
         BaseResponse = SharedReferenceFinder.Find("gAPI.Core.Dtos.BaseResponse", allSymbols);
@@ -58,6 +59,7 @@ public class SharedReferences
     public SharedReference ServiceId { get; }
     public SharedReference RequestId { get; }
     public SharedReference SessionId { get; }
+    public SharedReference ServiceSubscriptionId { get; }
     public SharedReference UserId { get; }
     public SharedReference BaseResponse { get; }
     public SharedReference RoutingDto { get; }

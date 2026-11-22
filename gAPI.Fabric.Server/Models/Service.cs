@@ -1,28 +1,21 @@
-﻿using gAPI.Core.Enums;
-using gAPI.Core.Ids;
-using gAPI.Core.Server.Entities;
-using gAPI.Fabric.Server.Collections;
+﻿using gAPI.Core.Ids;
+using gAPI.Fabric.Server.Helpers;
 using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Services;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace gAPI.Fabric.Server.Models;
 
-public record Service(ServiceId Id, FabricManager FabricManager) : IActor
+public class Service(ServiceId Id, FabricManager FabricManager) : PerformanceCounter, IActor
 {
     public ServiceId Id { get; } = Id;
+    public FabricManager FabricManager { get; } = FabricManager;
     public ConcurrentDictionary<UserId, UserSubsciption> Users { get; } = new();
-    public ConcurrentDictionary<SessionId, Session> Sessions { get; } = new();
+    public ConcurrentDictionary<SessionId, SessionSubscription> Sessions { get; } = new();
     public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
     public ConcurrentDictionary<BusConnectionId, BusConnection> BusConnections { get; } = new();
     public ConcurrentDictionary<PlaneConnectionId, PlaneConnection> PlaneConnections { get; } = new();
-
-    public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
-
-    private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
-    private readonly ConcurrentQueue<(double time, long bytes)> ReceiveLogger = new();
+    public ConcurrentDictionary<ServiceSubscriptionId, PlaneServiceSubscription> PlaneServiceSubscriptions { get; } = new();
 
     public async Task Subscribe(FabricHost connection, UserId? userId, SessionId sessionId, long receiveSize)
     {
@@ -44,7 +37,7 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         Sessions.AddOrUpdate(sessionId,
             (sessionId) =>
             {
-                var session = new Session(sessionId);
+                var session = new SessionSubscription(sessionId);
                 session.Subscribe(connection);
                 return session;
             },
@@ -76,16 +69,20 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         BusConnections.TryRemove(busConnectionId, out _);
         EnqueueReceive(receiveSize);
     }
-    public async Task PlaneSubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, long receiveSize)
+    public async Task PlaneSubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, ServiceSubscriptionId serviceSubscriptionId, long receiveSize)
     {
         PlaneConnections.AddOrUpdate(planeConnectionId,
             (planeConnectionId) => new PlaneConnection(planeConnectionId, connection),
             (planeConnectionId, planeConnection) => planeConnection);
+        PlaneServiceSubscriptions.AddOrUpdate(serviceSubscriptionId,
+            (serviceSubscriptionId) => new PlaneServiceSubscription(serviceSubscriptionId, connection),
+            (serviceSubscriptionId, planeConnection) => planeConnection);
         EnqueueReceive(receiveSize);
     }
-    public async Task PlaneUnsubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, long receiveSize)
+    public async Task PlaneUnsubscribe(FabricPlaneHost connection, PlaneConnectionId planeConnectionId, ServiceSubscriptionId serviceSubscriptionId, long receiveSize)
     {
         PlaneConnections.TryRemove(planeConnectionId, out _);
+        PlaneServiceSubscriptions.TryRemove(serviceSubscriptionId, out _);
         EnqueueReceive(receiveSize);
     }
 
@@ -143,36 +140,6 @@ public record Service(ServiceId Id, FabricManager FabricManager) : IActor
         {
             return (Connections.Values, this);
         }
-    }
-
-    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
-    {
-        var interval = 1.0;
-        var now = Stopwatch.Elapsed.TotalSeconds;
-
-        // Verwijder oude entries
-        while (queue.TryPeek(out var entry) && entry.time < now - interval)
-            queue.TryDequeue(out _);
-
-        var bytes = 0L;
-        var count = 0;
-        foreach (var item in queue)
-        {
-            bytes += item.bytes;
-            count++;
-        }
-        return new((int)(count / interval), (int)(bytes / interval));
-    }
-    public (int count, long bytes) GetSendSpeed() => GetSpeed(SendLogger);
-    public (int count, long bytes) GetReceiveSpeed() => GetSpeed(ReceiveLogger);
-
-    public void EnqueueSend(long size)
-    {
-        SendLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-    public void EnqueueReceive(long size)
-    {
-        ReceiveLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
     }
 
     public override string ToString()

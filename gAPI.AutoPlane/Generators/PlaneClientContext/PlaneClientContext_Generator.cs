@@ -23,6 +23,7 @@ public class PlaneClientContext_Generator : _BaseGenerator
     public IPlaneClientContext_Generator IClientContext { get; }
     public SharedReference PlaneChoiceType => Context.SharedReferences.PlaneToChoice;
     public SharedReference PlaneConnectionId => Context.SharedReferences.PlaneConnectionId;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
 
     public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public SharedReference IPlaneConnection => Context.IPlaneConnection;
@@ -37,6 +38,7 @@ public class PlaneClientContext_Generator : _BaseGenerator
         Reg(IPlaneConnection);
         Reg(PlaneChoiceType);
         Reg(PlaneConnectionId);
+        Reg(ServiceSubscriptionId);
         Reg(DeliveryMode);
         Reg("System");
         Reg("Microsoft.Extensions.Logging");
@@ -51,11 +53,13 @@ public class {Name}(
     : {IClientContext}
 {{
     public {Interface} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
-        => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToAll, null, throwIfNoReceiver);
+        => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToAll, null, null, throwIfNoReceiver);
     public {Interface} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
         => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToAny);
-    public {Interface} ToPlaneConnectionId({PlaneConnectionId} planeConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
-        => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToPlaneConnectionId, planeConnectionId);
+    public {Interface} ToPlaneConnection({PlaneConnectionId} planeConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
+        => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToPlaneConnection, planeConnectionId);
+    public {Interface} ToServiceSubscription({ServiceSubscriptionId} serviceSubscriptionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient)
+        => new {Client}(loggerFactory, planeConnection, timeOut, deliveryMode, {PlaneChoiceType}.ToServiceSubscription, null, serviceSubscriptionId);
 }}";
     }
 }

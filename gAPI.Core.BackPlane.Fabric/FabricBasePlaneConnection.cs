@@ -28,12 +28,12 @@ public abstract class FabricBasePlaneConnection(
 
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
-    protected Task SendSubscribeAsync(object implementation, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.PlaneSubscribeAsync(this, implementation, serviceId, ct);
+    protected Task<ServiceSubscriptionId> SendSubscribeAsync(object implementation, ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
+        => fabricClient.PlaneSubscribeAsync(this, implementation, serviceId, serviceSubscriptionId, ct);
     // This is called AFTER the service has been unregistered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)
-    protected Task SendUnsubscribeAsync(object implementation, ServiceId serviceId, CancellationToken ct)
-        => fabricClient.PlaneUnsubscribeAsync(this, implementation, serviceId, ct);
+    protected Task SendUnsubscribeAsync(object implementation, ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
+        => fabricClient.PlaneUnsubscribeAsync(this, implementation, serviceId, serviceSubscriptionId, ct);
 
     // This is called when a service has to be called through the service bus
     public Task SendFireAndForgetAsync(PlaneRoutingDto routing, byte[] data, CancellationToken ct)

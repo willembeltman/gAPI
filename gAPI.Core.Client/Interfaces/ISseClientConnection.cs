@@ -8,7 +8,7 @@ public interface ISseClientConnection : IDisposable
 
     void Start(CancellationToken ct);
 
-    Task SubscribeAsync(object implementation, CancellationToken ct = default);
+    Task<ServiceSubscriptionId[]> SubscribeAsync(object implementation, CancellationToken ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ct = default);
 
     Task Send_SendRequest_ToServiceAsync(

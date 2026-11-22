@@ -20,12 +20,14 @@ public class IPlaneConnectionGenerator : _BaseGenerator
     public Generator Context { get; }
     public SharedReference IBasePlaneConnection => Context.SharedReferences.IBasePlaneConnection;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
+    public SharedReference ServiceSubscriptionKeyDto => Context.SharedReferences.ServiceSubscriptionKeyDto;
     public SharedReference HostedPlaneServices => Context.HostedPlaneServices;
 
     public override void GenerateCode()
     {
         Reg(IBasePlaneConnection);
         Reg(HostedPlaneServices);
+        Reg(ServiceSubscriptionKeyDto);
         Reg(ServiceId);
 
         Code = @$"{GetNamespacesCode()}
@@ -37,8 +39,8 @@ public interface {Name} : {IBasePlaneConnection}
 {{
     void Start(CancellationToken ct);
 
-    Task SubscribeAsync(object implementation, CancellationToken ct = default);
-    Task UnsubscribeAsync(object implementation, CancellationToken ct = default);
+    Task<List<{ServiceSubscriptionKeyDto}>> SubscribeAsync(object implementation, CancellationToken ct = default);
+    Task<List<{ServiceSubscriptionKeyDto}>> UnsubscribeAsync(object implementation, CancellationToken ct = default);
 
     {HostedPlaneServices}? HostedPlaneServices {{ get; set; }}
 }}";

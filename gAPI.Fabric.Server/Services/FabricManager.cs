@@ -792,7 +792,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new BusInvokeRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with To {request.Routing.To} or ToBusConnectionId {request.Routing.ToBusConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
+                        $"No fabric connections found with To {request.Routing.To} or ToBusConnection {request.Routing.ToBusConnection}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
                         null),
                     actor);
                 return;
@@ -954,9 +954,9 @@ public class FabricManager : IDashboardSnapshotGetter
         var service = Services[routing.ServiceId];
         service.EnqueueReceive(receiveSize);
 
-        if (routing.To == BusToChoice.ToBusConnectionId && routing.ToBusConnectionId != null)
+        if (routing.To == BusToChoice.ToBusConnection && routing.ToBusConnection != null)
         {
-            if (service.BusConnections.TryGetValue(routing.ToBusConnectionId, out var target) == false)
+            if (service.BusConnections.TryGetValue(routing.ToBusConnection, out var target) == false)
                 return ([], service);
             return ([target.Connection], target);
         }
@@ -1063,7 +1063,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             var actor = Services[subscribe.ServiceId];
             await actor
-                .PlaneSubscribe(caller, subscribe.PlaneConnectionId, receiveSize);
+                .PlaneSubscribe(caller, subscribe.PlaneConnectionId, subscribe.ServiceSubscriptionId, receiveSize);
 
             var ack = new PlaneSubscribeAckDto(subscribe, false, null, null);
             await caller.Send_PlaneSubscribeAck_ToApiAsync(ack, actor);
@@ -1078,7 +1078,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             var actor = Services[unsubscribe.ServiceId];
             await actor
-                .PlaneUnsubscribe(caller, unsubscribe.PlaneConnectionId, receiveSize);
+                .PlaneUnsubscribe(caller, unsubscribe.PlaneConnectionId, unsubscribe.ServiceSubscriptionId, receiveSize);
 
             var ack = new PlaneUnsubscribeAckDto(unsubscribe, false, null, null);
             await caller.Send_PlaneUnsubscribeAck_ToApiAsync(ack, actor);
@@ -1226,7 +1226,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     new PlaneInvokeRequestDoneDto(
                         request.Routing,
                         false,
-                        $"No fabric connections found with To {request.Routing.To} or ToPlaneConnectionId {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
+                        $"No fabric connections found with To {request.Routing.To} or ToPlaneConnection {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}",
                         null),
                     actor);
                 return;
@@ -1388,9 +1388,15 @@ public class FabricManager : IDashboardSnapshotGetter
         var service = Services[routing.ServiceId];
         service.EnqueueReceive(receiveSize);
 
-        if (routing.To == PlaneToChoice.ToPlaneConnectionId && routing.ToPlaneConnectionId != null)
+        if (routing.To == PlaneToChoice.ToPlaneConnection && routing.ToPlaneConnectionId != null)
         {
             if (service.PlaneConnections.TryGetValue(routing.ToPlaneConnectionId, out var target) == false)
+                return ([], service);
+            return ([target.Connection], target);
+        }
+        if (routing.To == PlaneToChoice.ToServiceSubscription && routing.ToServiceSubscriptionId != null)
+        {
+            if (service.PlaneServiceSubscriptions.TryGetValue(routing.ToServiceSubscriptionId, out var target) == false)
                 return ([], service);
             return ([target.Connection], target);
         }

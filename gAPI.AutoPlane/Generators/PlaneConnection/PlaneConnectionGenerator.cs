@@ -35,6 +35,7 @@ public class PlaneConnectionGenerator : _BaseGenerator
     public SharedReference HostedPlaneServices => Context.HostedPlaneServices;
     public SharedReference IPlaneConnection => Context.IPlaneConnection;
     public SharedReference BackPlaneConfig => Context.SharedReferences.BackPlaneConfig;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
     public SharedReference PlaneInvokeRequestDto => Context.SharedReferences.PlaneInvokeRequestDto;
     public SharedReference PlaneSendRequestDto => Context.SharedReferences.PlaneSendRequestDto;
     public SharedReference ServiceId => Context.SharedReferences.ServiceId;
@@ -42,7 +43,9 @@ public class PlaneConnectionGenerator : _BaseGenerator
     public SharedReference? FabricClient => Context.SharedReferences.FabricClient;
     public SharedReference IHostedPlaneService => Context.SharedReferences.IHostedPlaneService;
     public SharedReference IPlaneServiceSubscription => Context.SharedReferences.IPlaneServiceSubscription;
+    public SharedReference ServiceSubscriptionKeyDto => Context.SharedReferences.ServiceSubscriptionKeyDto;
     public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
+    public SharedReference PlaneToChoice => Context.SharedReferences.PlaneToChoice;
 
     public List<INamedTypeSymbol> NeededSpanSerializers { get; private set; } = [];
     public GeneratePropertyHelper PropertyHelper { get; }
@@ -64,15 +67,19 @@ public class PlaneConnectionGenerator : _BaseGenerator
         Reg("gAPI.Core.Attributes");
         Reg("gAPI.Core.Serializers");
         Reg("System.Runtime.CompilerServices");
+        Reg("System.Collections.Concurrent");
         Reg(IPlaneConnection);
+        Reg(ServiceSubscriptionId);
         Reg(PlaneInvokeRequestDto);
         Reg(PlaneSendRequestDto);
+        Reg(ServiceSubscriptionKeyDto);
         Reg(ServiceId);
         Reg(StreamingResponseDto);
         Reg(BackPlaneConfig);
         Reg(BaseConnection);
         Reg(HostedPlaneServices);
         Reg(IHostedPlaneService);
+        Reg(PlaneToChoice);
 
         Reg(CancellationTokenSourceDispose);
 
@@ -141,66 +148,46 @@ public class {Name}
     private string GenerateHubProperties()
     {
         return string.Join("", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
-
-    readonly List<{@interface}> {@interface.CleanName.ToMultiple()} = [];
-    readonly SemaphoreSlim {@interface.CleanName.ToMultiple()}Lock = new(1, 1);
-
-    private async Task<{@interface}[]> Get{@interface.CleanName.ToMultiple()}SnapshotAsync()
-    {{
-        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync();
-        try
-        {{
-            return [.. {@interface.CleanName.ToMultiple()}];
-        }}
-        finally
-        {{
-            {@interface.CleanName.ToMultiple()}Lock.Release();
-        }}
-    }}"));
+    readonly ConcurrentDictionary<{@interface}, {ServiceSubscriptionKeyDto}> {@interface.CleanName.ToMultiple()} = [];"));
     }
 
     private string GenerateSubscribe()
     {
         return $@"
-    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
+    public async Task<List<{ServiceSubscriptionKeyDto}>> SubscribeAsync(object implementation, CancellationToken ct = default)
+    {{
+        var subscriptionIds = new List<{ServiceSubscriptionKeyDto}>();{
+            string.Join("", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
         if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
-            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-            try
+            var serviceId = new {ServiceId}(""{@interface}"");
+            var serviceSubscriptionId = {ServiceSubscriptionId}.New();
+            var value = new {ServiceSubscriptionKeyDto}(serviceId, serviceSubscriptionId);
+            if ({@interface.CleanName.ToMultiple()}.TryAdd({@interface.CleanName.ToCamelCase()}, value))
             {{
-                {@interface.CleanName.ToMultiple()}.Add({@interface.CleanName.ToCamelCase()});
+                await SendSubscribeAsync(implementation, serviceId, serviceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }}
-            finally
-            {{
-                {@interface.CleanName.ToMultiple()}Lock.Release();
-            }}
-
-            var ___serviceId = new {ServiceId}(""{@interface}"");
-            await SendSubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct);
         }}"))}
+        return subscriptionIds;
     }}";
     }
     private string GenerateUnsubscibe()
     {
         return $@"
-    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {{{string.Join("\r\n", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
+    public async Task<List<{ServiceSubscriptionKeyDto}>> UnsubscribeAsync(object implementation, CancellationToken ct = default)
+    {{
+        var subscriptionIds = new List<{ServiceSubscriptionKeyDto}>();{
+            string.Join("\r\n", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
         if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
-        {{
-            await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-            try
+        {{  
+            if ({@interface.CleanName.ToMultiple()}.TryRemove({@interface.CleanName.ToCamelCase()}, out var value))
             {{
-                {@interface.CleanName.ToMultiple()}.Remove({@interface.CleanName.ToCamelCase()});
+                await SendUnsubscribeAsync(implementation, value.ServiceId, value.ServiceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }}
-            finally
-            {{
-                {@interface.CleanName.ToMultiple()}Lock.Release();
-            }}
-
-            var ___serviceId = new {ServiceId}(""{@interface}"");
-            await SendUnsubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct);
         }}"))}
+        return subscriptionIds;
     }}";
     }
 
@@ -209,21 +196,15 @@ public class {Name}
         return $@"
     public override async Task OnDisconnectedAsync(CancellationToken ___ct)
     {{{string.Join("\r\n", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
-        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-        try
+        foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
         {{
-            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
+            if ({@interface.CleanName.ToCamelCase()}.Key is IPlaneServiceSubscription planeServiceSubscription)
             {{
-                if ({@interface.CleanName.ToCamelCase()} is IPlaneServiceSubscription {@interface.CleanName.ToCamelCase()}PlaneServiceSubscription)
-                {{
-                    var ___serviceId = new {ServiceId}(""{@interface}"");
-                    await {@interface.CleanName.ToCamelCase()}PlaneServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }}
+                await planeServiceSubscription.OnUnsubscribedAsync(
+                    {@interface.CleanName.ToCamelCase()}.Value.ServiceId, 
+                    {@interface.CleanName.ToCamelCase()}.Value.ServiceSubscriptionId, 
+                    ___ct);
             }}
-        }}
-        finally
-        {{
-            {@interface.CleanName.ToMultiple()}Lock.Release();
         }}"))}
     }}";
     }
@@ -232,18 +213,14 @@ public class {Name}
         return $@"
     public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
     {{{string.Join("\r\n", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
-        await {@interface.CleanName.ToMultiple()}Lock.WaitAsync(___ct);
-        try
+        foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
         {{
-            foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
-            {{
-                var ___serviceId = new {ServiceId}(""{@interface}"");
-                await SendSubscribeAsync({@interface.CleanName.ToCamelCase()}, ___serviceId, ___ct); // This causes the reconnect event to be called
-            }}
-        }}
-        finally
-        {{
-            {@interface.CleanName.ToMultiple()}Lock.Release();
+            var ___serviceId = new {ServiceId}(""{@interface}"");
+            await SendSubscribeAsync(
+                {@interface.CleanName.ToCamelCase()}.Key, 
+                {@interface.CleanName.ToCamelCase()}.Value.ServiceId,
+                {@interface.CleanName.ToCamelCase()}.Value.ServiceSubscriptionId, 
+                ___ct); // This causes the reconnect event to be called, which will trigger onsubscribed to client
         }}"))}
     }}";
     }
@@ -253,14 +230,13 @@ public class {Name}
         var functions = "";
         var code = $@"
     public override async Task Send_FireAndForgetRequest_ToServiceAsync({PlaneSendRequestDto} ___sendRequest, CancellationToken ___ct)
-    {{{(Context.ServiceContext.PlaneInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)) ? $@"
+    {{{(Context.ServiceContext.PlaneInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsVoid)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsVoid)).Select(hub => $@"
-            case ""{hub}"":
+        {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsVoid)).Select(@interface => $@"
+            case ""{@interface}"":
                 {{
-                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsVoid).Select(method => $@"
+                    {{{string.Join("", @interface.Methods.Where(a => a.ResponseType.IsVoid).Select(method => $@"
                         case ""{method}"":
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
                                 var ___offset = 0;" : "")}
@@ -269,9 +245,13 @@ public class {Name}
                                     .Where(a => a.arg.ParameterType.IsCancellationToken == false)
                                     .Select(a => $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-                                foreach (var client in clients)
+                                foreach (var client in {@interface.CleanName.ToMultiple()})
                                 {{
-                                    client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                    if (___sendRequest.Routing.To == {PlaneToChoice}.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
                                         ___ct"))});
                                 }}
@@ -291,14 +271,13 @@ public class {Name}
         var functions = "";
         var code = $@"
     public override async Task Send_SendRequest_ToServiceAsync({PlaneSendRequestDto} ___sendRequest, {CancellationTokenSourceDispose} ___timeoutCts)
-    {{{(Context.ServiceContext.PlaneInterfaces.Any(hub => hub.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
+    {{{(Context.ServiceContext.PlaneInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)) ? $@"
         switch (___sendRequest.Routing.ServiceId.Value)
-        {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Where(hub => hub.Methods.Any(a => a.ResponseType.IsTask)).Select(hub => $@"
-            case ""{hub}"":
+        {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTask)).Select(@interface => $@"
+            case ""{@interface}"":
                 {{
-                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
+                    {{{string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTask).Select(method => $@"
                         case ""{method}"":
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
                                 var ___offset = 0;" : "")}
@@ -310,9 +289,13 @@ public class {Name}
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                 : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
-                                foreach (var client in clients)
+                                foreach (var client in {@interface.CleanName.ToMultiple()})
                                 {{
-                                    await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                    if (___sendRequest.Routing.To == {PlaneToChoice}.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
                                         ___timeoutCts.Token"))});
                                 }}
@@ -335,12 +318,11 @@ public class {Name}
     {{{(Context.ServiceContext.PlaneInterfaces.Any(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable)) ? $@"
         switch (___invokeRequest.Routing.ServiceId.Value)
         {{{string.Join("", Context.ServiceContext.PlaneInterfaces.Where(@interface => @interface.Methods.Any(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable))
-        .Select(hub => $@"
-            case ""{hub}"":
+        .Select(@interface => $@"
+            case ""{@interface}"":
                 {{
-                    var clients = await Get{hub.CleanName.ToMultiple()}SnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
-                    {{{string.Join("", hub.Methods.Where(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable).Select(method =>
+                    {{{string.Join("", @interface.Methods.Where(a => a.ResponseType.IsTaskT || a.ResponseType.IsIAsyncEnumerable).Select(method =>
         {
             var returnTypeInner = method.ResponseType.UnderlayingTypes.Single();
             return
@@ -357,12 +339,16 @@ public class {Name}
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
                 : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}
-                                foreach (var client in clients)
+                                foreach (var client in {@interface.CleanName.ToMultiple()})
                                 {{
-                                    var response = await client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                    if (___invokeRequest.Routing.To == {PlaneToChoice}.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
                                         ___timeoutCts.Token"))});
-                                    yield return {hub}_{method}_Serializer(response);
+                                    yield return {@interface}_{method}_Serializer(response);
                                 }}
                             }}
                             yield break;"
@@ -380,14 +366,18 @@ public class {Name}
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___invokeRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer,  ___timeoutCts);"
                                     : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions2, functionNames)};"))}
-                                foreach (var client in clients)
+                                foreach (var client in {@interface.CleanName.ToMultiple()})
                                 {{
-                                    var responses = client.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
+                                    if (___invokeRequest.Routing.To == {PlaneToChoice}.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.{method}({string.Join(",", method.Arguments.Select(arg => arg.ParameterType.IsCancellationToken == false ? $@"
                                         {arg.Name.ToCamelCase()}" : $@"
                                         ___timeoutCts.Token"))});
                                     await foreach (var response in responses)
                                     {{
-                                        yield return {hub}_{method}_Serializer(response);
+                                        yield return {@interface}_{method}_Serializer(response);
                                     }}
                                 }}
                             }}

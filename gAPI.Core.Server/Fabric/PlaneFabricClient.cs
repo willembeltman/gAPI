@@ -268,7 +268,7 @@ public sealed class PlaneFabricClient
         ConnectedCts = null;
     }
 
-    public async Task PlaneSubscribeAsync(IFabricBasePlaneConnection planeConnection, object implementation, ServiceId serviceId, CancellationToken ct)
+    public async Task<ServiceSubscriptionId> PlaneSubscribeAsync(IFabricBasePlaneConnection planeConnection, object implementation, ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -277,8 +277,8 @@ public sealed class PlaneFabricClient
                 implementation,
                 serviceId);
 
-        var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
-        var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
+        //var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
+        //var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
 
         var message = new PlaneSubscribeDto(serviceSubscriptionId, serviceId, planeConnection.PlaneConnectionId);
 
@@ -297,15 +297,17 @@ public sealed class PlaneFabricClient
 
             if (implementation is IPlaneServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnSubscribedAsync(message.ServiceId, ct);
+                await implementationSubscription.OnSubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally
         {
             StreamingCache.PlaneSubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
         }
+
+        return serviceSubscriptionId;
     }
-    public async Task PlaneUnsubscribeAsync(IFabricBasePlaneConnection planeConnection, object implementation, ServiceId serviceId, CancellationToken ct)
+    public async Task PlaneUnsubscribeAsync(IFabricBasePlaneConnection planeConnection, object implementation, ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
@@ -314,12 +316,12 @@ public sealed class PlaneFabricClient
                 implementation,
                 serviceId);
 
-        var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
-        if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
-        {
-            Logger.LogError("Cannot remove subscription");
-            throw new Exception("Cannot add to cache");
-        }
+        //var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
+        //if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
+        //{
+        //    Logger.LogError("Cannot remove subscription");
+        //    throw new Exception("Cannot add to cache");
+        //}
 
         var message = new PlaneUnsubscribeDto(serviceSubscriptionId, serviceId, planeConnection.PlaneConnectionId);
 
@@ -338,7 +340,7 @@ public sealed class PlaneFabricClient
 
             if (implementation is IPlaneServiceSubscription implementationSubscription)
             {
-                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, ct);
+                await implementationSubscription.OnUnsubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
         finally

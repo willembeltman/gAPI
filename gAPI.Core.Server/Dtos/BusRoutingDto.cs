@@ -13,6 +13,6 @@ public record BusRoutingDto(
     TimeSpan Timeout,
     DeliveryMode deliveryMode,
     BusToChoice To,
-    BusConnectionId? ToBusConnectionId = null,
+    BusConnectionId? ToBusConnection = null,
     bool ThrowIfNoReceiver = true
     );

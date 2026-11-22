@@ -14,5 +14,6 @@ public record PlaneRoutingDto(
     DeliveryMode deliveryMode,
     PlaneToChoice To,
     PlaneConnectionId? ToPlaneConnectionId = null,
+    ServiceSubscriptionId? ToServiceSubscriptionId = null,
     bool ThrowIfNoReceiver = true
     );

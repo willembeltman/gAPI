@@ -1,21 +1,10 @@
-﻿using gAPI.Core.Ids;
-using gAPI.Fabric.Server.Interfaces;
-using gAPI.Fabric.Server.Services;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace gAPI.Fabric.Server.Models;
+namespace gAPI.Fabric.Server.Helpers;
 
-public record Session(SessionId Id) : IActor
+public class PerformanceCounter
 {
-    public SessionId Id { get; } = Id;
-    public ConcurrentDictionary<FabricConnectionId, FabricHost> Connections { get; } = new();
-
-    public void Subscribe(FabricHost connection) => Connections[connection.FabricConnectionId] = connection;
-    public void Unsubscribe(FabricHost connection) => Connections.TryRemove(connection.FabricConnectionId, out _);
-
-    public override string ToString() => Id.ToString();
-
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendLogger = new();
@@ -49,10 +38,5 @@ public record Session(SessionId Id) : IActor
     public void EnqueueReceive(long size)
     {
         ReceiveLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-
-    internal void RemoveHost(FabricHost host)
-    {
-        Connections.TryRemove(host.FabricConnectionId, out _);
     }
 }

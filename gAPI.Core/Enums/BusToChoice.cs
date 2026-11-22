@@ -4,5 +4,5 @@ public enum BusToChoice
 {
     ToAll,
     ToAny,
-    ToBusConnectionId
+    ToBusConnection
 }

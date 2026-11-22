@@ -31,6 +31,7 @@ public class PlaneClient_Generator : _BaseGenerator
     public SharedReference PlaneRoutingDto => Context.SharedReferences.PlaneRoutingDto;
     public SharedReference PlaneChoiceType => Context.SharedReferences.PlaneToChoice;
     public SharedReference PlaneConnectionId => Context.SharedReferences.PlaneConnectionId;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
     public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
     public List<INamedTypeSymbol> NeededSerializers { get; private set; } = [];
@@ -85,6 +86,7 @@ public class {Name}(
     {DeliveryMode} ___deliveryMode,
     {PlaneChoiceType} ___to,
     {PlaneConnectionId}? ___planeConnectionId = null,
+    {ServiceSubscriptionId}? ___serviceSubscriptionId = null,
     bool ___throwIfNoReceiver = true)
     : {Interface}
     , IDisposable
@@ -141,6 +143,7 @@ public class {Name}(
                 ___deliveryMode,
                 ___to,
                 ___planeConnectionId,
+                ___serviceSubscriptionId,
                 ___throwIfNoReceiver
             );
 
@@ -200,6 +203,7 @@ public class {Name}(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(
@@ -246,6 +250,7 @@ public class {Name}(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
@@ -307,6 +312,7 @@ public class {Name}(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);

@@ -9,14 +9,12 @@ using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Helpers;
 using gAPI.Fabric.Server.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Services;
 
-public sealed class FabricBusHost : IFabricLoggerFactory, IActor
+public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IActor
 {
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
@@ -27,39 +25,6 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
     public FabricBusConnectionId FabricBusConnectionId { get; }
     public ILogger<FabricHost> Logger { get; }
     public ILogger<FabricManager> ManagerLogger { get; }
-    public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
-
-    private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
-    private readonly ConcurrentQueue<(double time, long bytes)> ReceivedBytesLogger = new();
-
-    private (int count, long bytes) GetSpeed(ConcurrentQueue<(double time, long bytes)> queue)
-    {
-        var interval = 1.0;
-        var now = Stopwatch.Elapsed.TotalSeconds;
-
-        // Verwijder oude entries
-        while (queue.TryPeek(out var entry) && entry.time < now - interval)
-            queue.TryDequeue(out _);
-
-        var bytes = 0L;
-        var count = 0;
-        foreach (var item in queue)
-        {
-            bytes += item.bytes;
-            count++;
-        }
-        return new((int)(count / interval), (int)(bytes / interval));
-    }
-    public (int count, long bytes) GetSendBytesPerSecond() => GetSpeed(SendBytesLogger);
-    public (int count, long bytes) GetReceiveBytesPerSecond() => GetSpeed(ReceivedBytesLogger);
-    public void EnqueueSend(long size)
-    {
-        SendBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
-    public void EnqueueReceive(long size)
-    {
-        ReceivedBytesLogger.Enqueue((Stopwatch.Elapsed.TotalSeconds, size));
-    }
 
     private FabricBusHostCollection BusConnections => Manager.AllBusConnections;
     private ConsoleBuffer Console => Manager.Console;
@@ -222,7 +187,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
             var size = counter.BytesWritten - previous;
             previous = counter.BytesWritten;
             item.actor.EnqueueSend(size);
-            SendBytesLogger.Enqueue(new(Stopwatch.Elapsed.TotalSeconds, size));
+            EnqueueSend(size);
         }
         Dispose();
     }
@@ -335,7 +300,7 @@ public sealed class FabricBusHost : IFabricLoggerFactory, IActor
 
                 var size2 = counter.BytesRead - previousBytesRead;
                 previousBytesRead = counter.BytesRead;
-                ReceivedBytesLogger.Enqueue(new(Stopwatch.Elapsed.TotalSeconds, size2));
+                EnqueueReceive(size2);
             }
         }
         catch (Exception ex)

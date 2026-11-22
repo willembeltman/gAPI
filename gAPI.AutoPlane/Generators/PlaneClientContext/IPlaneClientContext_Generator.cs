@@ -24,6 +24,7 @@ public class IPlaneClientContext_Generator : _BaseGenerator
     public Interface Interface => ClientHandler.Interface;
     public SharedReference DeliveryMode => Context.SharedReferences.DeliveryMode;
     public SharedReference PlaneConnectionId => Context.SharedReferences.PlaneConnectionId;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
 
     public override void GenerateCode()
     {
@@ -41,7 +42,8 @@ public interface {Name}
 {{
     {Interface.Name} ToAll(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true);
     {Interface.Name} ToAny(TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
-    {Interface.Name} ToPlaneConnectionId({PlaneConnectionId} planeConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToPlaneConnection({PlaneConnectionId} planeConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
+    {Interface.Name} ToServiceSubscription({ServiceSubscriptionId} planeConnectionId, TimeSpan? timeOut = null, {DeliveryMode} deliveryMode = DeliveryMode.Transient);
 }}";
     }
 }
