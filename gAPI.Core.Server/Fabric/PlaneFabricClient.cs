@@ -569,7 +569,7 @@ public sealed class PlaneFabricClient
             await PlaneConnection.Send_SendRequest_ToServiceAsync(message, timeoutCts);
             await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
                 new PlaneSendRequestDoneDto(
-                    message.Routing, 
+                    message.Routing,
                     false,
                     null),
                 ct);
@@ -581,7 +581,7 @@ public sealed class PlaneFabricClient
                 new PlaneSendRequestDoneDto(
                     message.Routing,
                     true,
-                    new ExceptionDto(ex)), 
+                    new ExceptionDto(ex)),
                 ct);
         }
         catch (Exception ex)
@@ -661,9 +661,9 @@ public sealed class PlaneFabricClient
             Logger.LogError(ex, "Receive_PlaneInvokeRequest_FromFabricAsync");
             await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
                 new PlaneSendRequestDoneDto(
-                    message.Routing, 
+                    message.Routing,
                     false,
-                    new ExceptionDto(ex)), 
+                    new ExceptionDto(ex)),
                 ct);
         }
     }
@@ -756,13 +756,13 @@ public sealed class PlaneFabricClient
         {
             await Sender.Send_PlaneStreamingResponse_ToFabricAsync(
                 new PlaneStreamingResponseDto(
-                    message.Routing, 
-                    message.ArgumentIndex, 
-                    message.StreamId, 
-                    true, 
-                    false, 
+                    message.Routing,
+                    message.ArgumentIndex,
+                    message.StreamId,
+                    true,
+                    false,
                     new ExceptionDto("No StreamingRequestHandlers found", null, Environment.StackTrace),
-                    []), 
+                    []),
                 ct);
         }
     }
@@ -800,7 +800,7 @@ public sealed class PlaneFabricClient
 
     public void RegisterTimeout(PlaneRoutingDto routing, CancellationTokenSourceDispose cts)
     {
-        if ( StreamingCache.PlaneSenderTimeouts.TryAdd(routing.RequestId, cts) == false)
+        if (StreamingCache.PlaneSenderTimeouts.TryAdd(routing.RequestId, cts) == false)
         {
             Logger.LogError("RegisterTimeout cannot all timeout");
         }
@@ -903,9 +903,9 @@ public sealed class PlaneFabricClient
                 {
                     await Sender.Send_PlaneInvokeRequestDone_ToFabricAsync(
                         new PlaneInvokeRequestDoneDto(
-                            routing, 
+                            routing,
                             false,
-                            new ExceptionDto(ex)), 
+                            ex == null ? null : new ExceptionDto(ex)),
                         ct);
                 }
             }
