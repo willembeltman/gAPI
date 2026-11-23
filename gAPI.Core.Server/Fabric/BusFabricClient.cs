@@ -5,11 +5,15 @@ using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
+using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 
 namespace gAPI.Core.Server.Fabric;
@@ -20,6 +24,7 @@ public sealed class BusFabricClient
         SessionCache sessionCache,
         StreamingCache streamingCache,
         ILoggerFactory loggerFactory,
+        ServerConfig config,
         ServiceBusConfig serviceBusConfig)
     {
         Sender = new BusFabricClientSender(this, loggerFactory);
@@ -83,7 +88,7 @@ public sealed class BusFabricClient
     TcpClient? Tcp;
     NetworkStream? Stream;
 
-    public BinaryWriter? Writer { get; private set; }
+    //public BinaryWriter? Writer { get; private set; }
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricBusConnectionId FabricConnectionId { get; private set; } = new FabricBusConnectionId(-1);
     public bool IsConnected => Tcp?.Connected == true;
@@ -110,17 +115,6 @@ public sealed class BusFabricClient
             catch (Exception ex)
             {
                 Logger.LogError(ex, "ConnectAsync");
-            }
-        });
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Sender.SendKernel(ct);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "SendKernel");
             }
         });
     }
@@ -150,10 +144,15 @@ public sealed class BusFabricClient
                 Tcp = new TcpClient();
                 Tcp.Connect(Host, Port);
                 Stream = Tcp.GetStream();
-                Writer = new BinaryWriter(Stream);
                 var reader = new BinaryReader(Stream);
+                var writer = new BinaryWriter(Stream);
 
                 ConnectedCts = new CancellationTokenSource();
+                var connectedCts = ConnectedCts;
+                var ct = connectedCts.Token;
+
+                var senderTask = Task.Run(async () => { await Sender.SendKernel(writer, ct); });
+                var receiverTask = Task.Run(async () => { await ReceiveKernel(reader, ct); });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -162,14 +161,16 @@ public sealed class BusFabricClient
                 {
                     try
                     {
-                        await ReceiveKernel(reader, ConnectedCts.Token);
+                        await Task.WhenAny(senderTask, receiverTask);
+                        connectedCts.Cancel();
+                        await Task.WhenAll(senderTask, receiverTask);
 
                         if (RunningRequested)
                             await ReconnectAsync();
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "Gated_ConnectAsync");
+                        Logger.LogWarning(ex, "Gated_ConnectAsync");
                     }
                 });
             }
@@ -179,7 +180,6 @@ public sealed class BusFabricClient
 
                 try
                 {
-                    Writer = null;
                     ConnectedCts?.Cancel();
                     ConnectedCts?.Dispose();
                     ConnectedCts = null;

@@ -6,6 +6,7 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 
@@ -95,8 +96,6 @@ public sealed class FabricClient
     TcpClient? Tcp;
     NetworkStream? Stream;
 
-    public BinaryWriter? Writer { get; private set; }
-
     CancellationTokenSource? ConnectedCts;
     private bool RunningRequested;
     private CancellationToken? LifeCycleCt;
@@ -123,17 +122,6 @@ public sealed class FabricClient
             catch (Exception ex)
             {
                 Logger.LogError(ex, "ConnectAsync");
-            }
-        });
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Sender.SendKernel(ct);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Sender.SendKernel");
             }
         });
     }
@@ -170,9 +158,13 @@ public sealed class FabricClient
                 Tcp = new TcpClient();
                 Tcp.Connect(Host, Port);
                 Stream = Tcp.GetStream();
-                Writer = new BinaryWriter(Stream);
                 var reader = new BinaryReader(Stream);
+                var writer = new BinaryWriter(Stream);
                 ConnectedCts = new CancellationTokenSource();
+                var connectedCts = ConnectedCts;
+
+                var receiverTask = Task.Run(async () => { await ReceiveKernel(reader, connectedCts.Token); });
+                var senderTask = Task.Run(async () => { await Sender.SendKernel(writer, connectedCts.Token); });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -181,7 +173,9 @@ public sealed class FabricClient
                 {
                     try
                     {
-                        await ReceiveKernel(reader, ConnectedCts.Token);
+                        await Task.WhenAny(senderTask, receiverTask);
+                        connectedCts.Cancel();
+                        await Task.WhenAll(senderTask, receiverTask);
 
                         if (RunningRequested)
                             await ReconnectAsync();
@@ -198,7 +192,6 @@ public sealed class FabricClient
 
                 try
                 {
-                    Writer = null;
                     ConnectedCts?.Cancel();
                     ConnectedCts?.Dispose();
                     ConnectedCts = null;

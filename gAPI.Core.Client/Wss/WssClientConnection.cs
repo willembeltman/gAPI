@@ -123,8 +123,8 @@ public abstract class WssClientConnection : IWssClientConnection
 
                 var initialize = new InitializeDto(stateData, sessionId);
 
-                var senderTask = Sender.SendKernel(socket, initialize, connectedCts.Token);
-                var receiverTask = ReceiverKernel(socket, connectedCts.Token);
+                var receiverTask = Task.Run(async () => { await ReceiverKernel(socket, connectedCts.Token); });
+                var senderTask = Task.Run(async () => { await Sender.SendKernel(socket, initialize, connectedCts.Token); });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));

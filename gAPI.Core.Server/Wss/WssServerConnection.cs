@@ -83,8 +83,8 @@ public abstract class WssServerConnection : IServerConnection
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            var senderTask = Sender.SendKernel(socket, cts);
-            var receiverTask = ReceiverKernel(socket, path, queryString, ipAddress, sessionId, cookieData, cts);
+            var senderTask = Task.Run(async () => { await Sender.SendKernel(socket, cts); });
+            var receiverTask = Task.Run(async () => { await ReceiverKernel(socket, path, queryString, ipAddress, sessionId, cookieData, cts); });
 
             await Task.WhenAny(senderTask, receiverTask);
             cts.Cancel();

@@ -4,40 +4,29 @@ using gAPI.Core.Enums;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
-using gAPI.Core.Wss;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Net.WebSockets;
-using System.Reflection;
 using System.Threading.Channels;
 
 namespace gAPI.Core.Client.Wss;
 
-public class WssClientConnectionSender
+public class WssClientConnectionSender(
+    WssClientConnection wssClientConnection,
+    ClientConfig config,
+    IClientLoggerFactory LoggerFactory)
 {
-    private readonly WssClientConnection WssClientConnection;
-    private readonly ILogger<WssClientConnectionSender> Logger;
-    private readonly byte[] SendBuffer;
+    private readonly ILogger<WssClientConnectionSender> Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
+    private readonly byte[] SendBuffer = new byte[config.MaxPackageSize ?? 512 * 1024];
     private Channel<SendQueueItem>? SendQueue;
-
-    //private Channel<SendQueueItem>? SendQueue;
-
-    public WssClientConnectionSender(
-        WssClientConnection wssClientConnection,
-        ClientConfig clientConfig,
-        IClientLoggerFactory LoggerFactory)
-    {
-        WssClientConnection = wssClientConnection;
-        Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
-        SendBuffer = new byte[clientConfig.MaxPackageSize ?? 512 * 1024];
-    }
 
     public async Task SendKernel(WebSocket socket, InitializeDto initialize, CancellationToken ct)
     {
-        var sendQueue = Channel.CreateUnbounded<SendQueueItem>();
-        SendQueue = sendQueue;
         try
         {
+            var sendQueue = Channel.CreateUnbounded<SendQueueItem>();
+            SendQueue = sendQueue;
+
             var span = SendBuffer.AsSpan();
             var offset = 0;
 
@@ -59,8 +48,7 @@ public class WssClientConnectionSender
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
-
+                    Logger.LogError(ex, "SendKernel");
                     item.Sent?.TrySetException(ex);
                     throw;
                 }
@@ -79,15 +67,19 @@ public class WssClientConnectionSender
         catch (OperationCanceledException ex)
         {
             // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
-            CompleteQueue(sendQueue, ex);
+            var sendQueue = SendQueue;
+            if (sendQueue != null)
+                CompleteQueue(sendQueue, ex);
         }
         catch (Exception ex)
         {
             // A failed send means this connection can no longer drain the queue.
             // Do not hide it: the connection owner must cancel the receiver and
             // dispose its subscriptions instead of accepting messages forever.
-            Logger.LogError(ex, "WSS sender stopped for client {ClientConnectionId}", WssClientConnection.ClientConnectionId);
-            CompleteQueue(sendQueue, ex);
+            Logger.LogError(ex, "WSS sender stopped for client {ClientConnectionId}", wssClientConnection.ClientConnectionId);
+            var sendQueue = SendQueue;
+            if (sendQueue != null) 
+                CompleteQueue(sendQueue, ex);
         }
     }
     private void CompleteQueue(Channel<SendQueueItem> sendQueue, Exception error)
@@ -102,41 +94,33 @@ public class WssClientConnectionSender
 
     private async Task EnqueueAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
-        while (SendQueue == null)
+        var sendQueue = SendQueue;
+        while (sendQueue == null)
         {
-            await Task.Delay(10);
+            await Task.Delay(100);
+            sendQueue = SendQueue;
         }
 
-        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, null)))
+        if (!sendQueue.Writer.TryWrite(new SendQueueItem(write, null)))
         {
             return;
         }
     }
     private async Task EnqueueAndWaitAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
-        while (SendQueue == null)
+        var sendQueue = SendQueue;
+        while (sendQueue == null)
         {
-            await Task.Delay(10);
+            await Task.Delay(100);
+            sendQueue = SendQueue;
         }
 
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        if (!SendQueue.Writer.TryWrite(new SendQueueItem(write, completion)))
-        {
-            return;
-        }
+        if (!sendQueue.Writer.TryWrite(new SendQueueItem(write, completion)))
+            throw new Exception("Not connected");
 
         await completion.Task.WaitAsync(ct).ConfigureAwait(false);
-    }
-
-    public void ClearQueue()
-    {
-        // Vis alle openstaande callbacks uit de wachtrij zodat we met een schone lei beginnen
-        while (SendQueue?.Reader.TryRead(out _) == true)
-        {
-            // No-op: we gooien ze gewoon weg
-        }
-        Logger.LogInformation("Wachtrij succesvol leeggemaakt na verbindingsverlies.");
     }
 
     public async Task Send_Subscribe_ToServerAsync(SubscribeDto message, CancellationToken ct)
