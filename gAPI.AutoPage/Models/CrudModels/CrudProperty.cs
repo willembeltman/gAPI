@@ -28,6 +28,7 @@ public class CrudProperty : ICrudProperty
     public ITypeDigger TypeDigger => DtoProperty.TypeDigger;
     public bool IsNumber => TypeDigger.Type.IsNumber;
     public bool IsDateTime => TypeDigger.Type.IsDateTime;
+    public bool IsDateTimeOffset => TypeDigger.Type.IsDateTimeOffset;
     public bool IsCheckbox => TypeDigger.Type.IsCheckbox;
     public bool IsEnum => TypeDigger.Type.IsEnum;
     public string TypeSimpleName => PropertyType.Name;

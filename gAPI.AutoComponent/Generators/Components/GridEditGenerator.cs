@@ -247,7 +247,7 @@ else
 
         var input = p.IsCheckbox ? "InputCheckbox"
                    : p.IsNumber ? "InputNumber"
-                   : p.IsDateTime ? "InputDate"
+                   : p.IsDateTime || p.IsDateTimeOffset ? "InputDate"
                    : "InputText";
 
         return $@"@if (HideColumnNames.Contains(""{p.Name}"") == false)

@@ -15,6 +15,7 @@ public interface ITypeHelper : ISharedReference
     bool IsCheckbox { get; }
     bool IsEnum { get; }
     bool IsDateTime { get; }
+    bool IsDateTimeOffset { get; }
     bool IsPrimitive { get; }
     bool IsValueType { get; }
     bool IsEntryPoint { get; }

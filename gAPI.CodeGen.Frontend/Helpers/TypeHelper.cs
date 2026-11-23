@@ -31,8 +31,8 @@ public class TypeHelper : ITypeHelper
         if (nullablePrimitive)
         {
             _Name = GetSimpleCsTypeByName(type.Name);
-            IsDateTime = _Name == "DateTime" ||
-                _Name == "DateTimeOffset";
+            IsDateTime = _Name == "DateTime";
+            IsDateTimeOffset = _Name == "DateTimeOffset";
             IsGuid = _Name == "Guid";
             IsCheckbox = _Name == "bool";
             IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
@@ -75,8 +75,8 @@ public class TypeHelper : ITypeHelper
                     IsEnum = type.IsEnum;
                     IsTask = type.Name.StartsWith("Task");
                     IsVoid = type.Name == "void";
-                    IsDateTime = _Name == "DateTime" ||
-                        _Name == "DateTimeOffset";
+                    IsDateTime = _Name == "DateTime";
+                    IsDateTimeOffset = _Name == "DateTimeOffset";
                     IsGuid = _Name == "Guid";
                     IsCheckbox = _Name == "bool";
                     IsNumber = _Name == "int" || _Name == "long" || _Name == "float" || _Name == "double";
@@ -134,6 +134,7 @@ public class TypeHelper : ITypeHelper
     public string _Name { get; }
     public bool IsEnum { get; }
     public bool IsDateTime { get; }
+    public bool IsDateTimeOffset { get; }
     public bool IsGuid { get; }
     public bool IsCheckbox { get; }
     public bool IsArray { get; }

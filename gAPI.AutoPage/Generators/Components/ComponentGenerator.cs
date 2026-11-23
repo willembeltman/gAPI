@@ -364,7 +364,7 @@ public class ComponentGenerator : BaseGenerator
 
     private static string GenerateDisplayForType(string space, string name, string title, ITypeHelper type)
     {
-        if (type.IsString || type.IsNumber || type.IsCheckbox || type.IsDateTime || type.IsEnum || type.IsPrimitive || type.IsValueType)
+        if (type.IsString || type.IsNumber || type.IsCheckbox || type.IsDateTime || type.IsDateTimeOffset || type.IsEnum || type.IsPrimitive || type.IsValueType)
         {
             if (type.GetProperties().Any())
             {

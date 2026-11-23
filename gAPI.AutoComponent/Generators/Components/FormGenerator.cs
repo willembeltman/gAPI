@@ -203,7 +203,7 @@ else
     }}";
         }
 
-        if (p.IsDateTime)
+        if (p.IsDateTime || p.IsDateTimeOffset)
         {
             return $@"
     @if (HideColumnNames.Contains(""{p.Name}"") == false)

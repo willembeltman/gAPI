@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 
 namespace gAPI.AutoWss.Server.Models;
@@ -8,7 +9,7 @@ public class TypeHelper : SharedReference
     public TypeHelper(ServiceContext dataModel, ITypeSymbol typeSymbol, bool isNullable = false)
     {
         Type = typeSymbol;
-        DataModel = dataModel;
+        ServiceContext = dataModel;
         IsNullable = isNullable;
 
         var nullable = "";
@@ -90,13 +91,11 @@ public class TypeHelper : SharedReference
     }
 
     public ITypeSymbol Type { get; }
-    public ServiceContext DataModel { get; }
+    public ServiceContext ServiceContext { get; }
     public bool IsNullable { get; }
     public bool IsGenericType { get; }
     public bool IsReferenceType { get; }
     public bool IsValueType { get; }
-    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
-
     public bool IsTask { get; }
     public bool IsTaskT { get; }
     public bool IsArray { get; }
@@ -107,7 +106,11 @@ public class TypeHelper : SharedReference
     public bool IsBaseResponseT { get; }
     public bool IsBaseListResponseT { get; }
     public bool IsCancellationToken { get; }
+    public string NameInner { get; }
+    private string? NameEnd { get; }
+    public TypeHelper[] UnderlayingTypes { get; }
 
+    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
     public override string Name
     {
         get
@@ -146,11 +149,8 @@ public class TypeHelper : SharedReference
             return [.. list];
         }
     }
-    public string NameInner { get; }
-    private string? NameEnd { get; }
     public string FullNameInner => $"{Namespace}.{NameInner}";
 
-    public TypeHelper[] UnderlayingTypes { get; }
 
     public static string GetSimpleCsTypeByName(string name)
     {

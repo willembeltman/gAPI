@@ -10,6 +10,7 @@ public interface ICrudProperty
     bool IsImmutable { get; }
     bool IsNumber { get; }
     bool IsDateTime { get; }
+    bool IsDateTimeOffset { get; }
     bool IsCheckbox { get; }
     bool IsStorageFileUrlProperty { get; }
     bool IsEnum { get; }

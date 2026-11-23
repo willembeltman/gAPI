@@ -115,8 +115,12 @@ public class TypeHelper : SharedReference
     public bool IsHubResultT { get; }
     public bool IsDateTime { get; }
     public bool IsDateTimeOffset { get; }
-    public bool IsProperty => UnderlayingTypes.Length == 0 || IsValueType || IsArray || IsDateTime || IsDateTimeOffset;
+    public string NameInner { get; }
+    private string? NameEnd { get; }
+    public TypeHelper[] UnderlayingTypes { get; }
 
+    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
+    public bool IsProperty => UnderlayingTypes.Length == 0 || IsValueType || IsArray || IsDateTime || IsDateTimeOffset;
     public override string Name
     {
         get
@@ -155,13 +159,7 @@ public class TypeHelper : SharedReference
             return [.. list];
         }
     }
-    public string NameInner { get; }
-    private string? NameEnd { get; }
     public string FullNameInner => $"{Namespace}.{NameInner}";
-
-    public TypeHelper[] UnderlayingTypes { get; }
-    public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
-
 
     public static string GetSimpleCsTypeByName(string name)
     {

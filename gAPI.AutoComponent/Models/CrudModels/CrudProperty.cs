@@ -22,6 +22,7 @@ public class CrudProperty(CrudType parentType, TypeHelperProperty dtoProperty) :
     public ITypeDigger TypeDigger => DtoProperty.TypeDigger;
     public bool IsNumber => TypeDigger.Type.IsNumber;
     public bool IsDateTime => TypeDigger.Type.IsDateTime;
+    public bool IsDateTimeOffset => TypeDigger.Type.IsDateTimeOffset;
     public bool IsGuid => TypeDigger.Type.IsGuid;
     public bool IsCheckbox => TypeDigger.Type.IsCheckbox;
     public bool IsEnum => TypeDigger.Type.IsEnum;
