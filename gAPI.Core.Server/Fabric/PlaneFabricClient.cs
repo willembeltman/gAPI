@@ -192,6 +192,8 @@ public sealed class PlaneFabricClient
                 {
                     Logger.LogError(ex2, "Gated_ConnectAsync catch");
                 }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
     }

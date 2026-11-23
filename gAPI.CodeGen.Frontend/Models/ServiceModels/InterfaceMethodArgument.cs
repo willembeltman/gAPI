@@ -38,7 +38,7 @@ public class InterfaceMethodArgument : ICrudMethodArgument
     public bool IsStorageFileUrlProperty => throw new NotImplementedException();
     public bool IsKey => throw new NotImplementedException();
     public bool IsName => throw new NotImplementedException();
-    public AutoComponent.Models.ServiceModels.ITypeHelperPropertyAttribute[] GetAttributes()
+    public ITypeHelperPropertyAttribute[] GetAttributes()
     {
         throw new NotImplementedException();
     }

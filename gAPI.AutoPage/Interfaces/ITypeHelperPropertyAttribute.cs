@@ -1,6 +1,4 @@
-﻿using gAPI.AutoPage.Interfaces;
-
-namespace gAPI.AutoPage.Models.ServiceModels
+﻿namespace gAPI.AutoPage.Interfaces
 {
     public interface ITypeHelperPropertyAttribute : ISharedReference
     {

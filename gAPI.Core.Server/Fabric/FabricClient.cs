@@ -209,6 +209,8 @@ public sealed class FabricClient
                 {
                     Logger.LogError(ex2, "Gated_ConnectAsync catch");
                 }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
     }

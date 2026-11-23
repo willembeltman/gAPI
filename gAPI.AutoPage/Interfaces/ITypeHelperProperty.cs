@@ -1,6 +1,4 @@
-﻿using gAPI.AutoPage.Models.ServiceModels;
-
-namespace gAPI.AutoPage.Interfaces;
+﻿namespace gAPI.AutoPage.Interfaces;
 
 public interface ITypeHelperProperty
 {
