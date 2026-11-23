@@ -10,12 +10,11 @@ public class TypeHelper : SharedReference
     {
         Type = typeSymbol;
         ServiceContext = dataModel;
-        IsNullable = isNullable;
 
         var nullable = "";
         var nulleblePrimitive = false;
 
-        // Check of het een Nullable<T> is
+        // 1. Check of het een Nullable<T> (ValueType, zoals int?) is
         while (typeSymbol.OriginalDefinition is INamedTypeSymbol named &&
                named.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
         {
@@ -27,22 +26,29 @@ public class TypeHelper : SharedReference
             else
             {
                 nullable += "?";
+                isNullable = true;
                 typeSymbol = named.TypeArguments[0];
             }
         }
 
+        // 2. Check Roslyn's NullableAnnotation op het typeSymbol zelf (voor Reference Types zoals MyClass?)
+        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            isNullable = true;
+        }
+
+        IsNullable = isNullable;
+
         if (nulleblePrimitive)
         {
             NameInner = typeSymbol.ToDisplayString();
-
             IsDateTime = NameInner == "DateTime";
             IsDateTimeOffset = NameInner == "DateTimeOffset";
-
             UnderlayingTypes = [];
         }
         else
         {
-            if (isNullable && nullable.Length == 0)
+            if (IsNullable && nullable.Length == 0)
                 nullable += "?";
 
             if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol array)
@@ -50,20 +56,32 @@ public class TypeHelper : SharedReference
                 IsArray = true;
                 NameInner = "";
                 NameEnd = "[]" + nullable;
-                UnderlayingTypes = [new TypeHelper(dataModel, array.ElementType)];
+
+                // Check of de elementen in de array nullable zijn (bijv. MyClass?[])
+                var elementNullableAnnotated = array.ElementNullableAnnotation == NullableAnnotation.Annotated;
+                UnderlayingTypes = [new TypeHelper(dataModel, array.ElementType, elementNullableAnnotated)];
             }
             else
             {
                 NameInner = typeSymbol.Name.Split('`').First();
                 NameInner = GetSimpleCsTypeByName(NameInner);
-                NameEnd = nullable;
+                NameEnd = nullable; // Nu bevat 'nullable' wél het vraagteken!
                 Namespace = typeSymbol.ContainingNamespace?.ToDisplayString();
 
                 if (typeSymbol is INamedTypeSymbol namedType)
                 {
-                    IsNullable = IsNullable || namedType.NullableAnnotation.HasFlag(NullableAnnotation.Annotated);
                     IsGenericType = namedType.IsGenericType;
-                    UnderlayingTypes = [.. namedType.TypeArguments.Select(t => new TypeHelper(dataModel, t))];
+
+                    // Combineer TypeArguments met TypeArgumentNullableAnnotations
+                    UnderlayingTypes = namedType.TypeArguments
+                        .Select((t, index) =>
+                        {
+                            var argNullableAnnotation = t.NullableAnnotation == NullableAnnotation.Annotated ||
+                                                (index < namedType.TypeArgumentNullableAnnotations.Length &&
+                                                 namedType.TypeArgumentNullableAnnotations[index] == NullableAnnotation.Annotated);
+                            return new TypeHelper(dataModel, t, argNullableAnnotation);
+                        })
+                        .ToArray();
                 }
                 else
                 {
@@ -73,10 +91,10 @@ public class TypeHelper : SharedReference
                 IsReferenceType = typeSymbol.IsReferenceType;
                 IsValueType = typeSymbol.IsValueType;
 
-
                 IsDateTime = NameInner == "DateTime";
                 IsDateTimeOffset = NameInner == "DateTimeOffset";
                 IsCancellationToken = NameInner == "CancellationToken";
+
                 if (IsGenericType)
                 {
                     IsTaskT = NameInner.StartsWith("Task");
@@ -121,6 +139,7 @@ public class TypeHelper : SharedReference
 
     public bool IsVoid => Type?.SpecialType == SpecialType.System_Void;
     public bool IsProperty => UnderlayingTypes.Length == 0 || IsValueType || IsArray || IsDateTime || IsDateTimeOffset;
+
     public override string Name
     {
         get
@@ -128,10 +147,11 @@ public class TypeHelper : SharedReference
             if (IsArray)
                 return $"{UnderlayingTypes[0].Name}{NameEnd}";
             if (IsGenericType)
-                return $"{NameInner}<{string.Join(",", UnderlayingTypes.Select(a => a.Name))}>{NameEnd}";
+                return $"{NameInner}<{string.Join(", ", UnderlayingTypes.Select(a => a.Name))}>{NameEnd}";
             return $"{NameInner}{NameEnd}";
         }
     }
+
     public override string FullName
     {
         get
@@ -139,9 +159,10 @@ public class TypeHelper : SharedReference
             if (!IsGenericType)
                 return FullNameInner;
             else
-                return $"{FullNameInner}<{string.Join(",", UnderlayingTypes.Select(a => a.FullName))}>";
+                return $"{FullNameInner}<{string.Join(", ", UnderlayingTypes.Select(a => a.FullName))}>";
         }
     }
+
     public string[] Namespaces
     {
         get
@@ -159,6 +180,7 @@ public class TypeHelper : SharedReference
             return [.. list];
         }
     }
+
     public string FullNameInner => $"{Namespace}.{NameInner}";
 
     public static string GetSimpleCsTypeByName(string name)

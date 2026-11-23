@@ -15,7 +15,7 @@ public class InterfaceMethodArgument
 
         IsPassword = parameterSymbol.GetAttributes()
             .Any(a => a.AttributeClass?.Name == "IsPasswordAttribute");
-        IsNullable =
+        IsNullableAnnotation =
             parameterSymbol.NullableAnnotation == NullableAnnotation.Annotated;
 
         IsIFormFile = ParameterSymbol.Type.Name == "IFormFile";
@@ -27,12 +27,12 @@ public class InterfaceMethodArgument
     public IParameterSymbol ParameterSymbol { get; }
     public string Name { get; }
     public bool IsPassword { get; }
-    public bool IsNullable { get; }
+    public bool IsNullableAnnotation { get; }
     public bool IsIFormFile { get; }
     public bool IsValueType { get; }
 
     TypeHelper? ParameterTypeInner { get; set; }
-    public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullable);
+    public TypeHelper ParameterType => ParameterTypeInner ??= new TypeHelper(DataModel, ParameterSymbol.Type, IsNullableAnnotation);
 
     public override string ToString()
     {

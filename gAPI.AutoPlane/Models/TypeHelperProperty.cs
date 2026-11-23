@@ -12,7 +12,7 @@ public class TypeHelperProperty
         Name = propertySymbol.Name;
         ResponseTypeSymbol = propertySymbol.Type;
 
-        IsNullable = propertySymbol.NullableAnnotation == NullableAnnotation.Annotated;
+        NullableAnnotation = propertySymbol.NullableAnnotation == Microsoft.CodeAnalysis.NullableAnnotation.Annotated;
         IsReadOnly = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsReadOnlyAttribute");
         IsForeignName = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsForeignNameAttribute");
         IsStateManaged = propertySymbol.GetAttributes().Any(a => a.AttributeClass?.Name == "IsStateManagedAttribute");
@@ -24,7 +24,7 @@ public class TypeHelperProperty
     public TypeHelper Parent { get; }
     public ITypeSymbol ResponseTypeSymbol { get; }
     public string Name { get; }
-    public bool IsNullable { get; }
+    public bool NullableAnnotation { get; }
     public bool IsReadOnly { get; }
     public bool IsForeignName { get; }
     public bool IsStateManaged { get; }
@@ -33,5 +33,5 @@ public class TypeHelperProperty
     public bool IsStorageFileUrlProperty { get; }
 
     TypeHelper? PropertyTypeInner { get; set; }
-    public TypeHelper PropertyType => PropertyTypeInner ??= new TypeHelper(Parent.ServiceContext, ResponseTypeSymbol, IsNullable);
+    public TypeHelper PropertyType => PropertyTypeInner ??= new TypeHelper(Parent.ServiceContext, ResponseTypeSymbol, NullableAnnotation);
 }

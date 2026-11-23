@@ -177,7 +177,8 @@ public sealed class PlaneFabricClient
             catch (Exception ex)
             {
                 // Is niet bereikbaar, niet loggen
-                //Logger.LogWarning(ex, "Gated_ConnectAsync");
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace(ex, "Gated_ConnectAsync");
 
                 try
                 {

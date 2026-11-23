@@ -80,8 +80,8 @@ public static class BuildRenderTree
 {indent}    ""{node.Name}"", 
 {indent}    (RenderFragment<{specialNode}>)(({(contextAttr)}) => 
 {indent}    (RenderFragment)(__builder{newBuilderIndex} => 
-{indent}{{
-{indent}    var {newSeqVar} = 0;");
+{indent}{{{(node.Nodes.Count == 0 ? "" : $@"
+{indent}    var {newSeqVar} = 0;")}");
             foreach (var child in node.Nodes)
             {
                 ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);
@@ -127,9 +127,9 @@ public static class BuildRenderTree
                 var newBuilderIndex = builderIndex + 1;
                 var newSeqVar = $"seq{newBuilderIndex}";
                 sb.AppendLine($@"
-{indent}__builder{builderIndex}.AddAttribute(seq{builderIndex}++, ""ChildContent"", (RenderFragment<{specialClildContext}>)((_) => (RenderFragment)((__builder{newBuilderIndex}) =>
-{indent}{{
-{indent}    var {newSeqVar} = 0;");
+{indent}__builder{builderIndex}.AddAttribute({seqVar}++, ""ChildContent"", (RenderFragment<{specialClildContext}>)((_) => (RenderFragment)((__builder{newBuilderIndex}) =>
+{indent}{{{(node.Nodes.Count == 0 ? "" : $@"
+{indent}    var {newSeqVar} = 0;")}");
                 foreach (var child in node.Nodes)
                 {
                     ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);
@@ -142,8 +142,8 @@ public static class BuildRenderTree
                 var newSeqVar = $"seq{newBuilderIndex}";
                 sb.AppendLine($@"
 {indent}__builder{builderIndex}.AddAttribute({seqVar}++, ""ChildContent"", (RenderFragment)((__builder{newBuilderIndex}) =>
-{indent}{{
-{indent}    var {newSeqVar} = 0;");
+{indent}{{{(node.Nodes.Count == 0 ? "" : $@"
+{indent}    var {newSeqVar} = 0;")}");
                 foreach (var child in node.Nodes)
                 {
                     ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings);

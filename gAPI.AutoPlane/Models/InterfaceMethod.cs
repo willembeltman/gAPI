@@ -13,10 +13,8 @@ public class InterfaceMethod
 
         Name = methodSymbol.Name;
 
-        IsNullable =
-            methodSymbol.ReturnNullableAnnotation == NullableAnnotation.Annotated;
-
-        ResponseType = new TypeHelper(dataModel, methodSymbol.ReturnType, IsNullable);
+        IsNullableAnnotation = methodSymbol.ReturnNullableAnnotation == NullableAnnotation.Annotated;
+        ResponseType = new TypeHelper(dataModel, methodSymbol.ReturnType, IsNullableAnnotation);
 
         Title = Name;
         var TitleAttribute = methodSymbol.GetAttributes()
@@ -148,7 +146,7 @@ public class InterfaceMethod
     public Interface Interface { get; }
     public IMethodSymbol MethodSymbol { get; }
     public string Name { get; }
-    public bool IsNullable { get; }
+    public bool IsNullableAnnotation { get; }
     public TypeHelper ResponseType { get; }
     public string Title { get; }
     public InterfaceMethodArgument[] Arguments { get; }

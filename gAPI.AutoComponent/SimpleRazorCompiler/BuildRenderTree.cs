@@ -16,7 +16,8 @@ public static class BuildRenderTree
         var sb = new StringBuilder();
         sb.AppendLine($"        protected override void BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder{builderIndex})");
         sb.AppendLine("        {");
-        sb.AppendLine("            var seq0 = 0;");
+        if (structure.Nodes.Count > 0)
+            sb.AppendLine("            var seq0 = 0;");
         foreach (var node in structure.Nodes)
         {
             ProcessNode(node, sb, "            ", builderIndex, AllComponents, usings, injects);
@@ -128,8 +129,8 @@ public static class BuildRenderTree
                 var newSeqVar = $"seq{newBuilderIndex}";
                 sb.AppendLine($@"
 {indent}__builder{builderIndex}.AddAttribute(seq{builderIndex}++, ""ChildContent"", (RenderFragment<{specialClildContext}>)((_) => (RenderFragment)((__builder{newBuilderIndex}) =>
-{indent}{{
-{indent}    var {newSeqVar} = 0;");
+{indent}{{{(node.Nodes.Count == 0 ? "" : $@"
+{indent}    var {newSeqVar} = 0;")}");
                 foreach (var child in node.Nodes)
                 {
                     ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings, injects);
@@ -142,8 +143,8 @@ public static class BuildRenderTree
                 var newSeqVar = $"seq{newBuilderIndex}";
                 sb.AppendLine($@"
 {indent}__builder{builderIndex}.AddAttribute({seqVar}++, ""ChildContent"", (RenderFragment)((__builder{newBuilderIndex}) =>
-{indent}{{
-{indent}    var {newSeqVar} = 0;");
+{indent}{{{(node.Nodes.Count == 0 ? "" : $@"
+{indent}    var {newSeqVar} = 0;")}");
                 foreach (var child in node.Nodes)
                 {
                     ProcessNode(child, sb, indent + "    ", newBuilderIndex, assemblyControls, usings, injects);
