@@ -149,7 +149,7 @@ public static class PrimitivesSpanSerializer
         var byteCount = ReadInt32(span, ref offset);
 
         // Harde cap op 1gb
-        if (byteCount > 1024 * 1024 * 1024)
+        if (byteCount > 1024 * 1024 * 1024 || byteCount > maxBufferSize)
             throw new Exception("Array too big to send");
 
         var res = span.Slice(offset, byteCount).ToArray();
@@ -165,7 +165,7 @@ public static class PrimitivesSpanSerializer
             throw new Exception("Array too big to send");
 
         WriteInt32(ref span, ref offset, byteCount);
-        value.CopyTo(span.Slice(offset, byteCount));
+        value.CopyTo(span.Slice(offset, byteCount)); // deze regel
         offset += byteCount;
     }
     public static void LengthByteArray(ref int offset, byte[] value)
@@ -185,7 +185,7 @@ public static class PrimitivesSpanSerializer
         var byteCount = ReadInt32(span, ref offset);
 
         // Harde cap op 1gb
-        if (byteCount > 1024 * 1024 * 1024)
+        if (byteCount > 1024 * 1024 * 1024 || byteCount > maxBufferSize)
             throw new Exception("Array too big to send");
 
         var res = new ReadOnlyMemory<byte>(span.Slice(offset, byteCount).ToArray());
