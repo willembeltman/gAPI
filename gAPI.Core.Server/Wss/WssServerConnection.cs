@@ -446,15 +446,31 @@ public abstract class WssServerConnection : IServerConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_Unsubscribe_FromClientAsync({serviceId}, {sessionId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.ServiceId, message.SessionId);
 
-        var connections = ConnectedServiceSubscriptions.GetOrAdd(
-            message.ServiceId,
-            a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
-        if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
+        var completion = new TaskCompletionSource<UnsubscribeAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.UnsubscribeTcss.TryAdd(message.ServiceSubscriptionId, completion) == false)
         {
-            Logger.LogError("Cannot remove subscription");
+            Logger.LogError("Cannot add completion");
             return;
         }
-        await subscription.DisposeAsync(); // Dit stuurt de unregister
+
+        try
+        {
+            var connections = ConnectedServiceSubscriptions.GetOrAdd(
+            message.ServiceId,
+            a => new ConcurrentDictionary<ServiceSubscriptionId, WssServiceSubscription>());
+            if (connections.TryRemove(message.ServiceSubscriptionId, out var subscription) == false)
+            {
+                Logger.LogError("Cannot remove subscription");
+                return;
+            }
+            await subscription.DisposeAsync(); // Dit stuurt de unregister
+
+            var ack = await completion.Task.WaitAsync(connectionLifecycleCt);
+        }
+        finally
+        {
+            StreamingCache.UnsubscribeTcss.TryRemove(message.ServiceSubscriptionId, out _);
+        }
     }
 
     private async Task Receive_SendAndForgetRequest_FromClientAsync(SendRequestClientDto message, CancellationToken connectionLifecycleCt)
@@ -644,7 +660,7 @@ public abstract class WssServerConnection : IServerConnection
                 message.Routing,
                 -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
                 enumerable,
-                ct);
+                timeoutCts);
 
             // Register dispose 
             timeoutCts.RegisterDispose(async () =>
@@ -658,6 +674,7 @@ public abstract class WssServerConnection : IServerConnection
             await Sender.Send_InvokeRequestAck_ToClientAsync(
                 new InvokeRequestAckClientDto(
                     message.Routing,
+                    true,
                     false,
                     null,
                     stateIsChanged,
@@ -969,15 +986,15 @@ public abstract class WssServerConnection : IServerConnection
     }
     public async Task Send_UnsubscribeAck_ToClientAsync(UnsubscribeAckDto message, CancellationToken ct)
     {
-        //if (StreamingCache.UnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
-        //{
-        //    if (message.Cancelled)
-        //        completion.SetCanceled(ct);
-        //    else if (message.ExceptionMessage != null)
-        //        completion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
-        //    else
-        //        completion.TrySetResult(message);
-        //}
+        if (StreamingCache.UnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
+        {
+            if (message.Cancelled)
+                completion.SetCanceled(ct);
+            else if (message.Exception != null)
+                completion.SetException(new RemoteException(message.Exception));
+            else
+                completion.TrySetResult(message);
+        }
 
         await Sender.Send_UnsubscribeAck_ToClientAsync(message, ct);
     }
@@ -994,10 +1011,10 @@ public abstract class WssServerConnection : IServerConnection
 
     #region Calls vanuit gegenereerde code
 
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose cancellationToken)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
+            Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
         if (StreamingCache.StreamingRequestHandlers.TryAdd(
             new(routing.RequestId, argumentIndex),
@@ -1008,11 +1025,10 @@ public abstract class WssServerConnection : IServerConnection
                         streamId,
                         _ =>
                         {
-                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                             return new AsyncEnumerableRegistrationInstance<byte[]>(
-                                source.GetAsyncEnumerator(linked.Token),
+                                source.GetAsyncEnumerator(cancellationToken.Token),
                                 new SemaphoreSlim(1, 1),
-                                linked);
+                                cancellationToken);
                         });
 
                     async Task Cleanup()

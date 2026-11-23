@@ -611,7 +611,7 @@ public sealed class BusFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusSendRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.PendingBusSendRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingBusSendRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -641,6 +641,7 @@ public sealed class BusFabricClient
             await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
                 new BusInvokeRequestAckDto(
                     message.Routing, 
+                    true,
                     false,
                     null),
                 ct);
@@ -682,7 +683,7 @@ public sealed class BusFabricClient
         if (StreamingCache.BusReceivedTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingBusInvokeRequestAcks.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -700,14 +701,14 @@ public sealed class BusFabricClient
         if (StreamingCache.BusReceivedTimeouts.TryRemove(message.Routing.RequestId, out var handler))
             handler.Dispose();
 
-        if (StreamingCache.PendingBusInvokeRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingBusInvokeRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.SetCanceled(); // hij zit te wachten op beginnen met streamen, maar request is al done. Dus error?! Iig out-of-sync
+                completion.SetResult(message); // hij zit te wachten op beginnen met streamen, maar request is al done. Dus error?! Iig out-of-sync
         }
     }
 
@@ -1044,7 +1045,7 @@ public sealed class BusFabricClient
         var ct = timeoutCts.Token;
 
         var completion = new TaskCompletionSource<BusSendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingBusSendRequests.TryAdd(request.Routing, completion) == false)
+        if (StreamingCache.PendingBusSendRequestDones.TryAdd(request.Routing, completion) == false)
         {
             Logger.LogError("Cannot add completion");
             throw new Exception("Cannot add completion");
@@ -1052,7 +1053,7 @@ public sealed class BusFabricClient
 
         timeoutCts.RegisterDispose(async () =>
         {
-            StreamingCache.PendingBusSendRequests.TryRemove(request.Routing, out _);
+            StreamingCache.PendingBusSendRequestDones.TryRemove(request.Routing, out _);
         });
 
         await Sender.Send_BusSendRequest_ToFabricAsync(request, ct);
@@ -1073,7 +1074,14 @@ public sealed class BusFabricClient
         var ct = timeoutCts.Token;
 
         var completion = new TaskCompletionSource<BusInvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingBusInvokeRequests.TryAdd(request.Routing, completion) == false)
+        if (StreamingCache.PendingBusInvokeRequestAcks.TryAdd(request.Routing, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            throw new Exception("Cannot add completion");
+        }
+
+        var completion2 = new TaskCompletionSource<BusInvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.PendingBusInvokeRequestDones.TryAdd(request.Routing, completion2) == false)
         {
             Logger.LogError("Cannot add completion");
             throw new Exception("Cannot add completion");
@@ -1091,16 +1099,22 @@ public sealed class BusFabricClient
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
 
+            if (response.EnumeratorCreated == false)
+                yield break;
+
             var enumerable = RegisterBusRemoteAsyncEnumerableArgumentByte(request.Routing, -1, timeoutCts);
             await foreach (var item in enumerable)
             {
                 timeoutCts.CancelAfter(request.Routing.Timeout);
                 yield return item;
             }
+
+            var response2 = await completion2.Task.WaitAsync(request.Routing.Timeout, ct);
         }
         finally
         {
-            StreamingCache.PendingBusInvokeRequests.TryRemove(request.Routing, out _);
+            StreamingCache.PendingBusInvokeRequestAcks.TryRemove(request.Routing, out _);
+            StreamingCache.PendingBusInvokeRequestDones.TryRemove(request.Routing, out _);
         }
     }
 

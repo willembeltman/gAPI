@@ -616,7 +616,7 @@ public sealed class PlaneFabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_PlaneSendRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.PendingPlaneSendRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingPlaneSendRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -646,6 +646,7 @@ public sealed class PlaneFabricClient
             await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
                 new PlaneInvokeRequestAckDto(
                     message.Routing,
+                    true,
                     false,
                     null),
                 ct);
@@ -687,7 +688,7 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PlaneReceivedTimeouts.TryGetValue(message.Routing.RequestId, out var timeout))
             timeout.CancelAfter(message.Routing.Timeout);
 
-        if (StreamingCache.PendingPlaneInvokeRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingPlaneInvokeRequestAcks.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -705,14 +706,14 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PlaneReceivedTimeouts.TryRemove(message.Routing.RequestId, out var handler))
             handler.Dispose();
 
-        if (StreamingCache.PendingPlaneInvokeRequests.TryRemove(message.Routing, out var completion))
+        if (StreamingCache.PendingPlaneInvokeRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.SetCanceled(); // hij zit te wachten op beginnen met streamen, maar request is al done. Dus error?! Iig out-of-sync
+                completion.SetResult(message);
         }
     }
 
@@ -736,14 +737,6 @@ public sealed class PlaneFabricClient
             Logger.LogError("cannot find timeout");
 
         var ct = timeoutCts?.Token ?? connectionLifecycleCt;
-
-        if (ct.IsCancellationRequested)
-        {
-            Logger.LogError("Receive_PlaneStreamingRequest_FromFabricAsync CANCELLATION IS REQUESTED {timeout}, {timeout2}", timeout != null, timeout2 != null);
-
-        }
-
-
         if (!ct.IsCancellationRequested && StreamingCache.PlaneStreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
             try
@@ -753,7 +746,7 @@ public sealed class PlaneFabricClient
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Receive_PlaneStreamingRequest_FromFabricAsync({message})", message);
+                Logger.LogError(ex, "Receive_PlaneStreamingRequest_FromFabricAsync INVOKE({message})", message);
             }
         }
         else
@@ -765,7 +758,7 @@ public sealed class PlaneFabricClient
                     message.StreamId,
                     true,
                     false,
-                    new ExceptionDto("No StreamingRequestHandlers found", null, Environment.StackTrace),
+                    new ExceptionDto("The task was cancelled", null, Environment.StackTrace),
                     []),
                 ct);
         }
@@ -1056,7 +1049,7 @@ public sealed class PlaneFabricClient
         var ct = timeoutCts.Token;
 
         var completion = new TaskCompletionSource<PlaneSendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingPlaneSendRequests.TryAdd(request.Routing, completion) == false)
+        if (StreamingCache.PendingPlaneSendRequestDones.TryAdd(request.Routing, completion) == false)
         {
             Logger.LogError("Cannot add completion");
             throw new Exception("Cannot add completion");
@@ -1064,7 +1057,7 @@ public sealed class PlaneFabricClient
 
         timeoutCts.RegisterDispose(async () =>
         {
-            StreamingCache.PendingPlaneSendRequests.TryRemove(request.Routing, out _);
+            StreamingCache.PendingPlaneSendRequestDones.TryRemove(request.Routing, out _);
         });
 
         await Sender.Send_PlaneSendRequest_ToFabricAsync(request, ct);
@@ -1083,7 +1076,14 @@ public sealed class PlaneFabricClient
     public async IAsyncEnumerable<byte[]> InvokeAsync(IBasePlaneConnection basePlaneConnection, PlaneInvokeRequestDto request, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {
         var completion = new TaskCompletionSource<PlaneInvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingPlaneInvokeRequests.TryAdd(request.Routing, completion) == false)
+        if (StreamingCache.PendingPlaneInvokeRequestAcks.TryAdd(request.Routing, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            throw new Exception("Cannot add completion");
+        }
+
+        var completion2 = new TaskCompletionSource<PlaneInvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.PendingPlaneInvokeRequestDones.TryAdd(request.Routing, completion2) == false)
         {
             Logger.LogError("Cannot add completion");
             throw new Exception("Cannot add completion");
@@ -1101,16 +1101,22 @@ public sealed class PlaneFabricClient
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
 
+            if (response.EnumeratorCreated == false)
+                yield break;
+
             var enumerable = RegisterPlaneRemoteAsyncEnumerableArgumentByte(request.Routing, -1, timeoutCts);
             await foreach (var item in enumerable)
             {
                 timeoutCts.CancelAfter(request.Routing.Timeout);
                 yield return item;
             }
+
+            var response2 = await completion2.Task.WaitAsync(request.Routing.Timeout, ct);
         }
         finally
         {
-            StreamingCache.PendingPlaneInvokeRequests.TryRemove(request.Routing, out _);
+            StreamingCache.PendingPlaneInvokeRequestAcks.TryRemove(request.Routing, out _);
+            StreamingCache.PendingPlaneInvokeRequestDones.TryRemove(request.Routing, out _);
         }
     }
 

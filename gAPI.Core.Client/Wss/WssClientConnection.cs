@@ -34,7 +34,8 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
     readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
-    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequests = [];
+    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequestAcks = [];
+    readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneClientDto>> PendingInvokeRequestDones = [];
     readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> IncomingTimeouts = [];
     readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> OutgoingTimeouts = [];
     readonly byte[] ReceiveBuffer;
@@ -819,6 +820,7 @@ public abstract class WssClientConnection : IWssClientConnection
             await Sender.Send_InvokeRequestAck_ToServerAsync(
                 new InvokeRequestAckClientDto(
                     message.Routing,
+                    true,
                     false,
                     null,
                     stateIsChanged,
@@ -859,23 +861,24 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         var ct = cts?.Token ?? connectionLifecycleCt;
 
-        var stateIsChanged = HttpClient.IsStateDataChanged();
-        var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-        await Sender.Send_InvokeRequestAck_ToServerAsync(
-            new InvokeRequestAckClientDto(
-                message.Routing,
-                false,
-                null,
-                stateIsChanged,
-                stateData
-            ), ct);
+        //var stateIsChanged = HttpClient.IsStateDataChanged();
+        //var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
+        //await Sender.Send_InvokeRequestAck_ToServerAsync(
+        //    new InvokeRequestAckClientDto(
+        //        message.Routing,
+        //        true,
+        //        false,
+        //        null,
+        //        stateIsChanged,
+        //        stateData
+        //    ), ct);
     }
     private void Received_InvokeRequestAck_FromServerAsync(InvokeRequestAckClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_InvokeRequestAck_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
+        if (PendingInvokeRequestAcks.TryRemove(message.Routing.RequestId, out var channel))
         {
             if (message.Cancelled)
                 channel.SetCanceled();
@@ -890,20 +893,14 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now}: Received_InvokeRequestDone_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (PendingInvokeRequests.TryRemove(message.Routing.RequestId, out var channel))
+        if (PendingInvokeRequestDones.TryRemove(message.Routing.RequestId, out var channel))
         {
             if (message.Cancelled)
                 channel.SetCanceled();
             else if (message.Exception != null)
                 channel.SetException(new RemoteException(message.Exception));
             else
-                channel.SetResult(
-                    new InvokeRequestAckClientDto(
-                        message.Routing,
-                        false,
-                        null,
-                        message.StateIsChanged,
-                        message.StateData));
+                channel.SetResult(message);
         }
 
         if (StreamingRequestHandlers.TryRemove(new(message.Routing.RequestId, -1), out var handler))
@@ -1096,7 +1093,13 @@ public abstract class WssClientConnection : IWssClientConnection
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServerAsync(RoutingDto routing, byte[] data, CancellationTokenSourceDispose timeoutCts, [EnumeratorCancellation] CancellationToken ct)
     {
         var completion = new TaskCompletionSource<InvokeRequestAckClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (PendingInvokeRequests.TryAdd(routing.RequestId, completion) == false)
+        if (PendingInvokeRequestAcks.TryAdd(routing.RequestId, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            throw new Exception("Cannot add requestid");
+        }
+        var completion2 = new TaskCompletionSource<InvokeRequestDoneClientDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (PendingInvokeRequestDones.TryAdd(routing.RequestId, completion2) == false)
         {
             Logger.LogError("Cannot add completion");
             throw new Exception("Cannot add requestid");
@@ -1115,7 +1118,7 @@ public abstract class WssClientConnection : IWssClientConnection
             {
                 var invokeCancelled = new InvokeRequestCancelledClientDto(routing, "Task is cancelled", false, null);
                 await Sender.Send_InvokeRequestCancelled_ToServerAsync(invokeCancelled, ct);
-                PendingInvokeRequests.TryRemove(routing.RequestId, out _);
+                PendingInvokeRequestAcks.TryRemove(routing.RequestId, out _);
             });
 
             var response = await completion.Task.WaitAsync(routing.Timeout, ct);
@@ -1124,15 +1127,24 @@ public abstract class WssClientConnection : IWssClientConnection
                     response.StateData,
                     ct);
 
+            if (response.EnumeratorCreated == false)
+                yield break; 
+
             var list = RegisterRemoteAsyncEnumerableArgumentByte(routing, -1, timeoutCts);
             await foreach (var item in list)
             {
                 yield return item;
             }
+
+            var response2 = await completion2.Task.WaitAsync(routing.Timeout, ct);
+            if (response2.StateIsChanged)
+                await HttpClient.UpdateStateDataAsync(
+                    response.StateData,
+                    ct);
         }
         finally
         {
-            PendingInvokeRequests.TryRemove(routing.RequestId, out _);
+            PendingInvokeRequestAcks.TryRemove(routing.RequestId, out _);
         }
     }
 
@@ -1342,7 +1354,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 ct.IsCancellationRequested ||
                 timeoutCts.IsCancellationRequested)
             {
-                Logger.LogError(ex, "Cancelled");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgument Cancelled");
 
                 await Cleanup();
 
@@ -1362,7 +1374,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgument exception");
 
                 await Cleanup();
 
@@ -1455,7 +1467,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 ct.IsCancellationRequested ||
                 timeoutCts.IsCancellationRequested)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgument cancelled");
 
                 await Cleanup();
 
@@ -1475,7 +1487,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgument exception");
 
                 await Cleanup();
 

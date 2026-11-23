@@ -182,13 +182,13 @@ public sealed class FabricClient
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "Gated_ConnectAsync");
+                        Logger.LogError(ex, "Gated_ConnectAsync exception 1");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "Gated_ConnectAsync exception 2");
 
                 try
                 {
@@ -736,7 +736,7 @@ public sealed class FabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_SendRequestDone_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.PendingFabricSendRequests.TryRemove(message.Routing.RequestId, out var completion))
+        if (StreamingCache.PendingFabricSendRequestDones.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -775,6 +775,7 @@ public sealed class FabricClient
                     new InvokeRequestAckDto(
                         message.Routing,
                         false,
+                        false,
                         new ExceptionDto("No receivers found", null, null)),
                     ct);
             }
@@ -783,6 +784,7 @@ public sealed class FabricClient
                 await Sender.Send_InvokeRequestAck_ToFabricAsync(
                     new InvokeRequestAckDto(
                         message.Routing,
+                        false,
                         false,
                         null),
                     ct);
@@ -809,7 +811,7 @@ public sealed class FabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+        if (StreamingCache.PendingFabricInvokeRequestAcks.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -824,7 +826,7 @@ public sealed class FabricClient
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_InvokeRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
-        if (StreamingCache.PendingFabricInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+        if (StreamingCache.PendingFabricInvokeRequestDones.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled();
@@ -953,7 +955,7 @@ public sealed class FabricClient
 
     public async Task Handle_FabricInvokeRequestAck_FromClientAsync(InvokeRequestAckDto message, CancellationToken connectionLifecycleCt)
     {
-        if (StreamingCache.PendingClientInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+        if (StreamingCache.PendingClientInvokeRequestAcks.TryRemove(message.Routing.RequestId, out var completion))
         {
             // Ik heb er hard over na gedacht en deze moet dus blijven. Als er geen fabric wordt gebruikt, blijven
             // we gewoon de fabric callbacks naar de client gebruiken, deze worden in de PendingClientSendRequests
@@ -976,7 +978,7 @@ public sealed class FabricClient
     }
     public async Task Handle_FabricInvokeRequestDone_FromClientAsync(InvokeRequestDoneDto message, CancellationToken ct)
     {
-        if (StreamingCache.PendingClientInvokeRequests.TryRemove(message.Routing.RequestId, out var completion))
+        if (StreamingCache.PendingClientInvokeRequestDones.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
                 completion.SetCanceled(ct);
@@ -1125,7 +1127,7 @@ public sealed class FabricClient
         StreamingCache.FabricSenderTimeouts.TryRemove(routing.RequestId, out _);
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationToken cancellationToken)
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cancellationToken)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1139,11 +1141,10 @@ public sealed class FabricClient
                         streamId,
                         _ =>
                         {
-                            var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ct);
                             return new AsyncEnumerableRegistrationInstance<T>(
-                                source.GetAsyncEnumerator(linked.Token),
+                                source.GetAsyncEnumerator(cancellationToken.Token),
                                 new SemaphoreSlim(1, 1),
-                                linked);
+                                cancellationToken);
                         });
 
                     var entered = false;
@@ -1177,7 +1178,7 @@ public sealed class FabricClient
                         ct.IsCancellationRequested ||
                         cancellationToken.IsCancellationRequested)
                     {
-                        Logger.LogError(ex, "Cancelled");
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument Cancelled");
 
                         await Cleanup();
                         return new StreamingResponseDto(
@@ -1191,7 +1192,7 @@ public sealed class FabricClient
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument Exception");
 
                         await Cleanup();
                         return new StreamingResponseDto(
@@ -1370,7 +1371,7 @@ public sealed class FabricClient
     {
         var ct = timeoutCts.Token;
         var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingFabricSendRequests.TryAdd(request.Routing.RequestId, completion) == false)
+        if (StreamingCache.PendingFabricSendRequestDones.TryAdd(request.Routing.RequestId, completion) == false)
         {
             Logger.LogError("Cannot add cache");
             return;
@@ -1400,7 +1401,7 @@ public sealed class FabricClient
         }
         finally
         {
-            StreamingCache.PendingFabricSendRequests.TryRemove(request.Routing.RequestId, out _);
+            StreamingCache.PendingFabricSendRequestDones.TryRemove(request.Routing.RequestId, out _);
         }
     }
     private async Task Handle_SendRequest_ToClient_Async(SendRequestDto request, CancellationTokenSourceDispose timeoutCts)
@@ -1451,7 +1452,14 @@ public sealed class FabricClient
     {
         var ct = timeoutCts.Token;
         var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (StreamingCache.PendingFabricInvokeRequests.TryAdd(request.Routing.RequestId, completion) == false)
+        if (StreamingCache.PendingFabricInvokeRequestAcks.TryAdd(request.Routing.RequestId, completion) == false)
+        {
+            Logger.LogError("Cannot add completion");
+            yield break;
+        }
+
+        var completion2 = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (StreamingCache.PendingFabricInvokeRequestDones.TryAdd(request.Routing.RequestId, completion2) == false)
         {
             Logger.LogError("Cannot add completion");
             yield break;
@@ -1468,6 +1476,9 @@ public sealed class FabricClient
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
 
+            if (response.EnumeratorCreated == false)
+                yield break;
+
             timeoutCts.CancelAfter(request.Routing.Timeout);
 
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1, timeoutCts);
@@ -1480,10 +1491,13 @@ public sealed class FabricClient
 
                 yield return item;
             }
+
+            var response2 = await completion2.Task.WaitAsync(request.Routing.Timeout, ct);
         }
         finally
         {
-            StreamingCache.PendingFabricInvokeRequests.TryRemove(request.Routing.RequestId, out _);
+            StreamingCache.PendingFabricInvokeRequestAcks.TryRemove(request.Routing.RequestId, out _);
+            StreamingCache.PendingFabricInvokeRequestDones.TryRemove(request.Routing.RequestId, out _);
         }
     }
     private async IAsyncEnumerable<byte[]> Handle_FabricInvokeRequest_ToClientAsync(InvokeRequestDto request, CancellationTokenSourceDispose timeoutCts)
@@ -1493,7 +1507,13 @@ public sealed class FabricClient
         foreach (var sseServiceSubscription in sseServiceSubscriptions)
         {
             var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (StreamingCache.PendingClientInvokeRequests.TryAdd(request.Routing.RequestId, completion) == false)
+            if (StreamingCache.PendingClientInvokeRequestAcks.TryAdd(request.Routing.RequestId, completion) == false)
+            {
+                Logger.LogError("Cannot add completion");
+                continue;
+            }
+            var completion2 = new TaskCompletionSource<InvokeRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (StreamingCache.PendingClientInvokeRequestDones.TryAdd(request.Routing.RequestId, completion2) == false)
             {
                 Logger.LogError("Cannot add completion");
                 continue;
@@ -1514,10 +1534,13 @@ public sealed class FabricClient
                 {
                     yield return item;
                 }
+
+                var response2 = await completion2.Task.WaitAsync(request.Routing.Timeout, ct);
             }
             finally
             {
-                StreamingCache.PendingClientInvokeRequests.TryRemove(request.Routing.RequestId, out _);
+                StreamingCache.PendingClientInvokeRequestAcks.TryRemove(request.Routing.RequestId, out _);
+                StreamingCache.PendingClientInvokeRequestDones.TryRemove(request.Routing.RequestId, out _);
             }
         }
     }

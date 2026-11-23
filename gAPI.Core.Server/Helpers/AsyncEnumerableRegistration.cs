@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using System.Collections.Concurrent;
 
@@ -8,7 +9,7 @@ namespace gAPI.Core.Server.Helpers;
 public record AsyncEnumerableRegistrationInstance<T>(
     IAsyncEnumerator<T> enumerator,
     SemaphoreSlim gate,
-    CancellationTokenSource linkedCts)
+    CancellationTokenSourceDispose timeoutCts)
 {
     public bool IsDisposed { get; private set; }
 
@@ -20,7 +21,7 @@ public record AsyncEnumerableRegistrationInstance<T>(
     {
         try
         {
-            linkedCts.Cancel();
+            timeoutCts.Cancel();
         }
         catch (ObjectDisposedException)
         {
@@ -41,7 +42,7 @@ public record AsyncEnumerableRegistrationInstance<T>(
             }
             finally
             {
-                linkedCts.Dispose();
+                timeoutCts.Dispose();
             }
         }
         finally

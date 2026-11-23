@@ -361,12 +361,22 @@ public class FabricManager : IDashboardSnapshotGetter
 
             if (fabricHosts.Count == 0)
             {
-                await caller.Send_SendRequestDone_ToApiAsync(
-                    new SendRequestDoneDto(
-                        request.Routing,
-                        false,
-                        new ExceptionDto($"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
-                    actor);
+                if (request.Routing.ThrowIfNoReceiver)
+                    await caller.Send_InvokeRequestAck_ToApiAsync(
+                        new InvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            new ExceptionDto($"No fabric connections found with userId {request.Routing.UserId} or sessionId {request.Routing.SessionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
+                        actor);
+                else
+                    await caller.Send_InvokeRequestAck_ToApiAsync(
+                        new InvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            null),
+                        actor);
                 return;
             }
 
@@ -472,6 +482,7 @@ public class FabricManager : IDashboardSnapshotGetter
         await state.Caller.Send_InvokeRequestAck_ToApiAsync(
             new InvokeRequestAckDto(
                 state.Routing,
+                true,
                 false,
                 null
             ), state.Actor);
@@ -810,13 +821,24 @@ public class FabricManager : IDashboardSnapshotGetter
 
             (var fabricHosts, var actor) = ResolveBusTargets(request.Routing, receiveSize);
 
-            if (fabricHosts.Length == 0 && request.Routing.ThrowIfNoReceiver)
+            if (fabricHosts.Length == 0)
             {
-                await caller.Send_BusInvokeRequestDone_ToApiAsync(
-                    new BusInvokeRequestDoneDto(
-                        request.Routing,
-                        false, new ExceptionDto($"No fabric connections found with To {request.Routing.To} or ToBusConnection {request.Routing.ToBusConnection}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
-                    actor);
+                if (request.Routing.ThrowIfNoReceiver)
+                    await caller.Send_BusInvokeRequestAck_ToApiAsync(
+                        new BusInvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            new ExceptionDto($"No fabric connections found with To {request.Routing.To} or ToBusConnection {request.Routing.ToBusConnection}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
+                            actor);
+                else
+                    await caller.Send_BusInvokeRequestAck_ToApiAsync(
+                        new BusInvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            null),
+                        actor);
                 return;
             }
 
@@ -940,6 +962,7 @@ public class FabricManager : IDashboardSnapshotGetter
         await state.Caller.Send_BusInvokeRequestAck_ToApiAsync(
             new BusInvokeRequestAckDto(
                 state.Routing,
+                true,
                 false,
                 null
             ), state.Actor);
@@ -1255,14 +1278,24 @@ public class FabricManager : IDashboardSnapshotGetter
 
             (var fabricHosts, var actor) = ResolvePlaneTargets(request.Routing, receiveSize);
 
-            if (fabricHosts.Length == 0 && request.Routing.ThrowIfNoReceiver)
+            if (fabricHosts.Length == 0)
             {
-                await caller.Send_PlaneInvokeRequestDone_ToApiAsync(
-                    new PlaneInvokeRequestDoneDto(
-                        request.Routing,
-                        false,
-                        new ExceptionDto($"No fabric connections found with To {request.Routing.To} or ToPlaneConnection {request.Routing.ToPlaneConnectionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
-                    actor);
+                if (request.Routing.ThrowIfNoReceiver)
+                    await caller.Send_PlaneInvokeRequestAck_ToApiAsync(
+                        new PlaneInvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            new ExceptionDto($"No fabric connections found with ToServiceSubscriptionId {request.Routing.ToServiceSubscriptionId}, service: {request.Routing.ServiceId} method: {request.Routing.MethodId}", null, Environment.StackTrace)),
+                        actor);
+                else
+                    await caller.Send_PlaneInvokeRequestAck_ToApiAsync(
+                        new PlaneInvokeRequestAckDto(
+                            request.Routing,
+                            false,
+                            false,
+                            null),
+                        actor);
                 return;
             }
 
@@ -1386,6 +1419,7 @@ public class FabricManager : IDashboardSnapshotGetter
         await state.Caller.Send_PlaneInvokeRequestAck_ToApiAsync(
             new PlaneInvokeRequestAckDto(
                 state.Routing,
+                true,
                 false,
                 null
             ), state.Actor);

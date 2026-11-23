@@ -350,6 +350,7 @@ public class SseClientSubscription : IDisposable
                 await Sender.Send_InvokeRequestAck_ToServerAsync(
                     new InvokeRequestAckClientDto(
                         message.Routing,
+                        true,
                         false,
                         null,
                         stateIsChanged,
@@ -729,7 +730,7 @@ public class SseClientSubscription : IDisposable
                         ct.IsCancellationRequested ||
                         timeoutCts.IsCancellationRequested)
                     {
-                        Logger.LogError(ex, "Cancelled");
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument Cancelled");
 
                         await Cleanup();
 
@@ -749,7 +750,7 @@ public class SseClientSubscription : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                        Logger.LogError(ex, "RegisterAsyncEnumerableArgument exception");
 
                         await Cleanup();
 
@@ -777,7 +778,7 @@ public class SseClientSubscription : IDisposable
     public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
+            Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
 
         StreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new AsyncEnumerableRegistration<byte[]>(async (
             ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<byte[]>> activeStreams,
@@ -842,7 +843,7 @@ public class SseClientSubscription : IDisposable
                 ct.IsCancellationRequested ||
                 timeoutCts.IsCancellationRequested)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgumentByte cancelled");
 
                 await Cleanup();
 
@@ -862,7 +863,7 @@ public class SseClientSubscription : IDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
+                Logger.LogError(ex, "RegisterAsyncEnumerableArgumentByte exception");
 
                 await Cleanup();
 
