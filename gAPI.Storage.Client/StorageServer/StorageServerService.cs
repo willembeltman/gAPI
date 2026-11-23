@@ -85,7 +85,7 @@ public class StorageServerService(
             AllowOverwrite = allowOverwrite
         };
 
-        var enumerableStream = ReadStreamAsAsyncEnumerable(stream, config.MaxPackageSize ?? 64 * 1024, ct);
+        var enumerableStream = ReadStreamAsAsyncEnumerable(stream, config.MaxPackageSize ?? 512 * 1024, ct);
         var model = await gapiStorageService.SaveStorageFile(saveRequest, enumerableStream, ct);
 
         UrlCache[key] = new StorageFileCacheValue(model.Url, dateTime.GetUtcNow());
@@ -130,7 +130,7 @@ public class StorageServerService(
             AllowCreate = allowCreate
         };
 
-        var enumerableStream = ReadStreamAsAsyncEnumerable(stream, config.MaxPackageSize ?? 64 * 1024, ct);
+        var enumerableStream = ReadStreamAsAsyncEnumerable(stream, config.MaxPackageSize ?? 512 * 1024, ct);
         var model = await gapiStorageService.AppendStorageFile(saveRequest, enumerableStream, ct);
 
         UrlCache[key] = new StorageFileCacheValue(model.Url, dateTime.GetUtcNow());
