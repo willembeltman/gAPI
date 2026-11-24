@@ -413,7 +413,7 @@ public sealed class BusFabricClient
                         break;
                     case BusFabricHostToClientMessageEnum.BusSendRequestDone:
                         var busSendRequestAck = binaryReader.ReadBusSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_BusSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
+                        Receive_BusSendRequestDone_FromFabricAsync(busSendRequestAck, ct);
                         break;
 
                     case BusFabricHostToClientMessageEnum.BusInvokeRequest:
@@ -606,7 +606,7 @@ public sealed class BusFabricClient
         if (StreamingCache.BusSenderTimeouts.TryRemove(message.Routing.RequestId, out var cts))
             cts.Cancel();
     }
-    private void Receive_BusSendRequestAck_FromFabricAsync(BusSendRequestDoneDto message, CancellationToken connectionLifecycleCt)
+    private void Receive_BusSendRequestDone_FromFabricAsync(BusSendRequestDoneDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Receive_BusSendRequestAck_FromFabricAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
@@ -638,6 +638,12 @@ public sealed class BusFabricClient
         {
             var enumerable = BusConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
             RegisterBusAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
+
+            timeoutCts.RegisterDispose(async () =>
+            {
+                await UnRegisterBusAsyncEnumerableArgument(message.Routing, -1);
+            });
+
             await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
                 new BusInvokeRequestAckDto(
                     message.Routing, 

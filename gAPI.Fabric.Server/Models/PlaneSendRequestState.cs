@@ -7,17 +7,14 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Server.Models;
 
-public sealed class BusRequestState : IDisposable
+public sealed class PlaneSendRequestState : IDisposable
 {
-    public required BusRoutingDto Routing { get; init; }
+    public required PlaneRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
-    public required FabricBusHost Caller { get; init; }
-    public required ConcurrentDictionary<FabricBusConnectionId, FabricBusHost> Targets { get; init; }
-
-    public ConcurrentDictionary<FabricBusConnectionId, byte> ReadyTargets { get; } = [];
-    public ConcurrentDictionary<FabricBusConnectionId, byte> CompletedTargets { get; } = [];
-    public ConcurrentDictionary<StreamId, FabricBusHost> StreamRoutes { get; } = [];
-    public ConcurrentDictionary<FabricBusConnectionId, RemoteException> Exceptions { get; } = [];
+    public required FabricPlaneHost Caller { get; init; }
+    public required ConcurrentDictionary<FabricPlaneConnectionId, FabricPlaneHost> Targets { get; init; }
+    public ConcurrentDictionary<FabricPlaneConnectionId, PlaneSendRequestDoneDto> CompletedTargets { get; } = [];
+    public ConcurrentDictionary<StreamId, FabricPlaneHost> StreamRoutes { get; } = [];
 
     private int _cancelled;
     public bool Cancelled => Volatile.Read(ref _cancelled) != 0;
@@ -27,15 +24,14 @@ public sealed class BusRequestState : IDisposable
 
     private ResettableTimeout? Timeout { get; set; }
 
-    internal void RemoveBusHost(FabricBusHost host)
+    internal void RemovePlaneHost(FabricPlaneHost host)
     {
-        Targets.TryRemove(host.FabricBusConnectionId, out _);
-        CompletedTargets.TryRemove(host.FabricBusConnectionId, out _);
-        Exceptions.TryRemove(host.FabricBusConnectionId, out _);
+        Targets.TryRemove(host.FabricPlaneConnectionId, out _);
+        CompletedTargets.TryRemove(host.FabricPlaneConnectionId, out _);
 
         foreach (var target in StreamRoutes)
         {
-            if (target.Value.FabricBusConnectionId == host.FabricBusConnectionId)
+            if (target.Value.FabricPlaneConnectionId == host.FabricPlaneConnectionId)
                 StreamRoutes.TryRemove(target);
         }
     }

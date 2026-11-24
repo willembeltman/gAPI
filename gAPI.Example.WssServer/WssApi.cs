@@ -51,26 +51,26 @@ public class WssApi(
         var sw = Stopwatch.StartNew();
         var sessionId = authenticationService.SessionId;
 
-        for (var y = 0; y < 50; y++)
-        {
-            var sw2 = Stopwatch.StartNew();
+        //for (var y = 0; y < 50; y++)
+        //{
+        //    var sw2 = Stopwatch.StartNew();
 
-            PontResult = new TaskCompletionSource<string>();
+        //    PontResult = new TaskCompletionSource<string>();
 
-            clientContext.WssHub.ToSession(sessionId).Ping("hoi, dit is een lange zin. of zo.");
+        //    clientContext.WssHub.ToSession(sessionId).Ping("hoi, dit is een lange zin. of zo.");
 
-            var str = await PontResult.Task.WaitAsync(ct);
+        //    var str = await PontResult.Task.WaitAsync(ct);
 
-            Logger.LogInformation($"mainApi => mainHub PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
-        }
+        //    Logger.LogInformation($"mainApi => mainHub PINGPONG: {sw2.Elapsed.TotalMilliseconds:F3}ms");
+        //}
 
 
-        // Terug naar client
-        clientContext.WssHub.ToSession(sessionId).SendAndForget("hoi", ct);
-        Logger.LogInformation($"MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
+        //// Terug naar client
+        //clientContext.WssHub.ToSession(sessionId).SendAndForget("hoi", ct);
+        //Logger.LogInformation($"MainHub.SendAndForget - {sw.ElapsedMilliseconds}ms");
 
-        await clientContext.WssHub.ToSession(sessionId).Send("hoi", ct);
-        Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
+        //await clientContext.WssHub.ToSession(sessionId).Send("hoi", ct);
+        //Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");
 
         await clientContext.WssHub.ToSession(sessionId).SendWithList(MyList(), ct);
         Logger.LogInformation($"MainHub.Send - {sw.ElapsedMilliseconds}ms");

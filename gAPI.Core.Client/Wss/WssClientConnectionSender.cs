@@ -1,8 +1,8 @@
 using gAPI.Core.Client.Config;
+using gAPI.Core.Client.Logs;
 using gAPI.Core.Dtos;
 using gAPI.Core.Enums;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
@@ -14,7 +14,7 @@ namespace gAPI.Core.Client.Wss;
 public class WssClientConnectionSender(
     WssClientConnection wssClientConnection,
     ClientConfig config,
-    IClientLoggerFactory LoggerFactory)
+    ILoggerFactory LoggerFactory)
 {
     private readonly ILogger<WssClientConnectionSender> Logger = LoggerFactory.CreateLogger<WssClientConnectionSender>();
     private readonly byte[] SendBuffer = new byte[config.MaxPackageSize ?? 512 * 1024];
@@ -271,6 +271,22 @@ public class WssClientConnectionSender(
             return offset;
         }, ct);
     }
+    public async Task Send_InvokeRequestDone_ToServerAsync(InvokeRequestDoneClientDto message, CancellationToken ct)
+    {
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace("{now} QUEUED Send_InvokeRequestDone_ToServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
+        await EnqueueAsync(writer =>
+        {
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{now} Send_InvokeRequestDone_ToServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.FabricInvokeRequestDone);
+            writer.Write(ref offset, message);
+            return offset;
+        }, ct);
+    }
 
     public async Task Send_StreamingRequest_ToServerAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
@@ -338,7 +354,7 @@ public class WssClientConnectionSender(
         }, ct);
     }
 
-    public async Task Send_Log_ToServerAsync(ClientLogDto log, CancellationToken ct)
+    public async Task Send_Log_ToServerAsync(LogDto log, CancellationToken ct)
     {
         // NIET LOGGEN :)
         await EnqueueAsync(writer =>

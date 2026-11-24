@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Client.Collections;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Sse;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Example.Shared.ApiPublic;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,6 @@ namespace gAPI.Generated;
 
 public class ClientConnection : SseClientConnection, IClientConnection
 {
-    private ImmutableArray<IApiHub> ApiHubs = [];
     public HostedHubServices? HostedHubServices { get; set; }
 
     public ClientConnection(
@@ -26,32 +26,42 @@ public class ClientConnection : SseClientConnection, IClientConnection
         : base(loggerFactory, clientAuthenticatedHttpClient, sseManagerCollection)
     {
     }
-
-    public async Task SubscribeAsync(object implementation, CancellationToken ct)
+    
+    private ImmutableArray<IApiHub> ApiHubs = [];
+    
+    public async Task<List<ServiceSubscriptionKeyDto>> SubscribeAsync(object implementation, CancellationToken ct)
     {
-        
-        if (implementation is IApiHub _IApiHub)
+        var serviceSubscriptionIds = new List<ServiceSubscriptionKeyDto>();
+        if (implementation is IApiHub apiHub)
         {
-            var serviceId = new ServiceId(nameof(IApiHub));
+            var serviceId = new ServiceId("IApiHub");
             var client = ServiceClients.AddOrUpdate(
                 serviceId,
                 serviceId =>
                 {
-                    var client = new SseClientSubscription(LoggerFactory, ClientAuthenticatedHttpClient, this, serviceId);
-                    ImmutableInterlocked.Update(ref ApiHubs, list => list.Add(_IApiHub));
+                    var client = new SseClientSubscription(
+                        LoggerFactory, 
+                        ClientAuthenticatedHttpClient,
+                        this,
+                        serviceId,
+                        ServiceSubscriptionId.New());
+                    ImmutableInterlocked.Update(ref ApiHubs, list => list.Add(apiHub));
                     _ = Task.Run(client.ConnectAsync);
                     return client;
                 },
                 (service, client) =>
                 {
-                    ImmutableInterlocked.Update(ref ApiHubs, list => list.Add(_IApiHub));
+                    ImmutableInterlocked.Update(ref ApiHubs, list => list.Add(apiHub));
                     return client;
                 });
+            var value = new ServiceSubscriptionKeyDto(serviceId, client.ServiceSubscriptionId);
+            serviceSubscriptionIds.Add(value);
         }
+        return serviceSubscriptionIds;
     }
-    public async Task UnsubscribeAsync(object implementation, CancellationToken ct)
+    public async Task<List<ServiceSubscriptionKeyDto>> UnsubscribeAsync(object implementation, CancellationToken ct)
     {
-        
+        var serviceSubscriptionIds = new List<ServiceSubscriptionKeyDto>();
         if (implementation is IApiHub _IApiHub)
         {
             var serviceId = new ServiceId(nameof(IApiHub));
@@ -62,8 +72,9 @@ public class ClientConnection : SseClientConnection, IClientConnection
                 client.Dispose();
             }
         }
-    }
-
+        return serviceSubscriptionIds;
+    }    
+    
     public async Task Send_SendRequest_ToServiceAsync(
         ServiceId serviceId,
         ServiceMethodId methodId,
@@ -122,7 +133,7 @@ public class ClientConnection : SseClientConnection, IClientConnection
                 break;
         }
     }
-
+    
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(
         ServiceId serviceId,
         ServiceMethodId methodId,

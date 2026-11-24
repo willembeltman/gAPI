@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Server.Dashboard;
 using gAPI.Fabric.Server.Config;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 
@@ -10,20 +11,22 @@ public sealed class FabricBusServer : IHostedService, IAsyncDisposable
 {
     private readonly TcpListener Listener;
     private readonly FabricManager Manager;
+
+    public ILogger<FabricBusServer> Logger { get; }
+
     private readonly FabricConfig Config;
-    private readonly ConsoleBuffer Console;
 
     private CancellationTokenSource? ListenerCts;
 
 
     public FabricBusServer(
+        ILoggerFactory loggerFactory,
         FabricConfig config,
-        FabricManager manager,
-        ConsoleBuffer console)
+        FabricManager manager)
     {
         Config = config;
         Manager = manager;
-        Console = console;
+        Logger = loggerFactory.CreateLogger<FabricBusServer>();
 
         Listener = new TcpListener(IPAddress.Any, Config.BusPort);
     }
@@ -38,7 +41,7 @@ public sealed class FabricBusServer : IHostedService, IAsyncDisposable
         {
             Listener.Start();
 
-            Console.WriteInfo($"Fabric started on port: {Config.BusPort}");
+            Logger.LogInformation("Fabric started on port: {Config.BusPort}", Config.BusPort);
 
             try
             {

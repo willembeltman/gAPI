@@ -3,7 +3,6 @@ using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Example.Shared.WssPublic;
 using Microsoft.Extensions.Logging;
@@ -23,7 +22,7 @@ namespace gAPI.Generated;
 [IsApiProxyAttribute]
 public sealed class WssApi(
     IWssClientConnection ___clientConnection,
-    IClientLoggerFactory ___loggerFactory,
+    ILoggerFactory ___loggerFactory,
     IClientAuthenticatedHttpClient ___httpClient)
     : IWssApi
     , IDisposable

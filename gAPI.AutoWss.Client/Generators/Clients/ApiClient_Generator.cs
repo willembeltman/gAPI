@@ -34,7 +34,6 @@ public class ApiClient_Generator : _BaseGenerator
     public Generator Context { get; }
     public Interface Interface { get; }
     public SharedReference WssClientConnection => Context.SharedReferences.IWssClientConnection;
-    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
     public SharedReference CancellationTokenSourceDispose => Context.SharedReferences.CancellationTokenSourceDispose;
     public SharedReference RequestId => Context.SharedReferences.RequestId;
@@ -63,7 +62,6 @@ public class ApiClient_Generator : _BaseGenerator
         Reg(IsApiProxyAttribute);
         Reg(Interface);
         Reg(WssClientConnection);
-        Reg(IClientLoggerFactory);
         Reg(IClientAuthenticatedHttpClient);
         Reg(RequestId);
         Reg(ServiceId);
@@ -92,7 +90,7 @@ namespace {Namespace};
 [{IsApiProxyAttribute}]
 public sealed class {Name}(
     {WssClientConnection} ___clientConnection,
-    {IClientLoggerFactory} ___loggerFactory,
+    ILoggerFactory ___loggerFactory,
     {IClientAuthenticatedHttpClient} ___httpClient)
     : {Interface}
     , IDisposable

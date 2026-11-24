@@ -13,9 +13,11 @@ public class Plane1Context(
     : IPlane1Context
 {
     public IPlane1 ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
-        => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
+        => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, null, throwIfNoReceiver);
     public IPlane1 ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
         => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
-    public IPlane1 ToPlaneConnectionId(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, planeConnectionId);
+    public IPlane1 ToPlaneConnection(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnection, planeConnectionId);
+    public IPlane1 ToServiceSubscription(ServiceSubscriptionId serviceSubscriptionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new Plane1Client(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToServiceSubscription, null, serviceSubscriptionId);
 }

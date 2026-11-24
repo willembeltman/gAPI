@@ -7,17 +7,16 @@ using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Server.Models;
 
-public sealed class PlaneRequestState : IDisposable
+public sealed class BusInvokeRequestState : IDisposable
 {
-    public required PlaneRoutingDto Routing { get; init; }
+    public required BusRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
-    public required FabricPlaneHost Caller { get; init; }
-    public required ConcurrentDictionary<FabricPlaneConnectionId, FabricPlaneHost> Targets { get; init; }
+    public required FabricBusHost Caller { get; init; }
+    public required ConcurrentDictionary<FabricBusConnectionId, FabricBusHost> Targets { get; init; }
 
-    public ConcurrentDictionary<FabricPlaneConnectionId, byte> ReadyTargets { get; } = [];
-    public ConcurrentDictionary<FabricPlaneConnectionId, byte> CompletedTargets { get; } = [];
-    public ConcurrentDictionary<StreamId, FabricPlaneHost> StreamRoutes { get; } = [];
-    public ConcurrentDictionary<FabricPlaneConnectionId, RemoteException> Exceptions { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, BusInvokeRequestAckDto> ReadyTargets { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, BusInvokeRequestDoneDto> CompletedTargets { get; } = [];
+    public ConcurrentDictionary<StreamId, FabricBusHost> StreamRoutes { get; } = [];
 
     private int _cancelled;
     public bool Cancelled => Volatile.Read(ref _cancelled) != 0;
@@ -27,15 +26,14 @@ public sealed class PlaneRequestState : IDisposable
 
     private ResettableTimeout? Timeout { get; set; }
 
-    internal void RemovePlaneHost(FabricPlaneHost host)
+    internal void RemoveBusHost(FabricBusHost host)
     {
-        Targets.TryRemove(host.FabricPlaneConnectionId, out _);
-        CompletedTargets.TryRemove(host.FabricPlaneConnectionId, out _);
-        Exceptions.TryRemove(host.FabricPlaneConnectionId, out _);
+        Targets.TryRemove(host.FabricBusConnectionId, out _);
+        CompletedTargets.TryRemove(host.FabricBusConnectionId, out _);
 
         foreach (var target in StreamRoutes)
         {
-            if (target.Value.FabricPlaneConnectionId == host.FabricPlaneConnectionId)
+            if (target.Value.FabricBusConnectionId == host.FabricBusConnectionId)
                 StreamRoutes.TryRemove(target);
         }
     }

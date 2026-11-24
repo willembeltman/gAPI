@@ -18,13 +18,13 @@ public record PlaneAsyncEnumerableRegistrationInstance<T>(
 
     public async ValueTask DisposeAsync(bool gateAlreadyHeld = false)
     {
-        try
-        {
-            linkedCts.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        //try
+        //{
+        //    linkedCts.Cancel();
+        //}
+        //catch (ObjectDisposedException)
+        //{
+        //}
 
         if (!gateAlreadyHeld)
             await gate.WaitAsync();
@@ -41,7 +41,7 @@ public record PlaneAsyncEnumerableRegistrationInstance<T>(
             }
             finally
             {
-                linkedCts.Dispose();
+                //linkedCts.Dispose();
             }
         }
         finally

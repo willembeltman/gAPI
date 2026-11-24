@@ -14,7 +14,7 @@ using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Services;
 
-public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IActor
+public sealed class FabricBusHost : PerformanceCounter, IActor
 {
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
@@ -24,14 +24,11 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
 
     public FabricBusConnectionId FabricBusConnectionId { get; }
     public ILogger<FabricHost> Logger { get; }
-    public ILogger<FabricManager> ManagerLogger { get; }
 
     private FabricBusHostCollection BusConnections => Manager.AllBusConnections;
-    private ConsoleBuffer Console => Manager.Console;
-
-    public LogLevel MinimumLevel => Manager.Config.LogLevel;
 
     public FabricBusHost(
+        ILoggerFactory loggerFactory,
         FabricManager manager,
         TcpClient tcpClient)
     {
@@ -41,8 +38,7 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
         Stream = tcpClient.GetStream();
         SendQueue = Channel.CreateUnbounded<SendQueueItem>();
         FabricBusConnectionId = BusConnections.AddConnection(this);
-        Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
-        ManagerLogger = ((ILoggerFactory)this).CreateLogger<FabricManager>();
+        Logger = loggerFactory.CreateLogger<FabricHost>();
     }
 
     public void Start()
@@ -198,7 +194,7 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
 
     private async Task ReceiveLoop()
     {
-        Console.WriteInfo($"FabricHost {FabricBusConnectionId} started");
+        Logger.LogInformation($"FabricHost {FabricBusConnectionId} started");
 
         try
         {
@@ -216,84 +212,84 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
                         {
                             var busSubscribe = reader.ReadBusSubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSubscribe_FromApiAsync(this, ManagerLogger, busSubscribe, receiveSize, Cts.Token);
+                            await Manager.Receive_BusSubscribe_FromApiAsync(this, busSubscribe, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusUnsubscribe:
                         {
                             var busUnsubscribe = reader.ReadBusUnsubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusUnsubscribe_FromApiAsync(this, ManagerLogger, busUnsubscribe, receiveSize, Cts.Token);
+                            await Manager.Receive_BusUnsubscribe_FromApiAsync(this, busUnsubscribe, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusFireAndForget:
                         {
                             var busFireAndForget = reader.ReadBusSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendFireAndForget_FromApiAsync(this, ManagerLogger, busFireAndForget, receiveSize, Cts.Token);
+                            await Manager.Receive_BusSendFireAndForget_FromApiAsync(this, busFireAndForget, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusSendRequest:
                         {
                             var busSendRequest = reader.ReadBusSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequest_FromApiAsync(this, ManagerLogger, busSendRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_BusSendRequest_FromApiAsync(this, busSendRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusSendRequestCancelled:
                         {
                             var busSendRequestCancelled = reader.ReadBusSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequestCancelled_FromApiAsync(this, ManagerLogger, busSendRequestCancelled, receiveSize, Cts.Token);
+                            await Manager.Receive_BusSendRequestCancelled_FromApiAsync(this, busSendRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusSendRequestDone:
                         {
                             var busSendRequestAck = reader.ReadBusSendRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusSendRequestDone_FromApiAsync(this, ManagerLogger, busSendRequestAck, receiveSize, Cts.Token);
+                            await Manager.Receive_BusSendRequestDone_FromApiAsync(this, busSendRequestAck, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusInvokeRequest:
                         {
                             var busInvokeRequest = reader.ReadBusInvokeRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequest_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_BusInvokeRequest_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusInvokeRequestCancelled:
                         {
                             var busInvokeRequest = reader.ReadBusInvokeRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestCancelled_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_BusInvokeRequestCancelled_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusInvokeRequestAck:
                         {
                             var busInvokeRequestAck = reader.ReadBusInvokeRequestAckDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestAck_FromApiAsync(this, ManagerLogger, busInvokeRequestAck, receiveSize, Cts.Token);
+                            await Manager.Receive_BusInvokeRequestAck_FromApiAsync(this, busInvokeRequestAck, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusInvokeRequestDone:
                         {
                             var busInvokeRequestDone = reader.ReadBusInvokeRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusInvokeRequestDone_FromApiAsync(this, ManagerLogger, busInvokeRequestDone, receiveSize, Cts.Token);
+                            await Manager.Receive_BusInvokeRequestDone_FromApiAsync(this, busInvokeRequestDone, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusStreamingRequest:
                         {
                             var busStreamingRequest = reader.ReadBusStreamingRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusStreamingRequest_FromApiAsync(this, ManagerLogger, busStreamingRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_BusStreamingRequest_FromApiAsync(this, busStreamingRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case BusFabricClientToHostMessageEnum.BusStreamingResponse:
                         {
                             var busStreamingResponse = reader.ReadBusStreamingResponseDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_BusStreamingResponse_FromApiAsync(this, ManagerLogger, busStreamingResponse, receiveSize, Cts.Token);
+                            await Manager.Receive_BusStreamingResponse_FromApiAsync(this, busStreamingResponse, receiveSize, Cts.Token);
                         }
                         break;
                 }
@@ -305,12 +301,11 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "ReceiveLoop");
-            Console.WriteError($"FabricClient #{FabricBusConnectionId.Value}: receive loop failed.", ex);
+            Logger.LogError(ex, "FabricClient #{FabricBusConnectionId}: receive loop failed.", FabricBusConnectionId.Value);
         }
         Dispose();
 
-        Console.WriteInfo($"FabricHost {FabricBusConnectionId} stopped");
+        Logger.LogInformation("FabricHost {FabricBusConnectionId} stopped", FabricBusConnectionId);
     }
 
     public void Dispose()
@@ -320,21 +315,4 @@ public sealed class FabricBusHost : PerformanceCounter, IFabricLoggerFactory, IA
         TcpClient.Dispose();
         Manager.Disconnected(this);
     }
-
-    public async Task Send_Log_ToServerAsync(ClientLogDto dto, CancellationToken ct)
-    {
-        // Do not add logging lol
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
-            writer.Write(dto);
-        }, Manager.Logging);
-    }
-    public ILogger CreateLogger(string categoryName)
-        => new FabricLogger(categoryName, this);
-    public void AddProvider(ILoggerProvider provider)
-    {
-        // no-op
-    }
-
 }

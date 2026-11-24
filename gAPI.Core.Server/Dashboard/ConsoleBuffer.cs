@@ -29,6 +29,11 @@ public class ConsoleBuffer : ILoggerProvider
         // Niets te disposen voor de ConcurrentQueue
     }
 
+    public async Task WriteLog(LogLevel level, string message)
+    {
+        throw new NotImplementedException();
+    }
+
     // Interne ILogger klasse die naar de buffer schrijft
     private class BufferLogger : ILogger
     {
@@ -41,7 +46,7 @@ public class ConsoleBuffer : ILoggerProvider
             _categoryName = categoryName;
         }
 
-        public IDisposable? BeginScope<TState>(TState state) 
+        public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull
         {
             return null!;

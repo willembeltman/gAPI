@@ -24,7 +24,14 @@ public sealed class NormalConsoleOutput(
 
                     while (ConsoleBuffer.Lines.Reader.TryRead(out var line))
                     {
-                        Console.WriteLine(line.Text, line.Color);
+                        try
+                        {
+                            Console.WriteLine(SanitizeForConsoleFormat(line.Text), line.Color);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "StartAsync");
+                        }
                     }
                 }
             }
@@ -50,5 +57,14 @@ public sealed class NormalConsoleOutput(
         await Cts.CancelAsync();
         Cts.Dispose();
         Cts = null;
+    }
+    public static string SanitizeForConsoleFormat(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        return input.Replace("{", "{{").Replace("}", "}}");
     }
 }

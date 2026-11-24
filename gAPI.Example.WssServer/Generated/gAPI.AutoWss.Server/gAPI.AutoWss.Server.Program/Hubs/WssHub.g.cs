@@ -202,7 +202,7 @@ public class WssHub(
                 0, 
                 list, 
                 ___SendWithList_0_Serializer, 
-                ___ct);
+                ___timeoutCts);
 
             await ___fabricClient.SendAsync(
                 ___routing,
@@ -340,7 +340,7 @@ public class WssHub(
                 0, 
                 list, 
                 ___InvokeListWithList_0_Serializer, 
-                ___ct);
+                ___timeoutCts);
        
             var ___responses = ___fabricClient.InvokeAsync(
                 ___routing, 

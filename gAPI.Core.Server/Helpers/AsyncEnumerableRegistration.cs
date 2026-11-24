@@ -19,13 +19,13 @@ public record AsyncEnumerableRegistrationInstance<T>(
 
     public async ValueTask DisposeAsync(bool gateAlreadyHeld = false)
     {
-        try
-        {
-            timeoutCts.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        //try
+        //{
+        //    timeoutCts.Cancel();
+        //}
+        //catch (ObjectDisposedException)
+        //{
+        //}
 
         if (!gateAlreadyHeld)
             await gate.WaitAsync();
@@ -42,7 +42,7 @@ public record AsyncEnumerableRegistrationInstance<T>(
             }
             finally
             {
-                timeoutCts.Dispose();
+                //timeoutCts.Dispose();
             }
         }
         finally

@@ -23,10 +23,10 @@ public class WssHub(
     {
     }
 
-    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnSubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
-    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
 
@@ -46,18 +46,18 @@ public class WssHub(
 
     public async Task StartAllTests(CancellationToken ct)
     {
-        await Task.Delay(2000);
+        //await Task.Delay(2000);
 
-        int i2 = 0;
-        await foreach (var data in mainApi.VideoFeedTest(ct))
-        {
-            if (i2 == 1)
-            {
-                break;
-            }
-            i2++;
-        }
-        await Task.Delay(TimeSpan.FromSeconds(10), ct);
+        //int i2 = 0;
+        //await foreach (var data in mainApi.VideoFeedTest(ct))
+        //{
+        //    if (i2 == 1)
+        //    {
+        //        break;
+        //    }
+        //    i2++;
+        //}
+        //await Task.Delay(TimeSpan.FromSeconds(10), ct);
 
         for (int i = 0; i < 10; i++)
             await mainApi.InvokeTask("hoi", ct);
@@ -79,6 +79,7 @@ public class WssHub(
 
 
         var sw = Stopwatch.StartNew();
+        var result = string.Empty;
 
         mainApi.SendAndForget("hoi", ct);
         Logger.LogInformation($"mainApi.SendAndForget - {sw.ElapsedMilliseconds}ms");
@@ -86,7 +87,7 @@ public class WssHub(
         await mainApi.Send("hoi", ct);
         Logger.LogInformation("> mainApi.Send");
 
-        var result = await mainApi.InvokeTask("hoi", ct);
+        result = await mainApi.InvokeTask("hoi", ct);
         Logger.LogInformation($"> mainApi.InvokeTask - {result} - {sw.ElapsedMilliseconds}ms");
 
         await foreach (var item in mainApi.InvokeList("hoi", ct))

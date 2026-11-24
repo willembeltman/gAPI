@@ -66,7 +66,6 @@ public static class IFormFileSerializer
         return obj;
     }
 
-
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> span, ref int offset, IFormFile formFile)
     {

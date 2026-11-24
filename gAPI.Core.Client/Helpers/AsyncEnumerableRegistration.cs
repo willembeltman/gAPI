@@ -42,7 +42,7 @@ public record AsyncEnumerableRegistrationInstance<T>(
             }
             finally
             {
-                timeoutCts.Dispose();
+                //timeoutCts.Dispose();
             }
         }
         finally

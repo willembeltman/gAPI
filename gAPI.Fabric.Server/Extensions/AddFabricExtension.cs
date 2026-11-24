@@ -13,27 +13,26 @@ public static class AddFabricExtension
         var config = builder.Configuration.CreateFabricConfig();
         builder.Services.AddSingleton(config);
 
-        var consoleBuffer = new ConsoleBuffer();
-        builder.Services.AddSingleton(consoleBuffer);
-        builder.Logging.AddProvider(consoleBuffer);
-
-        var manager = new FabricManager(config, consoleBuffer);
-        builder.Services.AddSingleton(manager);
-        builder.Services.AddSingleton<IDashboardName>(sp => config);
-        builder.Services.AddSingleton<IDashboardSnapshotGetter>(sp => manager);
-
         var nameGetter = new ApplicationNameGetter(name);
         builder.Services.AddSingleton(nameGetter);
+
+        //var consoleBuffer = new ConsoleBuffer();
+        //builder.Services.AddSingleton(consoleBuffer);
+        //builder.Logging.AddProvider(consoleBuffer);
+
+        builder.Services.AddSingleton<FabricManager>();
+        builder.Services.AddSingleton<IDashboardName>(sp => config);
+        builder.Services.AddSingleton<IDashboardSnapshotGetter>(sp => sp.GetRequiredService<FabricManager>());
 
         // Hosted services starten
         builder.Services.AddHostedService<FabricServer>();
         builder.Services.AddHostedService<FabricBusServer>();
         builder.Services.AddHostedService<FabricPlaneServer>();
 
-        if (useConsoleDashboard && CanRenderConsole())
-            builder.Services.AddHostedService<DashboardConsoleOutput>();
-        else
-            builder.Services.AddHostedService<NormalConsoleOutput>();
+        //if (useConsoleDashboard && CanRenderConsole())
+        //    builder.Services.AddHostedService<DashboardConsoleOutput>();
+        //else
+        //    builder.Services.AddHostedService<NormalConsoleOutput>();
     }
 
     private static bool CanRenderConsole()

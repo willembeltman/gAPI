@@ -46,10 +46,10 @@ public class Plane1(
     public async Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct)
     {
     }
-    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnSubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
-    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
 

@@ -1,6 +1,6 @@
 ﻿using gAPI.Core.Ids;
 
-namespace gAPI.Core.Server.Dtos;
+namespace gAPI.Core.Dtos;
 
 public record ServiceSubscriptionKeyDto(
     ServiceId ServiceId, 

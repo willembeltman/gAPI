@@ -198,7 +198,7 @@ public class {Name}
     {{{string.Join("\r\n", Context.ServiceContext.PlaneInterfaces.Select(@interface => $@"
         foreach (var {@interface.CleanName.ToCamelCase()} in {@interface.CleanName.ToMultiple()})
         {{
-            if ({@interface.CleanName.ToCamelCase()}.Key is IPlaneServiceSubscription planeServiceSubscription)
+            if ({@interface.CleanName.ToCamelCase()}.Key is {IPlaneServiceSubscription} planeServiceSubscription)
             {{
                 await planeServiceSubscription.OnUnsubscribedAsync(
                     {@interface.CleanName.ToCamelCase()}.Value.ServiceId, 
@@ -282,12 +282,12 @@ public class {Name}
                             {{{(method.Arguments.Any(a => a.ParameterType.IsCancellationToken == false && a.ParameterType.IsIAsyncEnumerable == false) ? $@"
                                 var ___offset = 0;" : "")}
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);{string.Join("", method.Arguments
-            .Select((arg, index) => (arg, index))
-            .Where(a => a.arg.ParameterType.IsCancellationToken == false)
-            .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
-                ? $@"
+                                    .Select((arg, index) => (arg, index))
+                                    .Where(a => a.arg.ParameterType.IsCancellationToken == false)
+                                    .Select(a => a.arg.ParameterType.IsIAsyncEnumerable
+                                        ? $@"
                                 var {a.arg.Name.ToCamelCase()} = RegisterRemoteAsyncEnumerableArgument<{a.arg.ParameterType.UnderlayingTypes.Single()}>(___sendRequest.Routing, {a.index}, {@method.Interface}_{method}_{a.index}_Deserializer, ___timeoutCts);"
-                : $@"
+                                        : $@"
                                 {a.arg.ParameterType.Type} {a.arg.Name.ToCamelCase()} = {PropertyHelper.GenerateSpanReadCode(a.arg.ParameterType.Type, false, ref functions, functionNames)};"))}
                                 foreach (var client in {@interface.CleanName.ToMultiple()})
                                 {{

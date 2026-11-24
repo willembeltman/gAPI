@@ -1,4 +1,6 @@
-﻿using gAPI.AutoApi.Client.Models;
+﻿using gAPI.AutoApi.Client.Helpers;
+using gAPI.AutoApi.Client.Models;
+using System;
 using System.Linq;
 
 namespace gAPI.AutoApi.Client.Generators.ClientConnection;
@@ -30,6 +32,8 @@ public class ClientConnectionGenerator : _BaseGenerator
     public SharedReference IClientConnection => Context.IClientConnection;
     public SharedReference HostedHubServices => Context.HostedHubServices;
     public SharedReference SseClientConnection => Context.SharedReferences.SseClientConnection;
+    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
+    public SharedReference ServiceSubscriptionKeyDto => Context.SharedReferences.ServiceSubscriptionKeyDto;
 
     public override void GenerateCode()
     {
@@ -39,13 +43,21 @@ public class ClientConnectionGenerator : _BaseGenerator
         Reg("System.Text");
         Reg("System.Runtime.CompilerServices");
         Reg("Microsoft.Extensions.Logging");
+        Reg("System.Collections.Concurrent");
         Reg(IClientConnection);
         Reg(SseClientSubscription);
+        Reg(ServiceSubscriptionId);
         Reg(IClientAuthenticatedHttpClient);
         Reg(SseManagerCollection);
         Reg(ServiceId);
         Reg(SseClientConnection);
         Reg(HostedHubServices);
+        Reg(ServiceSubscriptionKeyDto);
+
+        foreach (var @interface in Interfaces)
+        {
+            Reg(@interface);
+        }
 
 
         Code = @$"
@@ -54,13 +66,7 @@ public class ClientConnectionGenerator : _BaseGenerator
 namespace {Namespace};
 
 public class {Name} : {SseClientConnection}, {IClientConnection.Name}
-{{{string.Join("", Interfaces
-        .Select(i =>
-        {
-            Reg(i);
-            return @$"
-    private ImmutableArray<{i.Name}> {i.Title}s = [];";
-        }))}
+{{
     public {HostedHubServices}? HostedHubServices {{ get; set; }}
 
     public {Name}(
@@ -70,37 +76,61 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         : base(loggerFactory, clientAuthenticatedHttpClient, sseManagerCollection)
     {{
     }}
+    {GenerateHubProperties()}
+    {GenerateSubscribe()}{GenerateUnsubscribe()}    
+    {GenerateSendRequest()}
+    {GenerateInvokeRequest()}{GenerateSerializers()}
+}}";
+        Code = $"{GetNamespacesCode()}{Code}";
+    }
 
-    public async Task SubscribeAsync(object implementation, CancellationToken ct)
+    private string GenerateHubProperties()
+    {
+        return string.Join("", Interfaces
+        .Select(@interface => @$"
+    private ImmutableArray<{@interface.Name}> {@interface.Title}s = [];"));
+    }
+    private string GenerateSubscribe()
+    {
+        return $@"
+    public async Task<List<{ServiceSubscriptionKeyDto}>> SubscribeAsync(object implementation, CancellationToken ct)
     {{
-        {string.Join("", Interfaces
-        .Select(i =>
-        {
-            Reg(i);
-            return @$"
-        if (implementation is {i.Name} _{i.Name})
+        var serviceSubscriptionIds = new List<{ServiceSubscriptionKeyDto}>();{string.Join("", Interfaces
+        .Select(@interface => @$"
+        if (implementation is {@interface} {@interface.CleanName.ToCamelCase()})
         {{
-            var serviceId = new {ServiceId}(nameof({i.Name}));
+            var serviceId = new {ServiceId}(""{@interface}"");
             var client = ServiceClients.AddOrUpdate(
                 serviceId,
                 serviceId =>
                 {{
-                    var client = new {SseClientSubscription}(LoggerFactory, ClientAuthenticatedHttpClient, this, serviceId);
-                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
+                    var client = new {SseClientSubscription}(
+                        LoggerFactory, 
+                        ClientAuthenticatedHttpClient,
+                        this,
+                        serviceId,
+                        {ServiceSubscriptionId}.New());
+                    ImmutableInterlocked.Update(ref {@interface.Title}s, list => list.Add({@interface.CleanName.ToCamelCase()}));
                     _ = Task.Run(client.ConnectAsync);
                     return client;
                 }},
                 (service, client) =>
                 {{
-                    ImmutableInterlocked.Update(ref {i.Title}s, list => list.Add(_{i.Name}));
+                    ImmutableInterlocked.Update(ref {@interface.Title}s, list => list.Add({@interface.CleanName.ToCamelCase()}));
                     return client;
                 }});
-        }}";
-        }))}
-    }}
-    public async Task UnsubscribeAsync(object implementation, CancellationToken ct)
+            var value = new {ServiceSubscriptionKeyDto}(serviceId, client.ServiceSubscriptionId);
+            serviceSubscriptionIds.Add(value);
+        }}"))}
+        return serviceSubscriptionIds;
+    }}";
+    }
+    private string GenerateUnsubscribe()
+    {
+        return $@"
+    public async Task<List<{ServiceSubscriptionKeyDto}>> UnsubscribeAsync(object implementation, CancellationToken ct)
     {{
-        {string.Join("", Interfaces
+        var serviceSubscriptionIds = new List<{ServiceSubscriptionKeyDto}>();{string.Join("", Interfaces
         .Select(i =>
         {
             Reg(i);
@@ -116,8 +146,12 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
             }}
         }}";
         }))}
-    }}
-
+        return serviceSubscriptionIds;
+    }}";
+    }
+    private string GenerateSendRequest()
+    {
+        return $@"
     public async Task Send_SendRequest_ToServiceAsync(
         {ServiceId} serviceId,
         {ServiceMethodId} methodId,
@@ -144,9 +178,9 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
                         foreach (var hub in {i.Title}s)
                         {{
                             {(m.ResponseType.IsVoid ? "" : "await ")}hub.{m.Name}({string.Join(", ", m.Arguments
-    .Where(a => a.ParameterType.Name != "CancellationToken")
-    .Select(a => $"{m.Name.ToLower()}.{a.Name}")
-    .Concat(hasCancellationToken ? new[] { "ct" } : Enumerable.Empty<string>()))});
+                                .Where(a => a.ParameterType.Name != "CancellationToken")
+                                .Select(a => $"{m.Name.ToLower()}.{a.Name}")
+                                .Concat(hasCancellationToken ? new[] { "ct" } : Enumerable.Empty<string>()))});
                         }}
                         break;";
             }))}
@@ -154,8 +188,11 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
                 break;";
         }))}
         }}" : "")}
-    }}
-
+    }}";
+    }
+    private string GenerateInvokeRequest()
+    {
+        return $@"
     public async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(
         {ServiceId} serviceId,
         {ServiceMethodId} methodId,
@@ -201,17 +238,15 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         }))}
         }}" : "")}
         yield break;
-    }}{string.Join("", Interfaces
-        .Select(i =>
-        {
-            Reg(i);
-            return string.Join("", i.Methods
-                .Select(m =>
-                {
-                    return @$"
+    }}";
+    }
+    private string GenerateSerializers()
+    {
+        return string.Join("", Interfaces
+        .SelectMany(@interface => @interface.Methods.Select(method => @$"
 
-    public class {i.Title}_{m.Name}
-    {{{string.Join("", m.Arguments
+    public class {@interface.Title}_{method.Name}
+    {{{string.Join("", method.Arguments
     .Where(a => a.ParameterType.Name != "CancellationToken")
     .Select(p =>
     {
@@ -219,10 +254,6 @@ public class {Name} : {SseClientConnection}, {IClientConnection.Name}
         return @$"
         public {p.ParameterType.Name} {p.Name} {{ get; set; }}{(p.ParameterType.IsNullable || !p.ParameterType.IsReferenceType ? "" : " = null!;")}";
     }))}
-    }}";
-                }));
-        }))}
-}}";
-        Code = $"{GetNamespacesCode()}{Code}";
+    }}")));
     }
 }

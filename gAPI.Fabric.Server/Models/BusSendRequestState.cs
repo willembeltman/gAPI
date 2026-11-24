@@ -1,23 +1,21 @@
-﻿using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
+using gAPI.Core.Server.Dtos;
 using gAPI.Fabric.Server.Interfaces;
 using gAPI.Fabric.Server.Services;
 using System.Collections.Concurrent;
 
 namespace gAPI.Fabric.Server.Models;
 
-public sealed class RequestState : IDisposable
+public sealed class BusSendRequestState : IDisposable
 {
-    public required RoutingDto Routing { get; init; }
+    public required BusRoutingDto Routing { get; init; }
     public required IActor Actor { get; init; }
-    public required FabricHost Caller { get; init; }
-    public required ConcurrentDictionary<FabricConnectionId, FabricHost> Targets { get; init; }
+    public required FabricBusHost Caller { get; init; }
+    public required ConcurrentDictionary<FabricBusConnectionId, FabricBusHost> Targets { get; init; }
 
-    public ConcurrentDictionary<FabricConnectionId, byte> ReadyTargets { get; } = [];
-    public ConcurrentDictionary<FabricConnectionId, byte> CompletedTargets { get; } = [];
-    public ConcurrentDictionary<StreamId, FabricHost> StreamRoutes { get; } = [];
-    public ConcurrentDictionary<FabricConnectionId, RemoteException> Exceptions { get; } = [];
+    public ConcurrentDictionary<FabricBusConnectionId, BusSendRequestDoneDto> CompletedTargets { get; } = [];
+    public ConcurrentDictionary<StreamId, FabricBusHost> StreamRoutes { get; } = [];
 
     private int _cancelled;
     public bool Cancelled => Volatile.Read(ref _cancelled) != 0;
@@ -27,20 +25,17 @@ public sealed class RequestState : IDisposable
 
     private ResettableTimeout? Timeout { get; set; }
 
-
-    internal void RemoveHost(FabricHost host)
+    internal void RemoveBusHost(FabricBusHost host)
     {
-        Targets.TryRemove(host.FabricConnectionId, out _);
-        CompletedTargets.TryRemove(host.FabricConnectionId, out _);
-        Exceptions.TryRemove(host.FabricConnectionId, out _);
+        Targets.TryRemove(host.FabricBusConnectionId, out _);
+        CompletedTargets.TryRemove(host.FabricBusConnectionId, out _);
 
         foreach (var target in StreamRoutes)
         {
-            if (target.Value.FabricConnectionId == host.FabricConnectionId)
+            if (target.Value.FabricBusConnectionId == host.FabricBusConnectionId)
                 StreamRoutes.TryRemove(target);
         }
     }
-
     public void Cancel()
     {
         Volatile.Write(ref _cancelled, 1);
@@ -81,4 +76,5 @@ public sealed class RequestState : IDisposable
     {
         Timeout?.Dispose();
     }
+
 }

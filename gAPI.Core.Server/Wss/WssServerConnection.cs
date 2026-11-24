@@ -22,7 +22,7 @@ namespace gAPI.Core.Server.Wss;
 public abstract class WssServerConnection : IServerConnection
 {
     readonly ILoggerFactory LoggerFactory;
-    readonly ILogger Logger;
+    readonly ILogger<WssServerConnection> Logger;
 
     readonly IServerAuthenticationService AuthenticationService;
     readonly FabricClient FabricClient;
@@ -368,8 +368,17 @@ public abstract class WssServerConnection : IServerConnection
                             break;
 
                         case WssClientToServerMessageEnum.Log:
-                            var log = span.ReadClientLogDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                            Receive_Log_FromClientAsync(log, ct);
+                            var log = span.ReadLogDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Receive_Log_FromClientAsync(log, ct);
+                                }
+                                catch
+                                {
+                                }
+                            }, ct);
                             break;
                     }
                 }
@@ -631,6 +640,11 @@ public abstract class WssServerConnection : IServerConnection
             await AuthenticationService.UpdateStateDataAsync(message.StateData, connectionLifecycleCt);
 
         await FabricClient.Handle_FabricSendRequestDone_FromClientAsync(message, connectionLifecycleCt);
+
+        //if (StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out var timeOut))
+        //{
+        //    timeOut.Dispose();
+        //}
     }
 
     private async Task Receive_InvokeRequest_FromClientAsync(InvokeRequestClientDto message, CancellationToken connectionLifecycleCt)
@@ -657,17 +671,44 @@ public abstract class WssServerConnection : IServerConnection
 
             // Register it for streaming
             RegisterAsyncEnumerableArgumentByte(
-                message.Routing,
-                -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
-                enumerable,
-                timeoutCts);
+                routing: message.Routing,
+                argumentIndex: -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
+                source: enumerable,
+                timeoutCts: timeoutCts,
+                done: async () =>
+                {
+                    StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
+                    await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
 
-            // Register dispose 
-            timeoutCts.RegisterDispose(async () =>
-            {
-                StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
-                await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
-            });
+                    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+                    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+                    await Sender.Send_InvokeRequestDone_ToClientAsync(
+                        new InvokeRequestDoneClientDto(
+                            message.Routing,
+                            false,
+                            null,
+                            stateIsChanged,
+                            stateData
+                        ), ct);
+                });
+
+            //// Register dispose 
+            //timeoutCts.RegisterDispose(async () =>
+            //{
+            //    StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
+            //    await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
+
+            //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
+            //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
+            //    await Sender.Send_InvokeRequestDone_ToClientAsync(
+            //        new InvokeRequestDoneClientDto(
+            //            message.Routing,
+            //            false,
+            //            null,
+            //            stateIsChanged,
+            //            stateData
+            //        ), ct);
+            //});
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -687,9 +728,10 @@ public abstract class WssServerConnection : IServerConnection
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            await Sender.Send_InvokeRequestDone_ToClientAsync(
-                new InvokeRequestDoneClientDto(
+            await Sender.Send_InvokeRequestAck_ToClientAsync(
+                new InvokeRequestAckClientDto(
                     message.Routing,
+                    false,
                     true,
                     new ExceptionDto(ex),
                     stateIsChanged,
@@ -705,9 +747,10 @@ public abstract class WssServerConnection : IServerConnection
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            await Sender.Send_InvokeRequestDone_ToClientAsync(
-                new InvokeRequestDoneClientDto(
+            await Sender.Send_InvokeRequestAck_ToClientAsync(
+                new InvokeRequestAckClientDto(
                     message.Routing,
+                    false,
                     false,
                     new ExceptionDto(ex),
                     stateIsChanged,
@@ -825,28 +868,51 @@ public abstract class WssServerConnection : IServerConnection
 
         await FabricClient.Handle_FabricStreamingResponse_FromClientAsync(message, ct);
     }
-
-    private void Receive_Log_FromClientAsync(ClientLogDto log, CancellationToken connectionLifecycleCt)
+    private async Task Receive_Log_FromClientAsync(LogDto log, CancellationToken connectionLifecycleCt)
     {
         try
         {
-            if (log.Category == null) return;
+            if (log.Category == null)
+                return;
+
             var logger = LoggerFactory.CreateLogger(log.Category);
 
-            if (log.ExceptionMessage != null)
+            var originalFormat = $"{(log.Source ?? "").ToUpper()}{(log.Source == null ? "" : " ")}{(log.MessageTemplate ?? log.Message)}";
+            // Reconstruct structured logging state
+            var state = new List<KeyValuePair<string, object?>>
             {
-                logger.LogError(new RemoteException(log.ExceptionMessage, log.ExceptionInnerMessage, log.ExceptionStackTrace), log.Message);
-            }
-            else
-            {
-                logger.Log(
-                    log.Level,
-                    log.Message);
-            }
+                new("{OriginalFormat}", originalFormat)
+            };
+
+            foreach (var property in log.Properties)
+                state.Add(new(property.Key, property.Value));
+
+            // Reconstruct exception (if available)
+            Exception? exception = log.ExceptionDetails != null
+                ? new RemoteException(
+                    log.ExceptionDetails,
+                    null, // inner exception?
+                    null) // stacktrace?
+                : null;
+
+            // Log locally on the server
+            logger.Log(
+                log.Level,
+                new EventId(log.EventId, log.EventName),
+                state,
+                exception,
+                (_, _) => log.Message);
+
+            // Forward original DTO to Fabric
+            await FabricClient.Handle_Log(log, connectionLifecycleCt);
         }
-        catch//(Exception ex)
+        catch (OperationCanceledException) when (connectionLifecycleCt.IsCancellationRequested)
         {
-            //Logger.LogError(ex, "Receive_Log_FromClientAsync");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Receive_Log_FromClientAsync failed");
         }
     }
 
@@ -1011,7 +1077,7 @@ public abstract class WssServerConnection : IServerConnection
 
     #region Calls vanuit gegenereerde code
 
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose cancellationToken)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> done)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1026,16 +1092,16 @@ public abstract class WssServerConnection : IServerConnection
                         _ =>
                         {
                             return new AsyncEnumerableRegistrationInstance<byte[]>(
-                                source.GetAsyncEnumerator(cancellationToken.Token),
+                                source.GetAsyncEnumerator(timeoutCts.Token),
                                 new SemaphoreSlim(1, 1),
-                                cancellationToken);
+                                timeoutCts);
                         });
 
                     async Task Cleanup()
                     {
                         activeStreams.TryRemove(streamId, out _);
                         await enumerator.DisposeAsync();
-                        linkedCts.Dispose();
+                        await done.Invoke();
                     }
 
                     var entered = false;
@@ -1062,7 +1128,7 @@ public abstract class WssServerConnection : IServerConnection
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
-                        cancellationToken.IsCancellationRequested)
+                        timeoutCts.IsCancellationRequested)
                     {
                         Logger.LogError(ex, "Cancelled");
 

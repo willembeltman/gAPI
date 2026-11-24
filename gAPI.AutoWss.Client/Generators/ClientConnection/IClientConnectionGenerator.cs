@@ -19,14 +19,14 @@ public class IClientConnectionGenerator : _BaseGenerator
 
     public Generator Context { get; }
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
-    public SharedReference ServiceSubscriptionId => Context.SharedReferences.ServiceSubscriptionId;
+    public SharedReference ServiceSubscriptionKeyDto => Context.SharedReferences.ServiceSubscriptionKeyDto;
     public SharedReference HostedHubServices => Context.HostedHubServices;
 
     public override void GenerateCode()
     {
         Reg(IWssClientConnection);
         Reg(HostedHubServices);
-        Reg(ServiceSubscriptionId);
+        Reg(ServiceSubscriptionKeyDto);
         foreach (var api in Context.Apis)
         {
             Reg(api);
@@ -41,8 +41,8 @@ public interface {Name} : {IWssClientConnection}
 {{{string.Join("", Context.Apis.Select(api => $@"
     {api.Interface} {api} {{ get; }}"))}
 
-    Task<{ServiceSubscriptionId}[]> SubscribeAsync(object implementation, CancellationToken ___ct = default);
-    Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
+    Task<List<{ServiceSubscriptionKeyDto}>> SubscribeAsync(object implementation, CancellationToken ___ct = default);
+    Task<List<{ServiceSubscriptionKeyDto}>> UnsubscribeAsync(object implementation, CancellationToken ___ct = default);
 
     {HostedHubServices}? HostedHubServices {{ get; set; }}
 }}";

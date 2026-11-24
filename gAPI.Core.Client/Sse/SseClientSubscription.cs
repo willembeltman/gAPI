@@ -21,7 +21,7 @@ public class SseClientSubscription : IDisposable
     public ILogger<SseClientSubscription> Logger { get; }
     public IClientAuthenticatedHttpClient HttpClient { get; }
     public ServiceId ServiceId { get; }
-    public ServiceSubscriptionId? ServiceSubscriptionId { get; private set; }
+    public ServiceSubscriptionId ServiceSubscriptionId { get; }
     public ClientConnectionId? ClientConnectionId { get; private set; }
     public FabricConnectionId? FabricConnectionId { get; private set; }
     public FabricManagerId? FabricManagerId { get; private set; }
@@ -40,12 +40,14 @@ public class SseClientSubscription : IDisposable
         ILoggerFactory loggerFactory,
         IClientAuthenticatedHttpClient AuthenticationService,
         ISseClientConnection sseClientConnection,
-        ServiceId serviceId)
+        ServiceId serviceId,
+        ServiceSubscriptionId serviceSubscriptionId)
     {
         Logger = loggerFactory.CreateLogger<SseClientSubscription>();
         HttpClient = AuthenticationService;
         this.SseClientConnection = sseClientConnection;
         ServiceId = serviceId;
+        ServiceSubscriptionId = serviceSubscriptionId;
         Sender = new(loggerFactory, this);
     }
 
@@ -59,7 +61,7 @@ public class SseClientSubscription : IDisposable
 
             try
             {
-                var url = $"/SseServiceSubscription/connect/{WebUtility.UrlEncode(ServiceId.Value)}";
+                var url = $"/SseServiceSubscription/connect/{WebUtility.UrlEncode(ServiceId.Value)}_{WebUtility.UrlEncode(ServiceSubscriptionId.Value)}";
                 using var stream = await HttpClient.GetStreamAsync(url, Cts.Token);
                 using var streamReader = new StreamReader(stream);
 
@@ -80,9 +82,6 @@ public class SseClientSubscription : IDisposable
 
                         switch (eventName)
                         {
-                            case "ServiceSubscriptionId":
-                                ServiceSubscriptionId = new ServiceSubscriptionId(eventData);
-                                break;
                             case "ClientConnectionId":
                                 if (long.TryParse(eventData, out var clientConnectionId))
                                 {
@@ -338,12 +337,22 @@ public class SseClientSubscription : IDisposable
                     message.Routing,
                     -1,
                     enumerable,
-                    timeoutCts);
+                    timeoutCts,
+                    async () =>
+                    {
+                        await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
 
-                ct.Register(async () =>
-                {
-                    await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
-                });
+                        var stateIsChanged = HttpClient.IsStateDataChanged();
+                        var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
+                        await Sender.Send_InvokeRequestDone_ToServerAsync(
+                            new InvokeRequestDoneClientDto(
+                                message.Routing,
+                                false,
+                                null,
+                                stateIsChanged,
+                                stateData
+                            ), ct);
+                    });
 
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
@@ -775,7 +784,7 @@ public class SseClientSubscription : IDisposable
                     }
                 }));
     }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> done)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -802,6 +811,7 @@ public class SseClientSubscription : IDisposable
             {
                 stream.TryRemoveFrom(activeStreams, streamId);
                 await stream.DisposeAsync(entered);
+                await done.Invoke();
             }
 
             //if (activeStreams.TryAdd(streamId, stream) == false)
@@ -903,7 +913,6 @@ public class SseClientSubscription : IDisposable
     {
         Cts.Cancel();
         Cts.Dispose();
-        ServiceSubscriptionId = null;
         ClientConnectionId = null;
         FabricConnectionId = null;
         FabricManagerId = null;

@@ -256,7 +256,7 @@ public class {Name}(
                 {index}, 
                 {arg}, 
                 ___{method}_{index}_Serializer, 
-                ___ct);" : ""))}
+                ___timeoutCts);" : ""))}
 
             await ___fabricClient.SendAsync(
                 ___routing,
@@ -315,7 +315,7 @@ public class {Name}(
                 {index}, 
                 {arg}, 
                 ___{method}_{index}_Serializer, 
-                ___ct);" : ""))}
+                ___timeoutCts);" : ""))}
        
             var ___responses = ___fabricClient.InvokeAsync(
                 ___routing, 

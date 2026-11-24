@@ -41,6 +41,7 @@ public class SseServiceSubscription
         StreamingCache streamingCache,
         FabricClient fabricClient,
         ServiceId serviceId,
+        ServiceSubscriptionId serviceSubscriptionId,
         UserId? userId,
         SessionId sessionId)
     {
@@ -48,9 +49,9 @@ public class SseServiceSubscription
         ServiceSubscriptionCollection = serviceSubscriptionCollection;
         FabricClient = fabricClient;
         ServiceId = serviceId;
-        SessionId = sessionId;
-        Id = ServiceSubscriptionId.New();
+        Id = serviceSubscriptionId;
         UserId = userId;
+        SessionId = sessionId;
         ClientConnectionId = serverConnectionCollection.Add(this);
         serviceSubscriptionCollection.Add(this, serviceId);
         Stopwatch = Stopwatch.StartNew();
@@ -63,7 +64,6 @@ public class SseServiceSubscription
 
         try
         {
-            yield return new SseItem<string>(Id.Value.ToString(), "ServiceSubscriptionId");
             yield return new SseItem<string>(ClientConnectionId.Value.ToString(), "ClientConnectionId");
             yield return new SseItem<string>(FabricClient.FabricConnectionId.Value.ToString(), "FabricConnectionId");
             yield return new SseItem<string>(FabricClient.FabricManagerId.Value.ToString(), "FabricManagerId");

@@ -9,7 +9,7 @@ public static class CreateFabricConfigExtention
     public static FabricConfig CreateFabricConfig(this IConfigurationManager m)
     {
         var logLevel = LogLevel.Error;
-        if (Enum.TryParse<LogLevel>(m["Logging__LogLevel__gAPI"], true, out var logLevel2))
+        if (Enum.TryParse<LogLevel>(m["Logging:LogLevel:gAPI"], true, out var logLevel2))
         {
             logLevel = logLevel2;
         }

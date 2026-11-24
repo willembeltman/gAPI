@@ -17,7 +17,7 @@ public class SharedReferences
         PlaneRoutingDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneRoutingDto", allSymbols);
         PlaneSendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneSendRequestDto", allSymbols);
         PlaneInvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.PlaneInvokeRequestDto", allSymbols);
-        ServiceSubscriptionKeyDto = SharedReferenceFinder.Find("gAPI.Core.Server.Dtos.ServiceSubscriptionKeyDto", allSymbols);
+        ServiceSubscriptionKeyDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServiceSubscriptionKeyDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
 
         IBasePlaneConnection = SharedReferenceFinder.Find("gAPI.Core.Server.Interfaces.IBasePlaneConnection", allSymbols);

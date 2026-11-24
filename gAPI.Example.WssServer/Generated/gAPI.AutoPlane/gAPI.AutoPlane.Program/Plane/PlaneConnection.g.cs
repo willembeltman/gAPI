@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.BackPlane.Fabric;
 using gAPI.Core.Dtos;
+using gAPI.Core.Enums;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -46,327 +48,187 @@ public class PlaneConnection
     public HostedPlaneServices? HostedPlaneServices { get; set; }
 
     
-
-    readonly List<IApiPlane> ApiPlanes = [];
-    readonly SemaphoreSlim ApiPlanesLock = new(1, 1);
-
-    private async Task<IApiPlane[]> GetApiPlanesSnapshotAsync()
-    {
-        await ApiPlanesLock.WaitAsync();
-        try
-        {
-            return [.. ApiPlanes];
-        }
-        finally
-        {
-            ApiPlanesLock.Release();
-        }
-    }
-
-    readonly List<IPlane1> Plane1s = [];
-    readonly SemaphoreSlim Plane1sLock = new(1, 1);
-
-    private async Task<IPlane1[]> GetPlane1sSnapshotAsync()
-    {
-        await Plane1sLock.WaitAsync();
-        try
-        {
-            return [.. Plane1s];
-        }
-        finally
-        {
-            Plane1sLock.Release();
-        }
-    }
-
-    readonly List<IPlane2> Plane2s = [];
-    readonly SemaphoreSlim Plane2sLock = new(1, 1);
-
-    private async Task<IPlane2[]> GetPlane2sSnapshotAsync()
-    {
-        await Plane2sLock.WaitAsync();
-        try
-        {
-            return [.. Plane2s];
-        }
-        finally
-        {
-            Plane2sLock.Release();
-        }
-    }
-
-    readonly List<IWssPlane> WssPlanes = [];
-    readonly SemaphoreSlim WssPlanesLock = new(1, 1);
-
-    private async Task<IWssPlane[]> GetWssPlanesSnapshotAsync()
-    {
-        await WssPlanesLock.WaitAsync();
-        try
-        {
-            return [.. WssPlanes];
-        }
-        finally
-        {
-            WssPlanesLock.Release();
-        }
-    }
+    readonly ConcurrentDictionary<IApiPlane, ServiceSubscriptionKeyDto> ApiPlanes = [];
+    readonly ConcurrentDictionary<IPlane1, ServiceSubscriptionKeyDto> Plane1s = [];
+    readonly ConcurrentDictionary<IPlane2, ServiceSubscriptionKeyDto> Plane2s = [];
+    readonly ConcurrentDictionary<IWssPlane, ServiceSubscriptionKeyDto> WssPlanes = [];
     
-    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
+    public async Task<List<ServiceSubscriptionKeyDto>> SubscribeAsync(object implementation, CancellationToken ct = default)
     {
+        var subscriptionIds = new List<ServiceSubscriptionKeyDto>();
         if (implementation is IApiPlane apiPlane)
         {
-            await ApiPlanesLock.WaitAsync(___ct);
-            try
+            var serviceId = new ServiceId("IApiPlane");
+            var serviceSubscriptionId = ServiceSubscriptionId.New();
+            var value = new ServiceSubscriptionKeyDto(serviceId, serviceSubscriptionId);
+            if (ApiPlanes.TryAdd(apiPlane, value))
             {
-                ApiPlanes.Add(apiPlane);
+                await SendSubscribeAsync(implementation, serviceId, serviceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                ApiPlanesLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IApiPlane");
-            await SendSubscribeAsync(apiPlane, ___serviceId, ___ct);
         }
         if (implementation is IPlane1 plane1)
         {
-            await Plane1sLock.WaitAsync(___ct);
-            try
+            var serviceId = new ServiceId("IPlane1");
+            var serviceSubscriptionId = ServiceSubscriptionId.New();
+            var value = new ServiceSubscriptionKeyDto(serviceId, serviceSubscriptionId);
+            if (Plane1s.TryAdd(plane1, value))
             {
-                Plane1s.Add(plane1);
+                await SendSubscribeAsync(implementation, serviceId, serviceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                Plane1sLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IPlane1");
-            await SendSubscribeAsync(plane1, ___serviceId, ___ct);
         }
         if (implementation is IPlane2 plane2)
         {
-            await Plane2sLock.WaitAsync(___ct);
-            try
+            var serviceId = new ServiceId("IPlane2");
+            var serviceSubscriptionId = ServiceSubscriptionId.New();
+            var value = new ServiceSubscriptionKeyDto(serviceId, serviceSubscriptionId);
+            if (Plane2s.TryAdd(plane2, value))
             {
-                Plane2s.Add(plane2);
+                await SendSubscribeAsync(implementation, serviceId, serviceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                Plane2sLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IPlane2");
-            await SendSubscribeAsync(plane2, ___serviceId, ___ct);
         }
         if (implementation is IWssPlane wssPlane)
         {
-            await WssPlanesLock.WaitAsync(___ct);
-            try
+            var serviceId = new ServiceId("IWssPlane");
+            var serviceSubscriptionId = ServiceSubscriptionId.New();
+            var value = new ServiceSubscriptionKeyDto(serviceId, serviceSubscriptionId);
+            if (WssPlanes.TryAdd(wssPlane, value))
             {
-                WssPlanes.Add(wssPlane);
+                await SendSubscribeAsync(implementation, serviceId, serviceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                WssPlanesLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IWssPlane");
-            await SendSubscribeAsync(wssPlane, ___serviceId, ___ct);
         }
+        return subscriptionIds;
     }
-    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
+    public async Task<List<ServiceSubscriptionKeyDto>> UnsubscribeAsync(object implementation, CancellationToken ct = default)
     {
+        var subscriptionIds = new List<ServiceSubscriptionKeyDto>();
         if (implementation is IApiPlane apiPlane)
-        {
-            await ApiPlanesLock.WaitAsync(___ct);
-            try
+        {  
+            if (ApiPlanes.TryRemove(apiPlane, out var value))
             {
-                ApiPlanes.Remove(apiPlane);
+                await SendUnsubscribeAsync(implementation, value.ServiceId, value.ServiceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                ApiPlanesLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IApiPlane");
-            await SendUnsubscribeAsync(apiPlane, ___serviceId, ___ct);
         }
 
         if (implementation is IPlane1 plane1)
-        {
-            await Plane1sLock.WaitAsync(___ct);
-            try
+        {  
+            if (Plane1s.TryRemove(plane1, out var value))
             {
-                Plane1s.Remove(plane1);
+                await SendUnsubscribeAsync(implementation, value.ServiceId, value.ServiceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                Plane1sLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IPlane1");
-            await SendUnsubscribeAsync(plane1, ___serviceId, ___ct);
         }
 
         if (implementation is IPlane2 plane2)
-        {
-            await Plane2sLock.WaitAsync(___ct);
-            try
+        {  
+            if (Plane2s.TryRemove(plane2, out var value))
             {
-                Plane2s.Remove(plane2);
+                await SendUnsubscribeAsync(implementation, value.ServiceId, value.ServiceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                Plane2sLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IPlane2");
-            await SendUnsubscribeAsync(plane2, ___serviceId, ___ct);
         }
 
         if (implementation is IWssPlane wssPlane)
-        {
-            await WssPlanesLock.WaitAsync(___ct);
-            try
+        {  
+            if (WssPlanes.TryRemove(wssPlane, out var value))
             {
-                WssPlanes.Remove(wssPlane);
+                await SendUnsubscribeAsync(implementation, value.ServiceId, value.ServiceSubscriptionId, ct);
+                subscriptionIds.Add(value);
             }
-            finally
-            {
-                WssPlanesLock.Release();
-            }
-
-            var ___serviceId = new ServiceId("IWssPlane");
-            await SendUnsubscribeAsync(wssPlane, ___serviceId, ___ct);
         }
+        return subscriptionIds;
     }
     
     public override async Task OnDisconnectedAsync(CancellationToken ___ct)
     {
-        await ApiPlanesLock.WaitAsync(___ct);
-        try
+        foreach (var apiPlane in ApiPlanes)
         {
-            foreach (var apiPlane in ApiPlanes)
+            if (apiPlane.Key is IPlaneServiceSubscription planeServiceSubscription)
             {
-                if (apiPlane is IPlaneServiceSubscription apiPlanePlaneServiceSubscription)
-                {
-                    var ___serviceId = new ServiceId("IApiPlane");
-                    await apiPlanePlaneServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }
+                await planeServiceSubscription.OnUnsubscribedAsync(
+                    apiPlane.Value.ServiceId, 
+                    apiPlane.Value.ServiceSubscriptionId, 
+                    ___ct);
             }
-        }
-        finally
-        {
-            ApiPlanesLock.Release();
         }
 
-        await Plane1sLock.WaitAsync(___ct);
-        try
+        foreach (var plane1 in Plane1s)
         {
-            foreach (var plane1 in Plane1s)
+            if (plane1.Key is IPlaneServiceSubscription planeServiceSubscription)
             {
-                if (plane1 is IPlaneServiceSubscription plane1PlaneServiceSubscription)
-                {
-                    var ___serviceId = new ServiceId("IPlane1");
-                    await plane1PlaneServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }
+                await planeServiceSubscription.OnUnsubscribedAsync(
+                    plane1.Value.ServiceId, 
+                    plane1.Value.ServiceSubscriptionId, 
+                    ___ct);
             }
-        }
-        finally
-        {
-            Plane1sLock.Release();
         }
 
-        await Plane2sLock.WaitAsync(___ct);
-        try
+        foreach (var plane2 in Plane2s)
         {
-            foreach (var plane2 in Plane2s)
+            if (plane2.Key is IPlaneServiceSubscription planeServiceSubscription)
             {
-                if (plane2 is IPlaneServiceSubscription plane2PlaneServiceSubscription)
-                {
-                    var ___serviceId = new ServiceId("IPlane2");
-                    await plane2PlaneServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }
+                await planeServiceSubscription.OnUnsubscribedAsync(
+                    plane2.Value.ServiceId, 
+                    plane2.Value.ServiceSubscriptionId, 
+                    ___ct);
             }
-        }
-        finally
-        {
-            Plane2sLock.Release();
         }
 
-        await WssPlanesLock.WaitAsync(___ct);
-        try
+        foreach (var wssPlane in WssPlanes)
         {
-            foreach (var wssPlane in WssPlanes)
+            if (wssPlane.Key is IPlaneServiceSubscription planeServiceSubscription)
             {
-                if (wssPlane is IPlaneServiceSubscription wssPlanePlaneServiceSubscription)
-                {
-                    var ___serviceId = new ServiceId("IWssPlane");
-                    await wssPlanePlaneServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }
+                await planeServiceSubscription.OnUnsubscribedAsync(
+                    wssPlane.Value.ServiceId, 
+                    wssPlane.Value.ServiceSubscriptionId, 
+                    ___ct);
             }
-        }
-        finally
-        {
-            WssPlanesLock.Release();
         }
     }
     public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
     {
-        await ApiPlanesLock.WaitAsync(___ct);
-        try
+        foreach (var apiPlane in ApiPlanes)
         {
-            foreach (var apiPlane in ApiPlanes)
-            {
-                var ___serviceId = new ServiceId("IApiPlane");
-                await SendSubscribeAsync(apiPlane, ___serviceId, ___ct); // This causes the reconnect event to be called
-            }
-        }
-        finally
-        {
-            ApiPlanesLock.Release();
+            var ___serviceId = new ServiceId("IApiPlane");
+            await SendSubscribeAsync(
+                apiPlane.Key, 
+                apiPlane.Value.ServiceId,
+                apiPlane.Value.ServiceSubscriptionId, 
+                ___ct); // This causes the reconnect event to be called, which will trigger onsubscribed to client
         }
 
-        await Plane1sLock.WaitAsync(___ct);
-        try
+        foreach (var plane1 in Plane1s)
         {
-            foreach (var plane1 in Plane1s)
-            {
-                var ___serviceId = new ServiceId("IPlane1");
-                await SendSubscribeAsync(plane1, ___serviceId, ___ct); // This causes the reconnect event to be called
-            }
-        }
-        finally
-        {
-            Plane1sLock.Release();
+            var ___serviceId = new ServiceId("IPlane1");
+            await SendSubscribeAsync(
+                plane1.Key, 
+                plane1.Value.ServiceId,
+                plane1.Value.ServiceSubscriptionId, 
+                ___ct); // This causes the reconnect event to be called, which will trigger onsubscribed to client
         }
 
-        await Plane2sLock.WaitAsync(___ct);
-        try
+        foreach (var plane2 in Plane2s)
         {
-            foreach (var plane2 in Plane2s)
-            {
-                var ___serviceId = new ServiceId("IPlane2");
-                await SendSubscribeAsync(plane2, ___serviceId, ___ct); // This causes the reconnect event to be called
-            }
-        }
-        finally
-        {
-            Plane2sLock.Release();
+            var ___serviceId = new ServiceId("IPlane2");
+            await SendSubscribeAsync(
+                plane2.Key, 
+                plane2.Value.ServiceId,
+                plane2.Value.ServiceSubscriptionId, 
+                ___ct); // This causes the reconnect event to be called, which will trigger onsubscribed to client
         }
 
-        await WssPlanesLock.WaitAsync(___ct);
-        try
+        foreach (var wssPlane in WssPlanes)
         {
-            foreach (var wssPlane in WssPlanes)
-            {
-                var ___serviceId = new ServiceId("IWssPlane");
-                await SendSubscribeAsync(wssPlane, ___serviceId, ___ct); // This causes the reconnect event to be called
-            }
-        }
-        finally
-        {
-            WssPlanesLock.Release();
+            var ___serviceId = new ServiceId("IWssPlane");
+            await SendSubscribeAsync(
+                wssPlane.Key, 
+                wssPlane.Value.ServiceId,
+                wssPlane.Value.ServiceSubscriptionId, 
+                ___ct); // This causes the reconnect event to be called, which will trigger onsubscribed to client
         }
     }
 
@@ -377,7 +239,6 @@ public class PlaneConnection
         {
             case "IApiPlane":
                 {
-                    var clients = await GetApiPlanesSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -385,9 +246,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    client.SendAndForget(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.SendAndForget(
                                         message,
                                         ___ct);
                                 }
@@ -398,9 +263,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    client.Pong(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.Pong(
                                         v);
                                 }
                                 return;
@@ -410,7 +279,6 @@ public class PlaneConnection
                 }
             case "IPlane1":
                 {
-                    var clients = await GetPlane1sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -418,9 +286,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    client.SendAndForget(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.SendAndForget(
                                         message,
                                         ___ct);
                                 }
@@ -431,9 +303,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    client.Ping(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.Ping(
                                         v);
                                 }
                                 return;
@@ -443,7 +319,6 @@ public class PlaneConnection
                 }
             case "IPlane2":
                 {
-                    var clients = await GetPlane2sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -451,9 +326,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    client.SendAndForget(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.SendAndForget(
                                         message,
                                         ___ct);
                                 }
@@ -464,9 +343,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string str = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    client.Ping(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.Ping(
                                         str);
                                 }
                                 return;
@@ -476,7 +359,6 @@ public class PlaneConnection
                 }
             case "IWssPlane":
                 {
-                    var clients = await GetWssPlanesSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -484,9 +366,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    client.SendAndForget(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.SendAndForget(
                                         message,
                                         ___ct);
                                 }
@@ -497,9 +383,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    client.Pong(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    client.Key.Pong(
                                         v);
                                 }
                                 return;
@@ -516,7 +406,6 @@ public class PlaneConnection
         {
             case "IApiPlane":
                 {
-                    var clients = await GetApiPlanesSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "Send":
@@ -524,9 +413,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    await client.Send(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.Send(
                                         message,
                                         ___timeoutCts.Token);
                                 }
@@ -536,9 +429,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IApiPlane_SendWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    await client.SendWithList(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.SendWithList(
                                         test,
                                         ___timeoutCts.Token);
                                 }
@@ -549,9 +446,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    await client.StartServiceTests(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.StartServiceTests(
                                         sessionId,
                                         ___timeoutCts.Token);
                                 }
@@ -560,9 +461,13 @@ public class PlaneConnection
                         case "DoPing":
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    await client.DoPing();
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.DoPing();
                                 }
                                 return;
                             }
@@ -571,7 +476,6 @@ public class PlaneConnection
                 }
             case "IPlane1":
                 {
-                    var clients = await GetPlane1sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "StartServiceTests":
@@ -580,9 +484,13 @@ public class PlaneConnection
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
                                 string to = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    await client.StartServiceTests(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.StartServiceTests(
                                         sessionId,
                                         to,
                                         ___timeoutCts.Token);
@@ -594,9 +502,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    await client.Send(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.Send(
                                         message,
                                         ___timeoutCts.Token);
                                 }
@@ -606,9 +518,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IPlane1_SendWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    await client.SendWithList(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.SendWithList(
                                         test,
                                         ___timeoutCts.Token);
                                 }
@@ -617,9 +533,13 @@ public class PlaneConnection
                         case "PongTask":
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    await client.PongTask(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.PongTask(
                                         ___timeoutCts.Token);
                                 }
                                 return;
@@ -629,7 +549,6 @@ public class PlaneConnection
                 }
             case "IPlane2":
                 {
-                    var clients = await GetPlane2sSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "Send":
@@ -637,9 +556,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    await client.Send(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.Send(
                                         message,
                                         ___timeoutCts.Token);
                                 }
@@ -649,9 +572,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IPlane2_SendWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    await client.SendWithList(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.SendWithList(
                                         test,
                                         ___timeoutCts.Token);
                                 }
@@ -660,9 +587,13 @@ public class PlaneConnection
                         case "RealPing":
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    await client.RealPing(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.RealPing(
                                         ___timeoutCts.Token);
                                 }
                                 return;
@@ -673,9 +604,13 @@ public class PlaneConnection
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
                                 string to = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    await client.StartServiceTests(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.StartServiceTests(
                                         sessionId,
                                         to,
                                         ___timeoutCts.Token);
@@ -687,7 +622,6 @@ public class PlaneConnection
                 }
             case "IWssPlane":
                 {
-                    var clients = await GetWssPlanesSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "Send":
@@ -695,9 +629,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 string message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    await client.Send(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.Send(
                                         message,
                                         ___timeoutCts.Token);
                                 }
@@ -707,9 +645,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssPlane_SendWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    await client.SendWithList(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.SendWithList(
                                         test,
                                         ___timeoutCts.Token);
                                 }
@@ -720,9 +662,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 gAPI.Core.Ids.SessionId sessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset, ___maxBufferSize);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    await client.StartServiceTests(
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.StartServiceTests(
                                         sessionId,
                                         ___timeoutCts.Token);
                                 }
@@ -731,9 +677,13 @@ public class PlaneConnection
                         case "DoPing":
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    await client.DoPing();
+                                    if (___sendRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___sendRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    await client.Key.DoPing();
                                 }
                                 return;
                             }
@@ -749,7 +699,6 @@ public class PlaneConnection
         {
             case "IApiPlane":
                 {
-                    var clients = await GetApiPlanesSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -757,9 +706,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    var response = await client.InvokeTask(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTask(
                                         name,
                                         ___timeoutCts.Token);
                                     yield return IApiPlane_InvokeTask_Serializer(response);
@@ -770,9 +723,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiPlane_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    var response = await client.InvokeTaskWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTaskWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     yield return IApiPlane_InvokeTaskWithList_Serializer(response);
@@ -784,9 +741,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    var responses = client.InvokeList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeList(
                                         name,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -800,9 +761,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IApiPlane_InvokeListWithList_0_Deserializer,  ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in ApiPlanes)
                                 {
-                                    var responses = client.InvokeListWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeListWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -817,7 +782,6 @@ public class PlaneConnection
                 }
             case "IPlane1":
                 {
-                    var clients = await GetPlane1sSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -825,9 +789,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    var response = await client.InvokeTask(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTask(
                                         name,
                                         ___timeoutCts.Token);
                                     yield return IPlane1_InvokeTask_Serializer(response);
@@ -838,9 +806,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane1_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    var response = await client.InvokeTaskWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTaskWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     yield return IPlane1_InvokeTaskWithList_Serializer(response);
@@ -852,9 +824,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    var responses = client.InvokeList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeList(
                                         name,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -868,9 +844,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane1_InvokeListWithList_0_Deserializer,  ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    var responses = client.InvokeListWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeListWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -883,9 +863,13 @@ public class PlaneConnection
                         case "PingEnumerable":
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in Plane1s)
                                 {
-                                    var responses = client.PingEnumerable(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.PingEnumerable(
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {
@@ -899,7 +883,6 @@ public class PlaneConnection
                 }
             case "IPlane2":
                 {
-                    var clients = await GetPlane2sSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -907,9 +890,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    var response = await client.InvokeTask(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTask(
                                         name,
                                         ___timeoutCts.Token);
                                     yield return IPlane2_InvokeTask_Serializer(response);
@@ -920,9 +907,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane2_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    var response = await client.InvokeTaskWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTaskWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     yield return IPlane2_InvokeTaskWithList_Serializer(response);
@@ -934,9 +925,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    var responses = client.InvokeList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeList(
                                         name,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -950,9 +945,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IPlane2_InvokeListWithList_0_Deserializer,  ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in Plane2s)
                                 {
-                                    var responses = client.InvokeListWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeListWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -967,7 +966,6 @@ public class PlaneConnection
                 }
             case "IWssPlane":
                 {
-                    var clients = await GetWssPlanesSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeTask":
@@ -975,9 +973,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    var response = await client.InvokeTask(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTask(
                                         name,
                                         ___timeoutCts.Token);
                                     yield return IWssPlane_InvokeTask_Serializer(response);
@@ -988,9 +990,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssPlane_InvokeTaskWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    var response = await client.InvokeTaskWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var response = await client.Key.InvokeTaskWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     yield return IWssPlane_InvokeTaskWithList_Serializer(response);
@@ -1002,9 +1008,13 @@ public class PlaneConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 string name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    var responses = client.InvokeList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeList(
                                         name,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -1018,9 +1028,13 @@ public class PlaneConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssPlane_InvokeListWithList_0_Deserializer,  ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    var responses = client.InvokeListWithList(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.InvokeListWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -1033,9 +1047,13 @@ public class PlaneConnection
                         case "VideoFeedTest":
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                foreach (var client in clients)
+                                foreach (var client in WssPlanes)
                                 {
-                                    var responses = client.VideoFeedTest(
+                                    if (___invokeRequest.Routing.To == PlaneToChoice.ToServiceSubscription &&
+                                        ___invokeRequest.Routing.ToServiceSubscriptionId != client.Value.ServiceSubscriptionId)
+                                        continue;
+
+                                    var responses = client.Key.VideoFeedTest(
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
                                     {

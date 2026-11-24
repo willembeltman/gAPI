@@ -24,6 +24,7 @@ public class ApiPlaneClient(
     DeliveryMode ___deliveryMode,
     PlaneToChoice ___to,
     PlaneConnectionId? ___planeConnectionId = null,
+    ServiceSubscriptionId? ___serviceSubscriptionId = null,
     bool ___throwIfNoReceiver = true)
     : IApiPlane
     , IDisposable
@@ -50,6 +51,7 @@ public class ApiPlaneClient(
                 ___deliveryMode,
                 ___to,
                 ___planeConnectionId,
+                ___serviceSubscriptionId,
                 ___throwIfNoReceiver
             );
 
@@ -116,6 +118,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(
@@ -167,6 +170,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(
@@ -222,6 +226,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
@@ -287,6 +292,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
@@ -356,6 +362,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
@@ -414,6 +421,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(___routing, ___timeoutCts);
@@ -481,6 +489,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(
@@ -534,6 +543,7 @@ public class ApiPlaneClient(
                 ___deliveryMode,
                 ___to,
                 ___planeConnectionId,
+                ___serviceSubscriptionId,
                 ___throwIfNoReceiver
             );
 
@@ -600,6 +610,7 @@ public class ApiPlaneClient(
             ___deliveryMode,
             ___to,
             ___planeConnectionId,
+            ___serviceSubscriptionId,
             ___throwIfNoReceiver
         );
         ___planeConnection.RegisterTimeout(

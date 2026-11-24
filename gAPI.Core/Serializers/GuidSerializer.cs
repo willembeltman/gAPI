@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Ids;
 
 namespace gAPI.Core.Serializers;
 
@@ -37,6 +38,13 @@ public static class GuidSerializer
     {
         return value.Equals(otherValue) == false;
     }
+
+    [IsCreateCopy]
+    public static Guid CreateCopy(this Guid value)
+    {
+        return new Guid(value.ToString());
+    }
+
     [IsSpanSerializerLength]
     public static int GetMessageLength(ref int offset, Guid value)
     {

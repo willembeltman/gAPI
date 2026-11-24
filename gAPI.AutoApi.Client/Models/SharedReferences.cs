@@ -9,11 +9,13 @@ public class SharedReferences
     {
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
+        ServiceSubscriptionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceSubscriptionId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         SessionId = SharedReferenceFinder.Find("gAPI.Core.Ids.SessionId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
 
         SseManagerId = SharedReferenceFinder.Find("gAPI.Core.Ids.SseManagerId", allSymbols);
+        ServiceSubscriptionKeyDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServiceSubscriptionKeyDto", allSymbols);
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         SendRequestCancelledDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestCancelledDto", allSymbols);
         SendRequestClientDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestClientDto", allSymbols);
@@ -47,6 +49,7 @@ public class SharedReferences
     }
     public SharedReference ServiceId { get; }
     public SharedReference ServiceMethodId { get; }
+    public SharedReference ServiceSubscriptionId { get; }
     public SharedReference RequestId { get; }
     public SharedReference SessionId { get; }
     public SharedReference UserId { get; }
@@ -55,6 +58,7 @@ public class SharedReferences
     public SharedReference SseManagerCollection { get; }
     public SharedReference ISseClientConnection { get; }
     public SharedReference SseManagerId { get; }
+    public SharedReference ServiceSubscriptionKeyDto { get; }
     public SharedReference SendRequestCancelledDto { get; }
     public SharedReference SendRequestClientDto { get; }
     public SharedReference SendRequestCancelledClientDto { get; }

@@ -13,9 +13,11 @@ public class WssPlaneContext(
     : IWssPlaneContext
 {
     public IWssPlane ToAll(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient, bool throwIfNoReceiver = true)
-        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, throwIfNoReceiver);
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAll, null, null, throwIfNoReceiver);
     public IWssPlane ToAny(TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
         => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToAny);
-    public IWssPlane ToPlaneConnectionId(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
-        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnectionId, planeConnectionId);
+    public IWssPlane ToPlaneConnection(PlaneConnectionId planeConnectionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToPlaneConnection, planeConnectionId);
+    public IWssPlane ToServiceSubscription(ServiceSubscriptionId serviceSubscriptionId, TimeSpan? timeOut = null, DeliveryMode deliveryMode = DeliveryMode.Transient)
+        => new WssPlaneClient(loggerFactory, planeConnection, timeOut, deliveryMode, PlaneToChoice.ToServiceSubscription, null, serviceSubscriptionId);
 }

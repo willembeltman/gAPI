@@ -4,7 +4,6 @@ public enum FabricHostToClientMessageEnum
 {
     GetSessionCookieDataResponse,
     SynchronizeFabricIds,
-    Log,
 
     SubscribeAck,
     UnsubscribeAck,

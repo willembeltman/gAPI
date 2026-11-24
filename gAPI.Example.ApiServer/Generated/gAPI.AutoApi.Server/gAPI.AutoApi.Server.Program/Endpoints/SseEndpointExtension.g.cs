@@ -17,8 +17,8 @@ public static class SseEndpointExtension
     public static WebApplication MapSseEndpoint(this WebApplication app)
     {
         // 🔥 Sse endpoint
-        app.MapGet("/SseServiceSubscription/connect/{serviceId}", async (
-            string serviceId,
+        app.MapGet("/SseServiceSubscription/connect/{ids}", async (
+            string ids,
             [FromHeader(Name = "X-SessionId")] string sessionId,
             [FromServices] IServerAuthenticationService authenticationService,
             [FromServices] ServerConnectionCollection serverConnectionCollection,
@@ -28,6 +28,10 @@ public static class SseEndpointExtension
             CancellationToken ct
         ) =>
         {
+            var ids_split = ids.Split(new char[] { '_' });
+            var serviceId = ids_split[0];
+            var serviceSubscriptionId = ids_split[1];
+
             var SseServiceSubscription = new SseServiceSubscription(
                 authenticationService,
                 serverConnectionCollection,
@@ -35,6 +39,7 @@ public static class SseEndpointExtension
                 streamingCache,
                 fabricClient,
                 new ServiceId(serviceId),
+                new ServiceSubscriptionId(serviceSubscriptionId),
                 authenticationService.UserId,
                 authenticationService.SessionId
             );

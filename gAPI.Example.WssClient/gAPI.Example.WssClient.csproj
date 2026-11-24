@@ -28,4 +28,10 @@
 		<ProjectReference Include="..\gAPI.Example.Shared.WssPublic\gAPI.Example.Shared.WssPublic.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="appsettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

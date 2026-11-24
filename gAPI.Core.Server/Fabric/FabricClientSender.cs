@@ -306,6 +306,15 @@ public class FabricClientSender(
         }, ct);
     }
 
+    public async Task Send_Log_ToFabricAsync(LogDto message, CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            FabricConverter.WriteClientToHostMessageType(writer, FabricClientToHostMessageEnum.Log);
+            writer.Write(message);
+        }, ct);
+    }
+
     record SendQueueItem(
         Action<BinaryWriter> Write,
         TaskCompletionSource? Sent);

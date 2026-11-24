@@ -195,7 +195,7 @@ public abstract class AzureBaseBusConnection(
             timeoutCts.CancelAfter(routing.Timeout);
             var message = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
-            if (message.ExceptionMessage != null) throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+            if (message.Exception != null) throw new RemoteException(message.Exception);
         }
         finally
         {
@@ -258,7 +258,7 @@ public abstract class AzureBaseBusConnection(
                     await SendStreamingRequestAsync(ackResult.Routing, argumentIndex, streamId, cancelled: false, ct);
                     timeoutCts.CancelAfter(routing.Timeout);
                     var message = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
-                    if (message.ExceptionMessage != null) throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+                    if (message.Exception != null) throw new RemoteException(message.Exception);
                     if (message.IsCompleted) break;
                     yield return message.BinaryData;
                 }
@@ -476,8 +476,7 @@ public abstract class AzureBaseBusConnection(
                                 request.StreamId,
                                 IsCompleted: true,
                                 IsCancelled: request.Cancelled,
-                                ExceptionMessage: request.Cancelled ? null : "Streaming registration no longer exists.",
-                                InnerExceptionMessage: null,
+                                Exception: request.Cancelled ? null : new ExceptionDto("Streaming registration no longer exists.", null, Environment.StackTrace),
                                 BinaryData: []);
                         }
                         if (!string.IsNullOrWhiteSpace(args.Message.ReplyTo))
@@ -488,7 +487,7 @@ public abstract class AzureBaseBusConnection(
                             var sender = _client!.CreateSender(args.Message.ReplyTo);
                             await sender.SendMessageAsync(respMessage, _lifetimeCts.Token);
                         }
-                        if (response.IsCompleted || response.IsCancelled || response.ExceptionMessage != null)
+                        if (response.IsCompleted || response.IsCancelled || response.Exception != null)
                         {
                             await UnRegisterAsyncEnumerableArgument(request.Routing, request.ArgumentIndex);
                         }
@@ -515,9 +514,9 @@ public abstract class AzureBaseBusConnection(
             BusSendRequestDoneDto ack;
             try
             {
-                var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
+                var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnection, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token);
-                ack = new BusSendRequestDoneDto(responseRouting, false, null, null);
+                ack = new BusSendRequestDoneDto(responseRouting, false, null);
             }
             catch (Exception ex)
             {
@@ -525,12 +524,11 @@ public abstract class AzureBaseBusConnection(
                     request.Routing with
                     {
                         FromBusConnectionId = BusConnectionId,
-                        To = BusToChoice.ToBusConnectionId,
+                        To = BusToChoice.ToBusConnection,
                         ToBusConnectionId = request.Routing.FromBusConnectionId
                     },
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message);
+                    new ExceptionDto(ex));
             }
             var ackData = CreateSendRequestAckData(ack);
             var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
@@ -550,10 +548,10 @@ public abstract class AzureBaseBusConnection(
             BusInvokeRequestAckDto ack;
             try
             {
-                var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnectionId, ToBusConnectionId = request.Routing.FromBusConnectionId };
+                var responseRouting = request.Routing with { FromBusConnectionId = BusConnectionId, To = BusToChoice.ToBusConnection, ToBusConnectionId = request.Routing.FromBusConnectionId };
                 var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
                 RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-                ack = new BusInvokeRequestAckDto(responseRouting, false, null, null);
+                ack = new BusInvokeRequestAckDto(responseRouting, true, false, null);
                 var ackData = CreateInvokeRequestAckData(ack);
                 var message = new ServiceBusMessage(ackData) { CorrelationId = correlationId, SessionId = sessionId };
                 message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;
@@ -566,12 +564,14 @@ public abstract class AzureBaseBusConnection(
                     request.Routing with
                     {
                         FromBusConnectionId = BusConnectionId,
-                        To = BusToChoice.ToBusConnectionId,
+                        To = BusToChoice.ToBusConnection,
                         ToBusConnectionId = request.Routing.FromBusConnectionId
                     },
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message);
+                    new ExceptionDto(
+                        ex.Message,
+                        ex.InnerException?.Message,
+                        ex.StackTrace));
                 var doneData = CreateInvokeRequestDoneData(done);
                 var message = new ServiceBusMessage(doneData) { CorrelationId = correlationId, SessionId = sessionId };
                 message.ApplicationProperties[MessageTypeKey] = InvokeRequestAckType;
@@ -634,15 +634,15 @@ public abstract class AzureBaseBusConnection(
                     // FIX 1: Als de zender actief heeft gecanceld, geef de TaskCanceledException direct door
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage ?? "De stream is gecanceld door de zender."));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message ?? "De stream is gecanceld door de zender."));
                         return;
                     }
 
                     // FIX 2: Als de zender halverwege is gecrasht (ExceptionMessage ingevuld),
                     // breek dan de lokale foreach af met een keiharde RemoteException!
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -712,28 +712,25 @@ public abstract class AzureBaseBusConnection(
                 await gate.WaitAsync(ct); entered = true;
                 bool hasNext;
                 T currentItem = default!;
-                string? localExceptionMessage = null;
-                string? localInnerExceptionMessage = null;
+                Exception? ex = null;
                 try
                 {
                     hasNext = !cancelled && await enumerator.MoveNextAsync();
                     if (hasNext) currentItem = enumerator.Current;
                 }
-                catch (Exception ex)
+                catch (Exception ex2)
                 {
                     hasNext = false;
-                    localExceptionMessage = ex.Message;
-                    localInnerExceptionMessage = ex.InnerException?.Message;
+                    ex = ex2;
                 }
-                var isCompleted = !hasNext || cancelled || localExceptionMessage != null;
+                var isCompleted = !hasNext || cancelled || ex != null;
                 var response = new BusStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     isCompleted,
                     cancelled,
-                    localExceptionMessage,
-                    localInnerExceptionMessage,
+                    ex == null ? null : new ExceptionDto(ex),
                     hasNext ? serializer(currentItem) : []);
                 if (isCompleted) await Cleanup();
                 return response;
@@ -747,8 +744,7 @@ public abstract class AzureBaseBusConnection(
                     streamId,
                     true,
                     true,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             catch (Exception ex)
@@ -760,8 +756,7 @@ public abstract class AzureBaseBusConnection(
                     streamId,
                     true,
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message,
+                    new ExceptionDto(ex),
                     []);
             }
             finally { if (entered) gate.Release(); }

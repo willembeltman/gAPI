@@ -1,18 +1,20 @@
-using gAPI.Example.WssServer.Server;
-using System.Globalization;
+using gAPI.Core.Server.Extensions;
 using gAPI.Generated;
+using System.Globalization;
 
 var invariantCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentCulture = invariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLogging(logging =>
+{
+    logging.AddFabricLogger();
+});
 
 builder.Services.AddAutoPlane(builder.Configuration);
 builder.Services.AddAutoWssServer(builder.Configuration);
 builder.Services.AddAutoAuthServer(builder.Configuration);
-//builder.Services.AddHostedService<MainService>();
-
 
 var app = builder.Build();
 app.MapAutoWssServer();

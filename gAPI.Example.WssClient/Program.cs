@@ -1,6 +1,5 @@
 ﻿using gAPI.Generated;
-using gAPI.Example.ApiServer.Client;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Globalization;
 
@@ -10,10 +9,11 @@ CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddAutoWssClient(builder.Configuration);
 builder.Services.AddAutoAuthClient(builder.Configuration);
-
-//builder.Services.AddHostedService<MainHub>();
 
 var app = builder.Build();
 app.Run();

@@ -67,6 +67,9 @@ public sealed class RemoteAsyncEnumerable<T> : IAsyncEnumerable<T>
 
             _timeoutCts.Register(() =>
             {
+                if (Volatile.Read(ref _completed) != 0)
+                    return;
+
                 if (_timeoutCts.IsTimedOut)
                 {
                     Complete(new TimeoutException("Remote async enumerable timed out."));

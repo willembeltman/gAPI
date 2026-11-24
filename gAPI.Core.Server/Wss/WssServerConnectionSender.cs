@@ -176,8 +176,6 @@ public class WssServerConnectionSender(
         }, ct);
     }
 
-
-
     public async Task Send_FabricSendRequest_ToClientAsync(SendRequestClientDto message, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))

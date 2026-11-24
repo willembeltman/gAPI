@@ -20,7 +20,6 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
     public SharedReference ClientConnectionHostedService => Context.ClientConnectionHostedService;
     public SharedReference ClientConnection => Context.ClientConnection;
     public SharedReference IClientConnection => Context.IClientConnection;
-    public SharedReference IClientLoggerFactory => Context.SharedReferences.IClientLoggerFactory;
     public SharedReference IWssClientConnection => Context.SharedReferences.IWssClientConnection;
     public SharedReference ClientConfig => Context.SharedReferences.ClientConfig;
     public SharedReference IClientAuthenticatedHttpClient => Context.SharedReferences.IClientAuthenticatedHttpClient;
@@ -38,7 +37,6 @@ public class AddAutoWssClientExtensionGenerator : _BaseGenerator
         Reg("gAPI.Core.Client.Extensions");
         Reg(ClientConnection);
         Reg(IClientConnection);
-        Reg(IClientLoggerFactory);
         Reg(IWssClientConnection);
         Reg(ClientConfig);
         Reg(ClientConnectionHostedService);
@@ -88,6 +86,12 @@ public static class {Name}
             throw new Exception(""WssBackendUrl must be filled in config"");
 
         services.AddSingleton(config);
+
+        services.AddLogging(logging =>
+        {{
+            logging.AddWssLogger();
+        }});
+
         services.AddSingleton(dateTime ?? TimeProvider.System);{string.Join("", Context.ServiceContext.HubInterfaces.Select(@interface => string.Join("", @interface.Services.Where(a => a.IsHostedHubService).Select(service => $@"
         services.AddSingleton<{service}>();"))))}
         services.AddHostedService<{ClientConnectionHostedService}>();
@@ -96,7 +100,6 @@ public static class {Name}
         services.AddSingleton<{ClientConnection}>();
         services.AddSingleton<{IClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
         services.AddSingleton<{IWssClientConnection}>(sp => sp.GetRequiredService<{ClientConnection}>());
-        services.AddSingleton<{IClientLoggerFactory}>(sp => sp.GetRequiredService<{ClientConnection}>());
         
         // Api clients{string.Join("", Context.Apis.Select(api => $@"
         services.AddSingleton<{api.Interface}>(sp => sp.GetRequiredService<{ClientConnection}>().{api});"))}

@@ -24,4 +24,6 @@ public enum FabricClientToHostMessageEnum
     ClearSession,
     GetSessionCookieData,
 
+    Log
+
 }

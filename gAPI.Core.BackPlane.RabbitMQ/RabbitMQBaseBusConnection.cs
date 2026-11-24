@@ -102,7 +102,7 @@ public abstract class RabbitMQBasePlaneConnection(
         var routingKey = routing.To switch
         {
             PlaneToChoice.ToAll => "",
-            PlaneToChoice.ToPlaneConnectionId => $"connection.{routing.ToPlaneConnectionId}",
+            PlaneToChoice.ToPlaneConnection => $"connection.{routing.ToPlaneConnectionId}",
             _ => routing.ServiceId.ToString()
         };
         await PublishRawAsync(exchange, routingKey, payload, ct, null, properties);
@@ -175,8 +175,8 @@ public abstract class RabbitMQBasePlaneConnection(
             timeoutCts.CancelAfter(routing.Timeout);
             var message = await ackCompletion.Task.WaitAsync(routing.Timeout, ct);
 
-            if (message.ExceptionMessage != null)
-                throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+            if (message.Exception != null)
+                throw new RemoteException(message.Exception);
         }
         finally
         {
@@ -234,8 +234,8 @@ public abstract class RabbitMQBasePlaneConnection(
                         {
                             if (message.Cancelled)
                                 ackCompletion.SetCanceled(ct);
-                            else if (message.ExceptionMessage != null)
-                                ackCompletion.SetException(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                            else if (message.Exception != null)
+                                ackCompletion.SetException(new RemoteException(message.Exception));
                             else
                                 ackCompletion.SetCanceled(ct);
                         }
@@ -275,8 +275,8 @@ public abstract class RabbitMQBasePlaneConnection(
                     timeoutCts.CancelAfter(routing.Timeout);
                     var message = await responseCompletion.Task.WaitAsync(routing.Timeout, ct);
 
-                    if (message.ExceptionMessage != null)
-                        throw new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage);
+                    if (message.Exception != null)
+                        throw new RemoteException(message.Exception);
 
                     // STAP 6b: De service stuurt Done terug, we sluiten de lus
                     if (message.IsCompleted)
@@ -348,7 +348,7 @@ public abstract class RabbitMQBasePlaneConnection(
         var routingKey = routing.To switch
         {
             PlaneToChoice.ToAll => "",
-            PlaneToChoice.ToPlaneConnectionId => $"connection.{routing.ToPlaneConnectionId}",
+            PlaneToChoice.ToPlaneConnection => $"connection.{routing.ToPlaneConnectionId}",
             _ => routing.ServiceId.ToString()
         };
         await PublishRawAsync(exchange, routingKey, payload, ct, correlationId, properties);
@@ -575,9 +575,9 @@ public abstract class RabbitMQBasePlaneConnection(
             PlaneSendRequestDoneDto ack;
             try
             {
-                var responseRouting = request.Routing with { FromPlaneConnectionId = PlaneConnectionId, To = PlaneToChoice.ToPlaneConnectionId, ToPlaneConnectionId = request.Routing.FromPlaneConnectionId };
+                var responseRouting = request.Routing with { FromPlaneConnectionId = PlaneConnectionId, To = PlaneToChoice.ToPlaneConnection, ToPlaneConnectionId = request.Routing.FromPlaneConnectionId };
                 await Send_SendRequest_ToServiceAsync(request, timeoutCts.Token);
-                ack = new PlaneSendRequestDoneDto(responseRouting, false, null, null);
+                ack = new PlaneSendRequestDoneDto(responseRouting, false, null);
             }
             catch (Exception ex)
             {
@@ -585,12 +585,11 @@ public abstract class RabbitMQBasePlaneConnection(
                     request.Routing with
                     {
                         FromPlaneConnectionId = PlaneConnectionId,
-                        To = PlaneToChoice.ToPlaneConnectionId,
+                        To = PlaneToChoice.ToPlaneConnection,
                         ToPlaneConnectionId = request.Routing.FromPlaneConnectionId
                     },
                     false,
-                    ex.Message,
-                    ex.InnerException?.Message);
+                    new ExceptionDto(ex));
             }
             var properties = new BasicProperties { Type = SendRequestAckType, CorrelationId = correlationId };
             var ackData = CreateSendRequestAckData(ack);
@@ -627,10 +626,10 @@ public abstract class RabbitMQBasePlaneConnection(
         PlaneInvokeRequestAckDto ack;
         try
         {
-            var responseRouting = request.Routing with { FromPlaneConnectionId = PlaneConnectionId, To = PlaneToChoice.ToPlaneConnectionId, ToPlaneConnectionId = request.Routing.FromPlaneConnectionId };
+            var responseRouting = request.Routing with { FromPlaneConnectionId = PlaneConnectionId, To = PlaneToChoice.ToPlaneConnection, ToPlaneConnectionId = request.Routing.FromPlaneConnectionId };
             var enumerable = Send_InvokeRequest_ToServiceAsync(request, timeoutCts.Token);
             RegisterAsyncEnumerableArgument<byte[]>(request.Routing, -1, enumerable, static item => item, timeoutCts);
-            ack = new PlaneInvokeRequestAckDto(responseRouting, false, null, null);
+            ack = new PlaneInvokeRequestAckDto(responseRouting, true, false, null);
             var properties = new BasicProperties { Type = InvokeRequestAckType, CorrelationId = correlationId };
             byte[] ackData = CreateInvokeRequestAckData(ack);
             await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
@@ -641,12 +640,11 @@ public abstract class RabbitMQBasePlaneConnection(
                 request.Routing with
                 {
                     FromPlaneConnectionId = PlaneConnectionId,
-                    To = PlaneToChoice.ToPlaneConnectionId,
+                    To = PlaneToChoice.ToPlaneConnection,
                     ToPlaneConnectionId = request.Routing.FromPlaneConnectionId
                 },
                 false,
-                ex.Message,
-                ex.InnerException?.Message);
+                new ExceptionDto(ex));
             var properties = new BasicProperties { Type = InvokeRequestDoneType, CorrelationId = correlationId };
             byte[] ackData = CreateInvokeRequestDoneData(done);
             await PublishRawAsync("", replyTo, ackData, timeoutCts.Token, correlationId, properties);
@@ -686,13 +684,12 @@ public abstract class RabbitMQBasePlaneConnection(
                             else
                             {
                                 response = new PlaneStreamingResponseDto(
-                                    request.Routing, 
+                                    request.Routing,
                                     request.ArgumentIndex,
                                     request.StreamId,
-                                    IsCompleted: true, 
-                                    IsCancelled: request.Cancelled, 
-                                    ExceptionMessage: request.Cancelled ? null : "De streamingregistratie bestaat niet meer.",
-                                    InnerExceptionMessage: null,
+                                    IsCompleted: true,
+                                    IsCancelled: request.Cancelled,
+                                    Exception: request.Cancelled ? null : new ExceptionDto("De streamingregistratie bestaat niet meer.", null, Environment.StackTrace),
                                     BinaryData: []);
                             }
                             if (!string.IsNullOrWhiteSpace(ea.BasicProperties.ReplyTo))
@@ -706,7 +703,7 @@ public abstract class RabbitMQBasePlaneConnection(
                             //    await UnRegisterAsyncEnumerableArgument(request.Routing, -1);
                             //}
                             // FIX: Geldt voor álle argumenten, niet alleen -1! Dit voorkomt memory leaks bij parameters.
-                            if (response.IsCompleted || response.IsCancelled || response.ExceptionMessage != null)
+                            if (response.IsCompleted || response.IsCancelled || response.Exception != null)
                             {
                                 await UnRegisterAsyncEnumerableArgument(request.Routing, request.ArgumentIndex);
                             }
@@ -761,15 +758,15 @@ public abstract class RabbitMQBasePlaneConnection(
                     // FIX 1: Als de zender actief heeft gecanceld, geef de TaskCanceledException direct door
                     if (message.IsCancelled)
                     {
-                        enumerator.Complete(new TaskCanceledException(message.ExceptionMessage ?? "De stream is gecanceld door de zender."));
+                        enumerator.Complete(new TaskCanceledException(message.Exception?.Message ?? "De stream is gecanceld door de zender."));
                         return;
                     }
 
                     // FIX 2: Als de zender halverwege is gecrasht (ExceptionMessage ingevuld),
                     // breek dan de lokale foreach af met een keiharde RemoteException!
-                    if (message.ExceptionMessage != null)
+                    if (message.Exception != null)
                     {
-                        enumerator.Complete(new RemoteException(message.ExceptionMessage, message.InnerExceptionMessage));
+                        enumerator.Complete(new RemoteException(message.Exception));
                         return;
                     }
 
@@ -839,8 +836,7 @@ public abstract class RabbitMQBasePlaneConnection(
 
                         bool hasNext;
                         T currentItem = default!;
-                        string? localExceptionMessage = null;
-                        string? localInnerExceptionMessage = null;
+                        Exception? ex = null;
 
                         try
                         {
@@ -851,16 +847,15 @@ public abstract class RabbitMQBasePlaneConnection(
                                 currentItem = enumerator.Current;
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception ex2)
                         {
                             // De lokale bron-iterator klapt halverwege het yielden uit elkaar
                             hasNext = false;
-                            localExceptionMessage = ex.Message;
-                            localInnerExceptionMessage = ex.InnerException?.Message;
+                            ex = ex2;
                         }
 
                         // Als er een exception was, markeren we de dto direct als Completed met de ExceptionMessage
-                        var isCompleted = !hasNext || cancelled || localExceptionMessage != null;
+                        var isCompleted = !hasNext || cancelled || ex != null;
 
                         var response = new PlaneStreamingResponseDto(
                             routing,
@@ -868,8 +863,7 @@ public abstract class RabbitMQBasePlaneConnection(
                             streamId,
                             IsCompleted: isCompleted,
                             IsCancelled: cancelled,
-                            ExceptionMessage: localExceptionMessage,
-                            InnerExceptionMessage: localInnerExceptionMessage,
+                            ex == null ? null : new ExceptionDto(ex),
                             BinaryData: hasNext ? serializer(currentItem) : []
                         );
 
@@ -882,13 +876,13 @@ public abstract class RabbitMQBasePlaneConnection(
                     {
                         await Cleanup();
                         return new PlaneStreamingResponseDto(
-                            routing, argumentIndex, streamId, true, true, ex.Message, ex.InnerException?.Message, []);
+                            routing, argumentIndex, streamId, true, true, new ExceptionDto(ex), []);
                     }
                     catch (Exception ex)
                     {
                         await Cleanup();
                         return new PlaneStreamingResponseDto(
-                            routing, argumentIndex, streamId, true, false, ex.Message, ex.InnerException?.Message, []);
+                            routing, argumentIndex, streamId, true, false, new ExceptionDto(ex), []);
                     }
                     finally
                     {

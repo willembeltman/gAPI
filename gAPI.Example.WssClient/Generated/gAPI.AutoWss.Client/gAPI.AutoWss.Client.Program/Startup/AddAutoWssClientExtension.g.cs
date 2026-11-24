@@ -36,6 +36,12 @@ public static class AddAutoWssClientExtension
             throw new Exception("WssBackendUrl must be filled in config");
 
         services.AddSingleton(config);
+
+        services.AddLogging(logging =>
+        {
+            logging.AddWssLogger();
+        });
+
         services.AddSingleton(dateTime ?? TimeProvider.System);
         services.AddSingleton<WssHub>();
         services.AddHostedService<ClientConnectionHostedService>();
@@ -44,7 +50,6 @@ public static class AddAutoWssClientExtension
         services.AddSingleton<ClientConnection>();
         services.AddSingleton<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddSingleton<IWssClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
-        services.AddSingleton<IClientLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
         
         // Api clients
         services.AddSingleton<IWssApi>(sp => sp.GetRequiredService<ClientConnection>().WssApi);

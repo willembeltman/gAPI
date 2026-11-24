@@ -25,11 +25,11 @@ public class ApiPlane(
     {
     }
 
-    public async Task OnSubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnSubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
 
-    public async Task OnUnsubscribedAsync(ServiceId serviceId, CancellationToken ct)
+    public async Task OnUnsubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
     }
 

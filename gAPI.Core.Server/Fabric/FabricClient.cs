@@ -6,6 +6,7 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
+using gAPI.Core.Server.Logs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
@@ -20,6 +21,7 @@ public sealed class FabricClient
     public FabricClient(
         SessionCache sessionCache,
         StreamingCache streamingCache,
+        ServerLogQueue serverLogQueue,
         ServerConnectionCollection connections,
         ServiceSubscriptionCollection serviceSubscriptions,
         ILoggerFactory loggerFactory,
@@ -29,6 +31,7 @@ public sealed class FabricClient
 
         LocalSessionCache = sessionCache;
         StreamingCache = streamingCache;
+        ServerLogQueue = serverLogQueue;
         Connections = connections;
         ServiceSubscriptions = serviceSubscriptions;
         Logger = loggerFactory.CreateLogger<FabricClient>();
@@ -87,6 +90,9 @@ public sealed class FabricClient
     readonly bool UseFabric;
 
     readonly StreamingCache StreamingCache;
+
+    public ServerLogQueue ServerLogQueue { get; }
+
     readonly SessionCache LocalSessionCache;
 
     readonly ServerConnectionCollection Connections;
@@ -163,6 +169,7 @@ public sealed class FabricClient
                 ConnectedCts = new CancellationTokenSource();
                 var connectedCts = ConnectedCts;
 
+                var loggerTask = Task.Run(async () => { await LoggerKernel(ServerLogQueue, connectedCts.Token); });
                 var receiverTask = Task.Run(async () => { await ReceiveKernel(reader, connectedCts.Token); });
                 var senderTask = Task.Run(async () => { await Sender.SendKernel(writer, connectedCts.Token); });
 
@@ -173,9 +180,9 @@ public sealed class FabricClient
                 {
                     try
                     {
-                        await Task.WhenAny(senderTask, receiverTask);
+                        await Task.WhenAny(senderTask, receiverTask, loggerTask);
                         connectedCts.Cancel();
-                        await Task.WhenAll(senderTask, receiverTask);
+                        await Task.WhenAll(senderTask, receiverTask, loggerTask);
 
                         if (RunningRequested)
                             await ReconnectAsync();
@@ -205,6 +212,14 @@ public sealed class FabricClient
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
             }
+        }
+    }
+
+    private async Task LoggerKernel(ServerLogQueue serverLogQueue, CancellationToken ct)
+    {
+        await foreach (var item in serverLogQueue.ReadAllAsync(ct))
+        {
+            await Sender.Send_Log_ToFabricAsync(item, ct);
         }
     }
 
@@ -456,10 +471,6 @@ public sealed class FabricClient
                         var activate = BinaryReader.ReadSendGetSessionCookieDataResponseDto(Config.MaxPackageSize ?? 512 * 1024);
                         Receive_GetSessionResponse_FromFabricAsync(activate, ct);
                         break;
-                    case FabricHostToClientMessageEnum.Log:
-                        var log = BinaryReader.ReadFabricLogDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_Log_FromFabricAsync(log, ct);
-                        break;
 
 
                     case FabricHostToClientMessageEnum.FabricSendAndForgetRequest:
@@ -628,17 +639,6 @@ public sealed class FabricClient
         if (StreamingCache.PendingGetSessionRequests.TryRemove(message.SessionId, out var completion))
             completion.TrySetResult(message.CookieData);
     }
-    private void Receive_Log_FromFabricAsync(FabricLogDto log, CancellationToken connectionLifecycleCt)
-    {
-        // niet loggen ;)
-#pragma warning disable CA2254 // Template should be a static expression
-#pragma warning disable CA1873 // Avoid potentially expensive logging
-
-        Logger.Log(log.Level, log.Message);
-
-#pragma warning restore CA2254 // Template should be a static expression
-#pragma warning restore CA1873 // Avoid potentially expensive logging
-    }
 
     private async Task Received_SubscribeAck_FromFabric(SubscribeAckDto message, CancellationToken connectionLifecycleCt)
     {
@@ -709,12 +709,14 @@ public sealed class FabricClient
         }
 
         if (!called)
+        {
             await Sender.Send_SendRequestDone_ToFabricAsync(
                 new SendRequestDoneDto(
                     message.Routing,
                     false,
                     message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No receivers found", null, Environment.StackTrace) : null),
                 ct);
+        }
     }
     private async Task Receive_FabricSendRequestCancelled_FromFabricAsync(SendRequestCancelledDto message, CancellationToken connectionLifecycleCt)
     {
@@ -769,26 +771,13 @@ public sealed class FabricClient
 
         if (!called)
         {
-            if (message.Routing.ThrowIfNoReceiver)
-            {
-                await Sender.Send_InvokeRequestAck_ToFabricAsync(
-                    new InvokeRequestAckDto(
-                        message.Routing,
-                        false,
-                        false,
-                        new ExceptionDto("No receivers found", null, null)),
-                    ct);
-            }
-            else
-            {
-                await Sender.Send_InvokeRequestAck_ToFabricAsync(
-                    new InvokeRequestAckDto(
-                        message.Routing,
-                        false,
-                        false,
-                        null),
-                    ct);
-            }
+            await Sender.Send_InvokeRequestAck_ToFabricAsync(
+                new InvokeRequestAckDto(
+                    message.Routing,
+                    false,
+                    false,
+                    message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No receivers found", null, null) : null),
+                ct);
         }
     }
     private async Task Receive_FabricInvokeRequestCancelled_FromFabricAsync(InvokeRequestCancelledDto message, CancellationToken connectionLifecycleCt)
@@ -818,7 +807,7 @@ public sealed class FabricClient
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
     private void Receive_InvokeRequestDone_FromFabricAsync(InvokeRequestDoneDto message, CancellationToken connectionLifecycleCt)
@@ -833,7 +822,7 @@ public sealed class FabricClient
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -881,6 +870,7 @@ public sealed class FabricClient
                 await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
             }
             else
+            {
                 await Sender.Send_StreamingResponse_ToFabricAsync(
                     new StreamingResponseDto(
                         message.Routing,
@@ -891,6 +881,7 @@ public sealed class FabricClient
                         message.Routing.ThrowIfNoReceiver ? new ExceptionDto("No StreamingRequestHandlers found", null, null) : null,
                         []),
                     ct);
+            }
         }
     }
     private async Task Receive_StreamingResponse_FromFabricAsync(StreamingResponseDto message, CancellationToken connectionLifecycleCt)
@@ -965,7 +956,7 @@ public sealed class FabricClient
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
             return;
         }
         if (!UseFabric)
@@ -985,7 +976,7 @@ public sealed class FabricClient
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
             return;
         }
         if (!UseFabric)
@@ -1046,6 +1037,11 @@ public sealed class FabricClient
 
         if (StreamingCache.StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
             responseHandler.Invoke(message);
+    }
+
+    public async Task Handle_Log(LogDto log, CancellationToken connectionLifecycleCt)
+    {
+        await Sender.Send_Log_ToFabricAsync(log, connectionLifecycleCt);
     }
 
     public RemoteAsyncEnumerable<byte[]> RegisterRemoteAsyncEnumerableArgumentByte_ToClient(IServiceSubscription sseServiceSubscription, RoutingDto routing, int argumentIndex, CancellationTokenSourceDispose timeoutCts)
@@ -1112,6 +1108,7 @@ public sealed class FabricClient
                 StreamingCache.StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
+
 
     #endregion
 
@@ -1583,5 +1580,4 @@ public sealed class FabricClient
             ConnectedCts.Dispose();
         }
     }
-
 }

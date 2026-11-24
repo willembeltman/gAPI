@@ -24,10 +24,10 @@ public class SharedReferences
         SendRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.SendRequestDto", allSymbols);
         InvokeRequestDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestDto", allSymbols);
         StreamingResponseDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.StreamingResponseDto", allSymbols);
+        ServiceSubscriptionKeyDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.ServiceSubscriptionKeyDto", allSymbols);
         InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
         InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
-        IClientLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         WssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Wss.WssClientConnection", allSymbols);
         IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
@@ -38,7 +38,10 @@ public class SharedReferences
         StaticNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Navigation.StaticNavigationManager", allSymbols);
         WithCookiesHandler = SharedReferenceFinder.Find("gAPI.Core.Client.Razor.WithCookiesHandler", allSymbols);
         StateChangedHandler = SharedReferenceFinder.Find("gAPI.Core.Delegates.StateChangedHandler", allSymbols);
+        ClientLogQueue = SharedReferenceFinder.Find("gAPI.Core.Client.Logs.ClientLogQueue", allSymbols);
+
         IStateParserT = new SharedReference("gAPI.Core.Interfaces.IStateParser");
+        IHubServiceSubscription = new SharedReference("gAPI.Core.Client.Interfaces.IHubServiceSubscription");
 
         CancellationTokenSourceDispose = SharedReferenceFinder.Find("gAPI.Core.Helpers.CancellationTokenSourceDispose", allSymbols);
 
@@ -69,9 +72,9 @@ public class SharedReferences
     public SharedReference UnsubscribeDto { get; }
     public SharedReference InvokeRequestDto { get; }
     public SharedReference StreamingResponseDto { get; }
+    public SharedReference ServiceSubscriptionKeyDto { get; }
     public SharedReference InvokeRequestAckDto { get; }
     public SharedReference WssClientConnection { get; }
-    public SharedReference IClientLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }
     public SharedReference IWssClientConnection { get; }
     public SharedReference? AuthClient_FormFile { get; }
@@ -82,10 +85,12 @@ public class SharedReferences
     public SharedReference StaticNavigationManager { get; }
     public SharedReference WithCookiesHandler { get; }
     public SharedReference IStateParserT { get; }
+    public SharedReference IHubServiceSubscription { get; }
     public SharedReference CancellationTokenSourceDispose { get; }
     public SharedReference AuthStateDto { get; }
     public SharedReference? StateDto { get; }
     public SharedReference StateChangedHandler { get; }
+    public SharedReference ClientLogQueue { get; }
     public SharedReference? IClientAuthenticatedHttpClientImplementation { get; }
     public SharedReference? OwnClientConnection { get; }
     public Dictionary<Interface, SharedReference> OwnApis { get; }

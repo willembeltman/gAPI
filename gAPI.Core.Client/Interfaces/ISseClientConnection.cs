@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 
 namespace gAPI.Core.Client.Interfaces;
 
@@ -8,8 +9,8 @@ public interface ISseClientConnection : IDisposable
 
     void Start(CancellationToken ct);
 
-    Task<ServiceSubscriptionId[]> SubscribeAsync(object implementation, CancellationToken ct = default);
-    Task UnsubscribeAsync(object implementation, CancellationToken ct = default);
+    Task<List<ServiceSubscriptionKeyDto>> SubscribeAsync(object implementation, CancellationToken ct = default);
+    Task<List<ServiceSubscriptionKeyDto>> UnsubscribeAsync(object implementation, CancellationToken ct = default);
 
     Task Send_SendRequest_ToServiceAsync(
         ServiceId serviceId,

@@ -4,7 +4,6 @@ using gAPI.Core.Server.Dashboard;
 using gAPI.Core.Server.Dtos;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Fabric;
-using gAPI.Core.Server.Interfaces;
 using gAPI.Fabric.Server.Collections;
 using gAPI.Fabric.Server.Helpers;
 using gAPI.Fabric.Server.Interfaces;
@@ -16,7 +15,7 @@ using System.Threading.Channels;
 
 namespace gAPI.Fabric.Server.Services;
 
-public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
+public sealed class FabricPlaneHost : IActor
 {
     private readonly FabricManager Manager;
     private readonly TcpClient TcpClient;
@@ -25,8 +24,7 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
     private readonly CancellationTokenSource Cts;
 
     public FabricPlaneConnectionId FabricPlaneConnectionId { get; }
-    public ILogger<FabricHost> Logger { get; }
-    public ILogger<FabricManager> ManagerLogger { get; }
+    public ILogger<FabricPlaneHost> Logger { get; }
     public Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
 
     private readonly ConcurrentQueue<(double time, long bytes)> SendBytesLogger = new();
@@ -62,11 +60,11 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
     }
 
     private FabricPlaneHostCollection PlaneConnections => Manager.AllPlaneConnections;
-    private ConsoleBuffer Console => Manager.Console;
 
     public LogLevel MinimumLevel => Manager.Config.LogLevel;
 
     public FabricPlaneHost(
+        ILoggerFactory loggerFactory,
         FabricManager manager,
         TcpClient tcpClient)
     {
@@ -76,8 +74,7 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
         Stream = tcpClient.GetStream();
         SendQueue = Channel.CreateUnbounded<SendQueueItem>();
         FabricPlaneConnectionId = PlaneConnections.AddConnection(this);
-        Logger = ((ILoggerFactory)this).CreateLogger<FabricHost>();
-        ManagerLogger = ((ILoggerFactory)this).CreateLogger<FabricManager>();
+        Logger = loggerFactory.CreateLogger<FabricPlaneHost>();
     }
 
     public void Start()
@@ -233,7 +230,7 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
 
     private async Task ReceiveLoop()
     {
-        Console.WriteInfo($"FabricHost {FabricPlaneConnectionId} started");
+        Logger.LogInformation("FabricHost {FabricPlaneConnectionId} started", FabricPlaneConnectionId);
 
         try
         {
@@ -251,84 +248,84 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
                         {
                             var busSubscribe = reader.ReadPlaneSubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSubscribe_FromApiAsync(this, ManagerLogger, busSubscribe, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneSubscribe_FromApiAsync(this, busSubscribe, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneUnsubscribe:
                         {
                             var busUnsubscribe = reader.ReadPlaneUnsubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneUnsubscribe_FromApiAsync(this, ManagerLogger, busUnsubscribe, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneUnsubscribe_FromApiAsync(this, busUnsubscribe, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneFireAndForget:
                         {
                             var busFireAndForget = reader.ReadPlaneSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendFireAndForget_FromApiAsync(this, ManagerLogger, busFireAndForget, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneSendFireAndForget_FromApiAsync(this, busFireAndForget, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequest:
                         {
                             var busSendRequest = reader.ReadPlaneSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequest_FromApiAsync(this, ManagerLogger, busSendRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneSendRequest_FromApiAsync(this, busSendRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequestCancelled:
                         {
                             var busSendRequestCancelled = reader.ReadPlaneSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequestCancelled_FromApiAsync(this, ManagerLogger, busSendRequestCancelled, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneSendRequestCancelled_FromApiAsync(this, busSendRequestCancelled, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequestDone:
                         {
                             var busSendRequestAck = reader.ReadPlaneSendRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequestDone_FromApiAsync(this, ManagerLogger, busSendRequestAck, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneSendRequestDone_FromApiAsync(this, busSendRequestAck, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequest:
                         {
                             var busInvokeRequest = reader.ReadPlaneInvokeRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequest_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneInvokeRequest_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestCancelled:
                         {
                             var busInvokeRequest = reader.ReadPlaneInvokeRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestCancelled_FromApiAsync(this, ManagerLogger, busInvokeRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneInvokeRequestCancelled_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestAck:
                         {
                             var busInvokeRequestAck = reader.ReadPlaneInvokeRequestAckDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestAck_FromApiAsync(this, ManagerLogger, busInvokeRequestAck, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneInvokeRequestAck_FromApiAsync(this, busInvokeRequestAck, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestDone:
                         {
                             var busInvokeRequestDone = reader.ReadPlaneInvokeRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestDone_FromApiAsync(this, ManagerLogger, busInvokeRequestDone, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneInvokeRequestDone_FromApiAsync(this, busInvokeRequestDone, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneStreamingRequest:
                         {
                             var busStreamingRequest = reader.ReadPlaneStreamingRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneStreamingRequest_FromApiAsync(this, ManagerLogger, busStreamingRequest, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneStreamingRequest_FromApiAsync(this, busStreamingRequest, receiveSize, Cts.Token);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneStreamingResponse:
                         {
                             var busStreamingResponse = reader.ReadPlaneStreamingResponseDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneStreamingResponse_FromApiAsync(this, ManagerLogger, busStreamingResponse, receiveSize, Cts.Token);
+                            await Manager.Receive_PlaneStreamingResponse_FromApiAsync(this, busStreamingResponse, receiveSize, Cts.Token);
                         }
                         break;
                 }
@@ -340,12 +337,11 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "ReceiveLoop");
-            Console.WriteError($"FabricClient #{FabricPlaneConnectionId.Value}: receive loop failed.", ex);
+            Logger.LogError(ex, "FabricClient #{FabricPlaneConnectionId.Value}: receive loop failed.", FabricPlaneConnectionId.Value);
         }
         Dispose();
 
-        Console.WriteInfo($"FabricHost {FabricPlaneConnectionId} stopped");
+        Logger.LogInformation("FabricHost {FabricPlaneConnectionId} stopped", FabricPlaneConnectionId);
     }
 
     public void Dispose()
@@ -354,22 +350,6 @@ public sealed class FabricPlaneHost : IFabricLoggerFactory, IActor
         Stream.Dispose();
         TcpClient.Dispose();
         Manager.Disconnected(this);
-    }
-
-    public async Task Send_Log_ToServerAsync(ClientLogDto dto, CancellationToken ct)
-    {
-        // Do not add logging lol
-        await Enqueue(writer =>
-        {
-            FabricConverter.WriteHostToClientMessageType(writer, FabricHostToClientMessageEnum.Log);
-            writer.Write(dto);
-        }, Manager.Logging);
-    }
-    public ILogger CreateLogger(string categoryName)
-        => new FabricLogger(categoryName, this);
-    public void AddProvider(ILoggerProvider provider)
-    {
-        // no-op
     }
 
 }

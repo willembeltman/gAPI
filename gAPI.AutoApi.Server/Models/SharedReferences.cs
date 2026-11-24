@@ -27,6 +27,7 @@ public class SharedReferences
         FabricClientHostedService = SharedReferenceFinder.Find("gAPI.Core.Server.Fabric.FabricClientHostedService", allSymbols);
         SseServiceSubscription = SharedReferenceFinder.Find("gAPI.Core.Server.Sse.SseServiceSubscription", allSymbols);
         ServiceId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceId", allSymbols);
+        ServiceSubscriptionId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceSubscriptionId", allSymbols);
         RequestId = SharedReferenceFinder.Find("gAPI.Core.Ids.RequestId", allSymbols);
         ServiceMethodId = SharedReferenceFinder.Find("gAPI.Core.Ids.ServiceMethodId", allSymbols);
         UserId = SharedReferenceFinder.Find("gAPI.Core.Ids.UserId", allSymbols);
@@ -53,6 +54,7 @@ public class SharedReferences
     public SharedReference ServerConnectionCollection { get; }
     public SharedReference SseServiceSubscription { get; }
     public SharedReference ServiceId { get; }
+    public SharedReference ServiceSubscriptionId { get; }
     public SharedReference RequestId { get; }
     public SharedReference ServiceMethodId { get; }
     public SharedReference UserId { get; }

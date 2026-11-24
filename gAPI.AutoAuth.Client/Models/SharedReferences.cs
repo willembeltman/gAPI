@@ -12,7 +12,6 @@ public class SharedReferences
         InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
         InvokeRequestAckDto = SharedReferenceFinder.Find("gAPI.Core.Dtos.InvokeRequestAckDto", allSymbols);
         ClientConfig = SharedReferenceFinder.Find("gAPI.Core.Client.Config.ClientConfig", allSymbols);
-        IClientLoggerFactory = SharedReferenceFinder.Find("gAPI.Core.Interfaces.IClientLoggerFactory", allSymbols);
         IClientAuthenticatedHttpClient = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient", allSymbols);
         IWssClientConnection = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IWssClientConnection", allSymbols);
         IUriNavigationManager = SharedReferenceFinder.Find("gAPI.Core.Client.Interfaces.IUriNavigationManager", allSymbols);
@@ -31,7 +30,6 @@ public class SharedReferences
     public SharedReference SessionId { get; }
     public SharedReference UserId { get; }
     public SharedReference InvokeRequestAckDto { get; }
-    public SharedReference IClientLoggerFactory { get; }
     public SharedReference IClientAuthenticatedHttpClient { get; }
     public SharedReference IWssClientConnection { get; }
     public SharedReference ClientConfig { get; }

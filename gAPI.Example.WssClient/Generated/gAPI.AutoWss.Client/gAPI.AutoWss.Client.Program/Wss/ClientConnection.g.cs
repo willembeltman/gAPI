@@ -1,17 +1,18 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Client.Logs;
 using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Example.ApiServer.Client;
 using gAPI.Example.Shared.WssPublic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -26,13 +27,15 @@ public class ClientConnection
     : WssClientConnection, IClientConnection
 {
     public ClientConnection(
+        ILoggerFactory loggerFactory,
         ClientConfig clientConfig,
+        ClientLogQueue clientLogQueue,
         IClientAuthenticatedHttpClient httpClient)
-        : base(clientConfig, httpClient)
+        : base(loggerFactory, clientConfig, clientLogQueue, httpClient)
     {
-        ___Logger = ((IClientLoggerFactory)this).CreateLogger<ClientConnection>();
+        ___Logger = loggerFactory.CreateLogger<ClientConnection>();
         ___maxBufferSize = clientConfig.MaxPackageSize ?? 512 * 1024;
-        WssApi = new WssApi(this, this, httpClient);
+        WssApi = new WssApi(this, loggerFactory, httpClient);
     }
 
     readonly ILogger ___Logger;
@@ -43,127 +46,80 @@ public class ClientConnection
     public WssApi WssApi { get; }
     IWssApi IClientConnection.WssApi => WssApi;
     
+    readonly ConcurrentDictionary<IWssHub, ServiceSubscriptionKeyDto> WssHubs = [];
+    
+    public async Task<List<ServiceSubscriptionKeyDto>> SubscribeAsync(object implementation, CancellationToken ct = default)
+    {
+        await WaitForConnectionAsync(ct);
 
-    readonly List<IWssHub> WssHubs = [];
-    readonly SemaphoreSlim WssHubsLock = new(1, 1);
-    
-    private async Task<IWssHub[]> GetWssHubsSnapshotAsync()
-    {
-        await WssHubsLock.WaitAsync();
-        try
-        {
-            return [.. WssHubs];
-        }
-        finally
-        {
-            WssHubsLock.Release();
-        }
-    }
-    
-    public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
-    {
+        var serviceSubscriptionIds = new List<ServiceSubscriptionKeyDto>();
         if (implementation is IWssHub wssHub)
         {
-            if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace("{now} SubscribeAsync({serviceId})", DateTime.Now.ToString("HH:mm:ss.fff"), "IWssHub");
-
-            await WaitForConnectionAsync(___ct);
-
-            await WssHubsLock.WaitAsync(___ct);
-            try
+            var serviceId = new ServiceId("IWssHub");
+            var serviceSubscriptionId = ServiceSubscriptionId.New();
+            var value = new ServiceSubscriptionKeyDto(serviceId, serviceSubscriptionId);
+            if (WssHubs.TryAdd(wssHub, value))
             {
-                WssHubs.Add(wssHub);
+                await Send_Subscribe_ToServerAsync(
+                    implementation, 
+                    serviceId, 
+                    serviceSubscriptionId,
+                    ct);
+                serviceSubscriptionIds.Add(value);
             }
-            finally
-            {
-                WssHubsLock.Release();
-            }
-
-            await Send_Subscribe_ToServerAsync(
-                wssHub,
-                new ServiceId("IWssHub"),
-                HttpClient.UserId,
-                HttpClient.SessionId, 
-                ___ct);
         }
+        return serviceSubscriptionIds;
     }
-    public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
+    public async Task<List<ServiceSubscriptionKeyDto>> UnsubscribeAsync(object implementation, CancellationToken ct = default)
     {
+        var serviceSubscriptionIds = new List<ServiceSubscriptionKeyDto>();
         if (implementation is IWssHub wssHub)
         {
-            if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace("{now} UnsubscribeAsync({serviceId})", DateTime.Now.ToString("HH:mm:ss.fff"), "IWssHub");
-
-            await WssHubsLock.WaitAsync(___ct);
-            try
+            if (WssHubs.TryRemove(wssHub, out var value))
             {
-                WssHubs.Remove(wssHub);
+                await Send_Unsubscribe_ToServerAsync(
+                    implementation, 
+                    value.ServiceId, 
+                    value.ServiceSubscriptionId, 
+                    ct);
+                serviceSubscriptionIds.Add(value);
             }
-            finally
-            {
-                WssHubsLock.Release();
-            }
-
-            await Send_Unsubscribe_ToServerAsync(
-                wssHub,
-                new ServiceId("IWssHub"),
-                HttpClient.UserId,
-                HttpClient.SessionId, 
-                ___ct);
         }
+        return serviceSubscriptionIds;
     }
     
     public override async Task OnDisconnectedAsync(CancellationToken ___ct)
     {
-        await WssHubsLock.WaitAsync(___ct);
-        try
+        foreach (var wssHub in WssHubs)
         {
-            foreach (var wssHub in WssHubs)
+            if (wssHub.Key is IHubServiceSubscription serviceSubscription)
             {
-                if (wssHub is IHubServiceSubscription wssHubHubServiceSubscription)
-                {
-                    var ___serviceId = new ServiceId("IWssHub");
-                    await wssHubHubServiceSubscription.OnUnsubscribedAsync(___serviceId, ___ct);
-                }
+                await serviceSubscription.OnUnsubscribedAsync(
+                    wssHub.Value.ServiceId, 
+                    wssHub.Value.ServiceSubscriptionId, 
+                    ___ct);
             }
-        }
-        finally
-        {
-            WssHubsLock.Release();
         }
     }
     public override async Task OnRestoreSubscriptionsAsync(CancellationToken ___ct)
     {
-        await WssHubsLock.WaitAsync(___ct);
-        try
+        foreach (var wssHub in WssHubs)
         {
-            foreach (var wssHub in WssHubs)
-            {
-                await Send_Subscribe_ToServerAsync(
-                    wssHub,
-                    new ServiceId("IWssHub"),
-                    HttpClient.UserId,
-                    HttpClient.SessionId,
-                    ___ct);// This causes the reconnect event to be called
-            }
-        }
-        finally
-        {
-            WssHubsLock.Release();
+            await Send_Subscribe_ToServerAsync(
+                wssHub.Key, 
+                wssHub.Value.ServiceId,
+                wssHub.Value.ServiceSubscriptionId, 
+                ___ct);// This causes the reconnect event to be called
         }
     }
 
     
     protected override async Task Send_SendAndForgetRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
-        
         switch (___sendRequest.Routing.ServiceId.Value)
         {
             case "IWssHub":
                 {
-                    var clients = await GetWssHubsSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "SendAndForget":
@@ -171,9 +127,9 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    client.SendAndForget(
+                                    client.Key.SendAndForget(
                                         message,
                                         ___ct);
                                 }
@@ -184,9 +140,9 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    client.Ping(
+                                    client.Key.Ping(
                                         v);
                                 }
                                 return;
@@ -196,9 +152,9 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var v = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    client.Pong(
+                                    client.Key.Pong(
                                         v);
                                 }
                                 return;
@@ -219,7 +175,6 @@ public class ClientConnection
         {
             case "IWssHub":
                 {
-                    var clients = await GetWssHubsSnapshotAsync();
                     switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "Send":
@@ -227,9 +182,9 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var message = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    await client.Send(
+                                    await client.Key.Send(
                                         message,
                                         ___timeoutCts.Token);
                                 }
@@ -239,9 +194,9 @@ public class ClientConnection
                             {
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 0, IWssHub_SendWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    await client.SendWithList(
+                                    await client.Key.SendWithList(
                                         list,
                                         ___timeoutCts.Token);
                                 }
@@ -264,7 +219,6 @@ public class ClientConnection
         {
             case "IWssHub":
                 {
-                    var clients = await GetWssHubsSnapshotAsync();
                     switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "InvokeList":
@@ -272,9 +226,9 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    var responses = client.InvokeList(
+                                    var responses = client.Key.InvokeList(
                                         name,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
@@ -288,9 +242,9 @@ public class ClientConnection
                             {
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var list = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 0, IWssHub_InvokeListWithList_0_Deserializer, ___timeoutCts);
-                                foreach (var client in clients)
+                                foreach (var client in WssHubs)
                                 {
-                                    var responses = client.InvokeListWithList(
+                                    var responses = client.Key.InvokeListWithList(
                                         list,
                                         ___timeoutCts.Token);
                                     await foreach (var response in responses)
