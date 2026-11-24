@@ -7,10 +7,6 @@ CultureInfo.DefaultThreadCurrentCulture = invariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddLogging(logging =>
-{
-    logging.AddFabricLogger();
-});
 
 builder.Services.AddAutoPlane(builder.Configuration);
 builder.Services.AddAutoWssServer(builder.Configuration);
