@@ -642,7 +642,24 @@ public sealed class PlaneFabricClient
         try
         {
             var enumerable = PlaneConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts, timeoutCts.Token);
-            RegisterPlaneAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
+            RegisterPlaneAsyncEnumerableArgumentByte(
+                message.Routing,
+                -1,
+                enumerable, 
+                timeoutCts,
+                onDone: async () =>
+                {
+                    StreamingCache.PlaneReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
+                    await UnRegisterPlaneAsyncEnumerableArgument(message.Routing, -1);
+
+                    await Sender.Send_PlaneInvokeRequestDone_ToFabricAsync(
+                        new PlaneInvokeRequestDoneDto(
+                            message.Routing,
+                            false,
+                            null
+                        ), ct);
+                });
+            
             await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
                 new PlaneInvokeRequestAckDto(
                     message.Routing,
@@ -654,9 +671,10 @@ public sealed class PlaneFabricClient
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task was cancelled");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
-                new PlaneSendRequestDoneDto(
+            await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
+                new PlaneInvokeRequestAckDto(
                     message.Routing,
+                    false,
                     true,
                     new ExceptionDto(ex)),
                 ct);
@@ -664,9 +682,10 @@ public sealed class PlaneFabricClient
         catch (Exception ex)
         {
             Logger.LogError(ex, "Receive_PlaneInvokeRequest_FromFabricAsync");
-            await Sender.Send_PlaneSendRequestDone_ToFabricAsync(
-                new PlaneSendRequestDoneDto(
+            await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
+                new PlaneInvokeRequestAckDto(
                     message.Routing,
+                    false,
                     false,
                     new ExceptionDto(ex)),
                 ct);
@@ -742,7 +761,11 @@ public sealed class PlaneFabricClient
             try
             {
                 var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
-                await Sender.Send_PlaneStreamingResponse_ToFabricAsync(response, ct);
+                await Sender.Send_PlaneStreamingResponse_ToFabricAsync(response.response, ct);
+                if (response.action != null)
+                {
+                    await response.action.Invoke();
+                }
             }
             catch (Exception ex)
             {
@@ -872,6 +895,94 @@ public sealed class PlaneFabricClient
                 StreamingCache.PlaneStreamingResponseHandlers.TryRemove(key, out _);
             });
     }
+
+    private void RegisterPlaneAsyncEnumerableArgumentByte(PlaneRoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
+    {
+        StreamingCache.PlaneStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new PlaneAsyncEnumerableRegistration<byte[]>(async (
+            ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<byte[]>> activeStreams,
+            StreamId streamId,
+            bool cancelled,
+            CancellationToken ct) =>
+        {
+            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    return new PlaneAsyncEnumerableRegistrationInstance<byte[]>(
+                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        new SemaphoreSlim(1, 1),
+                        timeoutCts);
+                });
+
+            async Task Cleanup(Exception? ex = null)
+            {
+                activeStreams.TryRemove(streamId, out _);
+                await enumerator.DisposeAsync();
+            }
+
+            var entered = false;
+            try
+            {
+                await gate.WaitAsync(ct);
+                entered = true;
+
+                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+
+                var response = new PlaneStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    !hasNext,
+                    cancelled,
+                    null,
+                    hasNext ? enumerator.Current : []);
+
+                if (!hasNext)
+                    await Cleanup();
+
+                return new PlaneAsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
+            }
+            catch (OperationCanceledException ex) when (
+                ct.IsCancellationRequested ||
+                timeoutCts.IsCancellationRequested)
+            {
+                Logger.LogError("Exception in Remote Plane AsyncEnumerable {argIndex}, routing: {routing}", argumentIndex, routing);
+
+                await Cleanup(ex);
+
+                return new PlaneAsyncEnumerableRegistrationResponse(
+                    new PlaneStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    true,
+                    new ExceptionDto(ex),
+                    []), onDone);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Exception in Remote Plane AsyncEnumerable {argIndex}, routing: {routing}", argumentIndex, routing);
+
+                await Cleanup(ex);
+
+                return new PlaneAsyncEnumerableRegistrationResponse(
+                    new PlaneStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    false,
+                    new ExceptionDto(ex),
+                    []), onDone);
+            }
+            finally
+            {
+                if (entered)
+                    gate.Release();
+            }
+        }));
+    }
     public void RegisterPlaneAsyncEnumerableArgument<T>(PlaneRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
     {
         StreamingCache.PlaneStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new PlaneAsyncEnumerableRegistration<T>(async (
@@ -884,27 +995,16 @@ public sealed class PlaneFabricClient
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, ct);
                     return new PlaneAsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(linked.Token),
+                        source.GetAsyncEnumerator(timeoutCts.Token),
                         new SemaphoreSlim(1, 1),
-                        linked);
+                        timeoutCts);
                 });
 
             async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
                 await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                if (argumentIndex == -1)
-                {
-                    await Sender.Send_PlaneInvokeRequestDone_ToFabricAsync(
-                        new PlaneInvokeRequestDoneDto(
-                            routing,
-                            false,
-                            ex == null ? null : new ExceptionDto(ex)),
-                        ct);
-                }
             }
 
             var entered = false;
@@ -927,7 +1027,7 @@ public sealed class PlaneFabricClient
                 if (!hasNext)
                     await Cleanup();
 
-                return response;
+                return new PlaneAsyncEnumerableRegistrationResponse( response, null);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -937,14 +1037,15 @@ public sealed class PlaneFabricClient
 
                 await Cleanup(ex);
 
-                return new PlaneStreamingResponseDto(
+                return new PlaneAsyncEnumerableRegistrationResponse(
+                    new PlaneStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     true,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             catch (Exception ex)
             {
@@ -952,14 +1053,15 @@ public sealed class PlaneFabricClient
 
                 await Cleanup(ex);
 
-                return new PlaneStreamingResponseDto(
+                return new PlaneAsyncEnumerableRegistrationResponse(
+                    new PlaneStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     false,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             finally
             {
@@ -1027,7 +1129,6 @@ public sealed class PlaneFabricClient
                         streamId,
                         true),
                     default);
-
             },
 
             dispose: streamId =>

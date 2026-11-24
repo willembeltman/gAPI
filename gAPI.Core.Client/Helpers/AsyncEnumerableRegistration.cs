@@ -55,21 +55,23 @@ public record AsyncEnumerableRegistrationInstance<T>(
 
 public interface IAsyncEnumerableRegistration : IAsyncDisposable
 {
-    Task<StreamingResponseClientDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
+    Task<AsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
 }
+
+public record AsyncEnumerableRegistrationResponse(StreamingResponseClientDto response, Func<Task>? action);
 
 public sealed class AsyncEnumerableRegistration<T> : IAsyncEnumerableRegistration
 {
     public AsyncEnumerableRegistration(
-        Func<ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<StreamingResponseClientDto>> handler)
+        Func<ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<AsyncEnumerableRegistrationResponse>> handler)
     {
         Handler = handler;
     }
 
     private readonly ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>> ActiveStreams = [];
-    private readonly Func<ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<StreamingResponseClientDto>> Handler;
+    private readonly Func<ConcurrentDictionary<StreamId, AsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<AsyncEnumerableRegistrationResponse>> Handler;
 
-    public Task<StreamingResponseClientDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
+    public Task<AsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
     {
         return Handler.Invoke(ActiveStreams, streamId, cancelled, ct);
     }

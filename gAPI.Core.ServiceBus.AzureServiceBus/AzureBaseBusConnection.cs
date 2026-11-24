@@ -466,7 +466,8 @@ public abstract class AzureBaseBusConnection(
                         BusStreamingResponseDto response;
                         if (StreamingRequestHandlers.TryGetValue(key, out var registration))
                         {
-                            response = await registration.Invoke(request.StreamId, request.Cancelled, _lifetimeCts.Token);
+                            var res = await registration.Invoke(request.StreamId, request.Cancelled, _lifetimeCts.Token);
+                            response = res.response;
                         }
                         else
                         {
@@ -690,21 +691,21 @@ public abstract class AzureBaseBusConnection(
                 StreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cts)
+    public void RegisterAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
     {
         StreamingRequestHandlers.TryAdd(new RequestArgumentIndexDto(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (activeStreams, streamId, cancelled, ct) =>
         {
             var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(streamId, _ =>
             {
-                var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, cts.Token);
-                return new BusAsyncEnumerableRegistrationInstance<T>(source.GetAsyncEnumerator(linked.Token), new SemaphoreSlim(1, 1), linked);
+                return new BusAsyncEnumerableRegistrationInstance<T>(
+                    source.GetAsyncEnumerator(timeoutCts.Token), 
+                    new SemaphoreSlim(1, 1),
+                    timeoutCts);
             });
             async Task Cleanup()
             {
-                if (activeStreams.TryRemove(streamId, out _))
-                {
-                    await enumerator.DisposeAsync(); linkedCts.Dispose();
-                }
+                activeStreams.TryRemove(streamId, out _);
+                await enumerator.DisposeAsync();
             }
             var entered = false;
             try
@@ -733,31 +734,33 @@ public abstract class AzureBaseBusConnection(
                     ex == null ? null : new ExceptionDto(ex),
                     hasNext ? serializer(currentItem) : []);
                 if (isCompleted) await Cleanup();
-                return response;
+                return new BusAsyncEnumerableRegistrationResponse(response, null);
             }
             catch (OperationCanceledException ex)
             {
                 await Cleanup();
-                return new BusStreamingResponseDto(
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     true,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             catch (Exception ex)
             {
                 await Cleanup();
-                return new BusStreamingResponseDto(
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     false,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             finally { if (entered) gate.Release(); }
         }));

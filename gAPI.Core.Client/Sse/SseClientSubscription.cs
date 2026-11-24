@@ -412,13 +412,13 @@ public class SseClientSubscription : IDisposable
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
                 var streamingResponseClient = new StreamingResponseClientDto(
-                    response.Routing,
-                    response.ArgumentIndex,
-                    response.StreamId,
-                    response.IsCompleted,
-                    response.IsCancelled,
-                    response.Exception,
-                    response.BinaryData,
+                    response.response.Routing,
+                    response.response.ArgumentIndex,
+                    response.response.StreamId,
+                    response.response.IsCompleted,
+                    response.response.IsCancelled,
+                    response.response.Exception,
+                    response.response.BinaryData,
                     stateIsChanged,
                     stateData);
                 await Sender.Send_StreamingResponse_ToServerAsync(streamingResponseClient, ct);
@@ -459,13 +459,13 @@ public class SseClientSubscription : IDisposable
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
                 var streamingResponseClient = new StreamingResponseClientDto(
-                    response.Routing,
-                    response.ArgumentIndex,
-                    response.StreamId,
-                    response.IsCompleted,
-                    response.IsCancelled,
-                    response.Exception,
-                    response.BinaryData,
+                    response.response.Routing,
+                    response.response.ArgumentIndex,
+                    response.response.StreamId,
+                    response.response.IsCompleted,
+                    response.response.IsCancelled,
+                    response.response.Exception,
+                    response.response.BinaryData,
                     stateIsChanged,
                     stateData);
                 await Sender.Send_FabricStreamingResponse_ToServerAsync(streamingResponseClient, ct);
@@ -669,7 +669,7 @@ public class SseClientSubscription : IDisposable
         await Sender.Send_FabricStreamingRequest_ToServerAsync(streamingResponseClient, ct);
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -733,7 +733,7 @@ public class SseClientSubscription : IDisposable
                         if (!hasNext)
                             await Cleanup();
 
-                        return response;
+                        return new AsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
@@ -746,7 +746,8 @@ public class SseClientSubscription : IDisposable
                         var stateIsChanged = HttpClient.IsStateDataChanged();
                         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                        return new StreamingResponseClientDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseClientDto(
                             routing,
                             argumentIndex,
                             streamId,
@@ -755,7 +756,7 @@ public class SseClientSubscription : IDisposable
                             new ExceptionDto(ex),
                             [],
                             stateIsChanged,
-                            stateData);
+                            stateData), onDone);
                     }
                     catch (Exception ex)
                     {
@@ -766,7 +767,8 @@ public class SseClientSubscription : IDisposable
                         var stateIsChanged = HttpClient.IsStateDataChanged();
                         var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                        return new StreamingResponseClientDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseClientDto(
                             routing,
                             argumentIndex,
                             streamId,
@@ -775,7 +777,7 @@ public class SseClientSubscription : IDisposable
                             new ExceptionDto(ex),
                             [],
                             stateIsChanged,
-                            stateData);
+                            stateData), onDone);
                     }
                     finally
                     {
@@ -784,7 +786,7 @@ public class SseClientSubscription : IDisposable
                     }
                 }));
     }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> done)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -811,7 +813,6 @@ public class SseClientSubscription : IDisposable
             {
                 stream.TryRemoveFrom(activeStreams, streamId);
                 await stream.DisposeAsync(entered);
-                await done.Invoke();
             }
 
             //if (activeStreams.TryAdd(streamId, stream) == false)
@@ -847,7 +848,7 @@ public class SseClientSubscription : IDisposable
                 if (!hasNext)
                     await Cleanup();
 
-                return response;
+                return new AsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -860,7 +861,8 @@ public class SseClientSubscription : IDisposable
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse(
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -869,7 +871,7 @@ public class SseClientSubscription : IDisposable
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), onDone);
             }
             catch (Exception ex)
             {
@@ -880,7 +882,8 @@ public class SseClientSubscription : IDisposable
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse(
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -889,7 +892,7 @@ public class SseClientSubscription : IDisposable
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), onDone);
             }
             finally
             {

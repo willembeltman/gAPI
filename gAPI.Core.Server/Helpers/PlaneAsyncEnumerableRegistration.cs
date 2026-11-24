@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Helpers;
+using gAPI.Core.Ids;
 using gAPI.Core.Server.Dtos;
 using System.Collections.Concurrent;
 
@@ -8,7 +9,7 @@ namespace gAPI.Core.Server.Helpers;
 public record PlaneAsyncEnumerableRegistrationInstance<T>(
     IAsyncEnumerator<T> enumerator,
     SemaphoreSlim gate,
-    CancellationTokenSource linkedCts)
+    CancellationTokenSourceDispose timeoutCts)
 {
     public bool IsDisposed { get; private set; }
 
@@ -52,23 +53,25 @@ public record PlaneAsyncEnumerableRegistrationInstance<T>(
     }
 }
 
+public record PlaneAsyncEnumerableRegistrationResponse(PlaneStreamingResponseDto response, Func<Task>? action);
+
 public interface IPlaneAsyncEnumerableRegistration : IAsyncDisposable
 {
-    Task<PlaneStreamingResponseDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
+    Task<PlaneAsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
 }
 
 public sealed class PlaneAsyncEnumerableRegistration<T> : IPlaneAsyncEnumerableRegistration
 {
     public PlaneAsyncEnumerableRegistration(
-        Func<ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<PlaneStreamingResponseDto>> handler)
+        Func<ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<PlaneAsyncEnumerableRegistrationResponse>> handler)
     {
         Handler = handler;
     }
 
     private readonly ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<T>> ActiveStreams = [];
-    private readonly Func<ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<PlaneStreamingResponseDto>> Handler;
+    private readonly Func<ConcurrentDictionary<StreamId, PlaneAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<PlaneAsyncEnumerableRegistrationResponse>> Handler;
 
-    public Task<PlaneStreamingResponseDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
+    public Task<PlaneAsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
     {
         return Handler.Invoke(ActiveStreams, streamId, cancelled, ct);
     }

@@ -529,7 +529,7 @@ public sealed class BusFabricClient
         {
             if (message.Cancelled)
                 completion.SetCanceled();
-            else if (message.Exception!= null)
+            else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
                 completion.TrySetResult(message);
@@ -568,9 +568,9 @@ public sealed class BusFabricClient
             await BusConnection.Send_SendRequest_ToServiceAsync(message, timeoutCts);
             await Sender.Send_BusSendRequestDone_ToFabricAsync(
                 new BusSendRequestDoneDto(
-                    message.Routing, 
-                    false, 
-                    null), 
+                    message.Routing,
+                    false,
+                    null),
                 ct);
         }
         catch (TaskCanceledException ex)
@@ -578,9 +578,9 @@ public sealed class BusFabricClient
             Logger.LogError(ex, "Task is cancelled");
             await Sender.Send_BusSendRequestDone_ToFabricAsync(
                 new BusSendRequestDoneDto(
-                    message.Routing, 
+                    message.Routing,
                     true,
-                    new ExceptionDto(ex)), 
+                    new ExceptionDto(ex)),
                 ct);
         }
         catch (Exception ex)
@@ -590,7 +590,7 @@ public sealed class BusFabricClient
                 new BusSendRequestDoneDto(
                     message.Routing,
                     false,
-                    new ExceptionDto(ex)), 
+                    new ExceptionDto(ex)),
                 ct);
         }
         finally
@@ -637,16 +637,27 @@ public sealed class BusFabricClient
         try
         {
             var enumerable = BusConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
-            RegisterBusAsyncEnumerableArgument(message.Routing, -1, enumerable, b => b, timeoutCts);
+            RegisterBusAsyncEnumerableArgumentByte(
+                message.Routing, 
+                -1, 
+                enumerable,
+                timeoutCts,
+                async () =>
+                {
+                    StreamingCache.BusReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
+                    await UnRegisterBusAsyncEnumerableArgument(message.Routing, -1);
 
-            timeoutCts.RegisterDispose(async () =>
-            {
-                await UnRegisterBusAsyncEnumerableArgument(message.Routing, -1);
-            });
+                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(
+                        new BusInvokeRequestDoneDto(
+                            message.Routing,
+                            false,
+                            null
+                        ), ct);
+                });
 
             await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
                 new BusInvokeRequestAckDto(
-                    message.Routing, 
+                    message.Routing,
                     true,
                     false,
                     null),
@@ -655,21 +666,23 @@ public sealed class BusFabricClient
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task was cancelled");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(
-                new BusSendRequestDoneDto(
-                    message.Routing, 
+            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
+                new BusInvokeRequestAckDto(
+                    message.Routing,
+                    false,
                     true,
-                    new ExceptionDto(ex)), 
+                    new ExceptionDto(ex)),
                 ct);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Receive_BusInvokeRequest_FromFabricAsync");
-            await Sender.Send_BusSendRequestDone_ToFabricAsync(
-                new BusSendRequestDoneDto(
-                    message.Routing, 
+            await Sender.Send_BusInvokeRequestAck_ToFabricAsync(
+                new BusInvokeRequestAckDto(
+                    message.Routing,
                     false,
-                    new ExceptionDto(ex)), 
+                    false,
+                    new ExceptionDto(ex)),
                 ct);
         }
     }
@@ -744,7 +757,11 @@ public sealed class BusFabricClient
             try
             {
                 var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
-                await Sender.Send_BusStreamingResponse_ToFabricAsync(response, ct);
+                await Sender.Send_BusStreamingResponse_ToFabricAsync(response.response, ct);
+                if (response.action != null)
+                {
+                    await response.action.Invoke();
+                }
             }
             catch (Exception ex)
             {
@@ -755,10 +772,10 @@ public sealed class BusFabricClient
         {
             await Sender.Send_BusStreamingResponse_ToFabricAsync(
                 new BusStreamingResponseDto(
-                    message.Routing, 
+                    message.Routing,
                     message.ArgumentIndex,
                     message.StreamId,
-                    true, 
+                    true,
                     false,
                     new ExceptionDto("No StreamingRequestHandlers found", null, Environment.StackTrace),
                     []),
@@ -799,7 +816,7 @@ public sealed class BusFabricClient
 
     public void RegisterTimeout(BusRoutingDto routing, CancellationTokenSourceDispose cts)
     {
-        if ( StreamingCache.BusSenderTimeouts.TryAdd(routing.RequestId, cts) == false)
+        if (StreamingCache.BusSenderTimeouts.TryAdd(routing.RequestId, cts) == false)
         {
             Logger.LogError("RegisterTimeout cannot all timeout");
         }
@@ -874,10 +891,10 @@ public sealed class BusFabricClient
                 StreamingCache.BusStreamingResponseHandlers.TryRemove(key, out _);
             });
     }
-    public void RegisterBusAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
+    public void RegisterBusAsyncEnumerableArgumentByte(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
     {
-        StreamingCache.BusStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (
-            ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> activeStreams,
+        StreamingCache.BusStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<byte[]>(async (
+            ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<byte[]>> activeStreams,
             StreamId streamId,
             bool cancelled,
             CancellationToken ct) =>
@@ -886,11 +903,10 @@ public sealed class BusFabricClient
                 streamId,
                 _ =>
                 {
-                    var linked = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, ct);
-                    return new BusAsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(linked.Token),
+                    return new BusAsyncEnumerableRegistrationInstance<byte[]>(
+                        source.GetAsyncEnumerator(timeoutCts.Token),
                         new SemaphoreSlim(1, 1),
-                        linked);
+                        timeoutCts);
                 });
 
             async Task Cleanup(Exception? ex = null)
@@ -905,7 +921,104 @@ public sealed class BusFabricClient
                             routing,
                             false,
                             ex == null ? null : new ExceptionDto(ex)),
-                        ct); 
+                        ct);
+                }
+            }
+
+            var entered = false;
+            try
+            {
+                await gate.WaitAsync(ct);
+                entered = true;
+
+                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+
+                var response = new BusStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    !hasNext,
+                    cancelled,
+                    null,
+                    hasNext ? enumerator.Current : []);
+
+                if (!hasNext)
+                    await Cleanup();
+
+                return new BusAsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
+            }
+            catch (OperationCanceledException ex) when (
+                ct.IsCancellationRequested ||
+                timeoutCts.IsCancellationRequested)
+            {
+                Logger.LogError("Exception in Remote Bus AsyncEnumerable {argIndex}, routing: {routing}", argumentIndex, routing);
+
+                await Cleanup(ex);
+
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    true,
+                    new ExceptionDto(ex),
+                    []), onDone);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Exception in Remote Bus AsyncEnumerable {argIndex}, routing: {routing}", argumentIndex, routing);
+
+                await Cleanup(ex);
+
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
+                    routing,
+                    argumentIndex,
+                    streamId,
+                    true,
+                    false,
+                    new ExceptionDto(ex),
+                    []), onDone);
+            }
+            finally
+            {
+                if (entered)
+                    gate.Release();
+            }
+        }));
+    }
+    public void RegisterBusAsyncEnumerableArgument<T>(BusRoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
+    {
+        StreamingCache.BusStreamingRequestHandlers.TryAdd(new(routing.RequestId, argumentIndex), new BusAsyncEnumerableRegistration<T>(async (
+            ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> activeStreams,
+            StreamId streamId,
+            bool cancelled,
+            CancellationToken ct) =>
+        {
+            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                streamId,
+                _ =>
+                {
+                    return new BusAsyncEnumerableRegistrationInstance<T>(
+                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        new SemaphoreSlim(1, 1),
+                        timeoutCts);
+                });
+
+            async Task Cleanup(Exception? ex = null)
+            {
+                activeStreams.TryRemove(streamId, out _);
+                await enumerator.DisposeAsync();
+                linkedCts.Dispose();
+                if (argumentIndex == -1)
+                {
+                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(
+                        new BusInvokeRequestDoneDto(
+                            routing,
+                            false,
+                            ex == null ? null : new ExceptionDto(ex)),
+                        ct);
                 }
             }
 
@@ -929,7 +1042,7 @@ public sealed class BusFabricClient
                 if (!hasNext)
                     await Cleanup();
 
-                return response;
+                return new BusAsyncEnumerableRegistrationResponse(response, null);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -939,14 +1052,15 @@ public sealed class BusFabricClient
 
                 await Cleanup(ex);
 
-                return new BusStreamingResponseDto(
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     true,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             catch (Exception ex)
             {
@@ -954,14 +1068,15 @@ public sealed class BusFabricClient
 
                 await Cleanup(ex);
 
-                return new BusStreamingResponseDto(
+                return new BusAsyncEnumerableRegistrationResponse(
+                    new BusStreamingResponseDto(
                     routing,
                     argumentIndex,
                     streamId,
                     true,
                     false,
                     new ExceptionDto(ex),
-                    []);
+                    []), null);
             }
             finally
             {

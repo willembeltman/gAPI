@@ -804,7 +804,7 @@ public abstract class WssClientConnection : IWssClientConnection
     private async Task Received_FabricInvokeRequest_FromServerAsync(InvokeRequestClientDto message, CancellationToken connectionLifecycleCt)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now}: Received_SendRequestDone_FromServer({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
+            Logger.LogTrace("{now}: Received_FabricInvokeRequest_FromServerAsync({RequestId}, {ServiceId}, {MethodId})", DateTime.Now.ToString("HH:mm:ss.fff"), message.Routing.RequestId, message.Routing.ServiceId, message.Routing.MethodId);
 
         var timeoutCts = new CancellationTokenSourceDispose(
             message.Routing.Timeout,
@@ -827,7 +827,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 argumentIndex: -1, 
                 source: enumerable, 
                 timeoutCts: timeoutCts,
-                done: async () =>
+                onDone: async () =>
                 {
                     IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
                     await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
@@ -856,15 +856,35 @@ public abstract class WssClientConnection : IWssClientConnection
                     stateData
                 ), ct);
         }
+        catch (TaskCanceledException ex)
+        {
+            Logger.LogError(ex, "Received_FabricInvokeRequest_FromServerAsync");
+
+            var stateIsChanged = HttpClient.IsStateDataChanged();
+            var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
+            await Sender.Send_InvokeRequestAck_ToServerAsync(
+                new InvokeRequestAckClientDto(
+                    message.Routing,
+                    false,
+                    true,
+                    new ExceptionDto(ex),
+                    stateIsChanged,
+                    stateData
+                ), ct);
+
+            timeoutCts.Dispose();
+            IncomingTimeouts.TryRemove(message.Routing.RequestId, out _);
+        }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Received_FabricInvokeRequest_FromServerAsync");
 
             var stateIsChanged = HttpClient.IsStateDataChanged();
             var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
-            await Sender.Send_SendRequestDone_ToServerAsync(
-                new SendRequestDoneClientDto(
+            await Sender.Send_InvokeRequestAck_ToServerAsync(
+                new InvokeRequestAckClientDto(
                     message.Routing,
+                    false,
                     false,
                     new ExceptionDto(ex),
                     stateIsChanged,
@@ -959,7 +979,11 @@ public abstract class WssClientConnection : IWssClientConnection
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
             var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
-            await Sender.Send_StreamingResponse_ToServerAsync(response, ct);
+            await Sender.Send_StreamingResponse_ToServerAsync(response.response, ct);
+            if (response.action != null)
+            {
+                await response.action.Invoke();
+            }
         }
     }
     private void Received_StreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken connectionLifecycleCt)
@@ -988,7 +1012,11 @@ public abstract class WssClientConnection : IWssClientConnection
         if (StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
         {
             var response = await handler.Invoke(message.StreamId, message.Cancelled, ct);
-            await Sender.Send_FabricStreamingResponse_ToServerAsync(response, ct);
+            await Sender.Send_FabricStreamingResponse_ToServerAsync(response.response, ct);
+            if (response.action != null)
+            {
+                await response.action.Invoke();
+            }
         }
     }
     private void Received_FabricStreamingResponse_FromServerAsync(StreamingResponseClientDto message, CancellationToken connectionLifecycleCt)
@@ -1400,7 +1428,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 if (!hasNext)
                     await Cleanup();
 
-                return response;
+                return new AsyncEnumerableRegistrationResponse( response, null);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -1413,7 +1441,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse(
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -1422,7 +1451,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), null);
             }
             catch (Exception ex)
             {
@@ -1433,7 +1462,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse(
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -1442,7 +1472,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), null);
             }
             finally
             {
@@ -1451,7 +1481,7 @@ public abstract class WssClientConnection : IWssClientConnection
             }
         }));
     }
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> done)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1478,14 +1508,7 @@ public abstract class WssClientConnection : IWssClientConnection
             {
                 stream.TryRemoveFrom(activeStreams, streamId);
                 await stream.DisposeAsync(entered);
-                await done.Invoke();
             }
-
-            //if (activeStreams.TryAdd(streamId, stream) == false)
-            //{
-            //    await Cleanup();
-            //    throw new Exception("Cache");
-            //}
 
             var enumerator = stream.enumerator;
             var gate = stream.gate;
@@ -1514,7 +1537,7 @@ public abstract class WssClientConnection : IWssClientConnection
                 if (!hasNext)
                     await Cleanup();
 
-                return response;
+                return new AsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -1527,7 +1550,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse(
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -1536,7 +1560,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), onDone);
             }
             catch (Exception ex)
             {
@@ -1547,7 +1571,8 @@ public abstract class WssClientConnection : IWssClientConnection
                 var stateIsChanged = HttpClient.IsStateDataChanged();
                 var stateData = stateIsChanged ? await HttpClient.GetStateDataAsync() : null;
 
-                return new StreamingResponseClientDto(
+                return new AsyncEnumerableRegistrationResponse( 
+                    new StreamingResponseClientDto(
                     routing,
                     argumentIndex,
                     streamId,
@@ -1556,7 +1581,7 @@ public abstract class WssClientConnection : IWssClientConnection
                     new ExceptionDto(ex),
                     [],
                     stateIsChanged,
-                    stateData);
+                    stateData), onDone);
             }
             finally
             {

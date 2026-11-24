@@ -675,7 +675,7 @@ public abstract class WssServerConnection : IServerConnection
                 argumentIndex: -1, // -1 is de response stream, min omdat hij terug gaat :) best logisch
                 source: enumerable,
                 timeoutCts: timeoutCts,
-                done: async () =>
+                onDone: async () =>
                 {
                     StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
                     await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
@@ -691,24 +691,6 @@ public abstract class WssServerConnection : IServerConnection
                             stateData
                         ), ct);
                 });
-
-            //// Register dispose 
-            //timeoutCts.RegisterDispose(async () =>
-            //{
-            //    StreamingCache.WssReceivedTimeouts.TryRemove(message.Routing.RequestId, out _);
-            //    await UnRegisterAsyncEnumerableArgument(message.Routing, -1);
-
-            //    var stateIsChanged = AuthenticationService.IsStateDataChanged();
-            //    var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
-            //    await Sender.Send_InvokeRequestDone_ToClientAsync(
-            //        new InvokeRequestDoneClientDto(
-            //            message.Routing,
-            //            false,
-            //            null,
-            //            stateIsChanged,
-            //            stateData
-            //        ), ct);
-            //});
 
             var stateIsChanged = AuthenticationService.IsStateDataChanged();
             var stateData = stateIsChanged ? AuthenticationService.GetStateData() : null;
@@ -811,19 +793,22 @@ public abstract class WssServerConnection : IServerConnection
         var response = await FabricClient.Handle_StreamingRequest_FromClientAsync(message, ct);
         if (response == null)
         {
-            response = new StreamingResponseDto(
+            await Send_StreamingResponse_ToClientAsync(new StreamingResponseDto(
                 message.Routing,
                 message.ArgumentIndex,
                 message.StreamId,
                 true,
                 false,
                 new ExceptionDto("Could not get response, enumerator might be freed", null, Environment.StackTrace),
-                []);
-            await Send_StreamingResponse_ToClientAsync(response, ct);
+                []), ct);
             return;
         }
 
-        await Send_StreamingResponse_ToClientAsync(response, ct);
+        await Send_StreamingResponse_ToClientAsync(response.response, ct);
+        if (response.action != null)
+        {
+            await response.action.Invoke();
+        }
     }
     private async Task Receive_StreamingResponse_FromClientAsync(StreamingResponseClientDto message, CancellationToken connectionLifecycleCt)
     {
@@ -1077,7 +1062,7 @@ public abstract class WssServerConnection : IServerConnection
 
     #region Calls vanuit gegenereerde code
 
-    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> done)
+    public void RegisterAsyncEnumerableArgumentByte(RoutingDto routing, int argumentIndex, IAsyncEnumerable<byte[]> source, CancellationTokenSourceDispose timeoutCts, Func<Task> onDone)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgumentByte({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1101,7 +1086,6 @@ public abstract class WssServerConnection : IServerConnection
                     {
                         activeStreams.TryRemove(streamId, out _);
                         await enumerator.DisposeAsync();
-                        await done.Invoke();
                     }
 
                     var entered = false;
@@ -1124,7 +1108,7 @@ public abstract class WssServerConnection : IServerConnection
                         if (!hasNext)
                             await Cleanup();
 
-                        return response;
+                        return new AsyncEnumerableRegistrationResponse(response, hasNext ? null : onDone);
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
@@ -1134,14 +1118,15 @@ public abstract class WssServerConnection : IServerConnection
 
                         await Cleanup();
 
-                        return new StreamingResponseDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseDto(
                             routing,
                             argumentIndex,
                             streamId,
                             true,
                             true,
                             new ExceptionDto(ex),
-                            []);
+                            []), onDone);
                     }
                     catch (Exception ex)
                     {
@@ -1149,14 +1134,15 @@ public abstract class WssServerConnection : IServerConnection
 
                         await Cleanup();
 
-                        return new StreamingResponseDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseDto(
                             routing,
                             argumentIndex,
                             streamId,
                             true,
                             false,
                             new ExceptionDto(ex),
-                            []);
+                            []), onDone);
                     }
                     finally
                     {

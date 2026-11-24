@@ -867,7 +867,11 @@ public sealed class FabricClient
             if (StreamingCache.StreamingRequestHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex), out var handler))
             {
                 var response = await handler.Invoke(message.StreamId, false, ct);
-                await Sender.Send_StreamingResponse_ToFabricAsync(response, ct);
+                await Sender.Send_StreamingResponse_ToFabricAsync(response.response, ct);
+                if (response.action != null)
+                {
+                    await response.action.Invoke();
+                }
             }
             else
             {
@@ -1018,7 +1022,7 @@ public sealed class FabricClient
         }
     }
 
-    public async Task<StreamingResponseDto?> Handle_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
+    public async Task<AsyncEnumerableRegistrationResponse?> Handle_StreamingRequest_FromClientAsync(StreamingRequestClientDto message, CancellationToken ct)
     {
         if (StreamingCache.FabricSenderTimeouts.TryGetValue(message.Routing.RequestId, out var timeout2))
             timeout2.CancelAfter(message.Routing.Timeout);
@@ -1169,7 +1173,7 @@ public sealed class FabricClient
                         if (!hasNext)
                             await Cleanup();
 
-                        return response;
+                        return new AsyncEnumerableRegistrationResponse(response, null);
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
@@ -1178,28 +1182,30 @@ public sealed class FabricClient
                         Logger.LogError(ex, "RegisterAsyncEnumerableArgument Cancelled");
 
                         await Cleanup();
-                        return new StreamingResponseDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseDto(
                             routing,
                             argumentIndex,
                             streamId,
                             true,
                             true, 
                             new ExceptionDto(ex),
-                            []);
+                            []), null);
                     }
                     catch (Exception ex)
                     {
                         Logger.LogError(ex, "RegisterAsyncEnumerableArgument Exception");
 
                         await Cleanup();
-                        return new StreamingResponseDto(
+                        return new AsyncEnumerableRegistrationResponse(
+                            new StreamingResponseDto(
                             routing,
                             argumentIndex,
                             streamId,
                             true,
                             false,
                             new ExceptionDto(ex),
-                            []);
+                            []), null);
                     }
                     finally
                     {

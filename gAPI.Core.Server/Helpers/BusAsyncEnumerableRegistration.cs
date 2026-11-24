@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Helpers;
+using gAPI.Core.Ids;
 using gAPI.Core.Server.Dtos;
 using System.Collections.Concurrent;
 
@@ -8,7 +9,7 @@ namespace gAPI.Core.Server.Helpers;
 public record BusAsyncEnumerableRegistrationInstance<T>(
     IAsyncEnumerator<T> enumerator,
     SemaphoreSlim gate,
-    CancellationTokenSource linkedCts)
+    CancellationTokenSourceDispose timeoutCts)
 {
     public bool IsDisposed { get; private set; }
 
@@ -52,23 +53,26 @@ public record BusAsyncEnumerableRegistrationInstance<T>(
     }
 }
 
+public record BusAsyncEnumerableRegistrationResponse(BusStreamingResponseDto response, Func<Task>? action);
+
+
 public interface IBusAsyncEnumerableRegistration : IAsyncDisposable
 {
-    Task<BusStreamingResponseDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
+    Task<BusAsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct);
 }
 
 public sealed class BusAsyncEnumerableRegistration<T> : IBusAsyncEnumerableRegistration
 {
     public BusAsyncEnumerableRegistration(
-        Func<ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<BusStreamingResponseDto>> handler)
+        Func<ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<BusAsyncEnumerableRegistrationResponse>> handler)
     {
         Handler = handler;
     }
 
     private readonly ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>> ActiveStreams = [];
-    private readonly Func<ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<BusStreamingResponseDto>> Handler;
+    private readonly Func<ConcurrentDictionary<StreamId, BusAsyncEnumerableRegistrationInstance<T>>, StreamId, bool, CancellationToken, Task<BusAsyncEnumerableRegistrationResponse>> Handler;
 
-    public Task<BusStreamingResponseDto> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
+    public Task<BusAsyncEnumerableRegistrationResponse> Invoke(StreamId streamId, bool cancelled, CancellationToken ct)
     {
         return Handler.Invoke(ActiveStreams, streamId, cancelled, ct);
     }
