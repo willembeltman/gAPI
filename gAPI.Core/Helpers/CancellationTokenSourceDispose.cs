@@ -152,4 +152,12 @@ public sealed class CancellationTokenSourceDispose : IDisposable
             }
         }
     }
+
+    public void ThrowIfCancellationRequested()
+    {
+        if (_cts == null)
+            throw new ObjectDisposedException("Already disposed");
+
+        _cts.Token.ThrowIfCancellationRequested();
+    }
 }

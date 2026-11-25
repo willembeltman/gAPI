@@ -225,6 +225,7 @@ public class FabricManager : IDashboardSnapshotGetter
 
             foreach (var fabricHost in fabricHosts)
             {
+                ct.ThrowIfCancellationRequested();
                 await fabricHost.Send_SendAndForgetRequest_ToApiAsync(message, actor);
             }
         }, ct);
@@ -280,7 +281,10 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var fabricHost in fabricHosts.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await fabricHost.Send_SendRequest_ToApiAsync(message, actor);
+            }
         }, ct);
     }
     public async Task Receive_SendRequestCancelled_FromApiAsync(FabricHost caller, SendRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -297,7 +301,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_SendRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
 
@@ -415,7 +422,10 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var host in fabricHosts)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Value.Send_InvokeRequest_ToApiAsync(message, actor);
+            }
         }, ct);
     }
     public async Task Receive_InvokeRequestCancelled_FromApiAsync(FabricHost caller, InvokeRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -432,7 +442,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_InvokeRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
             await ReadyInvokeAsync(state);
@@ -590,6 +603,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     {
                         foreach (var target in state2.Targets.Values)
                         {
+                            ct.ThrowIfCancellationRequested();
                             await target.Send_StreamingRequest_ToApiAsync(message, state2.Actor);
                         }
                     }
@@ -610,6 +624,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     {
                         foreach (var target in state.Targets.Values)
                         {
+                            ct.ThrowIfCancellationRequested();
                             await target.Send_StreamingRequest_ToApiAsync(message, state.Actor);
                         }
                     }
@@ -703,6 +718,7 @@ public class FabricManager : IDashboardSnapshotGetter
             (var targets, var actor) = ResolveBusTargets(message.Routing, receiveSize);
             foreach (var target in targets)
             {
+                ct.ThrowIfCancellationRequested();
                 await target.Send_BusFireAndForget_ToApiAsync(message, actor);
             }
         }, ct);
@@ -743,7 +759,10 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var host in fabricHosts)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_BusSendRequest_ToApiAsync(message, actor);
+            }
         }, ct);
     }
     public async Task Receive_BusSendRequestCancelled_FromApiAsync(FabricBusHost caller, BusSendRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -760,7 +779,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_BusSendRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
         }, ct);
@@ -872,7 +894,10 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var host in fabricHosts)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_BusInvokeRequest_ToApiAsync(message, actor);
+            }
         }, ct);
     }
     public async Task Receive_BusInvokeRequestCancelled_FromApiAsync(FabricBusHost caller, BusInvokeRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -889,7 +914,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_BusInvokeRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
 
@@ -1068,6 +1096,7 @@ public class FabricManager : IDashboardSnapshotGetter
                 {
                     foreach (var target in state.Targets.Values)
                     {
+                        ct.ThrowIfCancellationRequested();
                         await target.Send_BusStreamingRequest_ToApiAsync(message, state.Actor);
                     }
                 }
@@ -1173,6 +1202,7 @@ public class FabricManager : IDashboardSnapshotGetter
             (var targets, var actor) = ResolvePlaneTargets(request.Routing, receiveSize);
             foreach (var target in targets)
             {
+                ct.ThrowIfCancellationRequested();
                 await target.Send_PlaneFireAndForget_ToApiAsync(request, actor);
             }
         }, ct);
@@ -1213,7 +1243,10 @@ public class FabricManager : IDashboardSnapshotGetter
             });
 
             foreach (var host in fabricHosts)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_PlaneSendRequest_ToApiAsync(request, actor);
+            }
         }, ct);
     }
     public async Task Receive_PlaneSendRequestCancelled_FromApiAsync(FabricPlaneHost caller, PlaneSendRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -1230,7 +1263,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_PlaneSendRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
         }, ct);
@@ -1350,7 +1386,10 @@ public class FabricManager : IDashboardSnapshotGetter
             }
 
             foreach (var host in fabricHosts)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_PlaneInvokeRequest_ToApiAsync(request, actor);
+            }
         }, ct);
     }
     public async Task Receive_PlaneInvokeRequestCancelled_FromApiAsync(FabricPlaneHost caller, PlaneInvokeRequestCancelledDto message, long receiveSize, CancellationToken ct)
@@ -1367,7 +1406,10 @@ public class FabricManager : IDashboardSnapshotGetter
             state.Actor.EnqueueReceive(receiveSize);
 
             foreach (var host in state.Targets.Values)
+            {
+                ct.ThrowIfCancellationRequested();
                 await host.Send_PlaneInvokeRequestCancelled_ToApiAsync(message, state.Actor);
+            }
 
             state.Cancel();
             if (state.Targets.Count == 0)
@@ -1528,6 +1570,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     {
                         foreach (var target in state.Targets.Values)
                         {
+                            ct.ThrowIfCancellationRequested();
                             await target.Send_PlaneStreamingRequest_ToApiAsync(request, state.Actor);
                         }
                     }
@@ -1548,6 +1591,7 @@ public class FabricManager : IDashboardSnapshotGetter
                     {
                         foreach (var target in state2.Targets.Values)
                         {
+                            ct.ThrowIfCancellationRequested();
                             await target.Send_PlaneStreamingRequest_ToApiAsync(request, state2.Actor);
                         }
                     }

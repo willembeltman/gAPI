@@ -18,9 +18,15 @@ public sealed class ServiceSubscriptionCollection
         connections[client.Id] = client;
     }
 
-    public bool Remove(ServiceSubscriptionId id)
+    public bool Remove(ServiceSubscriptionId id, ServiceId serviceId)
     {
-        return ServiceSubscriptions.TryRemove(id, out _);
+        var res = ServiceSubscriptions.TryRemove(id, out _);
+        var connections = Services.GetOrAdd(serviceId, (_) => { return new ConcurrentDictionary<ServiceSubscriptionId, IServiceSubscription>(); });
+        if (connections.TryRemove(id, out _) == false)
+        {
+            res = false;
+        }
+        return res;
     }
 
 }

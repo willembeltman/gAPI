@@ -137,6 +137,7 @@ public class AuthenticationService<TUser, TStateDto>(
         // Additional forbidden checks
         foreach (var check in authenticationChecks)
         {
+            ct.ThrowIfCancellationRequested();
             if (!check.IsValid(headers, _ReceivedClientState, _State, _AuthenticationState, out AuthenticationInitializeResult notValidResult))
             {
                 return notValidResult;

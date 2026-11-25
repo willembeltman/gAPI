@@ -93,7 +93,7 @@ public class SseServiceSubscription
             if (Interlocked.Exchange(ref closed, 1) == 0)
             {
                 await FabricClient.UnsubscribeAsync(this, ct);
-                ServiceSubscriptionCollection.Remove(Id);
+                ServiceSubscriptionCollection.Remove(Id, ServiceId);
                 Cts.Dispose();
             }
         }

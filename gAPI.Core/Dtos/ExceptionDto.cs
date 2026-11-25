@@ -10,12 +10,12 @@ public class ExceptionDto
     }
     public ExceptionDto( 
         string message,
-        string? innerMessage,
-        string? stacktrace)
+        string? innerMessage = null,
+        string? stacktrace = null)
     {
         Message = message;
         InnerMessage = innerMessage;
-        StackTrace = stacktrace;
+        StackTrace = stacktrace ?? Environment.StackTrace;
     }
     public ExceptionDto(Exception ex)
     {

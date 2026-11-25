@@ -69,6 +69,7 @@ public class BusFabricClientSender(
         var sendQueue = SendQueue;
         while (sendQueue == null)
         {
+            ct.ThrowIfCancellationRequested();
             await Task.Delay(100);
             sendQueue = SendQueue;
         }
@@ -80,6 +81,7 @@ public class BusFabricClientSender(
         var sendQueue = SendQueue;
         while (sendQueue == null)
         {
+            ct.ThrowIfCancellationRequested();
             await Task.Delay(100);
             sendQueue = SendQueue;
         }

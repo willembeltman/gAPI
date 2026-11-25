@@ -24,7 +24,7 @@ public sealed class InvokeRequestState : IDisposable
     private int _ready;
     private int _completed;
 
-    private ResettableTimeout? Timeout { get; set; }
+    private CancellationTokenSourceDispose? Timeout { get; set; }
 
 
     internal void RemoveHost(FabricHost host)
@@ -67,7 +67,8 @@ public sealed class InvokeRequestState : IDisposable
 
     public void StartTimeout(TimeSpan duration, Action onTimeout)
     {
-        Timeout = new ResettableTimeout(duration, onTimeout);
+        Timeout = new CancellationTokenSourceDispose(duration);
+        Timeout.Register(onTimeout);
     }
 
     public void ResetTimeout()

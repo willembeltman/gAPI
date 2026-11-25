@@ -24,7 +24,7 @@ public sealed class PlaneInvokeRequestState : IDisposable
     private int _ready;
     private int _completed;
 
-    private ResettableTimeout? Timeout { get; set; }
+    private CancellationTokenSourceDispose? Timeout { get; set; }
 
     internal void RemovePlaneHost(FabricPlaneHost host)
     {
@@ -65,7 +65,8 @@ public sealed class PlaneInvokeRequestState : IDisposable
 
     public void StartTimeout(TimeSpan duration, Action onTimeout)
     {
-        Timeout = new ResettableTimeout(duration, onTimeout);
+        Timeout = new CancellationTokenSourceDispose(duration);
+        Timeout.Register(onTimeout);
     }
 
     public void ResetTimeout()

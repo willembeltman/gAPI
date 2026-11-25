@@ -92,7 +92,7 @@ public class WssServiceSubscription
         if (Interlocked.Exchange(ref Disposed, 1) == 0)
         {
             await FabricClient.UnsubscribeAsync(this, default);
-            ServiceSubscriptionCollection.Remove(Id);
+            ServiceSubscriptionCollection.Remove(Id, ServiceId);
         }
         GC.SuppressFinalize(this);
     }

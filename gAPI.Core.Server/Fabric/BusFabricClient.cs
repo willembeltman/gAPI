@@ -252,10 +252,7 @@ public sealed class BusFabricClient
         if (ConnectedCts == null)
             return;
 
-        //foreach (var list in StreamingCache.BusServiceSubscriptionIds.Values)
-        //{
-        //    list.Clear();
-        //}
+        await ResetActivity(ConnectedCts.Token);
 
         await ConnectedCts.CancelAsync();
 
@@ -267,6 +264,11 @@ public sealed class BusFabricClient
 
         ConnectedCts.Dispose();
         ConnectedCts = null;
+    }
+
+    private async Task ResetActivity(CancellationToken token)
+    {
+        // TODO
     }
 
     public async Task BusSubscribeAsync(IFabricBaseBusConnection busConnection, object implementation, ServiceId serviceId, CancellationToken ct)

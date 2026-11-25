@@ -78,6 +78,7 @@ public sealed class DashboardConsoleOutput : IHostedService
 
                     while (ConsoleBuffer.Lines.Reader.TryRead(out var line))
                     {
+                        ct.ThrowIfCancellationRequested();
                         LogWindow.WriteLine(line.Text, line.Color);
                     }
 

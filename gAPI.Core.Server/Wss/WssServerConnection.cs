@@ -324,7 +324,6 @@ public abstract class WssServerConnection : IServerConnection
                             break;
                         case WssClientToServerMessageEnum.StreamingResponse:
                             var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-
                             _ = Task.Run(async () =>
                             {
                                 try
@@ -375,7 +374,7 @@ public abstract class WssServerConnection : IServerConnection
                                 {
                                     await Receive_Log_FromClientAsync(log, ct);
                                 }
-                                catch
+                                catch // niet loggen
                                 {
                                 }
                             }, ct);
@@ -1007,16 +1006,22 @@ public abstract class WssServerConnection : IServerConnection
     {
         await Sender.Send_FabricDisconnected_ToClientAsync(new FabricDisconnectedDto(false), ct);
 
+        await ResetActivity(ct);
+    }
+
+    private async Task ResetActivity(CancellationToken ct)
+    {
         foreach (var key in StreamingCache.WssReceivedTimeouts.Keys)
         {
+            ct.ThrowIfCancellationRequested();
             if (StreamingCache.WssReceivedTimeouts.TryRemove(key, out var timeout))
             {
                 timeout.Cancel();
                 timeout.Dispose();
             }
         }
-
     }
+
     public async Task Send_OnRestoreSubscriptions_ToClientAsync(CancellationToken ct)
     {
         await Sender.Send_FabricRestoreSubscriptions_ToClientAsync(new FabricRestoreSubscriptionsDto(false), ct);

@@ -24,6 +24,8 @@ public sealed class NormalConsoleOutput(
 
                     while (ConsoleBuffer.Lines.Reader.TryRead(out var line))
                     {
+                        ct.ThrowIfCancellationRequested();
+
                         try
                         {
                             Console.WriteLine(SanitizeForConsoleFormat(line.Text), line.Color);

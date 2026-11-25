@@ -15,6 +15,12 @@ using System.Runtime.CompilerServices;
 
 namespace gAPI.Core.Client.Wss;
 
+public record StreamingHandler( 
+    bool IsCompleted, 
+    bool IsCancelled, 
+    ExceptionDto? Exception,
+    byte[] BinaryData);
+
 public abstract class WssClientConnection : IWssClientConnection
 {
     public WssClientConnection(
@@ -34,7 +40,7 @@ public abstract class WssClientConnection : IWssClientConnection
     readonly WssClientConnectionSender Sender;
     readonly ILogger<WssClientConnection> Logger;
     readonly ConcurrentDictionary<RequestArgumentIndexDto, IAsyncEnumerableRegistration> StreamingRequestHandlers = [];
-    readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingResponseClientDto>> StreamingResponseHandlers = [];
+    readonly ConcurrentDictionary<RequestArgumentIndexStreamDto, Action<StreamingHandler>> StreamingResponseHandlers = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<SendRequestDoneClientDto>> PendingSendRequests = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestAckClientDto>> PendingInvokeRequestAcks = [];
     readonly ConcurrentDictionary<RequestId, TaskCompletionSource<InvokeRequestDoneClientDto>> PendingInvokeRequestDones = [];
@@ -86,6 +92,7 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         while (IsConnected == false)
         {
+            ct.ThrowIfCancellationRequested();
             await ConnectAsync();
         }
     }
@@ -220,6 +227,71 @@ public abstract class WssClientConnection : IWssClientConnection
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
     }
+    private async Task ResetActivity(CancellationToken ct)
+    {
+        // Eerst de timeouts laten throwen
+        foreach (var key in IncomingTimeouts.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (IncomingTimeouts.TryRemove(key, out var timeout))
+            {
+                timeout.Cancel();
+                timeout.Dispose();
+            }
+        }
+        foreach (var key in OutgoingTimeouts.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (IncomingTimeouts.TryRemove(key, out var timeout))
+            {
+                timeout.Cancel();
+                timeout.Dispose();
+            }
+        }
+
+        // Dan de activiteiten alsnog stoppen.
+        foreach (var key in StreamingRequestHandlers.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (StreamingRequestHandlers.TryRemove(key, out var handler))
+            {
+                await handler.DisposeAsync();
+            }
+        }
+        foreach (var key in StreamingResponseHandlers.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (StreamingResponseHandlers.TryRemove(key, out var handler))
+            {
+                handler.Invoke(new StreamingHandler(true, true, new ExceptionDto("Connection failed"), []));
+            }
+        }
+        foreach (var key in PendingSendRequests.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (PendingSendRequests.TryRemove(key, out var handler))
+            {
+                handler.TrySetCanceled(ct);
+            }
+        }
+        foreach (var key in PendingInvokeRequestAcks.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (PendingInvokeRequestAcks.TryRemove(key, out var handler))
+            {
+                handler.TrySetCanceled(ct);
+            }
+        }
+        foreach (var key in PendingInvokeRequestDones.Keys)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (PendingInvokeRequestDones.TryRemove(key, out var handler))
+            {
+                handler.TrySetCanceled(ct);
+            }
+        }
+    }
+
 
     private async Task DisconnectAsync()
     {
@@ -244,10 +316,7 @@ public abstract class WssClientConnection : IWssClientConnection
         if (ConnectedCts == null)
             return;
 
-        //foreach (var list in ServiceSubscriptionIds.Values)
-        //{
-        //    list.Clear();
-        //}
+        await ResetActivity(ConnectedCts.Token);
 
         await ConnectedCts.CancelAsync();
 
@@ -393,6 +462,8 @@ public abstract class WssClientConnection : IWssClientConnection
 
                 do
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     result = await socket.ReceiveAsync(
                         new ArraySegment<byte>(ReceiveBuffer, totalBytes, ReceiveBuffer.Length - totalBytes),
                         ct);
@@ -426,11 +497,31 @@ public abstract class WssClientConnection : IWssClientConnection
 
                     case WssServerToClientMessageEnum.SubscribeAck:
                         var subscribeAck = span.ReadSubscribeAckDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        Received_SubscribeAck_FromServer(subscribeAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_SubscribeAck_FromServer(subscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_SubscribeAck_FromServer({message})", subscribeAck);
+                            }
+                        }, ct);
                         break;
                     case WssServerToClientMessageEnum.UnsubscribeAck:
                         var unsubscribeAck = span.ReadUnsubscribeAckDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        Received_UnsubscribeAck_FromServer(unsubscribeAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_UnsubscribeAck_FromServer(unsubscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_UnsubscribeAck_FromServer({message})", unsubscribeAck);
+                            }
+                        }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.FabricSendAndForgetRequest:
@@ -492,7 +583,17 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.SendRequestDone:
                         var sendArgumentedRequestDone = span.ReadSendRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_SendRequestDone_FromServer(sendArgumentedRequestDone, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_SendRequestDone_FromServer({message})", sendArgumentedRequestDone);
+                            }
+                        }, ct);
                         break;
 
                     case WssServerToClientMessageEnum.FabricInvokeRequest:
@@ -525,7 +626,17 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.InvokeRequestAck:
                         var invokeRequestAck = span.ReadInvokeRequestAckClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_InvokeRequestAck_FromServerAsync(invokeRequestAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_InvokeRequestAck_FromServerAsync({message})", invokeRequestAck);
+                            }
+                        }, ct);
                         break;
                     case WssServerToClientMessageEnum.InvokeRequestDone:
                         var invokeRequestDone = span.ReadInvokeRequestDoneClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
@@ -558,7 +669,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.StreamingResponse:
                         var argumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
+                        _ = Task.Run(() =>
                         {
                             try
                             {
@@ -587,7 +698,7 @@ public abstract class WssClientConnection : IWssClientConnection
                         break;
                     case WssServerToClientMessageEnum.FabricStreamingResponse:
                         var fabricArgumentResponse = span.ReadStreamingResponseClientDto(ref offset, Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
+                        _ = Task.Run(() =>
                         {
                             try
                             {
@@ -1005,8 +1116,14 @@ public abstract class WssClientConnection : IWssClientConnection
         if (OutgoingTimeouts.TryGetValue(message.Routing.RequestId, out var timeout2))
             timeout2.CancelAfter(message.Routing.Timeout);
 
-        if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
-            responseHandler.Invoke(message);
+        var key = new RequestArgumentIndexStreamDto(message.Routing.RequestId, message.ArgumentIndex, message.StreamId);
+        if (StreamingResponseHandlers.TryGetValue(key, out var responseHandler))
+            responseHandler.Invoke(
+                new StreamingHandler(
+                    message.IsCompleted,
+                    message.Cancelled,
+                    message.Exception,
+                    message.BinaryData));
     }
 
     private async Task Received_FabricStreamingRequest_FromServerAsync(StreamingRequestClientDto message, CancellationToken connectionLifecycleCt)
@@ -1037,36 +1154,21 @@ public abstract class WssClientConnection : IWssClientConnection
             timeout.CancelAfter(message.Routing.Timeout);
 
         if (StreamingResponseHandlers.TryGetValue(new(message.Routing.RequestId, message.ArgumentIndex, message.StreamId), out var responseHandler))
-            responseHandler.Invoke(message);
+            responseHandler.Invoke(
+                new StreamingHandler(
+                    message.IsCompleted, 
+                    message.IsCancelled,
+                    message.Exception,
+                    message.BinaryData));
     }
 
     private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken connectionLifecycleCt)
     {
         await OnDisconnectedAsync(connectionLifecycleCt);
 
-        foreach (var key in IncomingTimeouts.Keys)
-        {
-            if (IncomingTimeouts.TryRemove(key, out var timeout))
-            {
-                timeout.Cancel();
-                timeout.Dispose();
-            }
-        }
-        foreach (var key in OutgoingTimeouts.Keys)
-        {
-            if (IncomingTimeouts.TryRemove(key, out var timeout))
-            {
-                timeout.Cancel();
-                timeout.Dispose();
-            }
-        }
-
-        //foreach (var list in ServiceSubscriptionIds.Values)
-        //{
-        //    list.Clear();
-        //}
-
+        await ResetActivity(connectionLifecycleCt);
     }
+
     private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken connectionLifecycleCt)
     {
         await OnRestoreSubscriptionsAsync(connectionLifecycleCt);
@@ -1219,6 +1321,7 @@ public abstract class WssClientConnection : IWssClientConnection
             var list = RegisterRemoteAsyncEnumerableArgumentByte(routing, -1, timeoutCts);
             await foreach (var item in list)
             {
+                ct.ThrowIfCancellationRequested();
                 yield return item;
             }
 

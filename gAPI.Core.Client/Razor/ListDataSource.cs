@@ -192,17 +192,15 @@ public class ListDataSource<T, TKey>(
 
         LoadCts?.Cancel();
         LoadCts = new CancellationTokenSource();
-        var token = LoadCts.Token;
+        var ct = LoadCts.Token;
 
         try
         {
-            var newItems = ListItems(Items.Count, Take, OrderBy, token);
+            var newItems = ListItems(Items.Count, Take, OrderBy, ct);
             var count = 0;
 
-            await foreach (var item in newItems)
+            await foreach (var item in newItems.WithCancellation(ct))
             {
-                if (token.IsCancellationRequested)
-                    return;
                 Items.Add(item);
                 count++;
             }
@@ -225,7 +223,7 @@ public class ListDataSource<T, TKey>(
 
             // 🎯 FIX 2: Alleen controleren of we nog een pagina moeten laden 
             // als de token niet tussentijds is gecanceld en er daadwerkelijk meer is.
-            if (!token.IsCancellationRequested && HasMore && Registered)
+            if (!ct.IsCancellationRequested && HasMore && Registered)
             {
                 await EnsureVisibleAsync();
             }
@@ -243,6 +241,7 @@ public class ListDataSource<T, TKey>(
 
         foreach (var item in Response.Response)
         {
+            ct.ThrowIfCancellationRequested();
             yield return new ItemDataSource<T, TKey>(
                 GetPrimaryKey: a => GetPrimaryKey(a),
                 AfterSaveAction,

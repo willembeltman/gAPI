@@ -122,6 +122,7 @@ public sealed class PlaneFabricClient
     {
         while (IsConnected == false)
         {
+            ct.ThrowIfCancellationRequested();
             await ConnectAsync();
         }
     }
@@ -267,10 +268,7 @@ public sealed class PlaneFabricClient
         if (ConnectedCts == null)
             return;
 
-        //foreach (var list in StreamingCache.PlaneServiceSubscriptionIds.Values)
-        //{
-        //    list.Clear();
-        //}
+        await ResetActivity(ConnectedCts.Token);
 
         await ConnectedCts.CancelAsync();
 
@@ -282,6 +280,11 @@ public sealed class PlaneFabricClient
 
         ConnectedCts.Dispose();
         ConnectedCts = null;
+    }
+
+    private async Task ResetActivity(CancellationToken token)
+    {
+        // TODO
     }
 
     public async Task<ServiceSubscriptionId> PlaneSubscribeAsync(IFabricBasePlaneConnection planeConnection, object implementation, ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
@@ -393,11 +396,31 @@ public sealed class PlaneFabricClient
 
                     case PlaneFabricHostToClientMessageEnum.SubscribeAck:
                         var subscribeAck = binaryReader.ReadPlaneSubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_SubscribeAck_FromFabric({message})", subscribeAck);
+                            }
+                        }, ct);
                         break;
                     case PlaneFabricHostToClientMessageEnum.UnsubscribeAck:
                         var unsubscribeAck = binaryReader.ReadPlaneUnsubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_UnsubscribeAck_FromFabric({message})", unsubscribeAck);
+                            }
+                        }, ct);
                         break;
 
                     case PlaneFabricHostToClientMessageEnum.PlaneFireAndForget:
@@ -430,11 +453,31 @@ public sealed class PlaneFabricClient
                         break;
                     case PlaneFabricHostToClientMessageEnum.PlaneSendRequestCancelled:
                         var busSendRequestCancelled = binaryReader.ReadPlaneSendRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_PlaneSendRequestCancelled_FromFabricAsync(busSendRequestCancelled, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_PlaneSendRequestCancelled_FromFabricAsync(busSendRequestCancelled, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_PlaneSendRequestCancelled_FromFabricAsync({message})", busSendRequestCancelled);
+                            }
+                        }, ct);
                         break;
                     case PlaneFabricHostToClientMessageEnum.PlaneSendRequestDone:
                         var busSendRequestAck = binaryReader.ReadPlaneSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_PlaneSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_PlaneSendRequestAck_FromFabricAsync(busSendRequestAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_PlaneSendRequestAck_FromFabricAsync({message})", busSendRequestAck);
+                            }
+                        }, ct);
                         break;
 
                     case PlaneFabricHostToClientMessageEnum.PlaneInvokeRequest:
@@ -453,11 +496,31 @@ public sealed class PlaneFabricClient
                         break;
                     case PlaneFabricHostToClientMessageEnum.PlaneInvokeRequestCancelled:
                         var busInvokeRequestCancelled = binaryReader.ReadPlaneInvokeRequestCancelledDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_PlaneInvokeRequestCancelled_FromFabricAsync(busInvokeRequestCancelled, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_PlaneInvokeRequestCancelled_FromFabricAsync(busInvokeRequestCancelled, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_PlaneInvokeRequestCancelled_FromFabricAsync({message})", busInvokeRequestCancelled);
+                            }
+                        }, ct);
                         break;
                     case PlaneFabricHostToClientMessageEnum.PlaneInvokeRequestAck:
                         var busInvokeResponseAck = binaryReader.ReadPlaneInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_PlaneInvokeRequestAck_FromFabricAsync(busInvokeResponseAck, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_PlaneInvokeRequestAck_FromFabricAsync(busInvokeResponseAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_PlaneInvokeRequestAck_FromFabricAsync({message})", busInvokeResponseAck);
+                            }
+                        }, ct);
                         break;
                     case PlaneFabricHostToClientMessageEnum.PlaneInvokeRequestDone:
                         var busInvokeResponseDone = binaryReader.ReadPlaneInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
@@ -502,7 +565,6 @@ public sealed class PlaneFabricClient
                             }
                         }, ct);
                         break;
-
                 }
             }
         }
@@ -661,7 +723,7 @@ public sealed class PlaneFabricClient
             RegisterPlaneAsyncEnumerableArgumentByte(
                 message.Routing,
                 -1,
-                enumerable, 
+                enumerable,
                 timeoutCts,
                 onDone: async () =>
                 {
@@ -675,7 +737,7 @@ public sealed class PlaneFabricClient
                             null
                         ), ct);
                 });
-            
+
             await Sender.Send_PlaneInvokeRequestAck_ToFabricAsync(
                 new PlaneInvokeRequestAckDto(
                     message.Routing,
@@ -1045,7 +1107,7 @@ public sealed class PlaneFabricClient
                 if (!hasNext)
                     await Cleanup();
 
-                return new PlaneAsyncEnumerableRegistrationResponse( response, null);
+                return new PlaneAsyncEnumerableRegistrationResponse(response, null);
             }
             catch (OperationCanceledException ex) when (
                 ct.IsCancellationRequested ||
@@ -1224,7 +1286,7 @@ public sealed class PlaneFabricClient
                 yield break;
 
             var enumerable = RegisterPlaneRemoteAsyncEnumerableArgumentByte(request.Routing, -1, timeoutCts);
-            await foreach (var item in enumerable)
+            await foreach (var item in enumerable.WithCancellation(ct))
             {
                 timeoutCts.CancelAfter(request.Routing.Timeout);
                 yield return item;

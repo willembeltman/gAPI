@@ -139,6 +139,7 @@ public sealed class FabricClient
             return;
         while (IsConnected == false)
         {
+            ct.ThrowIfCancellationRequested();
             await ConnectAsync();
         }
     }
@@ -258,16 +259,16 @@ public sealed class FabricClient
         if (UseFabric == false)
             return;
 
-        await Gated_DisconnectAsync();
-        foreach (var wssConnection in ServiceSubscriptions.All.GroupBy(a => a.Connection).Select(a => a.Key))
+        foreach (var wssConnection in Connections.All)
         {
             await wssConnection.Send_OnDisconnected_ToClientAsync(LifeCycleCt.Value);
         }
+        await Gated_DisconnectAsync();
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
         await Gated_ConnectAsync();
-        foreach (var wssConnection in ServiceSubscriptions.All.GroupBy(a => a.Connection).Select(a => a.Key))
+        foreach (var wssConnection in Connections.All)
         {
             await wssConnection.Send_OnRestoreSubscriptions_ToClientAsync(LifeCycleCt.Value);
         }
@@ -299,14 +300,7 @@ public sealed class FabricClient
         if (ConnectedCts == null)
             return;
 
-        foreach (var item in StreamingCache.FabricSenderTimeouts.Keys)
-        {
-            if (StreamingCache.FabricSenderTimeouts.TryRemove(item, out var timeout))
-            {
-                await timeout.CancelAsync();
-                timeout.Dispose();
-            }
-        }
+        await ResetActivity();
 
         await ConnectedCts.CancelAsync();
 
@@ -318,6 +312,18 @@ public sealed class FabricClient
 
         ConnectedCts.Dispose();
         ConnectedCts = null;
+    }
+
+    private async Task ResetActivity()
+    {
+        foreach (var item in StreamingCache.FabricSenderTimeouts.Keys)
+        {
+            if (StreamingCache.FabricSenderTimeouts.TryRemove(item, out var timeout))
+            {
+                await timeout.CancelAsync();
+                timeout.Dispose();
+            }
+        }
     }
 
     #endregion
@@ -477,16 +483,46 @@ public sealed class FabricClient
 
                     case FabricHostToClientMessageEnum.SubscribeAck:
                         var subscribeAck = BinaryReader.ReadSubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await Received_SubscribeAck_FromFabric(subscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_SubscribeAck_FromFabric({message})", subscribeAck);
+                            }
+                        }, ct);
                         break;
                     case FabricHostToClientMessageEnum.UnsubscribeAck:
                         var unsubscribeAck = BinaryReader.ReadUnsubscribeAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        await Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await Received_UnsubscribeAck_FromFabric(unsubscribeAck, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Received_UnsubscribeAck_FromFabric({message})", unsubscribeAck);
+                            }
+                        }, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.GetSessionCookieDataResponse:
                         var activate = BinaryReader.ReadSendGetSessionCookieDataResponseDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_GetSessionResponse_FromFabricAsync(activate, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_GetSessionResponse_FromFabricAsync(activate, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_GetSessionResponse_FromFabricAsync({message})", activate);
+                            }
+                        }, ct);
                         break;
 
 
@@ -536,7 +572,17 @@ public sealed class FabricClient
                         break;
                     case FabricHostToClientMessageEnum.SendRequestDone:
                         var fabricSendRequestDone = BinaryReader.ReadSendRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        Receive_SendRequestDone_FromFabricAsync(fabricSendRequestDone, ct);
+                        _ = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Receive_SendRequestDone_FromFabricAsync(fabricSendRequestDone, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Receive_SendRequestDone_FromFabricAsync({message})", fabricSendRequestDone);
+                            }
+                        }, ct);
                         break;
 
                     case FabricHostToClientMessageEnum.FabricInvokeRequest:
@@ -569,7 +615,7 @@ public sealed class FabricClient
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestAck:
                         var fabricInvokeResponseAck = BinaryReader.ReadInvokeRequestAckDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
+                        _ = Task.Run(() =>
                         {
                             try
                             {
@@ -583,7 +629,7 @@ public sealed class FabricClient
                         break;
                     case FabricHostToClientMessageEnum.InvokeRequestDone:
                         var fabricInvokeResponseDone = BinaryReader.ReadInvokeRequestDoneDto(Config.MaxPackageSize ?? 512 * 1024);
-                        _ = Task.Run(async () =>
+                        _ = Task.Run(() =>
                         {
                             try
                             {
@@ -624,7 +670,6 @@ public sealed class FabricClient
                             }
                         }, ct);
                         break;
-
                 }
             }
         }
@@ -666,6 +711,7 @@ public sealed class FabricClient
         {
             foreach (var serviceSubscription in serviceSubscriptions.Values)
             {
+                connectionLifecycleCt.ThrowIfCancellationRequested();
                 if (serviceSubscription.Id == message.SubscribeDto.ServiceSubscriptionId)
                 {
                     await serviceSubscription.Connection.Send_SubscribeAck_ToClientAsync(message, connectionLifecycleCt);
@@ -682,6 +728,7 @@ public sealed class FabricClient
         {
             foreach (var serviceSubscription in serviceSubscriptions.Values)
             {
+                connectionLifecycleCt.ThrowIfCancellationRequested();
                 if (serviceSubscription.Id == message.UnsubscribeDto.ServiceSubscriptionId)
                 {
                     await serviceSubscription.Connection.Send_UnsubscribeAck_ToClientAsync(message, connectionLifecycleCt);
@@ -698,6 +745,7 @@ public sealed class FabricClient
         // Routeren naar client(s)
         foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            connectionLifecycleCt.ThrowIfCancellationRequested();
             if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                 message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                 continue;
@@ -717,6 +765,7 @@ public sealed class FabricClient
         var called = false;
         foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            ct.ThrowIfCancellationRequested();
             if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                 message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                 continue;
@@ -743,6 +792,7 @@ public sealed class FabricClient
         // Routeren naar client(s)
         foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            connectionLifecycleCt.ThrowIfCancellationRequested();
             if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                 message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                 continue;
@@ -778,6 +828,7 @@ public sealed class FabricClient
         var called = false;
         foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            ct.ThrowIfCancellationRequested();
             if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                 message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                 continue;
@@ -805,6 +856,7 @@ public sealed class FabricClient
         // Routeren naar client(s)
         foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
         {
+            connectionLifecycleCt.ThrowIfCancellationRequested();
             if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                 message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                 continue;
@@ -858,6 +910,7 @@ public sealed class FabricClient
             var called = false;
             foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
             {
+                ct.ThrowIfCancellationRequested();
                 if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                     message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                     continue;
@@ -927,6 +980,7 @@ public sealed class FabricClient
             // Routeren naar client(s)
             foreach (var serviceSubscription in GetServiceSubscriptions(message.Routing))
             {
+                ct.ThrowIfCancellationRequested();
                 if (message.Routing.IsAuthenticated && serviceSubscription.IsAuthenticated == false ||
                     message.Routing.IsNotAuthenticated && serviceSubscription.IsAuthenticated == true)
                     continue;
@@ -1361,6 +1415,7 @@ public sealed class FabricClient
 
         foreach (var serviceSubscription in sessions)
         {
+            ct.ThrowIfCancellationRequested();
             // GEEN StreamingCache.PendingFabricSendRequests meer!
             // Schiet hem direct de netwerkqueue in (EnqueueAsync onder water)
             await serviceSubscription.Connection.Send_FabricSendAndForgetRequest_ToClientAsync(request, ct);
@@ -1427,6 +1482,7 @@ public sealed class FabricClient
 
         foreach (var serviceSubscription in sessions)
         {
+            timeoutCts.ThrowIfCancellationRequested();
             var completion = new TaskCompletionSource<SendRequestDoneDto>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (StreamingCache.PendingClientSendRequests.TryAdd(request.Routing.RequestId, completion) == false)
             {
@@ -1498,7 +1554,7 @@ public sealed class FabricClient
             timeoutCts.CancelAfter(request.Routing.Timeout);
 
             var enumerable = RegisterRemoteAsyncEnumerableArgumentByte(request.Routing, -1, timeoutCts);
-            await foreach (var item in enumerable)
+            await foreach (var item in enumerable.WithCancellation(ct))
             {
                 if (timeoutCts.Token.IsCancellationRequested)
                     break;
@@ -1522,6 +1578,7 @@ public sealed class FabricClient
         var sseServiceSubscriptions = GetServiceSubscriptions(request.Routing);
         foreach (var sseServiceSubscription in sseServiceSubscriptions)
         {
+            ct.ThrowIfCancellationRequested();
             var completion = new TaskCompletionSource<InvokeRequestAckDto>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (StreamingCache.PendingClientInvokeRequestAcks.TryAdd(request.Routing.RequestId, completion) == false)
             {
@@ -1546,7 +1603,7 @@ public sealed class FabricClient
             {
                 var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
                 var enumerable = RegisterRemoteAsyncEnumerableArgumentByte_ToClient(sseServiceSubscription, request.Routing, -1, timeoutCts);
-                await foreach (var item in enumerable)
+                await foreach (var item in enumerable.WithCancellation(ct))
                 {
                     yield return item;
                 }

@@ -75,7 +75,7 @@ public class SseClientSubscription : IDisposable
 
                     buffer.Append(chunk, 0, read);
 
-                    while (TryExtractFrame(buffer, out var frame))
+                    while (!Cts.IsCancellationRequested && TryExtractFrame(buffer, out var frame))
                     {
                         if (!ParseFrame(frame, out string eventName, out string eventData))
                             continue;

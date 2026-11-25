@@ -107,7 +107,10 @@ public class StorageBackPlane(
         var removeList = db.StorageFileTokens
             .Where(a => a.DateTime < now.AddMinutes(-15));
         foreach (var remove in removeList)
+        {
+            ct.ThrowIfCancellationRequested();
             db.StorageFileTokens.Remove(remove);
+        }
         await db.StorageFileTokens.AddAsync(token, ct);
         await db.SaveChangesAsync(ct);
 
