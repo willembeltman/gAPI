@@ -40,6 +40,10 @@ public record PlaneAsyncEnumerableRegistrationInstance<T>(
             {
                 await enumerator.DisposeAsync();
             }
+            catch
+            {
+
+            }
             finally
             {
                 timeoutCts.Dispose();

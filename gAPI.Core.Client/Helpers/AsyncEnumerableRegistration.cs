@@ -40,6 +40,10 @@ public record AsyncEnumerableRegistrationInstance<T>(
             {
                 await enumerator.DisposeAsync();
             }
+            catch
+            {
+
+            }
             finally
             {
                 timeoutCts.Dispose();

@@ -1036,7 +1036,7 @@ public abstract class WssServerConnection : IServerConnection
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
 
         await Sender.Send_SubscribeAck_ToClientAsync(message, ct);
@@ -1050,7 +1050,7 @@ public abstract class WssServerConnection : IServerConnection
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
 
         await Sender.Send_UnsubscribeAck_ToClientAsync(message, ct);
@@ -1095,6 +1095,11 @@ public abstract class WssServerConnection : IServerConnection
                         activeStreams.TryRemove(streamId, out _);
                         await stream.DisposeAsync(entered);
                     }
+
+                    stream.timeoutCts.Token.Register(async () =>
+                    {
+                        await Cleanup();
+                    });
 
                     try
                     {

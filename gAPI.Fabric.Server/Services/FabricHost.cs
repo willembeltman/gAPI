@@ -203,26 +203,36 @@ public sealed class FabricHost : IActor
 
     private async Task SendLoop()
     {
-        using var counter = new CountingDuplexStream(Stream);
-        using var writer = new BinaryWriter(counter);
-
-        await Send_SynchronizeFabricIds_ToApiAsync(new SynchronizeFabricIdsDto(
-            Manager.FabricManagerId,
-            FabricConnectionId), Manager.System);
-
-        var previous = counter.BytesWritten;
-        await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
+        try
         {
-            item.write(writer);
-            writer.Flush();
-            if (Cts.IsCancellationRequested) break;
+            using var counter = new CountingDuplexStream(Stream);
+            using var writer = new BinaryWriter(counter);
 
-            var size = counter.BytesWritten - previous;
-            previous = counter.BytesWritten;
-            item.actor.EnqueueSend(size);
-            SendBytesLogger.Enqueue(new(Stopwatch.Elapsed.TotalSeconds, size));
+            await Send_SynchronizeFabricIds_ToApiAsync(new SynchronizeFabricIdsDto(
+                Manager.FabricManagerId,
+                FabricConnectionId), Manager.System);
+
+            var previous = counter.BytesWritten;
+            await foreach (var item in SendQueue.Reader.ReadAllAsync(Cts.Token))
+            {
+                item.write(writer);
+                writer.Flush();
+                if (Cts.IsCancellationRequested) break;
+
+                var size = counter.BytesWritten - previous;
+                previous = counter.BytesWritten;
+                item.actor.EnqueueSend(size);
+                SendBytesLogger.Enqueue(new(Stopwatch.Elapsed.TotalSeconds, size));
+            }
         }
-        Dispose();
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "SendLoop");
+        }
+        finally
+        {
+            Dispose();
+        }
     }
     private async Task Enqueue(Action<BinaryWriter> write, IActor actor)
     {
@@ -385,13 +395,16 @@ public sealed class FabricHost : IActor
         {
             Logger.LogError(ex, "FabricClient #{FabricConnectionId.Value}: receive loop failed.", FabricConnectionId.Value);
         }
-        Dispose();
-
-        Logger.LogError("FabricHost {FabricConnectionId} stopped", FabricConnectionId);
+        finally
+        {
+            Dispose();
+            Logger.LogError("FabricHost {FabricConnectionId} stopped", FabricConnectionId);
+        }
     }
 
     public void Dispose()
     {
+        Cts.Cancel();
         Cts.Dispose();
         Stream.Dispose();
         TcpClient.Dispose();

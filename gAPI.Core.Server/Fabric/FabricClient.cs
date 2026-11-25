@@ -699,7 +699,7 @@ public sealed class FabricClient
 
         // Zoek de wachtende taak op en zet het resultaat zodra het antwoord binnen is
         if (StreamingCache.PendingGetSessionRequests.TryRemove(message.SessionId, out var completion))
-            completion.TrySetResult(message.CookieData);
+            completion.SetResult(message.CookieData);
     }
 
     private async Task Received_SubscribeAck_FromFabric(SubscribeAckDto message, CancellationToken connectionLifecycleCt)
@@ -808,11 +808,11 @@ public sealed class FabricClient
         if (StreamingCache.PendingFabricSendRequestDones.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -872,7 +872,7 @@ public sealed class FabricClient
         if (StreamingCache.PendingFabricInvokeRequestAcks.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -887,7 +887,7 @@ public sealed class FabricClient
         if (StreamingCache.PendingFabricInvokeRequestDones.TryRemove(message.Routing.RequestId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -1002,11 +1002,11 @@ public sealed class FabricClient
             // we gewoon de fabric callbacks naar de fabricclient gebruiken, deze worden in de PendingClientSendRequests
             // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
             return;
         }
         if (!UseFabric)
@@ -1027,7 +1027,7 @@ public sealed class FabricClient
             // we gewoon de fabric callbacks naar de client gebruiken, deze worden in de PendingClientSendRequests
             // opgeslagen, dus dit is geen foute.
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -1226,6 +1226,11 @@ public sealed class FabricClient
                         activeStreams.TryRemove(streamId, out _);
                         await stream.DisposeAsync(entered);
                     }
+
+                    stream.timeoutCts.Token.Register(async () =>
+                    {
+                        await Cleanup();
+                    });
 
                     try
                     {
@@ -1454,7 +1459,14 @@ public sealed class FabricClient
 
             timeoutCts.Register(async () =>
             {
-                await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Handle_SendRequest_ToFabric_Async");
+                }
             });
 
             var done = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
@@ -1494,7 +1506,14 @@ public sealed class FabricClient
 
             timeoutCts.Register(async () =>
             {
-                await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Handle_SendRequest_ToClient_Async");
+                }
             });
 
             try
@@ -1543,7 +1562,14 @@ public sealed class FabricClient
 
             timeoutCts.Register(async () =>
             {
-                await Sender.Send_InvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await Sender.Send_InvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Handle_FabricInvokeRequest_ToFabricAsync register");
+                }
             });
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);
@@ -1596,7 +1622,14 @@ public sealed class FabricClient
 
             timeoutCts.Register(async () =>
             {
-                await sseServiceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await sseServiceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Handle_FabricInvokeRequest_ToClientAsync register");
+                }
             });
 
             try

@@ -40,6 +40,10 @@ public record BusAsyncEnumerableRegistrationInstance<T>(
             {
                 await enumerator.DisposeAsync();
             }
+            catch
+            {
+
+            }
             finally
             {
                 timeoutCts.Dispose();

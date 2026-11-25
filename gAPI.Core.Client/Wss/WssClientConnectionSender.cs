@@ -102,10 +102,7 @@ public class WssClientConnectionSender(
             sendQueue = SendQueue;
         }
 
-        if (!sendQueue.Writer.TryWrite(new SendQueueItem(write, null)))
-        {
-            return;
-        }
+        await sendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
     }
     private async Task EnqueueAndWaitAsync(Func<Span<byte>, int> write, CancellationToken ct)
     {
@@ -119,8 +116,7 @@ public class WssClientConnectionSender(
 
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        if (!sendQueue.Writer.TryWrite(new SendQueueItem(write, completion)))
-            throw new Exception("Not connected");
+        await sendQueue.Writer.WriteAsync(new SendQueueItem(write, completion), ct);
 
         await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }

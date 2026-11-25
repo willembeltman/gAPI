@@ -5,15 +5,11 @@ using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Dtos;
-using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Enums;
 using gAPI.Core.Server.Helpers;
 using gAPI.Core.Server.Interfaces;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Sockets;
 
 namespace gAPI.Core.Server.Fabric;
@@ -515,11 +511,11 @@ public sealed class BusFabricClient
         if (StreamingCache.BusSubscribeTcss.TryRemove(message.SubscribeDto.ServiceSubscriptionId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
     private void Received_UnsubscribeAck_FromFabric(BusUnsubscribeAckDto message, CancellationToken connectionLifecycleCt)
@@ -530,11 +526,11 @@ public sealed class BusFabricClient
         if (StreamingCache.BusUnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -616,11 +612,11 @@ public sealed class BusFabricClient
         if (StreamingCache.PendingBusSendRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -640,8 +636,8 @@ public sealed class BusFabricClient
         {
             var enumerable = BusConnection.Send_InvokeRequest_ToServiceAsync(message, timeoutCts);
             RegisterBusAsyncEnumerableArgumentByte(
-                message.Routing, 
-                -1, 
+                message.Routing,
+                -1,
                 enumerable,
                 timeoutCts,
                 async () =>
@@ -707,7 +703,7 @@ public sealed class BusFabricClient
         if (StreamingCache.PendingBusInvokeRequestAcks.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -725,7 +721,7 @@ public sealed class BusFabricClient
         if (StreamingCache.PendingBusInvokeRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -1166,7 +1162,14 @@ public sealed class BusFabricClient
 
         timeoutCts.Token.Register(async () =>
         {
-            await Sender.Send_BusSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            try
+            {
+                await Sender.Send_BusSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "SendAsync register");
+            }
         });
 
         var message = await completion.Task.WaitAsync(timeoutCts.Token);
@@ -1199,7 +1202,14 @@ public sealed class BusFabricClient
 
             timeoutCts.Token.Register(async () =>
             {
-                await Sender.Send_BusInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await Sender.Send_BusInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "InvokeAsync register");
+                }
             });
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);

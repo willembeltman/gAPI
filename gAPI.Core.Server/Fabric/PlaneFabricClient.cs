@@ -596,11 +596,11 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PlaneSubscribeTcss.TryRemove(message.SubscribeDto.ServiceSubscriptionId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
     private void Received_UnsubscribeAck_FromFabric(PlaneUnsubscribeAckDto message, CancellationToken connectionLifecycleCt)
@@ -611,11 +611,11 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PlaneUnsubscribeTcss.TryRemove(message.UnsubscribeDto.ServiceSubscriptionId, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -697,11 +697,11 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PendingPlaneSendRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
-                completion.TrySetResult(message);
+                completion.SetResult(message);
         }
     }
 
@@ -788,7 +788,7 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PendingPlaneInvokeRequestAcks.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -806,7 +806,7 @@ public sealed class PlaneFabricClient
         if (StreamingCache.PendingPlaneInvokeRequestDones.TryRemove(message.Routing, out var completion))
         {
             if (message.Cancelled)
-                completion.SetCanceled();
+                completion.SetCanceled(connectionLifecycleCt);
             else if (message.Exception != null)
                 completion.SetException(new RemoteException(message.Exception));
             else
@@ -999,6 +999,10 @@ public sealed class PlaneFabricClient
                 activeStreams.TryRemove(streamId, out _);
                 await stream.DisposeAsync(entered);
             }
+            stream.timeoutCts.Token.Register(async () =>
+            {
+                await Cleanup();
+            });
 
             try
             {
@@ -1246,7 +1250,14 @@ public sealed class PlaneFabricClient
 
         timeoutCts.Register(async () =>
         {
-            await Sender.Send_PlaneSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            try
+            {
+                await Sender.Send_PlaneSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "SendAsync register");
+            }
         });
 
         var message = await completion.Task.WaitAsync(timeoutCts.Token);
@@ -1277,7 +1288,14 @@ public sealed class PlaneFabricClient
 
             timeoutCts.Register(async () =>
             {
-                await Sender.Send_PlaneInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                try
+                {
+                    await Sender.Send_PlaneInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "InvokeAsync register");
+                }
             });
 
             var response = await completion.Task.WaitAsync(request.Routing.Timeout, ct);

@@ -237,95 +237,204 @@ public sealed class FabricPlaneHost : IActor
             using var counter = new CountingDuplexStream(Stream);
             using var reader = new BinaryReader(counter);
             var previousBytesRead = counter.BytesRead;
+            var ct = Cts.Token;
             while (!Cts.IsCancellationRequested)
             {
                 var messageType = PlaneFabricConverter.ReadClientToHostMessageType(reader);
-                //if (Logger.IsEnabled(LogLevel.Trace))
-                //    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("{now}: ReceiveLoop({messageType})", DateTime.Now.ToString("HH:mm:ss.fff"), messageType);
                 switch (messageType)
                 {
                     case PlaneFabricClientToHostMessageEnum.PlaneSubscribe:
                         {
                             var busSubscribe = reader.ReadPlaneSubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSubscribe_FromApiAsync(this, busSubscribe, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneSubscribe_FromApiAsync(this, busSubscribe, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneSubscribe_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneUnsubscribe:
                         {
                             var busUnsubscribe = reader.ReadPlaneUnsubscribeDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneUnsubscribe_FromApiAsync(this, busUnsubscribe, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneUnsubscribe_FromApiAsync(this, busUnsubscribe, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneUnsubscribe_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneFireAndForget:
                         {
                             var busFireAndForget = reader.ReadPlaneSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendFireAndForget_FromApiAsync(this, busFireAndForget, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneSendFireAndForget_FromApiAsync(this, busFireAndForget, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneSendFireAndForget_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequest:
                         {
                             var busSendRequest = reader.ReadPlaneSendRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequest_FromApiAsync(this, busSendRequest, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneSendRequest_FromApiAsync(this, busSendRequest, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneSendRequest_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequestCancelled:
                         {
                             var busSendRequestCancelled = reader.ReadPlaneSendRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequestCancelled_FromApiAsync(this, busSendRequestCancelled, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneSendRequestCancelled_FromApiAsync(this, busSendRequestCancelled, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneSendRequestCancelled_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneSendRequestDone:
                         {
                             var busSendRequestAck = reader.ReadPlaneSendRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneSendRequestDone_FromApiAsync(this, busSendRequestAck, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneSendRequestDone_FromApiAsync(this, busSendRequestAck, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneSendRequestDone_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequest:
                         {
                             var busInvokeRequest = reader.ReadPlaneInvokeRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequest_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneInvokeRequest_FromApiAsync(this, busInvokeRequest, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneInvokeRequest_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestCancelled:
                         {
                             var busInvokeRequest = reader.ReadPlaneInvokeRequestCancelledDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestCancelled_FromApiAsync(this, busInvokeRequest, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneInvokeRequestCancelled_FromApiAsync(this, busInvokeRequest, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneInvokeRequestCancelled_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestAck:
                         {
                             var busInvokeRequestAck = reader.ReadPlaneInvokeRequestAckDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestAck_FromApiAsync(this, busInvokeRequestAck, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneInvokeRequestAck_FromApiAsync(this, busInvokeRequestAck, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneInvokeRequestAck_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneInvokeRequestDone:
                         {
                             var busInvokeRequestDone = reader.ReadPlaneInvokeRequestDoneDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneInvokeRequestDone_FromApiAsync(this, busInvokeRequestDone, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneInvokeRequestDone_FromApiAsync(this, busInvokeRequestDone, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneInvokeRequestDone_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneStreamingRequest:
                         {
                             var busStreamingRequest = reader.ReadPlaneStreamingRequestDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneStreamingRequest_FromApiAsync(this, busStreamingRequest, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneStreamingRequest_FromApiAsync(this, busStreamingRequest, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneStreamingRequest_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                     case PlaneFabricClientToHostMessageEnum.PlaneStreamingResponse:
                         {
                             var busStreamingResponse = reader.ReadPlaneStreamingResponseDto(Manager.Config.MaxPackageSize ?? 512 * 1024);
                             var receiveSize = counter.BytesRead - previousBytesRead;
-                            await Manager.Receive_PlaneStreamingResponse_FromApiAsync(this, busStreamingResponse, receiveSize, Cts.Token);
+                            _ = Task.Run(async () => {
+                                try
+                                {
+                                    await Manager.Receive_PlaneStreamingResponse_FromApiAsync(this, busStreamingResponse, receiveSize, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.LogError(ex, "Receive_PlaneStreamingResponse_FromApiAsync");
+                                }
+                            }, ct);
                         }
                         break;
                 }

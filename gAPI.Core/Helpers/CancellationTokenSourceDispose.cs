@@ -51,8 +51,9 @@ public sealed class CancellationTokenSourceDispose : IDisposable
             {
                 await action.Invoke();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
             }
         });
     }
@@ -64,8 +65,9 @@ public sealed class CancellationTokenSourceDispose : IDisposable
             {
                 action.Invoke();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
             }
         });
     }
