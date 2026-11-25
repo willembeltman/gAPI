@@ -9,7 +9,7 @@ namespace gAPI.Core.Server.Helpers;
 public record BusAsyncEnumerableRegistrationInstance<T>(
     IAsyncEnumerator<T> enumerator,
     SemaphoreSlim gate,
-    CancellationTokenSourceDispose timeoutCts)
+    CancellationTokenSource timeoutCts)
 {
     public bool IsDisposed { get; private set; }
 
@@ -19,13 +19,13 @@ public record BusAsyncEnumerableRegistrationInstance<T>(
 
     public async ValueTask DisposeAsync(bool gateAlreadyHeld = false)
     {
-        //try
-        //{
-        //    linkedCts.Cancel();
-        //}
-        //catch (ObjectDisposedException)
-        //{
-        //}
+        try
+        {
+            timeoutCts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
 
         if (!gateAlreadyHeld)
             await gate.WaitAsync();
@@ -42,7 +42,7 @@ public record BusAsyncEnumerableRegistrationInstance<T>(
             }
             finally
             {
-                //linkedCts.Dispose();
+                timeoutCts.Dispose();
             }
         }
         finally

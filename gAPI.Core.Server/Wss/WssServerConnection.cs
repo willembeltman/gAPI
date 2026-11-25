@@ -1005,6 +1005,8 @@ public abstract class WssServerConnection : IServerConnection
 
     public async Task Send_OnDisconnected_ToClientAsync(CancellationToken ct)
     {
+        await Sender.Send_FabricDisconnected_ToClientAsync(new FabricDisconnectedDto(false), ct);
+
         foreach (var key in StreamingCache.WssReceivedTimeouts.Keys)
         {
             if (StreamingCache.WssReceivedTimeouts.TryRemove(key, out var timeout))
@@ -1014,7 +1016,6 @@ public abstract class WssServerConnection : IServerConnection
             }
         }
 
-        await Sender.Send_FabricDisconnected_ToClientAsync(new FabricDisconnectedDto(false), ct);
     }
     public async Task Send_OnRestoreSubscriptions_ToClientAsync(CancellationToken ct)
     {
@@ -1072,29 +1073,30 @@ public abstract class WssServerConnection : IServerConnection
             new AsyncEnumerableRegistration<byte[]>(
                 async (activeStreams, streamId, cancelled, ct) =>
                 {
-                    var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+                    var stream = activeStreams.GetOrAdd(
                         streamId,
                         _ =>
                         {
+                            var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                             return new AsyncEnumerableRegistrationInstance<byte[]>(
-                                source.GetAsyncEnumerator(timeoutCts.Token),
+                                source.GetAsyncEnumerator(cts.Token),
                                 new SemaphoreSlim(1, 1),
-                                timeoutCts);
+                                cts);
                         });
 
+                    var entered = false;
                     async Task Cleanup()
                     {
                         activeStreams.TryRemove(streamId, out _);
-                        await enumerator.DisposeAsync();
+                        await stream.DisposeAsync(entered);
                     }
 
-                    var entered = false;
                     try
                     {
-                        await gate.WaitAsync(ct);
+                        await stream.gate.WaitAsync(ct);
                         entered = true;
 
-                        var hasNext = !cancelled && await enumerator.MoveNextAsync(ct);
+                        var hasNext = !cancelled && await stream.enumerator.MoveNextAsync(ct);
 
                         var response = new StreamingResponseDto(
                             routing,
@@ -1103,7 +1105,7 @@ public abstract class WssServerConnection : IServerConnection
                             !hasNext,
                             cancelled,
                             null,
-                            hasNext ? enumerator.Current : []);
+                            hasNext ? stream.enumerator.Current : []);
 
                         if (!hasNext)
                             await Cleanup();
@@ -1147,7 +1149,7 @@ public abstract class WssServerConnection : IServerConnection
                     finally
                     {
                         if (entered)
-                            gate.Release();
+                            stream.gate.Release();
                     }
                 })) == false)
             throw new NotImplementedException();

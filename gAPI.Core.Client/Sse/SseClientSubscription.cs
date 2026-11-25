@@ -687,10 +687,11 @@ public class SseClientSubscription : IDisposable
                         streamId,
                         _ =>
                         {
+                            var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                             return new AsyncEnumerableRegistrationInstance<T>(
-                                source.GetAsyncEnumerator(timeoutCts.Token),
+                                source.GetAsyncEnumerator(cts.Token),
                                 new SemaphoreSlim(1, 1),
-                                timeoutCts);
+                                cts);
                         });
 
                     var entered = false;
@@ -801,10 +802,11 @@ public class SseClientSubscription : IDisposable
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new AsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
             var entered = false;

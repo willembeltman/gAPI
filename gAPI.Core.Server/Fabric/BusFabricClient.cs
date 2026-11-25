@@ -899,39 +899,30 @@ public sealed class BusFabricClient
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new BusAsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
+            var entered = false;
             async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                if (argumentIndex == -1)
-                {
-                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(
-                        new BusInvokeRequestDoneDto(
-                            routing,
-                            false,
-                            ex == null ? null : new ExceptionDto(ex)),
-                        ct);
-                }
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
-                await gate.WaitAsync(ct);
+                await stream.gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && await stream.enumerator.MoveNextAsync();
 
                 var response = new BusStreamingResponseDto(
                     routing,
@@ -940,7 +931,7 @@ public sealed class BusFabricClient
                     !hasNext,
                     cancelled,
                     null,
-                    hasNext ? enumerator.Current : []);
+                    hasNext ? stream.enumerator.Current : []);
 
                 if (!hasNext)
                     await Cleanup();
@@ -984,7 +975,7 @@ public sealed class BusFabricClient
             finally
             {
                 if (entered)
-                    gate.Release();
+                    stream.gate.Release();
             }
         }));
     }
@@ -996,39 +987,30 @@ public sealed class BusFabricClient
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new BusAsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
+            var entered = false;
             async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
-                linkedCts.Dispose();
-                if (argumentIndex == -1)
-                {
-                    await Sender.Send_BusInvokeRequestDone_ToFabricAsync(
-                        new BusInvokeRequestDoneDto(
-                            routing,
-                            false,
-                            ex == null ? null : new ExceptionDto(ex)),
-                        ct);
-                }
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
-                await gate.WaitAsync(ct);
+                await stream.gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && await stream.enumerator.MoveNextAsync();
 
                 var response = new BusStreamingResponseDto(
                     routing,
@@ -1037,7 +1019,7 @@ public sealed class BusFabricClient
                     !hasNext,
                     cancelled,
                     null,
-                    hasNext ? serializer(enumerator.Current) : []);
+                    hasNext ? serializer(stream.enumerator.Current) : []);
 
                 if (!hasNext)
                     await Cleanup();
@@ -1081,7 +1063,7 @@ public sealed class BusFabricClient
             finally
             {
                 if (entered)
-                    gate.Release();
+                    stream.gate.Release();
             }
         }));
     }

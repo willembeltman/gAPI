@@ -134,6 +134,8 @@ public class {Name}(
             using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
             var ___ct = ___timeoutCts.Token;
 
+            await ___planeConnection.WaitForConnectionAsync(___ct);
+
             var ___routing = new {PlaneRoutingDto}(
                 ___planeConnection.PlaneConnectionId,
                 {RequestId}.New(),
@@ -189,10 +191,12 @@ public class {Name}(
         return $@"
     public async Task {method.Name}({string.Join(", ", method.Arguments.Select(arg => $@"{arg.ParameterType.Name} {arg.Name}"))})
     {{
-            ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
-            using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
-            var ___ct = ___timeoutCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds({method.Timeout});{(ct == null ? $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
+        using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
+        var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new {PlaneRoutingDto}(
             ___planeConnection.PlaneConnectionId,
@@ -240,6 +244,8 @@ public class {Name}(
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new {PlaneRoutingDto}(
             ___planeConnection.PlaneConnectionId,
@@ -302,6 +308,8 @@ public class {Name}(
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value);" : $@"
         using var ___timeoutCts = new {CancellationTokenSourceDispose}(___timeOut.Value, {ct.Name});")}
         var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new {PlaneRoutingDto}(
             ___planeConnection.PlaneConnectionId,

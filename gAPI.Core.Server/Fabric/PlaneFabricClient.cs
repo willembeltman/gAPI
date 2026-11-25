@@ -23,8 +23,6 @@ public sealed class PlaneFabricClient
         ILoggerFactory loggerFactory,
         BackPlaneConfig BackPlaneConfig)
     {
-        Sender = new PlaneFabricClientSender(this, loggerFactory);
-
         StreamingCache = streamingCache;
         Logger = loggerFactory.CreateLogger<PlaneFabricClient>();
         Config = BackPlaneConfig;
@@ -38,15 +36,18 @@ public sealed class PlaneFabricClient
                     .Select(x => x.Split(['='], 2))
                     .ToDictionary(x => x[0].Trim(), x => x[1].Trim(), StringComparer.OrdinalIgnoreCase);
 
+                var name = string.Empty;
                 if (!parts.TryGetValue("Server", out var host))
                     throw new Exception("Fabric ConnectionString must contain 'Server' parameter");
                 if (!parts.TryGetValue("Port", out var portString))
                     throw new Exception("Fabric ConnectionString must contain 'Port' parameter");
                 if (!int.TryParse(portString, out var port))
                     throw new Exception("Fabric ConnectionString 'Port' parameter must be an int");
+                parts.TryGetValue("Name", out name);
 
                 Host = host;
                 Port = port;
+                Name = name ?? string.Empty;
             }
             else if (Uri.TryCreate(BackPlaneConfig.ConnectionString, UriKind.Absolute, out var uri))
             {
@@ -69,6 +70,8 @@ public sealed class PlaneFabricClient
         {
             throw new Exception("Plane fabric config not set");
         }
+
+        Sender = new PlaneFabricClientSender(this, loggerFactory);
     }
 
     readonly ILogger Logger;
@@ -77,6 +80,7 @@ public sealed class PlaneFabricClient
 
     readonly string Host;
     readonly int Port;
+    readonly string Name = string.Empty;
 
     readonly PlaneFabricClientSender Sender;
     readonly StreamingCache StreamingCache;
@@ -84,10 +88,9 @@ public sealed class PlaneFabricClient
     TcpClient? Tcp;
     NetworkStream? Stream;
 
-    public BinaryWriter? Writer { get; private set; }
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricPlaneConnectionId FabricConnectionId { get; private set; } = new FabricPlaneConnectionId(-1);
-    public bool IsConnected => Tcp?.Connected == true;
+    public bool IsConnected => Tcp?.Connected == true && Sender.Ready;
 
     private CancellationToken? LifeCycleCt;
     private IFabricBasePlaneConnection? PlaneConnection;
@@ -113,19 +116,15 @@ public sealed class PlaneFabricClient
                 Logger.LogError(ex, "ConnectAsync");
             }
         });
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Sender.SendKernel(ct);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "SendKernel");
-            }
-        });
     }
 
+    public async Task WaitForConnectionAsync(CancellationToken ct)
+    {
+        while (IsConnected == false)
+        {
+            await ConnectAsync();
+        }
+    }
     private async Task ConnectAsync()
     {
         if (Logger.IsEnabled(LogLevel.Trace))
@@ -151,10 +150,14 @@ public sealed class PlaneFabricClient
                 Tcp = new TcpClient();
                 Tcp.Connect(Host, Port);
                 Stream = Tcp.GetStream();
-                Writer = new BinaryWriter(Stream);
+                var writer = new BinaryWriter(Stream);
                 var reader = new BinaryReader(Stream);
 
-                ConnectedCts = new CancellationTokenSource();
+                var connectedCts = new CancellationTokenSource();
+                ConnectedCts = connectedCts;
+
+                var senderTask = Task.Run(async () => { await Sender.SendKernel(writer, connectedCts.Token); });
+                var receiverTask = Task.Run(async () => { await ReceiveKernel(reader, ConnectedCts.Token); });
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -163,7 +166,17 @@ public sealed class PlaneFabricClient
                 {
                     try
                     {
-                        await ReceiveKernel(reader, ConnectedCts.Token);
+                        try
+                        {
+                            await Task.WhenAny(senderTask, receiverTask);
+                            connectedCts.Cancel();
+                            await Task.WhenAll(senderTask, receiverTask);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Logger.IsEnabled(LogLevel.Warning))
+                                Logger.LogWarning(ex, "Gated_ConnectAsync exception 1: disconnected most likely");
+                        }
 
                         if (RunningRequested)
                             await ReconnectAsync();
@@ -182,7 +195,6 @@ public sealed class PlaneFabricClient
 
                 try
                 {
-                    Writer = null;
                     ConnectedCts?.Cancel();
                     ConnectedCts?.Dispose();
                     ConnectedCts = null;
@@ -220,10 +232,10 @@ public sealed class PlaneFabricClient
         if (PlaneConnection == null || LifeCycleCt == null)
             throw new Exception("Not initialized");
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
         await Gated_DisconnectAsync();
         await PlaneConnection.OnDisconnectedAsync(LifeCycleCt.Value);
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
 
         await Gated_ConnectAsync();
         await PlaneConnection.OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
@@ -281,6 +293,8 @@ public sealed class PlaneFabricClient
                 implementation,
                 serviceId);
 
+        await WaitForConnectionAsync(ct);
+
         //var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         //var serviceSubscriptionId = service.GetOrAdd(implementation, a => ServiceSubscriptionId.New());
 
@@ -319,6 +333,8 @@ public sealed class PlaneFabricClient
                 planeConnection,
                 implementation,
                 serviceId);
+
+        await WaitForConnectionAsync(ct);
 
         //var service = StreamingCache.PlaneServiceSubscriptionIds.GetOrAdd(serviceId, a => new ConcurrentDictionary<object, ServiceSubscriptionId>(ReferenceEqualityComparer.Instance));
         //if (service.TryRemove(implementation, out var serviceSubscriptionId) == false)
@@ -904,29 +920,30 @@ public sealed class PlaneFabricClient
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new PlaneAsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
+            var entered = false;
             async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
-                await gate.WaitAsync(ct);
+                await stream.gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && await stream.enumerator.MoveNextAsync();
 
                 var response = new PlaneStreamingResponseDto(
                     routing,
@@ -935,7 +952,7 @@ public sealed class PlaneFabricClient
                     !hasNext,
                     cancelled,
                     null,
-                    hasNext ? enumerator.Current : []);
+                    hasNext ? stream.enumerator.Current : []);
 
                 if (!hasNext)
                     await Cleanup();
@@ -979,7 +996,7 @@ public sealed class PlaneFabricClient
             finally
             {
                 if (entered)
-                    gate.Release();
+                    stream.gate.Release();
             }
         }));
     }
@@ -991,29 +1008,30 @@ public sealed class PlaneFabricClient
             bool cancelled,
             CancellationToken ct) =>
         {
-            var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(
+            var stream = activeStreams.GetOrAdd(
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new PlaneAsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
+            var entered = false;
 
             async Task Cleanup(Exception? ex = null)
             {
                 activeStreams.TryRemove(streamId, out _);
-                await enumerator.DisposeAsync();
+                await stream.DisposeAsync(entered);
             }
 
-            var entered = false;
             try
             {
-                await gate.WaitAsync(ct);
+                await stream.gate.WaitAsync(ct);
                 entered = true;
 
-                var hasNext = !cancelled && await enumerator.MoveNextAsync();
+                var hasNext = !cancelled && await stream.enumerator.MoveNextAsync();
 
                 var response = new PlaneStreamingResponseDto(
                     routing,
@@ -1022,7 +1040,7 @@ public sealed class PlaneFabricClient
                     !hasNext,
                     cancelled,
                     null,
-                    hasNext ? serializer(enumerator.Current) : []);
+                    hasNext ? serializer(stream.enumerator.Current) : []);
 
                 if (!hasNext)
                     await Cleanup();
@@ -1066,7 +1084,7 @@ public sealed class PlaneFabricClient
             finally
             {
                 if (entered)
-                    gate.Release();
+                    stream.gate.Release();
             }
         }));
     }
@@ -1164,7 +1182,7 @@ public sealed class PlaneFabricClient
         await Sender.Send_PlaneSendRequest_ToFabricAsync(request, ct);
         timeoutCts.CancelAfter(request.Routing.Timeout);
 
-        timeoutCts.Token.Register(async () =>
+        timeoutCts.Register(async () =>
         {
             await Sender.Send_PlaneSendCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
         });
@@ -1195,7 +1213,7 @@ public sealed class PlaneFabricClient
             await Sender.Send_PlaneInvokeRequest_ToFabricAsync(request, ct);
             timeoutCts.CancelAfter(request.Routing.Timeout);
 
-            timeoutCts.Token.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 await Sender.Send_PlaneInvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
             });

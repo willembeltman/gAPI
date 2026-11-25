@@ -1,6 +1,5 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Enums;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
@@ -13,6 +12,7 @@ public class FabricClientSender(
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
     private Channel<SendQueueItem>? SendQueue;
+    public bool Ready => SendQueue != null;
 
     public async Task SendKernel(BinaryWriter writer, CancellationToken ct)
     {
@@ -65,27 +65,15 @@ public class FabricClientSender(
 
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
-        var sendQueue = SendQueue;
-        while (sendQueue == null)
-        {
-            await Task.Delay(100);
-            sendQueue = SendQueue;
-        }
-
-        await sendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
+        if (SendQueue?.Writer.TryWrite(new SendQueueItem(write, null)) != true)
+            throw new Exception("Not connected");
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
-        var sendQueue = SendQueue;
-        while (sendQueue == null)
-        {
-            await Task.Delay(100);
-            sendQueue = SendQueue;
-        }
-
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        await sendQueue.Writer.WriteAsync(new SendQueueItem(write, completion), ct);
+        if (SendQueue?.Writer.TryWrite(new SendQueueItem(write, completion)) != true)
+            throw new Exception("Not connected");
 
         await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }

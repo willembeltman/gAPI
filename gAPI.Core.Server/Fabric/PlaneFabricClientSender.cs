@@ -12,76 +12,68 @@ public class PlaneFabricClientSender(
     ILoggerFactory loggerFactory)
 {
     private readonly ILogger Logger = loggerFactory.CreateLogger<FabricClientSender>();
-    readonly Channel<SendQueueItem> SendQueue = Channel.CreateUnbounded<SendQueueItem>();
+    private Channel<SendQueueItem>? SendQueue;
 
-    public async Task SendKernel(CancellationToken ct)
+    public bool Ready => SendQueue != null;
+
+    public async Task SendKernel(BinaryWriter writer, CancellationToken ct)
     {
         try
         {
+            SendQueue = Channel.CreateUnbounded<SendQueueItem>();
             await foreach (var item in SendQueue.Reader.ReadAllAsync(ct))
             {
-                var send = false;
-                while (send == false)
+                try
                 {
-                    try
-                    {
-                        if (fabricClient.IsConnected && fabricClient.Writer != null)
-                        {
-                            item.Write(fabricClient.Writer);
-                            fabricClient.Writer.Flush();
-                            send = true;
-                        }
-                        else
-                        {
-                            await Task.Delay(10);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, "Error writing to Fabric stream");
-                    }
+                    item.Write(writer);
+                    writer.Flush();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "SendKernel");
+                    item.Sent?.TrySetException(ex);
+                    throw;
                 }
 
                 item.Sent?.TrySetResult();
             }
         }
+        catch (OperationCanceledException ex)
+        {
+            // Hier komt de cancel vanuit cts.Cancel() bij disconnect, gewoon negeren
+            var sendQueue = SendQueue;
+            if (sendQueue != null)
+                CompleteQueue(sendQueue, ex);
+        }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "WSS sender stopped for client {FabricConnectionId}", fabricClient.FabricConnectionId);
-            CompleteQueue(ex);
+            Logger.LogError(ex, "Plane sender stopped for client {FabricConnectionId}", fabricClient.FabricConnectionId);
+            var sendQueue = SendQueue;
+            if (sendQueue != null)
+                CompleteQueue(sendQueue, ex);
         }
     }
-    private void CompleteQueue(Exception error)
+    private void CompleteQueue(Channel<SendQueueItem> sendQueue, Exception error)
     {
-        SendQueue.Writer.TryComplete(error);
+        SendQueue = null;
 
-        while (SendQueue.Reader.TryRead(out var item))
+        sendQueue.Writer.TryComplete(error);
+
+        while (sendQueue.Reader.TryRead(out var item))
             item.Sent?.TrySetException(error);
     }
 
     private async Task EnqueueAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
-        try
-        {
-            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, null), ct);
-        }
-        catch (TaskCanceledException ex)
-        {
-            Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
-        }
+        if (SendQueue?.Writer.TryWrite(new SendQueueItem(write, null)) != true)
+            throw new Exception("Not connected");
     }
     private async Task EnqueueAndWaitAsync(Action<BinaryWriter> write, CancellationToken ct)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        try
-        {
-            await SendQueue.Writer.WriteAsync(new SendQueueItem(write, completion), ct);
-        }
-        catch (TaskCanceledException ex)
-        {
-            Logger.LogError(ex, "RegisterAsyncEnumerableArgument");
-        }
+        if (SendQueue?.Writer.TryWrite(new SendQueueItem(write, completion)) != true)
+            throw new Exception("Not connected");
 
         await completion.Task.WaitAsync(ct).ConfigureAwait(false);
     }

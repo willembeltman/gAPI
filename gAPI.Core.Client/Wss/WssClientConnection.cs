@@ -138,16 +138,24 @@ public abstract class WssClientConnection : IWssClientConnection
                 {
                     try
                     {
-                        await Task.WhenAny(senderTask, receiverTask, loggerTask);
-                        connectedCts.Cancel();
-                        await Task.WhenAll(senderTask, receiverTask, loggerTask);
+                        try
+                        {
+                            await Task.WhenAny(senderTask, receiverTask, loggerTask);
+                            connectedCts.Cancel();
+                            await Task.WhenAll(senderTask, receiverTask, loggerTask);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Logger.IsEnabled(LogLevel.Warning))
+                                Logger.LogWarning(ex, "Gated_ConnectAsync exception 1: disconnected most likely");
+                        }
 
                         if (RunningRequested)
                             await ReconnectAsync();
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogWarning(ex, "Gated_ConnectAsync");
+                        Logger.LogWarning(ex, "Gated_ConnectAsync exception 1");
                     }
                 });
             }
@@ -201,10 +209,11 @@ public abstract class WssClientConnection : IWssClientConnection
         if (LifeCycleCt == null)
             throw new Exception("Not initialized");
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
         await Gated_DisconnectAsync();
         await OnDisconnectedAsync(LifeCycleCt.Value);
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
         await Gated_ConnectAsync();
         await OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
 
@@ -1033,7 +1042,17 @@ public abstract class WssClientConnection : IWssClientConnection
 
     private async Task Received_FabricDisconnected_FromServerAsync(FabricDisconnectedDto message, CancellationToken connectionLifecycleCt)
     {
+        await OnDisconnectedAsync(connectionLifecycleCt);
+
         foreach (var key in IncomingTimeouts.Keys)
+        {
+            if (IncomingTimeouts.TryRemove(key, out var timeout))
+            {
+                timeout.Cancel();
+                timeout.Dispose();
+            }
+        }
+        foreach (var key in OutgoingTimeouts.Keys)
         {
             if (IncomingTimeouts.TryRemove(key, out var timeout))
             {
@@ -1047,7 +1066,6 @@ public abstract class WssClientConnection : IWssClientConnection
         //    list.Clear();
         //}
 
-        await OnDisconnectedAsync(connectionLifecycleCt);
     }
     private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken connectionLifecycleCt)
     {
@@ -1382,10 +1400,11 @@ public abstract class WssClientConnection : IWssClientConnection
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new AsyncEnumerableRegistrationInstance<T>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
             var entered = false;
@@ -1496,10 +1515,11 @@ public abstract class WssClientConnection : IWssClientConnection
                 streamId,
                 _ =>
                 {
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                     return new AsyncEnumerableRegistrationInstance<byte[]>(
-                        source.GetAsyncEnumerator(timeoutCts.Token),
+                        source.GetAsyncEnumerator(cts.Token),
                         new SemaphoreSlim(1, 1),
-                        timeoutCts);
+                        cts);
                 });
 
             var entered = false;

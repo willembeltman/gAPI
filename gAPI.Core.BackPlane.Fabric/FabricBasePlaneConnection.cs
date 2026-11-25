@@ -25,6 +25,10 @@ public abstract class FabricBasePlaneConnection(
     {
         fabricClient.Start(this, ct);
     }
+    public Task WaitForConnectionAsync(CancellationToken ct)
+    {
+        return fabricClient.WaitForConnectionAsync(ct);
+    }
 
     // This is called AFTER the service has been registered for service routing
     // (with the Send_SendRequest_ToServiceAsync / Send_InvokeRequest_ToServiceAsync calls)

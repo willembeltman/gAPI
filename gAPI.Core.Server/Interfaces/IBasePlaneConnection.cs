@@ -10,6 +10,8 @@ public interface IBasePlaneConnection
     PlaneConnectionId PlaneConnectionId { get; }
     BackPlaneConfig Config { get; }
 
+    Task WaitForConnectionAsync(CancellationToken ct);
+
     void RegisterTimeout(PlaneRoutingDto routing, CancellationTokenSourceDispose cts);
     void UnRegisterTimeout(PlaneRoutingDto routing, CancellationTokenSourceDispose cts);
 

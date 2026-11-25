@@ -9,6 +9,7 @@ using gAPI.Core.Server.Interfaces;
 using gAPI.Core.Server.Logs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Sockets;
 
 namespace gAPI.Core.Server.Fabric;
@@ -109,7 +110,7 @@ public sealed class FabricClient
 
     public FabricManagerId FabricManagerId { get; private set; } = new FabricManagerId("Local");
     public FabricConnectionId FabricConnectionId { get; private set; } = new FabricConnectionId(-1);
-    public bool IsConnected => Tcp?.Connected == true;
+    public bool IsConnected => Tcp?.Connected == true && Sender.Ready;
 
     #region Connection
 
@@ -134,6 +135,8 @@ public sealed class FabricClient
 
     public async Task WaitForConnectionAsync(CancellationToken ct)
     {
+        if (UseFabric == false)
+            return;
         while (IsConnected == false)
         {
             await ConnectAsync();
@@ -180,22 +183,30 @@ public sealed class FabricClient
                 {
                     try
                     {
-                        await Task.WhenAny(senderTask, receiverTask, loggerTask);
-                        connectedCts.Cancel();
-                        await Task.WhenAll(senderTask, receiverTask, loggerTask);
+                        try
+                        {
+                            await Task.WhenAny(senderTask, receiverTask, loggerTask);
+                            connectedCts.Cancel();
+                            await Task.WhenAll(senderTask, receiverTask, loggerTask);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Logger.IsEnabled(LogLevel.Warning))
+                                Logger.LogWarning(ex, "Gated_ConnectAsync exception 1: disconnected most likely");
+                        }
 
                         if (RunningRequested)
                             await ReconnectAsync();
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "Gated_ConnectAsync exception 1");
+                        Logger.LogError(ex, "Gated_ConnectAsync exception 2");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Gated_ConnectAsync exception 2");
+                Logger.LogError(ex, "Gated_ConnectAsync exception 3");
 
                 try
                 {
@@ -207,7 +218,7 @@ public sealed class FabricClient
                 }
                 catch (Exception ex2)
                 {
-                    Logger.LogError(ex2, "Gated_ConnectAsync catch");
+                    Logger.LogError(ex2, "Gated_ConnectAsync exception 4");
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
@@ -247,13 +258,13 @@ public sealed class FabricClient
         if (UseFabric == false)
             return;
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
         await Gated_DisconnectAsync();
         foreach (var wssConnection in ServiceSubscriptions.All.GroupBy(a => a.Connection).Select(a => a.Key))
         {
             await wssConnection.Send_OnDisconnected_ToClientAsync(LifeCycleCt.Value);
         }
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
 
         await Gated_ConnectAsync();
         foreach (var wssConnection in ServiceSubscriptions.All.GroupBy(a => a.Connection).Select(a => a.Key))
@@ -313,12 +324,14 @@ public sealed class FabricClient
 
     #region Subscription
 
-    public Task SubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
+    public async Task SubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
                 "SubscribeAsync({SseServiceSubscription})",
                 serviceSubscription);
+
+        await WaitForConnectionAsync(ct);
 
         var request = new SubscribeDto(
             serviceSubscription.Id,
@@ -328,22 +341,25 @@ public sealed class FabricClient
 
         if (UseFabric == false)
         {
-            return Received_SubscribeAck_FromFabric(
+            await Received_SubscribeAck_FromFabric(
                 new SubscribeAckDto(
-                    request, 
-                    false, 
-                    null), 
+                    request,
+                    false,
+                    null),
                 ct);
+            return;
         }
 
-        return Sender.Send_Subscribe_ToFabricAsync(request, ct);
+        await Sender.Send_Subscribe_ToFabricAsync(request, ct);
     }
-    public Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
+    public async Task UnsubscribeAsync(IServiceSubscription serviceSubscription, CancellationToken ct)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace(
                 "UnsubscribeAsync({SseServiceSubscription})",
                 serviceSubscription);
+
+        await WaitForConnectionAsync(ct);
 
         var request = new UnsubscribeDto(
             serviceSubscription.Id,
@@ -354,15 +370,16 @@ public sealed class FabricClient
 
         if (UseFabric == false)
         {
-            return Received_UnsubscribeAck_FromFabric(
+            await Received_UnsubscribeAck_FromFabric(
                 new UnsubscribeAckDto(
                     request,
                     false,
                     null),
                 ct);
+            return;
         }
 
-        return Sender.Send_Unsubscribe_ToFabricAsync(request, ct);
+        await Sender.Send_Unsubscribe_ToFabricAsync(request, ct);
     }
 
     #endregion
@@ -1128,7 +1145,7 @@ public sealed class FabricClient
         StreamingCache.FabricSenderTimeouts.TryRemove(routing.RequestId, out _);
     }
 
-    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose cancellationToken)
+    public void RegisterAsyncEnumerableArgument<T>(RoutingDto routing, int argumentIndex, IAsyncEnumerable<T> source, Func<T, byte[]> serializer, CancellationTokenSourceDispose timeoutCts)
     {
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace("{now} RegisterAsyncEnumerableArgument({serviceId}, {methodId}, {requestId}, {argumentIndex})", DateTime.Now.ToString("HH:mm:ss.fff"), routing.ServiceId, routing.MethodId, routing.RequestId, argumentIndex);
@@ -1142,10 +1159,11 @@ public sealed class FabricClient
                         streamId,
                         _ =>
                         {
+                            var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                             return new AsyncEnumerableRegistrationInstance<T>(
-                                source.GetAsyncEnumerator(cancellationToken.Token),
+                                source.GetAsyncEnumerator(cts.Token),
                                 new SemaphoreSlim(1, 1),
-                                cancellationToken);
+                                cts);
                         });
 
                     var entered = false;
@@ -1177,7 +1195,7 @@ public sealed class FabricClient
                     }
                     catch (OperationCanceledException ex) when (
                         ct.IsCancellationRequested ||
-                        cancellationToken.IsCancellationRequested)
+                        timeoutCts.IsCancellationRequested)
                     {
                         Logger.LogError(ex, "RegisterAsyncEnumerableArgument Cancelled");
 
@@ -1188,7 +1206,7 @@ public sealed class FabricClient
                             argumentIndex,
                             streamId,
                             true,
-                            true, 
+                            true,
                             new ExceptionDto(ex),
                             []), null);
                     }
@@ -1325,11 +1343,6 @@ public sealed class FabricClient
         try
         {
             await Sender.Send_SendAndForgetRequest_ToFabricAsync(request, ct);
-
-            ct.Register(async () =>
-            {
-                await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
-            });
         }
         catch (OperationCanceledException)
         {
@@ -1384,7 +1397,7 @@ public sealed class FabricClient
         {
             await Sender.Send_SendRequest_ToFabricAsync(request, ct);
 
-            ct.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 await Sender.Send_SendRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
             });
@@ -1423,7 +1436,7 @@ public sealed class FabricClient
 
             await serviceSubscription.Connection.Send_FabricSendRequest_ToClientAsync(request, ct);
 
-            ct.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 await serviceSubscription.Connection.Send_FabricSendRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
             });
@@ -1472,7 +1485,7 @@ public sealed class FabricClient
         {
             await Sender.Send_InvokeRequest_ToFabricAsync(request, ct);
 
-            ct.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 await Sender.Send_InvokeRequestCancelled_ToFabricAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
             });
@@ -1524,7 +1537,7 @@ public sealed class FabricClient
 
             await sseServiceSubscription.Connection.Send_FabricInvokeRequest_ToClientAsync(request, ct);
 
-            ct.Register(async () =>
+            timeoutCts.Register(async () =>
             {
                 await sseServiceSubscription.Connection.Send_FabricInvokeRequestCancelled_ToClientAsync(new(request.Routing, "Task is cancelled"), CancellationToken.None);
             });

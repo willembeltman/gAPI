@@ -11,8 +11,6 @@ public static class CreatePlaneConfigExtension
         var maxPackageSizeStr = m.GetSection("MaxPackageSize").Value;
         int? maxPackageSize = int.TryParse(maxPackageSizeStr, out var parsedSize) ? parsedSize : null;
 
-        var queueName = m.GetSection("QueueName").Value ?? "Standard";
-
         // Aspire vult dit nu automatisch in omdat de component "BackPlane" heet in de AppHost
         var connectionString = m.GetConnectionString("BackPlaneConnection")
             ?? m.GetConnectionString("BackPlane")
@@ -23,7 +21,6 @@ public static class CreatePlaneConfigExtension
 
         return new BackPlaneConfig(
             maxPackageSize,
-            queueName,
             connectionString);
     }
 }

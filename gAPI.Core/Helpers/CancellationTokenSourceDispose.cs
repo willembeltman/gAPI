@@ -7,6 +7,7 @@ public sealed class CancellationTokenSourceDispose : IDisposable
     private bool IsDisposed;
     private readonly object Lock = new();
     private List<Action> OnDispose = [];
+    private List<Func<Task>> OnDisposeAsync = [];
 
     public CancellationTokenSourceDispose(
         TimeSpan timeoutDuration)
@@ -42,9 +43,31 @@ public sealed class CancellationTokenSourceDispose : IDisposable
     {
         _cts.CancelAfter(TimeoutDuration);
     }
+    public void Register(Func<Task> action)
+    {
+        _cts.Token.Register(async () =>
+        {
+            try
+            {
+                await action.Invoke();
+            }
+            catch
+            {
+            }
+        });
+    }
     public void Register(Action action)
     {
-        _cts.Token.Register(action);
+        _cts.Token.Register(() =>
+        {
+            try
+            {
+                action.Invoke();
+            }
+            catch
+            {
+            }
+        });
     }
     public void RegisterDispose(Action action)
     {
@@ -54,6 +77,16 @@ public sealed class CancellationTokenSourceDispose : IDisposable
         lock (Lock)
         {
             OnDispose.Add(action);
+        }
+    }
+    public void RegisterDispose(Func<Task> action)
+    {
+        if (IsDisposed)
+            return;
+
+        lock (Lock)
+        {
+            OnDisposeAsync.Add(action);
         }
     }
 
@@ -95,7 +128,28 @@ public sealed class CancellationTokenSourceDispose : IDisposable
         lock (Lock)
         {
             foreach (var action in OnDispose)
-                action.Invoke();
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch 
+                {
+                }
+            }
+            foreach (var action in OnDisposeAsync)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await action.Invoke();
+                    }
+                    catch
+                    {
+                    }
+                });
+            }
         }
     }
 }
