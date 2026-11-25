@@ -14,7 +14,7 @@ public static class CreateFabricConfigExtention
             logLevel = logLevel2;
         }
         var portStr = m["Port"];
-        int port = 9494;
+        int port = 30494;
         if (int.TryParse(portStr, out var p) && p > 0)
         {
             port = p;

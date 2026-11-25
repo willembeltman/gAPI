@@ -274,7 +274,7 @@ The following settings are supported:
   "UseMemoryDatabase": "false",
   "ConnectionStrings": {
     "DefaultConnection": "Server=SERVER;Database=DBNAME;Integrated Security=True;TrustServerCertificate=True",
-    "FabricConnection": "Server=localhost;Port=9494;"
+    "FabricConnection": "Server=localhost;Port=30494;"
   }
 }
 
