@@ -68,6 +68,7 @@ public class AddAutoApiServerExtension_Generator : BaseGenerator
         Reg("System.Reflection");
         Reg("System.Globalization");
         Reg("gAPI.Core.Server.Extensions");
+        Reg("Microsoft.Extensions.DependencyInjection.Extensions");
         Reg(ServerConfig);
         Reg(FabricClient);
         Reg(ServiceSubscriptionCollection);
@@ -120,6 +121,11 @@ public static class {Name}
         services.AddSingleton(new {AuthenticationOptions.FullName}(false));
         services.AddSingleton(serverConfig);
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+
+        services.AddLogging(logging =>
+        {{
+            logging.AddFabricLogger();
+        }});
 
         services.AddHttpContextAccessor();
         services.AddCors(options =>

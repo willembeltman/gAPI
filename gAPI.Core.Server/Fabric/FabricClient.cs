@@ -403,6 +403,8 @@ public sealed class FabricClient
             return;
         }
 
+        await WaitForConnectionAsync(ct);
+
         var updateSessionDto = new UpdateSessionDto(sessionId, cookieData);
         await Sender.Send_UpdateSession_ToFabricAsync(updateSessionDto, ct);
     }
@@ -416,6 +418,8 @@ public sealed class FabricClient
             LocalSessionCache.Remove(sessionId);
             return;
         }
+
+        await WaitForConnectionAsync(ct);
 
         var clearSessionDto = new SendClearSessionDto(sessionId);
         await Sender.Send_ClearSession_ToFabricAsync(clearSessionDto, ct);
@@ -434,6 +438,8 @@ public sealed class FabricClient
                 return cookieData;
             return null;
         }
+
+        await WaitForConnectionAsync(ct);
 
         // Maak een TaskCompletionSource aan voor deze specifieke sessie
         var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);

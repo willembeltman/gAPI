@@ -388,4 +388,14 @@ public class WssServerConnectionSender(
             return offset;
         }, ct);
     }
+
+    public async Task Send_Pong_ToClientAsync(CancellationToken ct)
+    {
+        await EnqueueAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssServerToClientMessageEnum(ref offset, WssServerToClientMessageEnum.Pong);
+            return offset;
+        }, ct);
+    }
 }

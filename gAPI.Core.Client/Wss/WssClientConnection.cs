@@ -68,122 +68,289 @@ public abstract class WssClientConnection : IWssClientConnection
 
     protected CancellationTokenSource? ConnectedCts;
     public bool RunningRequested { get; private set; }
-    SemaphoreSlim ConnectingGate = new SemaphoreSlim(1);
+    private readonly object LifecycleLock = new();
+    private CancellationTokenSource? LifecycleCts;
+    private Task? ConnectionLoopTask;
+    private TaskCompletionSource ConnectedTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private TaskCompletionSource? PendingPongTcs;
+    private DateTime LastReceivedUtc = DateTime.UtcNow;
+
+    private TimeSpan KeepAliveInterval => Config.KeepAliveInterval ?? TimeSpan.FromSeconds(20);
+    private TimeSpan KeepAliveTimeout => Config.KeepAliveTimeout ?? TimeSpan.FromSeconds(5);
 
     #region Connection
 
     public void Start(CancellationToken ct)
     {
-        LifeCycleCt = ct;
-        _ = Task.Run(async () =>
+        EnsureStarted(ct);
+    }
+
+    private void EnsureStarted(CancellationToken? ct = null)
+    {
+        lock (LifecycleLock)
         {
-            try
+            if (ct.HasValue && ct.Value.CanBeCanceled)
             {
-                await ConnectAsync();
+                LifeCycleCt = ct.Value;
+                ct.Value.Register(() =>
+                {
+                    RunningRequested = false;
+                    try { LifecycleCts?.Cancel(); } catch { }
+                    ConnectedTcs.TrySetCanceled();
+                });
             }
-            catch (Exception ex)
+            else if (LifeCycleCt == null)
             {
-                Logger.LogError(ex, "Gated_ConnectAsync");
+                LifeCycleCt = CancellationToken.None;
             }
-        });
+
+            if (RunningRequested && ConnectionLoopTask is { IsCompleted: false })
+                return;
+
+            RunningRequested = true;
+            LifecycleCts?.Dispose();
+            LifecycleCts = ct.HasValue && ct.Value.CanBeCanceled
+                ? CancellationTokenSource.CreateLinkedTokenSource(ct.Value)
+                : new CancellationTokenSource();
+
+            if (ConnectedTcs.Task.IsCompleted)
+                ConnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var loopCt = LifecycleCts.Token;
+            ConnectionLoopTask = Task.Run(async () =>
+            {
+                try
+                {
+                    await RunConnectionLoopAsync(loopCt);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "RunConnectionLoopAsync");
+                }
+            });
+        }
     }
 
     public async Task WaitForConnectionAsync(CancellationToken ct)
     {
-        while (IsConnected == false)
+        EnsureStarted();
+
+        while (true)
         {
             ct.ThrowIfCancellationRequested();
-            await ConnectAsync();
+
+            Task waitTask;
+            lock (LifecycleLock)
+            {
+                if (IsConnected && ConnectedCts != null && !ConnectedCts.IsCancellationRequested)
+                    return;
+
+                waitTask = ConnectedTcs.Task;
+            }
+
+            await waitTask.WaitAsync(ct).ConfigureAwait(false);
         }
     }
 
-    private async Task ConnectAsync()
+    public async Task<bool> CheckConnectionAsync(CancellationToken ct = default)
     {
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} ConnectAsync()", DateTime.Now.ToString("HH:mm:ss.fff"));
+        var connectedCts = ConnectedCts;
+        if (!IsConnected || connectedCts == null || connectedCts.IsCancellationRequested)
+            return false;
 
-        await ConnectingGate.WaitAsync();
+        var pongTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Volatile.Write(ref PendingPongTcs, pongTcs);
+
         try
         {
-            RunningRequested = true;
-            await Gated_ConnectAsync();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, connectedCts.Token);
+            await Sender.Send_Ping_ToServerAsync(linkedCts.Token).ConfigureAwait(false);
+            await pongTcs.Task.WaitAsync(KeepAliveTimeout, linkedCts.Token).ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "WSS keep-alive ping failed, triggering reconnect.");
+            try { await connectedCts.CancelAsync(); } catch { }
+            try { Ws?.Abort(); } catch { }
+            return false;
         }
         finally
         {
-            ConnectingGate.Release();
+            Interlocked.CompareExchange(ref PendingPongTcs, null, pongTcs);
         }
     }
-    private async Task Gated_ConnectAsync()
+
+    private async Task RunConnectionLoopAsync(CancellationToken lifecycleCt)
     {
         var baseUri = Config.WssBackendUrl;
-        while (RunningRequested == true && ConnectedCts == null)
+
+        while (RunningRequested && !lifecycleCt.IsCancellationRequested)
         {
+            ClientWebSocket? socket = null;
+            CancellationTokenSource? connectedCts = null;
+            Task? senderTask = null;
+            Task? receiverTask = null;
+            Task? loggerTask = null;
+            Task? keepAliveTask = null;
+            bool wasConnected = false;
+
             try
             {
-                var stateData = await HttpClient.GetStateDataAsync(false, LifeCycleCt ?? CancellationToken.None);
+                using var connectTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(lifecycleCt);
+                connectTimeoutCts.CancelAfter(TimeSpan.FromSeconds(15));
+
+                var stateData = await HttpClient.GetStateDataAsync(false, connectTimeoutCts.Token);
                 var sessionId = HttpClient.SessionId.Value;
 
-                Ws = new ClientWebSocket();
+                socket = new ClientWebSocket();
+                Ws = socket;
 
                 var url = new Uri($"{baseUri}/fabricr?SessionId={sessionId}");
-                await Ws.ConnectAsync(url, LifeCycleCt ?? CancellationToken.None);
+                await socket.ConnectAsync(url, connectTimeoutCts.Token);
 
-                ConnectedCts = new CancellationTokenSource();
-                var socket = Ws;
-                var connectedCts = ConnectedCts;
+                connectedCts = CancellationTokenSource.CreateLinkedTokenSource(lifecycleCt);
+                ConnectedCts = connectedCts;
+                LastReceivedUtc = DateTime.UtcNow;
+                wasConnected = true;
 
                 var initialize = new InitializeDto(stateData, sessionId);
+                var token = connectedCts.Token;
 
-                var loggerTask = Task.Run(async () => { await LoggerKernel(ClientLogQueue, connectedCts.Token); });
-                var receiverTask = Task.Run(async () => { await ReceiverKernel(socket, connectedCts.Token); });
-                var senderTask = Task.Run(async () => { await Sender.SendKernel(socket, initialize, connectedCts.Token); });
+                senderTask = Task.Run(() => Sender.SendKernel(socket, initialize, token));
+                receiverTask = Task.Run(() => ReceiverKernel(socket, token));
+                loggerTask = Task.Run(() => LoggerKernel(ClientLogQueue, token));
+                keepAliveTask = Task.Run(() => KeepAliveKernel(token));
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{now} ConnectAsync() Connected!", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-                _ = Task.Run(async () =>
+                lock (LifecycleLock)
                 {
-                    try
-                    {
-                        try
-                        {
-                            await Task.WhenAny(senderTask, receiverTask, loggerTask);
-                            connectedCts.Cancel();
-                            await Task.WhenAll(senderTask, receiverTask, loggerTask);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (Logger.IsEnabled(LogLevel.Warning))
-                                Logger.LogWarning(ex, "Gated_ConnectAsync exception 1: disconnected most likely");
-                        }
+                    ConnectedTcs.TrySetResult();
+                }
 
-                        if (RunningRequested)
-                            await ReconnectAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogWarning(ex, "Gated_ConnectAsync exception 1");
-                    }
-                });
+                // Restore subscriptions without holding any gate; bound by connectedCts.Token
+                _ = RestoreSubscriptionsSafeAsync(token);
+
+                await Task.WhenAny(senderTask, receiverTask, loggerTask, keepAliveTask);
+            }
+            catch (OperationCanceledException) when (lifecycleCt.IsCancellationRequested)
+            {
+                break;
             }
             catch (Exception ex)
             {
-                Logger.LogWarning("ConnectAsync => connection failed, retrying: {ex}", ex.Message);
+                Logger.LogWarning("WSS connection failed or lost, retrying: {ex}", ex.Message);
+            }
+            finally
+            {
+                lock (LifecycleLock)
+                {
+                    if (RunningRequested && !lifecycleCt.IsCancellationRequested)
+                        ConnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    else
+                        ConnectedTcs.TrySetCanceled();
+                }
 
+                if (connectedCts != null)
+                {
+                    try { await connectedCts.CancelAsync(); } catch { }
+                }
+
+                if (socket != null)
+                {
+                    try { socket.Abort(); } catch { }
+                }
+
+                var kernelTasks = new List<Task>(4);
+                if (senderTask != null) kernelTasks.Add(senderTask);
+                if (receiverTask != null) kernelTasks.Add(receiverTask);
+                if (loggerTask != null) kernelTasks.Add(loggerTask);
+                if (keepAliveTask != null) kernelTasks.Add(keepAliveTask);
+
+                if (kernelTasks.Count > 0)
+                {
+                    try { await Task.WhenAll(kernelTasks); } catch { }
+                }
+
+                await ResetActivityAsync();
+
+                try { socket?.Dispose(); } catch { }
+                if (ReferenceEquals(Ws, socket))
+                    Ws = null;
+
+                if (ReferenceEquals(ConnectedCts, connectedCts))
+                    ConnectedCts = null;
+                connectedCts?.Dispose();
+
+                if (wasConnected)
+                    await OnDisconnectedSafeAsync(lifecycleCt);
+            }
+
+            if (RunningRequested && !lifecycleCt.IsCancellationRequested)
+            {
                 try
                 {
-                    ConnectedCts?.Cancel();
-                    ConnectedCts?.Dispose();
-                    ConnectedCts = null;
-                    Ws?.Dispose();
+                    await Task.Delay(TimeSpan.FromSeconds(5), lifecycleCt);
                 }
-                catch (Exception ex2)
+                catch (OperationCanceledException)
                 {
-                    Logger.LogError(ex2, "Gated_ConnectAsync catch");
+                    break;
                 }
-
-                await Task.Delay(TimeSpan.FromSeconds(5));
             }
+        }
+    }
+
+    private async Task RestoreSubscriptionsSafeAsync(CancellationToken ct)
+    {
+        try
+        {
+            await OnRestoreSubscriptionsAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "OnRestoreSubscriptionsAsync failed");
+        }
+    }
+
+    private async Task OnDisconnectedSafeAsync(CancellationToken ct)
+    {
+        try
+        {
+            await OnDisconnectedAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "OnDisconnectedAsync failed");
+        }
+    }
+
+    private async Task KeepAliveKernel(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            await Task.Delay(KeepAliveInterval, ct);
+
+            if (DateTime.UtcNow - LastReceivedUtc < KeepAliveInterval)
+                continue;
+
+            var ok = await CheckConnectionAsync(ct);
+            if (!ok)
+                return;
         }
     }
 
@@ -195,44 +362,13 @@ public abstract class WssClientConnection : IWssClientConnection
         }
     }
 
-    private async Task ReconnectAsync()
+    private async Task ResetActivityAsync()
     {
-        if (Logger.IsEnabled(LogLevel.Error))
-            Logger.LogError("{now} Reconnecting FabricClient ....",
-                DateTime.Now.ToString("HH:mm:ss.fff"));
+        Interlocked.Exchange(ref PendingPongTcs, null)?.TrySetCanceled();
 
-        await ConnectingGate.WaitAsync();
-        try
-        {
-            await Gated_ReconnectAsync();
-        }
-        finally
-        {
-            ConnectingGate.Release();
-        }
-    }
-    private async Task Gated_ReconnectAsync()
-    {
-        if (LifeCycleCt == null)
-            throw new Exception("Not initialized");
-
-        await Gated_DisconnectAsync();
-        await OnDisconnectedAsync(LifeCycleCt.Value);
-
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
-        await Gated_ConnectAsync();
-        await OnRestoreSubscriptionsAsync(LifeCycleCt.Value);
-
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace("{now} Reconnecting FabricClient DONE", DateTime.Now.ToString("HH:mm:ss.fff"));
-    }
-    private async Task ResetActivity(CancellationToken ct)
-    {
         // Eerst de timeouts laten throwen
         foreach (var key in IncomingTimeouts.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (IncomingTimeouts.TryRemove(key, out var timeout))
             {
                 timeout.Cancel();
@@ -241,8 +377,7 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         foreach (var key in OutgoingTimeouts.Keys)
         {
-            ct.ThrowIfCancellationRequested();
-            if (IncomingTimeouts.TryRemove(key, out var timeout))
+            if (OutgoingTimeouts.TryRemove(key, out var timeout))
             {
                 timeout.Cancel();
                 timeout.Dispose();
@@ -252,7 +387,6 @@ public abstract class WssClientConnection : IWssClientConnection
         // Dan de activiteiten alsnog stoppen.
         foreach (var key in StreamingRequestHandlers.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (StreamingRequestHandlers.TryRemove(key, out var handler))
             {
                 await handler.DisposeAsync();
@@ -260,7 +394,6 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         foreach (var key in StreamingResponseHandlers.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (StreamingResponseHandlers.TryRemove(key, out var handler))
             {
                 handler.Invoke(new StreamingHandler(true, true, new ExceptionDto("Connection failed"), []));
@@ -268,30 +401,40 @@ public abstract class WssClientConnection : IWssClientConnection
         }
         foreach (var key in PendingSendRequests.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (PendingSendRequests.TryRemove(key, out var handler))
             {
-                handler.TrySetCanceled(ct);
+                handler.TrySetCanceled();
             }
         }
         foreach (var key in PendingInvokeRequestAcks.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (PendingInvokeRequestAcks.TryRemove(key, out var handler))
             {
-                handler.TrySetCanceled(ct);
+                handler.TrySetCanceled();
             }
         }
         foreach (var key in PendingInvokeRequestDones.Keys)
         {
-            ct.ThrowIfCancellationRequested();
             if (PendingInvokeRequestDones.TryRemove(key, out var handler))
             {
-                handler.TrySetCanceled(ct);
+                handler.TrySetCanceled();
+            }
+        }
+        foreach (var key in SubscribeTcss.Keys)
+        {
+            if (SubscribeTcss.TryRemove(key, out var handler))
+            {
+                handler.TrySetCanceled();
+            }
+        }
+        foreach (var key in UnsubscribeTcss.Keys)
+        {
+            if (UnsubscribeTcss.TryRemove(key, out var handler))
+            {
+                handler.TrySetCanceled();
             }
         }
     }
-
 
     private async Task DisconnectAsync()
     {
@@ -300,31 +443,19 @@ public abstract class WssClientConnection : IWssClientConnection
                 "Disconnecting FabricClient {Id}",
                 FabricConnectionId);
 
-        await ConnectingGate.WaitAsync();
-        try
+        Task? loopTask;
+        lock (LifecycleLock)
         {
             RunningRequested = false;
-            await Gated_DisconnectAsync();
+            try { LifecycleCts?.Cancel(); } catch { }
+            ConnectedTcs.TrySetCanceled();
+            loopTask = ConnectionLoopTask;
         }
-        finally
+
+        if (loopTask != null)
         {
-            ConnectingGate.Release();
+            try { await loopTask; } catch { }
         }
-    }
-    private async Task Gated_DisconnectAsync()
-    {
-        if (ConnectedCts == null)
-            return;
-
-        await ResetActivity(ConnectedCts.Token);
-
-        await ConnectedCts.CancelAsync();
-
-        Ws?.Dispose();
-        Ws = null;
-
-        ConnectedCts.Dispose();
-        ConnectedCts = null;
     }
 
     #endregion
@@ -367,9 +498,17 @@ public abstract class WssClientConnection : IWssClientConnection
                 await implementationSubscription.OnSubscribedAsync(message.ServiceId, message.ServiceSubscriptionId, ct);
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (RemoteException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-
+            Logger.LogWarning(ex, "Send_Subscribe_ToServerAsync({serviceId}) interrupted", serviceId);
         }
         finally
         {
@@ -474,14 +613,15 @@ public abstract class WssClientConnection : IWssClientConnection
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
-                        RunningRequested = false; // Netjes afgesloten door server of client
+                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
                         return;
                     }
 
                     totalBytes += result.Count;
 
                 } while (!result.EndOfMessage);
+
+                LastReceivedUtc = DateTime.UtcNow;
 
                 // 🎯 Direct span gebruiken
                 var span = new ReadOnlySpan<byte>(ReceiveBuffer, 0, totalBytes);
@@ -741,6 +881,9 @@ public abstract class WssClientConnection : IWssClientConnection
                                 Logger.LogError(ex, "Received_FabricRestoreSubscriptions_FromServerAsync({message})", fabricRestoreSubscriptionsResponse);
                             }
                         }, ct);
+                        break;
+                    case WssServerToClientMessageEnum.Pong:
+                        Interlocked.Exchange(ref PendingPongTcs, null)?.TrySetResult();
                         break;
                 }
             }
@@ -1170,7 +1313,7 @@ public abstract class WssClientConnection : IWssClientConnection
     {
         await OnDisconnectedAsync(connectionLifecycleCt);
 
-        await ResetActivity(connectionLifecycleCt);
+        await ResetActivityAsync();
     }
 
     private async Task Received_FabricRestoreSubscriptions_FromServerAsync(FabricRestoreSubscriptionsDto message, CancellationToken connectionLifecycleCt)
@@ -1775,11 +1918,19 @@ public abstract class WssClientConnection : IWssClientConnection
 
     public void Dispose()
     {
+        lock (LifecycleLock)
+        {
+            RunningRequested = false;
+            try { LifecycleCts?.Cancel(); } catch { }
+            ConnectedTcs.TrySetCanceled();
+        }
         ConnectedCts?.Cancel();
         ConnectedCts?.Dispose();
         ConnectedCts = null;
         Ws?.Dispose();
         Ws = null;
+        LifecycleCts?.Dispose();
+        LifecycleCts = null;
         GC.SuppressFinalize(this);
     }
 

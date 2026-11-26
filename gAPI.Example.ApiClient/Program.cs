@@ -9,7 +9,7 @@ CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Configuration.AddJsonFile("appconfig.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddAutoApiClient(builder.Configuration);

@@ -49,6 +49,11 @@ public static class AddAutoWssServerExtension
         services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
+        services.AddLogging(logging =>
+        {
+            logging.AddFabricLogger();
+        });
+
         services.AddHttpContextAccessor();
         if (frontendUrl != null)
         {

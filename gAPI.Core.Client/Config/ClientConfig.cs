@@ -6,4 +6,6 @@ public record ClientConfig(
     string ApiBackendUrl,
     string? WssBackendUrl,
     int? MaxPackageSize = null,
-    LogLevel MinimumLogLevel = LogLevel.Warning);
+    LogLevel MinimumLogLevel = LogLevel.Warning,
+    TimeSpan? KeepAliveInterval = null,
+    TimeSpan? KeepAliveTimeout = null);

@@ -47,6 +47,7 @@ public abstract class RabbitMQBasePlaneConnection(
 
     private readonly SemaphoreSlim SubscriptionLock = new(1, 1);
     private readonly SemaphoreSlim PublishLock = new(1, 1);
+    private readonly SemaphoreSlim ConnectionLock = new(1, 1);
     private readonly CancellationTokenSource _lifetimeCts = new();
 
     private IConnection? _connection;
@@ -60,22 +61,34 @@ public abstract class RabbitMQBasePlaneConnection(
     public bool Initialized { get; private set; }
     public PlaneConnectionId PlaneConnectionId { get; private set; } = PlaneConnectionId.New();
 
+    public Task WaitForConnectionAsync(CancellationToken ct) => TryConnectAsync(ct);
+
     public async Task TryConnectAsync(CancellationToken ct)
     {
         if (Initialized) return;
 
-        var factory = new ConnectionFactory { Uri = new Uri(Config.ConnectionString) };
-        _connection = await factory.CreateConnectionAsync(ct);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
-        _publishChannel = await _connection.CreateChannelAsync(cancellationToken: ct);
+        await ConnectionLock.WaitAsync(ct);
+        try
+        {
+            if (Initialized) return;
 
-        var result = await _channel.QueueDeclareAsync(
-            queue: $"q.AutoPlane.streaming.{PlaneConnectionId}",
-            durable: false, exclusive: true, autoDelete: true, cancellationToken: ct);
+            var factory = new ConnectionFactory { Uri = new Uri(Config.ConnectionString) };
+            _connection = await factory.CreateConnectionAsync(ct);
+            _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
+            _publishChannel = await _connection.CreateChannelAsync(cancellationToken: ct);
 
-        _streamingQueueName = result.QueueName;
-        await StartStreamingConsumerAsync(ct);
-        Initialized = true;
+            var result = await _channel.QueueDeclareAsync(
+                queue: $"q.AutoPlane.streaming.{PlaneConnectionId}",
+                durable: false, exclusive: true, autoDelete: true, cancellationToken: ct);
+
+            _streamingQueueName = result.QueueName;
+            await StartStreamingConsumerAsync(ct);
+            Initialized = true;
+        }
+        finally
+        {
+            ConnectionLock.Release();
+        }
     }
 
     public async Task SendFireAndForgetAsync(PlaneRoutingDto routing, byte[] data, CancellationToken ct)
@@ -824,10 +837,11 @@ public abstract class RabbitMQBasePlaneConnection(
                 {
                     var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(streamId, _ =>
                     {
+                        var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                         return new PlaneAsyncEnumerableRegistrationInstance<T>(
-                            source.GetAsyncEnumerator(timeoutCts.Token),
+                            source.GetAsyncEnumerator(cts.Token),
                             new SemaphoreSlim(1, 1),
-                            timeoutCts);
+                            cts);
                     });
 
                     async Task Cleanup()

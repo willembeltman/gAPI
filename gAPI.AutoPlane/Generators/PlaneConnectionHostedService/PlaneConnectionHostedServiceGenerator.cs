@@ -74,14 +74,27 @@ public class {Name}(
             .Select(service => $@"
 
         var {service.FullName.Replace(".", "_")} = Scope.Value.ServiceProvider.GetRequiredService<{service.FullName}>();
-        await {service.FullName.Replace(".", "_")}.OnStartedAsync(new {ServiceId}(""{@interface}""), ct);
-        await planeConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
+        await {service.FullName.Replace(".", "_")}.OnStartedAsync(new {ServiceId}(""{@interface}""), ct);"))))}
 
         planeConnection.HostedPlaneServices = new {HostedPlaneServices}({string.Join(",", Context.ServiceContext.PlaneInterfaces
             .SelectMany(@interface => @interface.Services)
             .Where(a => a.IsHostedPlaneService)
             .Select(service => $@"
             {service.FullName.Replace(".", "_")}"))});
+
+        _ = Task.Run(async () =>
+        {{
+            try
+            {{{string.Join("", Context.ServiceContext.PlaneInterfaces
+                .Select(@interface => string.Join("", @interface.Services
+                    .Where(a => a.IsHostedPlaneService)
+                    .Select(service => $@"
+                await planeConnection.SubscribeAsync({service.FullName.Replace(".", "_")}, ct);"))))}
+            }}
+            catch (OperationCanceledException)
+            {{
+            }}
+        }}, ct);
     }}
     public async Task StopAsync(CancellationToken ct)
     {{

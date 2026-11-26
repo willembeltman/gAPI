@@ -66,7 +66,7 @@ public class AuthenticatedHttpClient(
             StateLock.Release();
         }
 
-        return await StateFetchTask;
+        return await StateFetchTask.WaitAsync(ct);
     }
 
     public bool IsStateDataChanged()
@@ -103,9 +103,15 @@ public class AuthenticatedHttpClient(
         }
         finally
         {
-            await StateLock.WaitAsync(ct);
-            StateFetchTask = null;
-            StateLock.Release();
+            await StateLock.WaitAsync(CancellationToken.None);
+            try
+            {
+                StateFetchTask = null;
+            }
+            finally
+            {
+                StateLock.Release();
+            }
         }
     }
 

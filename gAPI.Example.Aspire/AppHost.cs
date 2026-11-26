@@ -9,24 +9,24 @@ var storage = builder.AddProject<Projects.gAPI_Example_Storage>("storage")
     .WithEnvironment("BaseUrl", "https://localhost:7275")
     .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
 
-//var apiServer = builder.AddProject<Projects.gAPI_Example_ApiServer>("apiserver")
-//    .WithReference(backplane)
-//    .WithReference(storage)
-//    .WaitFor(backplane)
-//    .WaitFor(storage)
-//    .WithEnvironment("FrontendUrl", "IsApp_SoNoCors")
-//    .WithEnvironment("UseMemoryDatabase", "true")
-//    .WithEnvironment("QueueName", "Standard")
-//    .WithEnvironment("ConnectionStrings__DefaultConnection", "UsingMemoryDatabase_SoNoConnectionstring")
-//    .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;UrlTimeout=1;AuthenticateTimeout=15")
-//    .WithEnvironment("ConnectionStrings__FabricConnection", "Server=localhost;Port=9494")
-//    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
+var apiServer = builder.AddProject<Projects.gAPI_Example_ApiServer>("apiserver")
+    .WithReference(backplane)
+    .WithReference(storage)
+    .WaitFor(backplane)
+    .WaitFor(storage)
+    .WithEnvironment("FrontendUrl", "IsApp_SoNoCors")
+    .WithEnvironment("UseMemoryDatabase", "true")
+    .WithEnvironment("QueueName", "Standard")
+    .WithEnvironment("ConnectionStrings__DefaultConnection", "UsingMemoryDatabase_SoNoConnectionstring")
+    .WithEnvironment("ConnectionStrings__StorageConnection", "Provider=StorageServer;UrlTimeout=1;AuthenticateTimeout=15")
+    .WithEnvironment("ConnectionStrings__FabricConnection", "Server=localhost;Port=9494")
+    .WithEnvironment("ConnectionStrings__BackPlane", "Server=localhost;Port=9696");
 
-//var apiClient = builder.AddProject<Projects.gAPI_Example_ApiClient>("apiclient")
-//    .WithReference(apiServer)
-//    .WaitFor(apiServer)
-//    .WithEnvironment("ApiBackendUrl", "https://localhost:7048")
-//    .WithEnvironment("WssBackendUrl", "wss://127.0.0.1:7048");
+var apiClient = builder.AddProject<Projects.gAPI_Example_ApiClient>("apiclient")
+    .WithReference(apiServer)
+    .WaitFor(apiServer)
+    .WithEnvironment("ApiBackendUrl", "https://localhost:7048")
+    .WithEnvironment("WssBackendUrl", "wss://127.0.0.1:7048");
 
 var wssServer = builder.AddProject<Projects.gAPI_Example_WssServer>("wssserver")
     .WithReference(backplane)

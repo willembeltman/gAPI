@@ -19,9 +19,23 @@ public static class CreateFabricConfigExtention
         {
             port = p;
         }
+        var busPortStr = m["BusPort"];
+        int busPort = 30595;
+        if (int.TryParse(busPortStr, out var bp) && bp > 0)
+        {
+            busPort = bp;
+        }
+        var planePortStr = m["PlanePort"];
+        int planePort = 30696;
+        if (int.TryParse(planePortStr, out var pp) && pp > 0)
+        {
+            planePort = pp;
+        }
         var config = new FabricConfig()
         {
             Port = port,
+            BusPort = busPort,
+            PlanePort = planePort,
             LogLevel = logLevel
         };
         return config;

@@ -98,7 +98,7 @@ public class WssClientConnectionSender(
         while (sendQueue == null)
         {
             ct.ThrowIfCancellationRequested();
-            await Task.Delay(100);
+            await Task.Delay(100, ct);
             sendQueue = SendQueue;
         }
 
@@ -110,7 +110,7 @@ public class WssClientConnectionSender(
         while (sendQueue == null)
         {
             ct.ThrowIfCancellationRequested();
-            await Task.Delay(100);
+            await Task.Delay(100, ct);
             sendQueue = SendQueue;
         }
 
@@ -360,6 +360,16 @@ public class WssClientConnectionSender(
             var offset = 0;
             writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Log);
             writer.Write(ref offset, log);
+            return offset;
+        }, ct);
+    }
+
+    public async Task Send_Ping_ToServerAsync(CancellationToken ct)
+    {
+        await EnqueueAndWaitAsync(writer =>
+        {
+            var offset = 0;
+            writer.WriteWssClientToServerMessageEnum(ref offset, WssClientToServerMessageEnum.Ping);
             return offset;
         }, ct);
     }

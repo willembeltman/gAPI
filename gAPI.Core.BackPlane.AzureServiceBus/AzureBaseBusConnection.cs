@@ -46,6 +46,7 @@ public abstract class AzureBasePlaneConnection(
     private readonly ConcurrentDictionary<RequestId, CancellationTokenSourceDispose> _activeRequests = [];
 
     private readonly SemaphoreSlim SubscriptionLock = new(1, 1);
+    private readonly SemaphoreSlim ConnectionLock = new(1, 1);
     private readonly CancellationTokenSource _lifetimeCts = new();
 
     private ServiceBusClient? _client;
@@ -62,56 +63,68 @@ public abstract class AzureBasePlaneConnection(
     protected abstract Task Send_SendRequest_ToServiceAsync(PlaneSendRequestDto sendRequest, CancellationToken ct);
     protected abstract IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(PlaneInvokeRequestDto invokeRequest, CancellationToken ct);
 
+    public Task WaitForConnectionAsync(CancellationToken ct) => TryConnectAsync(ct);
+
     public async Task TryConnectAsync(CancellationToken ct)
     {
         if (Initialized) return;
 
-        var clientOptions = new ServiceBusClientOptions();
-        var adminOptions = new ServiceBusAdministrationClientOptions();
-
-        // Basis messaging connectionstring (voor poort 5672 / AMQP)
-        var messagingConnectionString = Config.ConnectionString;
-        var adminConnectionString = Config.ConnectionString;
-
-        // Initialiseer de clients met hun respectievelijke poort-verbindingsreeksen
-        _client = new ServiceBusClient(messagingConnectionString, clientOptions);
-        _adminClient = new ServiceBusAdministrationClient(adminConnectionString, adminOptions);
-
-        // We gebruiken één centrale topic per microservice-architectuur, of een gedeelde topic voor streaming
-        _streamingTopicName = "top.gapi.AutoPlane.streaming";
-        _streamingSubscriptionName = $"sub.streaming.{PlaneConnectionId}";
-
-        // Zorg dat de streaming infrastructuur bestaat (Dynamic runtime queues/topics)
-        if (!await _adminClient.TopicExistsAsync(_streamingTopicName, ct))
+        await ConnectionLock.WaitAsync(ct);
+        try
         {
-            await _adminClient.CreateTopicAsync(_streamingTopicName, ct);
-        }
+            if (Initialized) return;
 
-        if (!await _adminClient.SubscriptionExistsAsync(_streamingTopicName, _streamingSubscriptionName, ct))
-        {
-            var subOptions = new CreateSubscriptionOptions(_streamingTopicName, _streamingSubscriptionName)
+            var clientOptions = new ServiceBusClientOptions();
+            var adminOptions = new ServiceBusAdministrationClientOptions();
+
+            // Basis messaging connectionstring (voor poort 5672 / AMQP)
+            var messagingConnectionString = Config.ConnectionString;
+            var adminConnectionString = Config.ConnectionString;
+
+            // Initialiseer de clients met hun respectievelijke poort-verbindingsreeksen
+            _client = new ServiceBusClient(messagingConnectionString, clientOptions);
+            _adminClient = new ServiceBusAdministrationClient(adminConnectionString, adminOptions);
+
+            // We gebruiken één centrale topic per microservice-architectuur, of een gedeelde topic voor streaming
+            _streamingTopicName = "top.gapi.AutoPlane.streaming";
+            _streamingSubscriptionName = $"sub.streaming.{PlaneConnectionId}";
+
+            // Zorg dat de streaming infrastructuur bestaat (Dynamic runtime queues/topics)
+            if (!await _adminClient.TopicExistsAsync(_streamingTopicName, ct))
             {
-                AutoDeleteOnIdle = TimeSpan.FromMinutes(5), // Ruimt zichzelf netjes op als de verbinding wegvalt
-                RequiresSession = true                     // Essentieel voor gerichte RPC streaming routing via SessionId
+                await _adminClient.CreateTopicAsync(_streamingTopicName, ct);
+            }
+
+            if (!await _adminClient.SubscriptionExistsAsync(_streamingTopicName, _streamingSubscriptionName, ct))
+            {
+                var subOptions = new CreateSubscriptionOptions(_streamingTopicName, _streamingSubscriptionName)
+                {
+                    AutoDeleteOnIdle = TimeSpan.FromMinutes(5), // Ruimt zichzelf netjes op als de verbinding wegvalt
+                    RequiresSession = true                     // Essentieel voor gerichte RPC streaming routing via SessionId
+                };
+                await _adminClient.CreateSubscriptionAsync(subOptions, ct);//.CreateSubscriptionOptionsAsync(subOptions, ct);
+            }
+
+            _topicSender = _client.CreateSender(_streamingTopicName);
+
+            // Start de streaming sessie processor (luistert specifiek naar berichten voor ONZE PlaneConnectionId)
+            var processorOptions = new ServiceBusSessionProcessorOptions
+            {
+                AutoCompleteMessages = false,
+                MaxConcurrentSessions = 1,
+                SessionIds = { PlaneConnectionId.ToString() }
             };
-            await _adminClient.CreateSubscriptionAsync(subOptions, ct);//.CreateSubscriptionOptionsAsync(subOptions, ct);
+            _streamingSessionProcessor = _client.CreateSessionProcessor(_streamingTopicName, _streamingSubscriptionName, processorOptions);
+            _streamingSessionProcessor.ProcessMessageAsync += ProcessStreamingMessageAsync;
+            _streamingSessionProcessor.ProcessErrorAsync += ProcessErrorAsync;
+
+            await _streamingSessionProcessor.StartProcessingAsync(ct);
+            Initialized = true;
         }
-
-        _topicSender = _client.CreateSender(_streamingTopicName);
-
-        // Start de streaming sessie processor (luistert specifiek naar berichten voor ONZE PlaneConnectionId)
-        var processorOptions = new ServiceBusSessionProcessorOptions
+        finally
         {
-            AutoCompleteMessages = false,
-            MaxConcurrentSessions = 1,
-            SessionIds = { PlaneConnectionId.ToString() }
-        };
-        _streamingSessionProcessor = _client.CreateSessionProcessor(_streamingTopicName, _streamingSubscriptionName, processorOptions);
-        _streamingSessionProcessor.ProcessMessageAsync += ProcessStreamingMessageAsync;
-        _streamingSessionProcessor.ProcessErrorAsync += ProcessErrorAsync;
-
-        await _streamingSessionProcessor.StartProcessingAsync(ct);
-        Initialized = true;
+            ConnectionLock.Release();
+        }
     }
 
     public async Task SendFireAndForgetAsync(PlaneRoutingDto routing, byte[] data, CancellationToken ct)
@@ -695,9 +708,10 @@ public abstract class AzureBasePlaneConnection(
         {
             var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(streamId, _ =>
             {
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                 return new PlaneAsyncEnumerableRegistrationInstance<T>(
-                    source.GetAsyncEnumerator(timeoutCts.Token),
-                    new SemaphoreSlim(1, 1), timeoutCts);
+                    source.GetAsyncEnumerator(cts.Token),
+                    new SemaphoreSlim(1, 1), cts);
             });
             async Task Cleanup()
             {
