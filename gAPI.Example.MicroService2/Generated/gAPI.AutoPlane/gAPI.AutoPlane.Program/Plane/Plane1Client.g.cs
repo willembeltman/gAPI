@@ -36,9 +36,11 @@ public class Plane1Client(
 
     public async Task StartServiceTests(SessionId sessionId, string to, CancellationToken ct)
     {
-            ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
-            var ___ct = ___timeoutCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -96,6 +98,8 @@ public class Plane1Client(
             ___timeOut ??= TimeSpan.FromSeconds(100);
             using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
             var ___ct = ___timeoutCts.Token;
+
+            await ___planeConnection.WaitForConnectionAsync(___ct);
 
             var ___routing = new PlaneRoutingDto(
                 ___planeConnection.PlaneConnectionId,
@@ -160,9 +164,11 @@ public class Plane1Client(
 
     public async Task Send(string message, CancellationToken ct)
     {
-            ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
-            var ___ct = ___timeoutCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -212,9 +218,11 @@ public class Plane1Client(
 
     public async Task SendWithList(IAsyncEnumerable<string> test, CancellationToken ct)
     {
-            ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
-            var ___ct = ___timeoutCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -271,6 +279,8 @@ public class Plane1Client(
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -337,6 +347,8 @@ public class Plane1Client(
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -408,6 +420,8 @@ public class Plane1Client(
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
+        await ___planeConnection.WaitForConnectionAsync(___ct);
+
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
             RequestId.New(),
@@ -466,6 +480,8 @@ public class Plane1Client(
         ___timeOut ??= TimeSpan.FromSeconds(100);
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -535,6 +551,8 @@ public class Plane1Client(
         using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
         var ___ct = ___timeoutCts.Token;
 
+        await ___planeConnection.WaitForConnectionAsync(___ct);
+
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
             RequestId.New(),
@@ -580,9 +598,11 @@ public class Plane1Client(
 
     public async Task PongTask(CancellationToken ct)
     {
-            ___timeOut ??= TimeSpan.FromSeconds(100);
-            using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
-            var ___ct = ___timeoutCts.Token;
+        ___timeOut ??= TimeSpan.FromSeconds(100);
+        using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value, ct);
+        var ___ct = ___timeoutCts.Token;
+
+        await ___planeConnection.WaitForConnectionAsync(___ct);
 
         var ___routing = new PlaneRoutingDto(
             ___planeConnection.PlaneConnectionId,
@@ -627,6 +647,8 @@ public class Plane1Client(
             ___timeOut ??= TimeSpan.FromSeconds(100);
             using var ___timeoutCts = new CancellationTokenSourceDispose(___timeOut.Value);
             var ___ct = ___timeoutCts.Token;
+
+            await ___planeConnection.WaitForConnectionAsync(___ct);
 
             var ___routing = new PlaneRoutingDto(
                 ___planeConnection.PlaneConnectionId,

@@ -823,10 +823,11 @@ public abstract class RabbitMQBaseBusConnection(
                 {
                     var (enumerator, gate, linkedCts) = activeStreams.GetOrAdd(streamId, _ =>
                     {
+                        var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token);
                         return new BusAsyncEnumerableRegistrationInstance<T>(
-                            source.GetAsyncEnumerator(timeoutCts.Token),
+                            source.GetAsyncEnumerator(cts.Token),
                             new SemaphoreSlim(1, 1),
-                            timeoutCts);
+                            cts);
                     });
 
                     async Task Cleanup()

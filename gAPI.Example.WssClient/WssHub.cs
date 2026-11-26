@@ -16,7 +16,6 @@ public class WssHub(
 
     public async Task OnStartedAsync(ServiceId serviceId, CancellationToken ct)
     {
-        _ = StartAllTests(ct);
     }
 
     public async Task OnStoppedAsync(ServiceId serviceId, CancellationToken ct)
@@ -25,6 +24,7 @@ public class WssHub(
 
     public async Task OnSubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {
+        _ = StartAllTests(ct);
     }
     public async Task OnUnsubscribedAsync(ServiceId serviceId, ServiceSubscriptionId serviceSubscriptionId, CancellationToken ct)
     {

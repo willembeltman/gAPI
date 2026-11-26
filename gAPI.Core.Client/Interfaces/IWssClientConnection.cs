@@ -29,4 +29,5 @@ public interface IWssClientConnection
     Task UnRegisterAsyncEnumerableArgument(RoutingDto routing, int argumentIndex);
 
     Task WaitForConnectionAsync(CancellationToken ct);
+    Task<bool> CheckConnectionAsync(CancellationToken ct = default);
 }

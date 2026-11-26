@@ -379,6 +379,9 @@ public abstract class WssServerConnection : IServerConnection
                                 }
                             }, ct);
                             break;
+                        case WssClientToServerMessageEnum.Ping:
+                            await Sender.Send_Pong_ToClientAsync(ct);
+                            break;
                     }
                 }
                 catch (Exception ex)

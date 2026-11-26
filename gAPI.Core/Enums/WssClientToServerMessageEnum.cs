@@ -23,5 +23,6 @@ public enum WssClientToServerMessageEnum
     FabricStreamingRequest,
     FabricStreamingResponse,
 
-    Log
+    Log,
+    Ping
 }

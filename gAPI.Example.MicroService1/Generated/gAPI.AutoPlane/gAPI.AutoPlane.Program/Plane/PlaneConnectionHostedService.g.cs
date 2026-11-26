@@ -28,10 +28,20 @@ public class PlaneConnectionHostedService(
 
         var gAPI_Example_MicroService2_Plane1 = Scope.Value.ServiceProvider.GetRequiredService<gAPI.Example.MicroService2.Plane1>();
         await gAPI_Example_MicroService2_Plane1.OnStartedAsync(new ServiceId("IPlane1"), ct);
-        await planeConnection.SubscribeAsync(gAPI_Example_MicroService2_Plane1, ct);
 
         planeConnection.HostedPlaneServices = new HostedPlaneServices(
             gAPI_Example_MicroService2_Plane1);
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await planeConnection.SubscribeAsync(gAPI_Example_MicroService2_Plane1, ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }, ct);
     }
     public async Task StopAsync(CancellationToken ct)
     {
