@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
@@ -39,6 +40,11 @@ public static class AddAutoApiServerExtension
         services.AddSingleton(new gAPI.Core.Server.Authentication.AuthenticationOptions(false));
         services.AddSingleton(serverConfig);
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+
+        services.AddLogging(logging =>
+        {
+            logging.AddFabricLogger();
+        });
 
         services.AddHttpContextAccessor();
         services.AddCors(options =>
